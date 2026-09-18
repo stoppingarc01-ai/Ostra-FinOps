@@ -128,10 +128,10 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
   };
 
   const packageCommands = {
-    npm: 'npm install -g osterdops-guard',
-    npx: 'npx osterdops-guard',
-    pnpm: 'pnpm add -g osterdops-guard',
-    brew: 'brew install osterdops/tap/osterdops-guard',
+    npm: 'npm install -g @stoppingarc01-ai/ostraops-guard',
+    npx: 'npx @stoppingarc01-ai/ostraops-guard',
+    pnpm: 'pnpm add -g @stoppingarc01-ai/ostraops-guard',
+    brew: 'brew install ostraops/tap/ostraops-guard',
   };
 
   const envSnippets = {
@@ -301,7 +301,7 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
             </div>
             <div className="flex items-center gap-2.5 shrink-0">
               <button
-                onClick={() => copyCredential(`node packages/guard-daemon/bin/cli.js --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd-all')}
+                onClick={() => copyCredential(`npx @stoppingarc01-ai/ostraops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd-all')}
                 className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-charcoal-950 text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
               >
                 {copiedField === 'cmd-all' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -457,7 +457,7 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
             </div>
             {isOneTimeRevealed ? (
               <button
-                onClick={() => copyCredential(`npx osterdops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd')}
+                onClick={() => copyCredential(`npx @stoppingarc01-ai/ostraops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd')}
                 className="px-3 py-1 rounded-lg bg-osterdGold-400 hover:bg-osterdGold-300 text-charcoal-900 font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 {copiedField === 'cmd' ? <Check className="w-3.5 h-3.5 text-charcoal-900" /> : <Copy className="w-3.5 h-3.5 text-charcoal-900" />}
@@ -465,7 +465,7 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
               </button>
             ) : (
               <button
-                onClick={() => copyCredential(`npx osterdops-guard --port ${daemonPort}`, 'cmd-interactive')}
+                onClick={() => copyCredential(`npx @stoppingarc01-ai/ostraops-guard --port ${daemonPort}`, 'cmd-interactive')}
                 className="px-3 py-1 rounded-lg bg-charcoal-800 hover:bg-charcoal-700 text-white font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs border border-charcoal-700"
               >
                 {copiedField === 'cmd-interactive' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -475,13 +475,13 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
           </div>
           <div className="p-3 rounded-xl bg-charcoal-950 font-mono text-xs text-charcoal-300 overflow-x-auto whitespace-pre select-all border border-charcoal-800/80">
             {isOneTimeRevealed
-              ? `npx osterdops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`
-              : `npx osterdops-guard --port ${daemonPort}`}
+              ? `npx @stoppingarc01-ai/ostraops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`
+              : `npx @stoppingarc01-ai/ostraops-guard --port ${daemonPort}`}
           </div>
           <p className="text-[11px] text-charcoal-400">
             {isOneTimeRevealed
-              ? 'Tip: Run anywhere via npx osterdops-guard, or with node packages/guard-daemon/bin/cli.js inside local repo.'
-              : 'Tip: Run npx osterdops-guard to enter credentials interactively, or click "Generate New Client ID" above to see new keys.'}
+              ? 'Tip: Run anywhere via npx @stoppingarc01-ai/ostraops-guard, or with node packages/guard-daemon/bin/cli.js inside local repo.'
+              : 'Tip: Run npx @stoppingarc01-ai/ostraops-guard to enter credentials interactively, or click "Generate New Client ID" above to see new keys.'}
           </p>
         </div>
       </div>
@@ -628,10 +628,10 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
           </span>
           <div className="relative p-3.5 rounded-xl bg-[#1E1E22] text-white border border-[#2D2D33] font-mono text-xs flex items-center justify-between gap-3 overflow-hidden">
             <span className="text-zinc-300 overflow-x-auto whitespace-nowrap pr-2">
-              npx osterdops-guard --id {clientId} --secret {daemonSecret} --port {daemonPort}
+              npx @stoppingarc01-ai/ostraops-guard --id {clientId} --secret {daemonSecret} --port {daemonPort}
             </span>
             <button
-              onClick={() => copyToClipboard(`npx osterdops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'start-cmd')}
+              onClick={() => copyToClipboard(`npx @stoppingarc01-ai/ostraops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'start-cmd')}
               className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors shrink-0 cursor-pointer"
               title="Copy start command"
             >

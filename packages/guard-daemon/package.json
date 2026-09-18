@@ -1,12 +1,12 @@
 {
-  "name": "osterdops-guard",
+  "name": "@stoppingarc01-ai/ostraops-guard",
   "version": "0.1.0",
-  "description": "OsterdOps Sentinel — Zero-overhead local reverse-proxy and safety guard for AI coding agents",
+  "description": "Inline financial firewall and telemetry proxy for autonomous AI coding agents",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "osterdops-guard": "./bin/cli.js"
+    "ostraops-guard": "./bin/cli.js"
   },
   "files": [
     "bin",
@@ -15,16 +15,17 @@
     "README.md"
   ],
   "keywords": [
-    "osterdops",
+    "ostraops",
     "sentinel",
     "finops",
     "ai-agent",
     "telemetry",
     "proxy",
+    "firewall",
     "cursor",
     "cline"
   ],
-  "author": "OsterdOps",
+  "author": "OstraOps",
   "license": "Apache-2.0",
   "publishConfig": {
     "access": "public"
@@ -35,6 +36,7 @@
     "directory": "packages/guard-daemon"
   },
   "scripts": {
+    "start": "node bin/cli.js",
     "build:ui": "vite build --config ui/vite.config.ts",
     "test:stage1": "tsx test/stage1-check.ts",
     "test:stage2": "tsx test/stage2-check.ts",

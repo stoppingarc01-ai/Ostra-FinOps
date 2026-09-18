@@ -1,16 +1,16 @@
-# OsterdOps Sentinel (`osterdops-guard`)
+# OstraOps Sentinel (`@stoppingarc01-ai/ostraops-guard`)
 
-> Zero-overhead, 100% localhost reverse-proxy, telemetry odometer, and circuit breaker for AI coding agents (Cursor, Cline, OpenAI SDK, Anthropic).
+> Inline financial firewall and telemetry proxy for autonomous AI coding agents (Cursor, Cline, OpenAI SDK, Anthropic).
 
 ## Quick Start (No Install Needed)
 
 Run directly with `npx`:
 
 ```bash
-npx osterdops-guard
+npx @stoppingarc01-ai/ostraops-guard
 ```
 
-The daemon will interactively ask for your pairing credentials from your [Solo Developer Console](https://osterdops.com/#solo-guard):
+The daemon will interactively ask for your pairing credentials from your [OstraOps Solo Developer Console](https://osterdops.com/#solo-guard):
 1. **Solo Client ID** (`ost_client_solo_...`)
 2. **Secret Passkey** (`ost_sec_...`)
 3. **Ingress Port** (default: `8080`)
@@ -20,7 +20,7 @@ The daemon will interactively ask for your pairing credentials from your [Solo D
 Pass credentials directly via CLI flags:
 
 ```bash
-npx osterdops-guard --id <CLIENT_ID> --secret <SECRET_PASSKEY> --port 8080
+npx @stoppingarc01-ai/ostraops-guard --id <CLIENT_ID> --secret <SECRET_PASSKEY> --port 8080
 ```
 
 ---
@@ -53,8 +53,8 @@ export ANTHROPIC_BASE_URL="http://127.0.0.1:8080"
 ## Global Install (Optional)
 
 ```bash
-npm install -g osterdops-guard
-osterdops-guard
+npm install -g @stoppingarc01-ai/ostraops-guard
+ostraops-guard
 ```
 
 ## License
