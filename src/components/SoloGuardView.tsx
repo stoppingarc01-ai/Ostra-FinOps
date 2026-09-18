@@ -14,7 +14,13 @@ import {
   Flame,
   ArrowRight,
   Sliders,
-  Play
+  Play,
+  Key,
+  ShieldCheck,
+  Lock,
+  Eye,
+  EyeOff,
+  Hash
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -26,10 +32,10 @@ interface SoloGuardViewProps {
 
 export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
   onNavigateToTeamGateway,
-  isHostedGatewayUser,
+  onNavigateToPricing,
+  isHostedGatewayUser = false,
 }) => {
-  const { user, subscription } = useAuth();
-  const isHostedGatewayPlan = isHostedGatewayUser ?? (subscription?.plan_id === 'team_scale' || subscription?.plan_id === 'enterprise');
+  const { user } = useAuth();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [activePkgTab, setActivePkgTab] = useState<'npm' | 'npx' | 'pnpm' | 'brew'>('npm');
   const [activeEnvTab, setActiveEnvTab] = useState<'env' | 'bash' | 'powershell' | 'cursor'>('env');
@@ -38,6 +44,33 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
   const [testResponse, setTestResponse] = useState<string | null>(null);
   const [sessionCap, setSessionCap] = useState<number>(15);
   const [telegramAlertsEnabled, setTelegramAlertsEnabled] = useState(true);
+
+  // Dedicated Sentinel Daemon Credentials
+  const [clientId] = useState(() => {
+    const uidSuffix = user?.uid ? user.uid.slice(0, 8) : '84f19a';
+    return `ost_client_solo_${uidSuffix}`;
+  });
+  const [daemonSecret, setDaemonSecret] = useState('ost_sec_7a2f9b8c3d4e9102');
+  const [showSecret, setShowSecret] = useState(false);
+  const [daemonPort, setDaemonPort] = useState<number>(8080);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const copyCredential = (text: string, fieldKey: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldKey);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const regenerateSecret = () => {
+    const chars = 'abcdef0123456789';
+    let rand = '';
+    for (let i = 0; i < 16; i++) {
+      rand += chars[Math.floor(Math.random() * chars.length)];
+    }
+    const newSec = `ost_sec_${rand}`;
+    setDaemonSecret(newSec);
+    copyCredential(newSec, 'secret');
+  };
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -84,25 +117,30 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
 
   const envSnippets = {
     env: `# .env (Drop this in your project root)
-OPENAI_BASE_URL="http://127.0.0.1:8080/v1"
-ANTHROPIC_BASE_URL="http://127.0.0.1:8080/v1"
-OSTERDOPS_LOCAL_KEY="${localToken}"
+OPENAI_BASE_URL="http://127.0.0.1:${daemonPort}/v1"
+ANTHROPIC_BASE_URL="http://127.0.0.1:${daemonPort}"
+OSTERDOPS_CLIENT_ID="${clientId}"
+OSTERDOPS_SECRET_KEY="${daemonSecret}"
 OSTERDOPS_SESSION_CAP="${sessionCap}"`,
 
     bash: `# ~/.bashrc or ~/.zshrc
-export OPENAI_BASE_URL="http://127.0.0.1:8080/v1"
-export ANTHROPIC_BASE_URL="http://127.0.0.1:8080/v1"
-export OSTERDOPS_LOCAL_KEY="${localToken}"`,
+export OPENAI_BASE_URL="http://127.0.0.1:${daemonPort}/v1"
+export ANTHROPIC_BASE_URL="http://127.0.0.1:${daemonPort}"
+export OSTERDOPS_CLIENT_ID="${clientId}"
+export OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
 
     powershell: `# PowerShell ($PROFILE)
-$env:OPENAI_BASE_URL="http://127.0.0.1:8080/v1"
-$env:ANTHROPIC_BASE_URL="http://127.0.0.1:8080/v1"
-$env:OSTERDOPS_LOCAL_KEY="${localToken}"`,
+$env:OPENAI_BASE_URL="http://127.0.0.1:${daemonPort}/v1"
+$env:ANTHROPIC_BASE_URL="http://127.0.0.1:${daemonPort}"
+$env:OSTERDOPS_CLIENT_ID="${clientId}"
+$env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
 
     cursor: `// .cursor/settings.json or VSCode settings
 {
-  "openai.baseURL": "http://127.0.0.1:8080/v1",
-  "claude.baseURL": "http://127.0.0.1:8080/v1"
+  "openai.baseURL": "http://127.0.0.1:${daemonPort}/v1",
+  "openai.apiKey": "${daemonSecret}",
+  "anthropic.baseURL": "http://127.0.0.1:${daemonPort}",
+  "anthropic.apiKey": "${daemonSecret}"
 }`,
   };
 
@@ -145,7 +183,7 @@ $env:OSTERDOPS_LOCAL_KEY="${localToken}"`,
                 Active Tier
               </span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E8DCC4] text-charcoal-800 font-mono">
-                {isHostedGatewayPlan ? 'Included with Team Plan' : 'Solo Pro Active'}
+                {isHostedGatewayUser ? 'Included with Team Plan' : 'Solo Pro Active'}
               </span>
             </div>
 
@@ -154,13 +192,21 @@ $env:OSTERDOPS_LOCAL_KEY="${localToken}"`,
               <span>Storage: <strong>~/.osterdops/telemetry.db</strong></span>
             </div>
 
-            {isHostedGatewayPlan && onNavigateToTeamGateway ? (
+            {isHostedGatewayUser && onNavigateToTeamGateway ? (
               <button
                 onClick={onNavigateToTeamGateway}
                 className="w-full py-2 px-3 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <span>Back to Team Dashboard</span>
                 <ArrowRight className="w-3.5 h-3.5 text-osterdGold-400" />
+              </button>
+            ) : onNavigateToPricing ? (
+              <button
+                onClick={onNavigateToPricing}
+                className="w-full py-1.5 px-3 rounded-xl bg-[#EAE4D8] hover:bg-[#E0D8C8] text-charcoal-800 text-[11px] font-semibold transition-all flex items-center justify-between cursor-pointer"
+              >
+                <span>Upgrade to Cloud Team</span>
+                <ArrowRight className="w-3 h-3 text-charcoal-700" />
               </button>
             ) : (
               <div className="text-[11px] text-emerald-700 font-mono flex items-center gap-1.5 pt-1 border-t border-[#EAE4D8]">
@@ -169,6 +215,151 @@ $env:OSTERDOPS_LOCAL_KEY="${localToken}"`,
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/* SENTINEL DAEMON AUTHENTICATION & PAIRING CREDENTIALS         */}
+      {/* ============================================================ */}
+      <div className="p-6 sm:p-7 rounded-3xl bg-charcoal-900 text-white border border-charcoal-800 shadow-xl relative overflow-hidden space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-charcoal-800 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-osterdGold-400/20 border border-osterdGold-400/30 flex items-center justify-center text-osterdGold-400 shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white tracking-tight">Sentinel Daemon Security Keys</h2>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-wider font-mono">
+                  Local-Only Lock
+                </span>
+              </div>
+              <p className="text-xs text-charcoal-400 mt-0.5">
+                Required by your local Sentinel daemon for secure reverse-proxy binding and tamper-proof telemetry.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-charcoal-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-mono">Ready to Pair</span>
+          </div>
+        </div>
+
+        {/* 3 Credential Cards: ID, Secret Passkey, Unique Port */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          {/* Card 1: Client ID */}
+          <div className="p-4 rounded-2xl bg-charcoal-950/80 border border-charcoal-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold text-charcoal-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Key className="w-3.5 h-3.5 text-osterdGold-400" />
+                Solo Client ID
+              </span>
+              <button
+                onClick={() => copyCredential(clientId, 'id')}
+                className="text-xs text-osterdGold-400 hover:text-osterdGold-300 font-mono flex items-center gap-1 transition-colors cursor-pointer"
+                title="Copy Client ID"
+              >
+                {copiedField === 'id' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedField === 'id' ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+            <div className="p-2.5 rounded-xl bg-charcoal-900 border border-charcoal-800 font-mono text-xs text-charcoal-200 truncate select-all">
+              {clientId}
+            </div>
+            <p className="text-[11px] text-charcoal-400">Identifies your local daemon instance to your local database.</p>
+          </div>
+
+          {/* Card 2: Secret Passkey */}
+          <div className="p-4 rounded-2xl bg-charcoal-950/80 border border-charcoal-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold text-charcoal-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-osterdGold-400" />
+                Secret Passkey
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowSecret(!showSecret)}
+                  className="text-charcoal-400 hover:text-white transition-colors cursor-pointer"
+                  title={showSecret ? 'Hide secret' : 'Show secret'}
+                >
+                  {showSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+                <button
+                  onClick={regenerateSecret}
+                  className="text-charcoal-400 hover:text-white transition-colors cursor-pointer"
+                  title="Generate new passkey"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => copyCredential(daemonSecret, 'secret')}
+                  className="text-xs text-osterdGold-400 hover:text-osterdGold-300 font-mono flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Copy Secret"
+                >
+                  {copiedField === 'secret' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedField === 'secret' ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-charcoal-900 border border-charcoal-800 font-mono text-xs text-emerald-400 truncate select-all">
+              {showSecret ? daemonSecret : '••••••••••••••••••••••••'}
+            </div>
+            <p className="text-[11px] text-charcoal-400">Protects port against unauthorized localhost processes.</p>
+          </div>
+
+          {/* Card 3: Unique Port */}
+          <div className="p-4 rounded-2xl bg-charcoal-950/80 border border-charcoal-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold text-charcoal-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Hash className="w-3.5 h-3.5 text-osterdGold-400" />
+                Unique Ingress Port
+              </span>
+              <button
+                onClick={() => copyCredential(String(daemonPort), 'port')}
+                className="text-xs text-osterdGold-400 hover:text-osterdGold-300 font-mono flex items-center gap-1 transition-colors cursor-pointer"
+                title="Copy Port"
+              >
+                {copiedField === 'port' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedField === 'port' ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="1024"
+                max="65535"
+                value={daemonPort}
+                onChange={(e) => setDaemonPort(Number(e.target.value) || 8080)}
+                className="w-full p-2 rounded-xl bg-charcoal-900 border border-charcoal-800 font-mono text-xs text-white focus:outline-hidden focus:border-osterdGold-400 transition-colors"
+              />
+              <span className="text-[11px] text-charcoal-400 font-mono shrink-0">TCP</span>
+            </div>
+            <p className="text-[11px] text-charcoal-400">Change if 8080 is occupied by Docker or another service.</p>
+          </div>
+        </div>
+
+        {/* Quick Launch Command Snippet */}
+        <div className="p-4 rounded-2xl bg-black/60 border border-charcoal-800 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Terminal className="w-4 h-4 text-osterdGold-400" />
+              <span className="text-xs font-mono font-bold text-charcoal-200">Start Command (Auto-Configured)</span>
+            </div>
+            <button
+              onClick={() => copyCredential(`node packages/guard-daemon/bin/cli.js --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd')}
+              className="px-3 py-1 rounded-lg bg-osterdGold-400 hover:bg-osterdGold-300 text-charcoal-900 font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              {copiedField === 'cmd' ? <Check className="w-3.5 h-3.5 text-charcoal-900" /> : <Copy className="w-3.5 h-3.5 text-charcoal-900" />}
+              <span>{copiedField === 'cmd' ? 'Copied Command!' : 'Copy Command'}</span>
+            </button>
+          </div>
+          <div className="p-3 rounded-xl bg-charcoal-950 font-mono text-xs text-charcoal-300 overflow-x-auto whitespace-pre select-all border border-charcoal-800/80">
+            node packages/guard-daemon/bin/cli.js --id {clientId} --secret {daemonSecret} --port {daemonPort}
+          </div>
+          <p className="text-[11px] text-charcoal-400">
+            Tip: You can also just run <code className="text-osterdGold-300 bg-charcoal-900 px-1.5 py-0.5 rounded font-mono">node packages/guard-daemon/bin/cli.js</code> and the daemon will ask you to enter these 3 values interactively in your terminal.
+          </p>
         </div>
       </div>
 
@@ -186,7 +377,7 @@ $env:OSTERDOPS_LOCAL_KEY="${localToken}"`,
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-xl font-extrabold text-charcoal-900 font-mono">127.0.0.1:8080</div>
+            <div className="text-xl font-extrabold text-charcoal-900 font-mono">127.0.0.1:{daemonPort}</div>
             <div className="text-[11px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>0 external network hops</span>
@@ -310,14 +501,14 @@ $env:OSTERDOPS_LOCAL_KEY="${localToken}"`,
         {/* Step 2: Start the Proxy */}
         <div className="space-y-2 pt-2">
           <span className="text-xs font-bold text-charcoal-800">
-            Start the background loopback proxy:
+            Start the Sentinel background daemon:
           </span>
-          <div className="relative p-3.5 rounded-xl bg-[#1E1E22] text-white border border-[#2D2D33] font-mono text-xs flex items-center justify-between">
-            <span className="text-zinc-300">
-              osterdops-guard start --port 8080 --telemetry 4040 --cap {sessionCap}
+          <div className="relative p-3.5 rounded-xl bg-[#1E1E22] text-white border border-[#2D2D33] font-mono text-xs flex items-center justify-between gap-3 overflow-hidden">
+            <span className="text-zinc-300 overflow-x-auto whitespace-nowrap pr-2">
+              node packages/guard-daemon/bin/cli.js --id {clientId} --secret {daemonSecret} --port {daemonPort}
             </span>
             <button
-              onClick={() => copyToClipboard(`osterdops-guard start --port 8080 --telemetry 4040 --cap ${sessionCap}`, 'start-cmd')}
+              onClick={() => copyToClipboard(`node packages/guard-daemon/bin/cli.js --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'start-cmd')}
               className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors shrink-0 cursor-pointer"
               title="Copy start command"
             >
@@ -617,7 +808,7 @@ $env:OSTERDOPS_LOCAL_KEY="${localToken}"`,
             <div className="text-zinc-400 text-[10px]">LOOPBACK LATENCY</div>
             <div className="text-emerald-400 font-bold text-sm mt-0.5">&lt; 0.5 ms</div>
           </div>
-          {isHostedGatewayPlan && onNavigateToTeamGateway && (
+          {isHostedGatewayUser && onNavigateToTeamGateway && (
             <button
               onClick={onNavigateToTeamGateway}
               className="px-5 py-3 rounded-2xl bg-[#F0E6D8] hover:bg-white text-charcoal-950 font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"

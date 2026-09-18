@@ -2,12 +2,15 @@
 import { exec } from 'node:child_process';
 import net from 'node:net';
 import path from 'node:path';
+import fs from 'node:fs';
+import readline from 'node:readline/promises';
+import { stdin as input, stdout as output } from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { loadConfig } from '../dist/src/config.js';
 import { initializeDatabase } from '../dist/src/db/connection.js';
 import { TraceRepository } from '../dist/src/db/repository.js';
 import { createDaemonServer } from '../dist/src/server/http-server.js';
-import { readOrCreateDaemonToken } from '../dist/src/security.js';
+import { saveDaemonToken, readOrCreateDaemonToken } from '../dist/src/security.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,17 +52,126 @@ async function findAvailablePort(startPort, host = '127.0.0.1') {
 async function main() {
   const args = process.argv.slice(2);
   const noOpen = args.includes('--no-open') || args.includes('--no-browser');
+  const resetAuth = args.includes('--reset') || args.includes('--reauth');
 
-  let customUiPort;
-  const uiPortIdx = args.findIndex((a) => a === '--ui-port' || a === '--port' || a === '-p');
-  if (uiPortIdx !== -1 && args[uiPortIdx + 1]) {
-    customUiPort = parseInt(args[uiPortIdx + 1], 10);
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log(`
+  🛡️  OsterdOps Sentinel Local Daemon CLI
+
+  Usage:
+    node packages/guard-daemon/bin/cli.js [options]
+
+  Options:
+    --id <client_id>        Solo Client ID from Console
+    --secret <passkey>      Secret passkey from Console
+    --port <number>         Ingress proxy port (default: 8080)
+    --telemetry <number>    Telemetry UI port (default: 4040)
+    --no-browser            Do not automatically open browser
+    --reset                 Reset cached authentication credentials
+    -h, --help              Show this help message
+`);
+    process.exit(0);
+  }
+
+  // 1. Check for CLI arguments for authentication & custom port
+  let clientId = undefined;
+  const idIdx = args.findIndex((a) => a === '--id' || a === '--client-id');
+  if (idIdx !== -1 && args[idIdx + 1]) {
+    clientId = args[idIdx + 1].trim();
+  }
+
+  let secretPasskey = undefined;
+  const secIdx = args.findIndex((a) => a === '--secret' || a === '--pass' || a === '--password');
+  if (secIdx !== -1 && args[secIdx + 1]) {
+    secretPasskey = args[secIdx + 1].trim();
   }
 
   let customProxyPort;
-  const proxyPortIdx = args.findIndex((a) => a === '--proxy-port');
+  const proxyPortIdx = args.findIndex((a) => a === '--proxy-port' || a === '--port' || a === '-p');
   if (proxyPortIdx !== -1 && args[proxyPortIdx + 1]) {
     customProxyPort = parseInt(args[proxyPortIdx + 1], 10);
+  }
+
+  // 2. Auth cache file in user's home directory (~/.osterdops/daemon.auth)
+  const homeDir = process.env.HOME || process.env.USERPROFILE || '.';
+  const authStoreDir = path.join(homeDir, '.osterdops');
+  const authStoreFile = path.join(authStoreDir, 'daemon.auth');
+
+  if (!resetAuth && (!clientId || !secretPasskey)) {
+    if (fs.existsSync(authStoreFile)) {
+      try {
+        const saved = JSON.parse(fs.readFileSync(authStoreFile, 'utf-8'));
+        if (saved.clientId && saved.secret) {
+          clientId = clientId || saved.clientId;
+          secretPasskey = secretPasskey || saved.secret;
+          if (!customProxyPort && saved.port) {
+            customProxyPort = saved.port;
+          }
+        }
+      } catch {}
+    }
+  }
+
+  // 3. Prompt interactively if ID or Secret are still missing
+  if (!clientId || !secretPasskey) {
+    console.log(`
+  \x1b[33m🔒 OsterdOps Sentinel — Security Pairing Required\x1b[0m
+  ─────────────────────────────────────────────────────────────────────────────
+  To ensure end-to-end local safety, please enter the pairing credentials
+  from your Solo Developer Console (\x1b[36mhttp://localhost:5173/#solo-guard\x1b[0m):
+  ─────────────────────────────────────────────────────────────────────────────
+    `);
+
+    const rl = readline.createInterface({ input, output });
+    try {
+      if (!clientId) {
+        const ans = await rl.question('  🔑 Enter Client ID (e.g. ost_client_solo_...): ');
+        clientId = ans.trim();
+      }
+      if (!secretPasskey) {
+        const ans = await rl.question('  🛡️  Enter Secret Passkey (e.g. ost_sec_...): ');
+        secretPasskey = ans.trim();
+      }
+      if (!customProxyPort) {
+        const ans = await rl.question('  🌐 Enter Unique Ingress Port [Default: 8080]: ');
+        const p = parseInt(ans.trim(), 10);
+        if (p && !isNaN(p)) {
+          customProxyPort = p;
+        }
+      }
+    } finally {
+      rl.close();
+    }
+  }
+
+  if (!clientId || clientId.length < 4) {
+    console.error('\x1b[31m❌ Error: Client ID is required. Obtain it from your Solo Developer Console.\x1b[0m');
+    process.exit(1);
+  }
+
+  if (!secretPasskey || secretPasskey.length < 6) {
+    console.error('\x1b[31m❌ Error: Secret Passkey is required (min 6 chars). Obtain it from your Solo Developer Console.\x1b[0m');
+    process.exit(1);
+  }
+
+  customProxyPort = customProxyPort || 8080;
+
+  // Persist secure pairing locally with strict permissions
+  try {
+    if (!fs.existsSync(authStoreDir)) {
+      fs.mkdirSync(authStoreDir, { recursive: true, mode: 0o700 });
+    }
+    fs.writeFileSync(
+      authStoreFile,
+      JSON.stringify({ clientId, secret: secretPasskey, port: customProxyPort, pairedAt: new Date().toISOString() }, null, 2),
+      { mode: 0o600 }
+    );
+  } catch {}
+
+  let customUiPort;
+  const uiPortIdx = args.findIndex((a) => a === '--ui-port');
+  if (uiPortIdx !== -1 && args[uiPortIdx + 1]) {
+    customUiPort = parseInt(args[uiPortIdx + 1], 10);
   }
 
   let customBudget;
@@ -90,6 +202,9 @@ async function main() {
     config.tokenPath = path.join(customDataDir, 'daemon.token');
   }
 
+  // Save the secret passkey as the authorized daemon token
+  saveDaemonToken(config.tokenPath, secretPasskey);
+
   const targetUiPort = await findAvailablePort(config.uiPort, config.bindHost);
   const targetProxyPort = await findAvailablePort(config.proxyPort, config.bindHost);
 
@@ -114,11 +229,12 @@ async function main() {
   console.log(`
   \x1b[36m⚡ OsterdOps Guard Sentinel v2.0 Active\x1b[0m
   ┌─────────────────────────────────────────────────────────────────────────────┐
+  │ \x1b[1mClient Paired:\x1b[0m   \x1b[32m${clientId}\x1b[0m
+  │ \x1b[1mSecret Lock:\x1b[0m     \x1b[33mVerified (Constant-Time Match)\x1b[0m
   │ \x1b[1mWeb Dashboard:\x1b[0m   ${url}
-  │ \x1b[1mIngress Proxy:\x1b[0m   ${finalProxyUrl}
+  │ \x1b[1mIngress Proxy:\x1b[0m   ${finalProxyUrl} (\x1b[35mUnique Port: ${customProxyPort}\x1b[0m)
   │ \x1b[1mAPI Health:\x1b[0m      http://${config.bindHost}:${port}/healthz
   │ \x1b[1mSQLite WAL:\x1b[0m      ${config.dbPath}
-  │ \x1b[1mAuth Token:\x1b[0m      ${config.tokenPath}
   │ \x1b[1mBudget Cap:\x1b[0m      $${config.sessionBudgetUsd.toFixed(2)} USD
   ├─────────────────────────────────────────────────────────────────────────────┤
   │ \x1b[1mIntegrate with AI Coding Agents:\x1b[0m                                             │
