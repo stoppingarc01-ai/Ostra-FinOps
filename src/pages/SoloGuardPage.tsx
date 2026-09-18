@@ -2,23 +2,21 @@ import React from 'react';
 import { SoloGuardView } from '../components/SoloGuardView';
 import { OstraLogo } from '../components/OstraBrand';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, ExternalLink, ArrowLeft } from 'lucide-react';
+import { LogOut, ArrowLeft, Terminal } from 'lucide-react';
 
 interface SoloGuardPageProps {
   onNavigateHome: () => void;
-  onNavigateDashboard: () => void;
+  onNavigateDashboard?: () => void;
   onNavigatePricing: () => void;
 }
 
 export const SoloGuardPage: React.FC<SoloGuardPageProps> = ({
   onNavigateHome,
-  onNavigateDashboard,
   onNavigatePricing,
 }) => {
-  const { user, profile, signOut, subscription } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Developer';
   const displayEmail = profile?.email || user?.email || '';
-  const isHostedUser = subscription?.plan_id === 'team_scale' || subscription?.plan_id === 'enterprise';
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans flex flex-col antialiased selection:bg-osterdGold-500/20 selection:text-charcoal-900">
@@ -42,20 +40,12 @@ export const SoloGuardPage: React.FC<SoloGuardPageProps> = ({
           </button>
         </div>
 
-        {/* Right Actions: User Profile & Controls */}
+        {/* Right Actions: Solo Developer Plan Badge & Profile */}
         <div className="flex items-center gap-3">
-          {isHostedUser && (
-            <>
-              <button
-                onClick={onNavigateDashboard}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EAE5DC] hover:border-charcoal-400 text-charcoal-800 text-xs font-semibold transition-all shadow-xs cursor-pointer"
-              >
-                <span>Hosted Gateway Console</span>
-                <ExternalLink className="w-3.5 h-3.5 text-charcoal-500" />
-              </button>
-              <div className="h-4 w-px bg-[#EAE5DC] hidden sm:block" />
-            </>
-          )}
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-mono font-bold">
+            <Terminal className="w-3.5 h-3.5 text-amber-700" />
+            <span>Solo Developer Console</span>
+          </div>
 
           {/* User pill */}
           <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-sandstone-100 border border-[#EAE4D8]" title={displayEmail}>
@@ -86,9 +76,8 @@ export const SoloGuardPage: React.FC<SoloGuardPageProps> = ({
         </div>
 
         <SoloGuardView
-          onNavigateToTeamGateway={isHostedUser ? onNavigateDashboard : undefined}
           onNavigateToPricing={onNavigatePricing}
-          isHostedGatewayUser={isHostedUser}
+          isHostedGatewayUser={false}
         />
       </main>
 

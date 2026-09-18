@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
-  Layers,
   FolderKanban,
   Receipt,
   Wallet,
@@ -24,8 +23,7 @@ import {
   ExternalLink,
   Menu,
   X,
-  LogOut,
-  Terminal
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { ProjectsView } from '../components/ProjectsView';
@@ -39,7 +37,6 @@ import { OptimizationView } from '../components/OptimizationView';
 import { CalendarView } from '../components/CalendarView';
 import { AlertsView } from '../components/AlertsView';
 import { BudgetsView } from '../components/BudgetsView';
-import { SoloGuardView } from '../components/SoloGuardView';
 import { DashboardHomeView } from '../components/DashboardHomeView';
 import { SpendVelocityChart } from '../components/SpendVelocityChart';
 import { OstraLogo } from '../components/OstraBrand';
@@ -56,19 +53,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   initialTab,
 }) => {
   const { user, profile, subscription, signOut } = useAuth();
-  const isSoloPlan = subscription?.plan_id === 'solo_pro';
-  const [activeTab, setActiveTab] = useState(initialTab || (isSoloPlan ? 'solo-guard' : 'dashboard'));
+  const [activeTab, setActiveTab] = useState(initialTab && initialTab !== 'solo-guard' ? initialTab : 'dashboard');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [assistantInput, setAssistantInput] = useState('');
 
-  // Sync activeTab when initialTab or plan changes
+  // Sync activeTab when initialTab changes
   useEffect(() => {
-    if (initialTab) {
+    if (initialTab && initialTab !== 'solo-guard') {
       setActiveTab(initialTab);
     } else {
-      setActiveTab(isSoloPlan ? 'solo-guard' : 'dashboard');
+      setActiveTab('dashboard');
     }
-  }, [initialTab, isSoloPlan]);
+  }, [initialTab]);
 
   // Calculate real-time live date ranges
   const formatRange = (daysBack = 6) => {
@@ -101,19 +97,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const firstName = displayName.split(' ')[0];
 
   const sidebarNavItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'solo-guard', label: 'Solo CLI & Local Guard', icon: Terminal, badge: 'Included' },
-    { id: 'overview', label: 'Overview', icon: Layers },
-    { id: 'calendar', label: 'Calendar & Tasks', icon: Calendar },
-    { id: 'projects', label: 'Projects', icon: FolderKanban },
+    { id: 'dashboard', label: 'Gateway Overview', icon: LayoutDashboard },
+    { id: 'projects', label: 'API Keys & Projects', icon: FolderKanban },
+    { id: 'integrations', label: 'API Key Vault', icon: Cable },
+    { id: 'models', label: 'Models & Routing', icon: Cpu },
     { id: 'usage', label: 'Usage & Costs', icon: Receipt },
     { id: 'budgets', label: 'Budgets & Limits', icon: Wallet },
-    { id: 'models', label: 'Models', icon: Cpu },
-    { id: 'alerts', label: 'Alerts', icon: Bell, badge: '3' },
+    { id: 'alerts', label: 'Gateway Alerts', icon: Bell, badge: '3' },
     { id: 'optimization', label: 'Optimization', icon: Sparkles },
-    { id: 'reports', label: 'Reports', icon: FileBarChart2 },
-    { id: 'integrations', label: 'Integrations', icon: Cable },
-    { id: 'team', label: 'Team', icon: Users },
+    { id: 'reports', label: 'Reports & Export', icon: FileBarChart2 },
+    { id: 'team', label: 'Team Seats', icon: Users },
+    { id: 'calendar', label: 'Calendar & Tasks', icon: Calendar },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -404,12 +398,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="px-6 lg:px-8 pt-6 space-y-6 max-w-[1600px] mx-auto w-full">
           {activeTab === 'alerts' ? (
             <AlertsView />
-          ) : activeTab === 'solo-guard' ? (
-            <SoloGuardView
-              onNavigateToTeamGateway={() => setActiveTab('dashboard')}
-              onNavigateToPricing={onNavigatePricing}
-              isHostedGatewayUser={true}
-            />
           ) : activeTab === 'budgets' ? (
             <BudgetsView />
           ) : activeTab === 'calendar' ? (

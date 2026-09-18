@@ -104,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
                 : 'hover:text-charcoal-900'
             }`}
           >
-            {isSoloUser ? 'Solo Guard' : 'Dashboard'}
+            {isSoloUser ? 'Solo Guard' : 'API Gateway'}
           </button>
 
           <a href="#docs" className="hover:text-charcoal-900 transition-colors flex items-center gap-1.5">
@@ -137,7 +137,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
                 onClick={() => onNavigate(consoleRoute)}
                 className="text-[14px] font-medium text-charcoal-600 hover:text-charcoal-900 transition-colors cursor-pointer"
               >
-                {isSoloUser ? 'Solo Guard' : 'Console'}
+                {isSoloUser ? 'Solo Guard' : 'API Gateway'}
               </button>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-[#18181B] text-white text-xs font-bold flex items-center justify-center font-mono">
@@ -204,10 +204,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
               Pricing
             </button>
             <button
-              onClick={() => { onNavigate('dashboard'); setMobileMenuOpen(false); }}
-              className={`text-left py-1 ${currentRoute === 'dashboard' ? 'text-charcoal-900 font-bold' : ''}`}
+              onClick={() => { onNavigate(consoleRoute); setMobileMenuOpen(false); }}
+              className={`text-left py-1 ${(currentRoute === 'dashboard' || currentRoute === 'solo-guard') ? 'text-charcoal-900 font-bold' : ''}`}
             >
-              Dashboard
+              {isSoloUser ? 'Solo Guard' : 'API Gateway'}
             </button>
             <a href="#docs" onClick={() => setMobileMenuOpen(false)} className="py-1">Docs</a>
             <a href="#blog" onClick={() => setMobileMenuOpen(false)} className="py-1">Blog</a>
@@ -216,10 +216,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
               {user ? (
                 <>
                   <button
-                    onClick={() => { onNavigate('dashboard'); setMobileMenuOpen(false); }}
+                    onClick={() => { onNavigate(consoleRoute); setMobileMenuOpen(false); }}
                     className="text-charcoal-700 font-medium"
                   >
-                    Console
+                    {isSoloUser ? 'Solo Guard' : 'API Gateway'}
                   </button>
                   <button
                     onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}

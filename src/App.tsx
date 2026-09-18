@@ -80,6 +80,18 @@ const AppInner: React.FC = () => {
       window.history.pushState(null, '', `#${defaultConsole}`);
       return;
     }
+    // Solo Pro subscribers ONLY get the Solo Guard console (never hosted gateway/team routes)
+    if (user && isSoloUser && PROTECTED_ROUTES.includes(route as AppRoute) && route !== 'solo-guard') {
+      setCurrentRoute('solo-guard');
+      window.history.pushState(null, '', '#solo-guard');
+      return;
+    }
+    // Hosted Gateway subscribers ONLY get the API Gateway Dashboard (never solo guard)
+    if (user && !isSoloUser && route === 'solo-guard') {
+      setCurrentRoute('dashboard');
+      window.history.pushState(null, '', '#dashboard');
+      return;
+    }
     setCurrentRoute(route as AppRoute);
     const newPath = route === 'home' ? '#' : `#${route}`;
     window.history.pushState(null, '', newPath);
@@ -104,10 +116,15 @@ const AppInner: React.FC = () => {
       setCurrentRoute(defaultConsole);
       window.history.replaceState(null, '', `#${defaultConsole}`);
     }
-    // Solo Pro subscribers only get the Solo Guard page (no hosted gateway)
+    // Solo Pro subscribers ONLY get the Solo Guard page
     if (user && isSoloUser && currentRoute !== 'solo-guard' && PROTECTED_ROUTES.includes(currentRoute)) {
       setCurrentRoute('solo-guard');
       window.history.replaceState(null, '', '#solo-guard');
+    }
+    // Hosted Gateway subscribers ONLY get the API Gateway Dashboard
+    if (user && !isSoloUser && currentRoute === 'solo-guard') {
+      setCurrentRoute('dashboard');
+      window.history.replaceState(null, '', '#dashboard');
     }
   }, [loading, user, currentRoute, isSoloUser, defaultConsole]);
 
