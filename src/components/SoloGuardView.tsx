@@ -20,7 +20,8 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Hash
+  Hash,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -45,14 +46,26 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
   const [sessionCap, setSessionCap] = useState<number>(15);
   const [telegramAlertsEnabled, setTelegramAlertsEnabled] = useState(true);
 
-  // Dedicated Sentinel Daemon Credentials
-  const [clientId] = useState(() => {
-    const uidSuffix = user?.uid ? user.uid.slice(0, 8) : '84f19a';
-    return `ost_client_solo_${uidSuffix}`;
+  // Helper for generating cryptographic hex
+  const generateRandomHex = (len: number) => {
+    const chars = 'abcdef0123456789';
+    let rand = '';
+    for (let i = 0; i < len; i++) {
+      rand += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return rand;
+  };
+
+  // Dedicated Sentinel Daemon Credentials (Fresh Client ID & 1-Time View)
+  const [clientId, setClientId] = useState(() => {
+    const rand = generateRandomHex(8);
+    const time = Date.now().toString(36).slice(-4);
+    return `ost_client_solo_${rand}_${time}`;
   });
-  const [daemonSecret, setDaemonSecret] = useState('ost_sec_7a2f9b8c3d4e9102');
+  const [daemonSecret, setDaemonSecret] = useState(() => `ost_sec_${generateRandomHex(16)}`);
   const [showSecret, setShowSecret] = useState(false);
   const [daemonPort, setDaemonPort] = useState<number>(8080);
+  const [isOneTimeRevealed, setIsOneTimeRevealed] = useState<boolean>(true);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const copyCredential = (text: string, fieldKey: string) => {
@@ -61,15 +74,21 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const regenerateSecret = () => {
-    const chars = 'abcdef0123456789';
-    let rand = '';
-    for (let i = 0; i < 16; i++) {
-      rand += chars[Math.floor(Math.random() * chars.length)];
-    }
-    const newSec = `ost_sec_${rand}`;
+  const generateNewCredentials = () => {
+    const rand = generateRandomHex(8);
+    const time = Date.now().toString(36).slice(-4);
+    const newId = `ost_client_solo_${rand}_${time}`;
+    const newSec = `ost_sec_${generateRandomHex(16)}`;
+    setClientId(newId);
     setDaemonSecret(newSec);
-    copyCredential(newSec, 'secret');
+    setIsOneTimeRevealed(true);
+    setShowSecret(false);
+    setCopiedField('regenerated');
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const lockOneTimeView = () => {
+    setIsOneTimeRevealed(false);
   };
 
   const copyToClipboard = (text: string, key: string) => {
@@ -230,20 +249,103 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white tracking-tight">Sentinel Daemon Security Keys</h2>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-wider font-mono">
-                  Local-Only Lock
-                </span>
+                {isOneTimeRevealed ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 text-[10px] font-bold uppercase tracking-wider font-mono flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    1-Time View Active
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300 text-[10px] font-bold uppercase tracking-wider font-mono flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-emerald-400" />
+                    Secured &amp; Masked
+                  </span>
+                )}
               </div>
               <p className="text-xs text-charcoal-400 mt-0.5">
-                Required by your local Sentinel daemon for secure reverse-proxy binding and tamper-proof telemetry.
+                Always generates a fresh unique Client ID. Credentials are shown in 1-time view for maximum safety.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-charcoal-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-mono">Ready to Pair</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={generateNewCredentials}
+              className="px-3.5 py-1.5 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-osterdGold-300 hover:text-white border border-charcoal-700 text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Generate a brand new Client ID and passkey"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Generate New Client ID</span>
+            </button>
           </div>
         </div>
+
+        {/* 1-Time View Alert or Locked Banner */}
+        {isOneTimeRevealed ? (
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 mt-0.5">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-extrabold text-amber-300 uppercase tracking-wider font-mono">
+                    ⚠️ 1-Time Security View Active
+                  </span>
+                  <span className="px-2 py-0.2 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-mono font-bold">
+                    Fresh Unique ID
+                  </span>
+                </div>
+                <p className="text-xs text-amber-200/90 leading-relaxed">
+                  A fresh, unique Client ID has been created. Copy your Client ID and Secret Passkey now. Once you click &ldquo;Lock View&rdquo; or refresh this tab, credentials will be masked permanently for safety.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 shrink-0">
+              <button
+                onClick={() => copyCredential(`node packages/guard-daemon/bin/cli.js --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd-all')}
+                className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-charcoal-950 text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+              >
+                {copiedField === 'cmd-all' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedField === 'cmd-all' ? 'Copied Full Command!' : 'Copy Full Command'}</span>
+              </button>
+              <button
+                onClick={lockOneTimeView}
+                className="px-3.5 py-2 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-white text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border border-charcoal-700"
+                title="Lock and hide credentials"
+              >
+                <Lock className="w-3.5 h-3.5 text-osterdGold-400" />
+                <span>Lock View</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 sm:p-5 rounded-2xl bg-charcoal-950/80 border border-charcoal-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-extrabold text-charcoal-200 uppercase tracking-wider font-mono">
+                    Credentials Masked &amp; Locked
+                  </span>
+                  <span className="px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold">
+                    1-Time View Expired
+                  </span>
+                </div>
+                <p className="text-xs text-charcoal-400 leading-relaxed">
+                  Your credentials are encrypted &amp; hidden from this screen. Existing Sentinel daemon runs continue smoothly. If you need a new pair, click generate below.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={generateNewCredentials}
+              className="px-4 py-2.5 rounded-xl bg-osterdGold-400 hover:bg-osterdGold-300 text-charcoal-950 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md shrink-0"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Generate New Client ID &amp; Keys</span>
+            </button>
+          </div>
+        )}
 
         {/* 3 Credential Cards: ID, Secret Passkey, Unique Port */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -255,19 +357,25 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
                 <Key className="w-3.5 h-3.5 text-osterdGold-400" />
                 Solo Client ID
               </span>
-              <button
-                onClick={() => copyCredential(clientId, 'id')}
-                className="text-xs text-osterdGold-400 hover:text-osterdGold-300 font-mono flex items-center gap-1 transition-colors cursor-pointer"
-                title="Copy Client ID"
-              >
-                {copiedField === 'id' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedField === 'id' ? 'Copied' : 'Copy'}</span>
-              </button>
+              {isOneTimeRevealed ? (
+                <button
+                  onClick={() => copyCredential(clientId, 'id')}
+                  className="text-xs text-osterdGold-400 hover:text-osterdGold-300 font-mono flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Copy Client ID"
+                >
+                  {copiedField === 'id' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedField === 'id' ? 'Copied' : 'Copy'}</span>
+                </button>
+              ) : (
+                <span className="text-[10px] text-charcoal-500 font-mono">1-Time Masked</span>
+              )}
             </div>
             <div className="p-2.5 rounded-xl bg-charcoal-900 border border-charcoal-800 font-mono text-xs text-charcoal-200 truncate select-all">
-              {clientId}
+              {isOneTimeRevealed ? clientId : `${clientId.slice(0, 18)}••••••••`}
             </div>
-            <p className="text-[11px] text-charcoal-400">Identifies your local daemon instance to your local database.</p>
+            <p className="text-[11px] text-charcoal-400">
+              {isOneTimeRevealed ? 'Fresh unique client identifier generated for this session.' : 'Masked for security. Generate a new ID if lost.'}
+            </p>
           </div>
 
           {/* Card 2: Secret Passkey */}
@@ -277,35 +385,34 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
                 <Lock className="w-3.5 h-3.5 text-osterdGold-400" />
                 Secret Passkey
               </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowSecret(!showSecret)}
-                  className="text-charcoal-400 hover:text-white transition-colors cursor-pointer"
-                  title={showSecret ? 'Hide secret' : 'Show secret'}
-                >
-                  {showSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-                <button
-                  onClick={regenerateSecret}
-                  className="text-charcoal-400 hover:text-white transition-colors cursor-pointer"
-                  title="Generate new passkey"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => copyCredential(daemonSecret, 'secret')}
-                  className="text-xs text-osterdGold-400 hover:text-osterdGold-300 font-mono flex items-center gap-1 transition-colors cursor-pointer"
-                  title="Copy Secret"
-                >
-                  {copiedField === 'secret' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedField === 'secret' ? 'Copied' : 'Copy'}</span>
-                </button>
-              </div>
+              {isOneTimeRevealed ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowSecret(!showSecret)}
+                    className="text-charcoal-400 hover:text-white transition-colors cursor-pointer"
+                    title={showSecret ? 'Hide secret' : 'Show secret'}
+                  >
+                    {showSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    onClick={() => copyCredential(daemonSecret, 'secret')}
+                    className="text-xs text-osterdGold-400 hover:text-osterdGold-300 font-mono flex items-center gap-1 transition-colors cursor-pointer"
+                    title="Copy Secret"
+                  >
+                    {copiedField === 'secret' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedField === 'secret' ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+              ) : (
+                <span className="text-[10px] text-charcoal-500 font-mono">1-Time Masked</span>
+              )}
             </div>
             <div className="p-2.5 rounded-xl bg-charcoal-900 border border-charcoal-800 font-mono text-xs text-emerald-400 truncate select-all">
-              {showSecret ? daemonSecret : '••••••••••••••••••••••••'}
+              {isOneTimeRevealed ? (showSecret ? daemonSecret : '••••••••••••••••••••••••') : '••••••••••••••••••••••••'}
             </div>
-            <p className="text-[11px] text-charcoal-400">Protects port against unauthorized localhost processes.</p>
+            <p className="text-[11px] text-charcoal-400">
+              {isOneTimeRevealed ? 'Cryptographic secret protecting against unauthorized loopback queries.' : 'Hidden permanently for safety.'}
+            </p>
           </div>
 
           {/* Card 3: Unique Port */}
@@ -344,21 +451,37 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Terminal className="w-4 h-4 text-osterdGold-400" />
-              <span className="text-xs font-mono font-bold text-charcoal-200">Start Command (Auto-Configured)</span>
+              <span className="text-xs font-mono font-bold text-charcoal-200">
+                {isOneTimeRevealed ? 'Start Command (Ready to Run)' : 'Start Command (Interactive or Saved)'}
+              </span>
             </div>
-            <button
-              onClick={() => copyCredential(`node packages/guard-daemon/bin/cli.js --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd')}
-              className="px-3 py-1 rounded-lg bg-osterdGold-400 hover:bg-osterdGold-300 text-charcoal-900 font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-            >
-              {copiedField === 'cmd' ? <Check className="w-3.5 h-3.5 text-charcoal-900" /> : <Copy className="w-3.5 h-3.5 text-charcoal-900" />}
-              <span>{copiedField === 'cmd' ? 'Copied Command!' : 'Copy Command'}</span>
-            </button>
+            {isOneTimeRevealed ? (
+              <button
+                onClick={() => copyCredential(`node packages/guard-daemon/bin/cli.js --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd')}
+                className="px-3 py-1 rounded-lg bg-osterdGold-400 hover:bg-osterdGold-300 text-charcoal-900 font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                {copiedField === 'cmd' ? <Check className="w-3.5 h-3.5 text-charcoal-900" /> : <Copy className="w-3.5 h-3.5 text-charcoal-900" />}
+                <span>{copiedField === 'cmd' ? 'Copied Command!' : 'Copy Command'}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => copyCredential(`node packages/guard-daemon/bin/cli.js --port ${daemonPort}`, 'cmd-interactive')}
+                className="px-3 py-1 rounded-lg bg-charcoal-800 hover:bg-charcoal-700 text-white font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs border border-charcoal-700"
+              >
+                {copiedField === 'cmd-interactive' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedField === 'cmd-interactive' ? 'Copied!' : 'Copy Interactive CLI'}</span>
+              </button>
+            )}
           </div>
           <div className="p-3 rounded-xl bg-charcoal-950 font-mono text-xs text-charcoal-300 overflow-x-auto whitespace-pre select-all border border-charcoal-800/80">
-            node packages/guard-daemon/bin/cli.js --id {clientId} --secret {daemonSecret} --port {daemonPort}
+            {isOneTimeRevealed
+              ? `node packages/guard-daemon/bin/cli.js --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`
+              : `node packages/guard-daemon/bin/cli.js --port ${daemonPort}`}
           </div>
           <p className="text-[11px] text-charcoal-400">
-            Tip: You can also just run <code className="text-osterdGold-300 bg-charcoal-900 px-1.5 py-0.5 rounded font-mono">node packages/guard-daemon/bin/cli.js</code> and the daemon will ask you to enter these 3 values interactively in your terminal.
+            {isOneTimeRevealed
+              ? 'Tip: Run this command in your terminal. You can also run without flags to enter them interactively.'
+              : 'Tip: You can run this interactive command and type your credentials, or click "Generate New Client ID & Keys" to create a fresh 1-time view.'}
           </p>
         </div>
       </div>
