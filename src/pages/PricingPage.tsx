@@ -22,6 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 interface PricingPageProps {
   onNavigateHome?: () => void;
   onNavigateLogin?: () => void;
+  onNavigateSignup?: () => void;
   onNavigateDashboard?: () => void;
   onNavigateSoloGuard?: () => void;
 }
@@ -109,6 +110,8 @@ const CURRENCY_CONFIGS: Record<SupportedCurrency, CurrencyConfig> = {
 
 export const PricingPage: React.FC<PricingPageProps> = ({ 
   onNavigateHome, 
+  onNavigateLogin,
+  onNavigateSignup,
   onNavigateDashboard,
   onNavigateSoloGuard
 }) => {
@@ -227,6 +230,31 @@ export const PricingPage: React.FC<PricingPageProps> = ({
 
   const handleOpenCheckout = (planId: 'solo_pro' | 'team_scale', name: string, monthlyAmount: number) => {
     const finalAmount = isAnnual ? monthlyAmount * 12 : monthlyAmount;
+    
+    // Persist user's selected plan for seamless onboarding & signup fulfillment
+    const pendingPlan = {
+      planId,
+      name,
+      type: planId === 'team_scale' ? 'hosted' : 'solo',
+      amount: finalAmount,
+      billingInterval: isAnnual ? 'yr' : 'mo',
+      currency: currentCfg.code,
+    };
+    try {
+      sessionStorage.setItem('osterdops_pending_plan', JSON.stringify(pendingPlan));
+    } catch {}
+
+    // If user is not logged in, route directly to signup page
+    if (!user) {
+      if (onNavigateSignup) {
+        onNavigateSignup();
+      } else if (onNavigateLogin) {
+        onNavigateLogin();
+      }
+      return;
+    }
+
+    // User is logged in: show checkout / confirmation modal
     setSelectedPlanModal({
       id: planId,
       name,
@@ -242,19 +270,26 @@ export const PricingPage: React.FC<PricingPageProps> = ({
 
     try {
       if (user) {
-        // Update user subscription in Firestore
+        const isHosted = selectedPlanModal.id === 'team_scale';
+        // Update user subscription in Firestore with clear plan limits
         await updateSubscription({
           plan_id: selectedPlanModal.id,
-          plan_name: selectedPlanModal.name,
+          plan_name: isHosted ? 'Team Hosted Gateway' : 'Solo Pro',
           price_amount: selectedPlanModal.amount,
           billing_interval: selectedPlanModal.billingInterval,
           status: 'active',
+          quota_limit: isHosted ? 500000 : 100000,
+          quota_used: isHosted ? 12000 : 74000,
+          quota_usage_percent: isHosted ? 2.4 : 74,
           renewal_date: isAnnual ? '18 Sep, 2027' : '18 Oct, 2026',
         });
+        try {
+          sessionStorage.removeItem('osterdops_pending_plan');
+        } catch {}
       }
 
       setCheckoutStatus('success');
-      showToast(`Successfully subscribed to ${selectedPlanModal.name} in ${currentCfg.code}!`);
+      showToast(`Successfully activated ${selectedPlanModal.name} in ${currentCfg.code}!`);
       setTimeout(() => {
         const chosenPlan = selectedPlanModal.id;
         setSelectedPlanModal(null);

@@ -62,10 +62,16 @@ const AppInner: React.FC = () => {
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(getInitialRoute);
 
   const navigate = (route: AppRoute | string) => {
-    // If navigating to a protected route without auth, redirect to login
+    // If navigating to a protected route without auth, redirect to signup (if pending plan) or login
     if (PROTECTED_ROUTES.includes(route as AppRoute) && !user) {
-      setCurrentRoute('login');
-      window.history.pushState(null, '', '#login');
+      let authTarget: AppRoute = 'login';
+      try {
+        if (sessionStorage.getItem('osterdops_pending_plan')) {
+          authTarget = 'signup';
+        }
+      } catch {}
+      setCurrentRoute(authTarget);
+      window.history.pushState(null, '', `#${authTarget}`);
       return;
     }
     // If logged in and navigating to login/signup, go to their respective console
@@ -80,12 +86,18 @@ const AppInner: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Redirect to login if on a protected route and not authenticated (after loading resolves)
+  // Redirect if on a protected route and not authenticated (after loading resolves)
   useEffect(() => {
     if (loading) return;
     if (PROTECTED_ROUTES.includes(currentRoute) && !user) {
-      setCurrentRoute('login');
-      window.history.replaceState(null, '', '#login');
+      let authTarget: AppRoute = 'login';
+      try {
+        if (sessionStorage.getItem('osterdops_pending_plan')) {
+          authTarget = 'signup';
+        }
+      } catch {}
+      setCurrentRoute(authTarget);
+      window.history.replaceState(null, '', `#${authTarget}`);
     }
     // If logged in and on auth pages, go to their console
     if (user && (currentRoute === 'login' || currentRoute === 'signup')) {
@@ -283,6 +295,8 @@ const AppInner: React.FC = () => {
           /* Separate Dedicated Pricing Page */
           <PricingPage
             onNavigateHome={() => navigate('home')}
+            onNavigateLogin={() => navigate('login')}
+            onNavigateSignup={() => navigate('signup')}
             onNavigateDashboard={() => navigate('dashboard')}
             onNavigateSoloGuard={() => navigate('solo-guard')}
           />

@@ -22,7 +22,24 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
-  const { signIn, signInWithGoogle, signInWithGithub } = useAuth();
+  const { signIn, signInWithGoogle, signInWithGithub, updateSubscription, subscription } = useAuth();
+
+  // Inspect if a plan was pre-selected on the pricing page
+  const [pendingPlan] = useState<{
+    planId: string;
+    name: string;
+    type: string;
+    amount: number;
+    billingInterval: string;
+    currency?: string;
+  } | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('osterdops_pending_plan');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +53,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const resolveTargetConsole = async (): Promise<string> => {
+    try {
+      const pendingRaw = sessionStorage.getItem('osterdops_pending_plan');
+      if (pendingRaw) {
+        const parsed = JSON.parse(pendingRaw);
+        const isHosted = parsed.type === 'hosted' || parsed.planId === 'team_scale';
+        await updateSubscription({
+          plan_id: isHosted ? 'team_scale' : 'solo_pro',
+          plan_name: isHosted ? 'Team Hosted Gateway' : 'Solo Pro',
+          price_amount: parsed.amount || (isHosted ? 49 : 12),
+          billing_interval: parsed.billingInterval || 'mo',
+          status: 'active',
+          quota_limit: isHosted ? 500000 : 100000,
+          quota_used: isHosted ? 12000 : 74000,
+          quota_usage_percent: isHosted ? 2.4 : 74,
+          renewal_date: '18 Oct, 2026',
+        });
+        sessionStorage.removeItem('osterdops_pending_plan');
+        return isHosted ? 'dashboard' : 'solo-guard';
+      }
+    } catch (e) {
+      console.warn('Sub sync error on login:', e);
+    }
+    return subscription?.plan_id === 'solo_pro' ? 'solo-guard' : 'dashboard';
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -69,8 +112,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
       });
       showToast(error.message || 'Authentication failed.');
     } else {
-      showToast('Welcome back! Loading your dashboard...');
-      setTimeout(() => onNavigate('dashboard'), 600);
+      const target = await resolveTargetConsole();
+      showToast(target === 'dashboard' ? 'Welcome back! Loading Hosted Gateway console...' : 'Welcome back! Loading Solo Guard...');
+      setTimeout(() => onNavigate(target), 600);
     }
   };
 
@@ -81,8 +125,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     if (error) {
       showToast(error.message);
     } else {
-      showToast('Signed in successfully! Loading dashboard...');
-      setTimeout(() => onNavigate('dashboard'), 600);
+      const target = await resolveTargetConsole();
+      showToast(target === 'dashboard' ? 'Signed in! Loading Hosted Gateway console...' : 'Signed in! Loading Solo Guard...');
+      setTimeout(() => onNavigate(target), 600);
     }
   };
 
@@ -163,7 +208,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
               </span>
             </div>
 
-            <div className="space-y-1.5 mb-8">
+            <div className="space-y-1.5 mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
                 Log in
               </h2>
@@ -171,6 +216,36 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                 Enter your details to access your account.
               </p>
             </div>
+
+            {/* Pending Plan Notice if arrived from Pricing */}
+            {pendingPlan && (
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#17202A] via-[#1C1F26] to-[#1F1C16] border border-[#E2BA7D]/40 mb-6 flex items-center justify-between gap-3 shadow-lg animate-in fade-in">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-[#E2BA7D]/20 text-[#E2BA7D] flex items-center justify-center font-bold text-xs shrink-0">
+                    {pendingPlan.type === 'hosted' ? '☁️' : '⚡'}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5 flex-wrap">
+                      <span>Activating:</span>
+                      <span className="text-[#E2BA7D] font-mono">{pendingPlan.name}</span>
+                    </div>
+                    <p className="text-[11px] text-[#9AA5B1] truncate">
+                      {pendingPlan.type === 'hosted'
+                        ? 'Sign in to access your Hosted Gateway console.'
+                        : 'Sign in to access your Solo Guard console.'}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0 font-mono">
+                  <div className="text-xs font-bold text-white">
+                    {pendingPlan.currency === 'INR' ? '₹' : '$'}{pendingPlan.amount}
+                  </div>
+                  <div className="text-[10px] text-[#8F9CA7]">
+                    /{pendingPlan.billingInterval === 'yr' ? 'yr' : 'mo'}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleLoginSubmit} className="space-y-5">
               <div className="space-y-2">

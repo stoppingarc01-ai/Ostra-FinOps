@@ -45,8 +45,17 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
   // Step 3: Plan Selection State
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPlan, setSelectedPlan] = useState<'solo' | 'team' | 'enterprise'>(() => {
+    try {
+      const pending = sessionStorage.getItem('osterdops_pending_plan');
+      if (pending) {
+        const parsed = JSON.parse(pending);
+        if (parsed.type === 'hosted' || parsed.planId === 'team_scale') return 'team';
+        if (parsed.type === 'solo' || parsed.planId === 'solo_pro') return 'solo';
+      }
+    } catch {}
     if (subscription?.plan_id === 'team_scale') return 'team';
     if (subscription?.plan_id === 'enterprise') return 'enterprise';
+    if (subscription?.plan_id === 'solo_pro') return 'solo';
     return 'team'; // Default to Team (Hosted Gateway) or user selection
   });
   const [isFinishing, setIsFinishing] = useState(false);
@@ -127,6 +136,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
         });
         onNavigate('solo-guard');
       }
+      try {
+        sessionStorage.removeItem('osterdops_pending_plan');
+      } catch {}
     } catch (err) {
       console.warn('Failed to update subscription on onboarding finish:', err);
       if (selectedPlan === 'solo') {

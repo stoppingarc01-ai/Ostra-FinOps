@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 import type { UserSubscription } from '../types/database';
 
@@ -6,15 +6,15 @@ import type { UserSubscription } from '../types/database';
  * Default subscription preset if user hasn't chosen one yet
  */
 export const DEFAULT_SUBSCRIPTION: Omit<UserSubscription, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
-  plan_id: 'solo_pro',
-  plan_name: 'Solo Pro',
-  price_amount: 149,
+  plan_id: 'team_scale',
+  plan_name: 'Team Hosted Gateway',
+  price_amount: 49,
   billing_interval: 'mo',
   status: 'active',
-  renewal_date: '25 May, 2026',
-  quota_usage_percent: 74,
-  quota_used: 74000,
-  quota_limit: 100000,
+  renewal_date: '18 Oct, 2026',
+  quota_usage_percent: 2.4,
+  quota_used: 12000,
+  quota_limit: 500000,
 };
 
 /**
@@ -70,7 +70,7 @@ export const updateUserSubscription = async (
     ...updates,
     updated_at: new Date().toISOString(),
   };
-  await updateDoc(subRef, payload);
+  await setDoc(subRef, payload, { merge: true });
 };
 
 /**

@@ -432,7 +432,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <SettingsView onNavigateHome={onNavigateHome} />
           ) : activeTab === 'dashboard' ? (
             <DashboardHomeView
-              onGetStarted={() => setActiveTab('solo-guard')}
+              onGetStarted={() => setActiveTab('overview')}
               onViewIntegrations={() => setActiveTab('integrations')}
               onViewOverview={() => setActiveTab('overview')}
             />

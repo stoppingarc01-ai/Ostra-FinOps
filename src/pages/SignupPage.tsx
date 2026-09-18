@@ -25,7 +25,24 @@ interface SignupPageProps {
 }
 
 export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
-  const { signUp, signInWithGoogle, signInWithGithub } = useAuth();
+  const { signUp, signInWithGoogle, signInWithGithub, updateSubscription } = useAuth();
+
+  // Inspect if user arrived having pre-selected a plan from Pricing Page
+  const [pendingPlan] = useState<{
+    planId: string;
+    name: string;
+    type: string;
+    amount: number;
+    billingInterval: string;
+    currency?: string;
+  } | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('osterdops_pending_plan');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,7 +50,17 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [accountType, setAccountType] = useState<'solo' | 'team'>('solo');
+  const [accountType, setAccountType] = useState<'solo' | 'team'>(() => {
+    try {
+      const saved = sessionStorage.getItem('osterdops_pending_plan');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.type === 'hosted' || parsed.planId === 'team_scale') return 'team';
+        if (parsed.type === 'solo' || parsed.planId === 'solo_pro') return 'solo';
+      }
+    } catch {}
+    return 'team';
+  });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
@@ -94,8 +121,26 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
       });
       showToast(error.message || 'Registration failed.');
     } else {
-      showToast('Account created! Setting up your workspace...');
-      setTimeout(() => onNavigate('onboarding'), 600);
+      const isHosted = accountType === 'team' || pendingPlan?.type === 'hosted' || pendingPlan?.planId === 'team_scale';
+      try {
+        await updateSubscription({
+          plan_id: isHosted ? 'team_scale' : 'solo_pro',
+          plan_name: isHosted ? 'Team Hosted Gateway' : 'Solo Pro',
+          price_amount: pendingPlan?.amount || (isHosted ? 49 : 12),
+          billing_interval: (pendingPlan?.billingInterval as any) || 'mo',
+          status: 'active',
+          quota_limit: isHosted ? 500000 : 100000,
+          quota_used: isHosted ? 12000 : 74000,
+          quota_usage_percent: isHosted ? 2.4 : 74,
+          renewal_date: '18 Oct, 2026',
+        });
+        sessionStorage.removeItem('osterdops_pending_plan');
+      } catch (e) {
+        console.warn('Sub sync notice:', e);
+      }
+
+      showToast(isHosted ? 'Team Hosted Gateway workspace activated!' : 'Solo Guard workspace activated!');
+      setTimeout(() => onNavigate(isHosted ? 'dashboard' : 'solo-guard'), 600);
     }
   };
 
@@ -106,8 +151,26 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     if (error) {
       showToast(error.message);
     } else {
-      showToast('Account connected! Setting up your workspace...');
-      setTimeout(() => onNavigate('onboarding'), 600);
+      const isHosted = accountType === 'team' || pendingPlan?.type === 'hosted' || pendingPlan?.planId === 'team_scale';
+      try {
+        await updateSubscription({
+          plan_id: isHosted ? 'team_scale' : 'solo_pro',
+          plan_name: isHosted ? 'Team Hosted Gateway' : 'Solo Pro',
+          price_amount: pendingPlan?.amount || (isHosted ? 49 : 12),
+          billing_interval: (pendingPlan?.billingInterval as any) || 'mo',
+          status: 'active',
+          quota_limit: isHosted ? 500000 : 100000,
+          quota_used: isHosted ? 12000 : 74000,
+          quota_usage_percent: isHosted ? 2.4 : 74,
+          renewal_date: '18 Oct, 2026',
+        });
+        sessionStorage.removeItem('osterdops_pending_plan');
+      } catch (e) {
+        console.warn('Sub sync notice:', e);
+      }
+
+      showToast(isHosted ? 'Team Hosted Gateway workspace ready!' : 'Solo Guard workspace ready!');
+      setTimeout(() => onNavigate(isHosted ? 'dashboard' : 'solo-guard'), 600);
     }
   };
 
@@ -230,7 +293,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
             </div>
 
             {/* Heading */}
-            <div className="space-y-1 mb-6">
+            <div className="space-y-1 mb-5">
               <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
                 Create your account
               </h2>
@@ -238,6 +301,39 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
                 Start in minutes. No credit card required.
               </p>
             </div>
+
+            {/* Pending Plan Selection Ribbon */}
+            {pendingPlan && (
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#17202A] via-[#1C1F26] to-[#1F1C16] border border-[#E2BA7D]/40 mb-5 flex items-center justify-between gap-3 shadow-lg animate-in fade-in">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-[#E2BA7D]/20 text-[#E2BA7D] flex items-center justify-center font-bold text-xs shrink-0">
+                    {pendingPlan.type === 'hosted' ? '☁️' : '⚡'}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5 flex-wrap">
+                      <span>Selected:</span>
+                      <span className="text-[#E2BA7D] font-mono">{pendingPlan.name}</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-semibold">
+                        Ready to activate
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#9AA5B1] truncate">
+                      {pendingPlan.type === 'hosted'
+                        ? '14-Day Free Trial included. Cloud Edge Gateway workspace.'
+                        : 'Local-first zero prompt retention proxy for solo builders.'}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0 font-mono">
+                  <div className="text-xs font-bold text-white">
+                    {pendingPlan.currency === 'INR' ? '₹' : '$'}{pendingPlan.amount}
+                  </div>
+                  <div className="text-[10px] text-[#8F9CA7]">
+                    /{pendingPlan.billingInterval === 'yr' ? 'yr' : 'mo'}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Form */}
             <form onSubmit={handleSignupSubmit} className="space-y-4">
