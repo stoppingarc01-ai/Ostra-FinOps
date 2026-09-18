@@ -1,12 +1,38 @@
 {
-  "name": "@osterdops/guard-daemon",
+  "name": "osterdops-guard",
   "version": "0.1.0",
-  "private": true,
+  "description": "OsterdOps Sentinel — Zero-overhead local reverse-proxy and safety guard for AI coding agents",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
     "osterdops-guard": "./bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "ui/dist",
+    "README.md"
+  ],
+  "keywords": [
+    "osterdops",
+    "sentinel",
+    "finops",
+    "ai-agent",
+    "telemetry",
+    "proxy",
+    "cursor",
+    "cline"
+  ],
+  "author": "OsterdOps",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stoppingarc01-ai/Ostra-FinOps.git",
+    "directory": "packages/guard-daemon"
   },
   "scripts": {
     "build:ui": "vite build --config ui/vite.config.ts",

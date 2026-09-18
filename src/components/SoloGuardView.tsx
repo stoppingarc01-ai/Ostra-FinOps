@@ -129,7 +129,7 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
 
   const packageCommands = {
     npm: 'npm install -g osterdops-guard',
-    npx: 'npx osterdops-guard start --port 8080',
+    npx: 'npx osterdops-guard',
     pnpm: 'pnpm add -g osterdops-guard',
     brew: 'brew install osterdops/tap/osterdops-guard',
   };
@@ -457,7 +457,7 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
             </div>
             {isOneTimeRevealed ? (
               <button
-                onClick={() => copyCredential(`node packages/guard-daemon/bin/cli.js --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd')}
+                onClick={() => copyCredential(`npx osterdops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd')}
                 className="px-3 py-1 rounded-lg bg-osterdGold-400 hover:bg-osterdGold-300 text-charcoal-900 font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 {copiedField === 'cmd' ? <Check className="w-3.5 h-3.5 text-charcoal-900" /> : <Copy className="w-3.5 h-3.5 text-charcoal-900" />}
@@ -465,7 +465,7 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
               </button>
             ) : (
               <button
-                onClick={() => copyCredential(`node packages/guard-daemon/bin/cli.js --port ${daemonPort}`, 'cmd-interactive')}
+                onClick={() => copyCredential(`npx osterdops-guard --port ${daemonPort}`, 'cmd-interactive')}
                 className="px-3 py-1 rounded-lg bg-charcoal-800 hover:bg-charcoal-700 text-white font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs border border-charcoal-700"
               >
                 {copiedField === 'cmd-interactive' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -475,13 +475,13 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
           </div>
           <div className="p-3 rounded-xl bg-charcoal-950 font-mono text-xs text-charcoal-300 overflow-x-auto whitespace-pre select-all border border-charcoal-800/80">
             {isOneTimeRevealed
-              ? `node packages/guard-daemon/bin/cli.js --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`
-              : `node packages/guard-daemon/bin/cli.js --port ${daemonPort}`}
+              ? `npx osterdops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`
+              : `npx osterdops-guard --port ${daemonPort}`}
           </div>
           <p className="text-[11px] text-charcoal-400">
             {isOneTimeRevealed
-              ? 'Tip: Run this command in your terminal. You can also run without flags to enter them interactively.'
-              : 'Tip: You can run this interactive command and type your credentials, or click "Generate New Client ID & Keys" to create a fresh 1-time view.'}
+              ? 'Tip: Run anywhere via npx osterdops-guard, or with node packages/guard-daemon/bin/cli.js inside local repo.'
+              : 'Tip: Run npx osterdops-guard to enter credentials interactively, or click "Generate New Client ID" above to see new keys.'}
           </p>
         </div>
       </div>
@@ -628,10 +628,10 @@ $env:OSTERDOPS_SECRET_KEY="${daemonSecret}"`,
           </span>
           <div className="relative p-3.5 rounded-xl bg-[#1E1E22] text-white border border-[#2D2D33] font-mono text-xs flex items-center justify-between gap-3 overflow-hidden">
             <span className="text-zinc-300 overflow-x-auto whitespace-nowrap pr-2">
-              node packages/guard-daemon/bin/cli.js --id {clientId} --secret {daemonSecret} --port {daemonPort}
+              npx osterdops-guard --id {clientId} --secret {daemonSecret} --port {daemonPort}
             </span>
             <button
-              onClick={() => copyToClipboard(`node packages/guard-daemon/bin/cli.js --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'start-cmd')}
+              onClick={() => copyToClipboard(`npx osterdops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'start-cmd')}
               className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors shrink-0 cursor-pointer"
               title="Copy start command"
             >
