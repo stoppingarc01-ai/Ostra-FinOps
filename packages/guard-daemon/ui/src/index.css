@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #020617;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.8);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 1);
+}
+
+/* Custom Analytics Sleek Gradient Cursor (Magenta to Purple) */
+.cursor-analytic-pointer,
+.cursor-analytic-pointer button,
+.cursor-analytic-pointer a,
+.cursor-analytic-pointer [role="button"],
+.cursor-analytic-pointer svg {
+  cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACRklEQVR4nGNgGAVI4ARDDfsdlRSBHoUl/HS3fBbDRJZShiBOEDuMgYFxnkqLwAT5VIFZnun0cUy9uR0bNnEfBg7Gmc0BAnPiIgQW+pbTzjFd9r6ihNSsYGBgbJSIFJij1SRQYjmVuo5JizRlSrV1FiFW/ZuFjIzdWU4CXZk2AvFlAdRxTJB5gRg5+oJ92BljdSwEJgt4CZTZ9pPvmIbgHoLRQAgsYPBmNBCsFphuUSVQnutPmmMki2YwpXo4EB0NBMEpBsaI0mQB/dgigclJTcQ5piYsgaxoIARYGPoZK5WbBKzCi/E7JMA/geJowAfWiBQzZvsksuJUoFYwnykpsoF60YAFZFll8eFVEFYaT5NoAAH/MC/RooCZHHgVZVf6UzUaokJiBSIiMkVS4quE0yfNxVriogDj415MSVk2ZEeDunI/S1lGunBRebVwZWqm8PxDW5hJNiQvypGkaMjJCOasbC4WLmosE17V2S5AsoXoINQ7nOhoCImPEimqLeKl2FJkYJvpx1RpXUYwGuIzUzlrm4O5qWo5DPh45hGMBj//UmGaWA4CUUHFBKOhNL6FdmWG677VTF0N+TgtiDGIYynJKsFfqFAKZmTU44yGjIhM2gU/DDQkBuGMBjvXBNo7wCcplMnKBXsVbR8RT3sHgEC+2xSMaPAzThGKSI5hoosD6s1DMKKh0jVTiC6Wg0Bw0gYmB0fUQinULJqmVTYGSE+uk5BlkAMHeXxSk3BpfRI7XR0AAqXFnSK9ffVCyb3zOelu+bAFABJKgOYe48bNAAAAAElFTkSuQmCC') 3 3, auto !important;
+}
+
+.cursor-analytic-pointer .cursor-pointer {
+  cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACRklEQVR4nGNgGAVI4ARDDfsdlRSBHoUl/HS3fBbDRJZShiBOEDuMgYFxnkqLwAT5VIFZnun0cUy9uR0bNnEfBg7Gmc0BAnPiIgQW+pbTzjFd9r6ihNSsYGBgbJSIFJij1SRQYjmVuo5JizRlSrV1FiFW/ZuFjIzdWU4CXZk2AvFlAdRxTJB5gRg5+oJ92BljdSwEJgt4CZTZ9pPvmIbgHoLRQAgsYPBmNBCsFphuUSVQnutPmmMki2YwpXo4EB0NBMEpBsaI0mQB/dgigclJTcQ5piYsgaxoIARYGPoZK5WbBKzCi/E7JMA/geJowAfWiBQzZvsksuJUoFYwnykpsoF60YAFZFll8eFVEFYaT5NoAAH/MC/RooCZHHgVZVf6UzUaokJiBSIiMkVS4quE0yfNxVriogDj415MSVk2ZEeDunI/S1lGunBRebVwZWqm8PxDW5hJNiQvypGkaMjJCOasbC4WLmosE17V2S5AsoXoINQ7nOhoCImPEimqLeKl2FJkYJvpx1RpXUYwGuIzUzlrm4O5qWo5DPh45hGMBj//UmGaWA4CUUHFBKOhNL6FdmWG677VTF0N+TgtiDGIYynJKsFfqFAKZmTU44yGjIhM2gU/DDQkBuGMBjvXBNo7wCcplMnKBXsVbR8RT3sHgEC+2xSMaPAzThGKSI5hoosD6s1DMKKh0jVTiC6Wg0Bw0gYmB0fUQinULJqmVTYGSE+uk5BlkAMHeXxSk3BpfRI7XR0AAqXFnSK9ffVCyb3zOelu+bAFABJKgOYe48bNAAAAAElFTkSuQmCC') 3 3, pointer !important;
+}

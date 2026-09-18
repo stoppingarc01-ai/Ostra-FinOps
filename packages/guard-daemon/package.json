@@ -1,0 +1,25 @@
+{
+  "name": "@osterdops/guard-daemon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "osterdops-guard": "./bin/cli.js"
+  },
+  "scripts": {
+    "build:ui": "vite build --config ui/vite.config.ts",
+    "test:stage1": "tsx test/stage1-check.ts",
+    "test:stage2": "tsx test/stage2-check.ts",
+    "test:stage2.1": "tsx test/stage2-chaos-check.ts",
+    "test:stage3": "tsx test/stage3-ui-check.ts",
+    "test:all": "tsx test/stage1-check.ts && tsx test/stage2-check.ts && tsx test/stage2-chaos-check.ts && tsx test/stage3-ui-check.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "tsx": "^4.19.3",
+    "typescript": "~6.0.2"
+  }
+}
