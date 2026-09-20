@@ -40,11 +40,14 @@
     "prepublishOnly": "npm run build",
     "start": "node bin/cli.js",
     "build:ui": "vite build --config ui/vite.config.ts",
-    "test:stage1": "tsx test/stage1-check.ts",
-    "test:stage2": "tsx test/stage2-check.ts",
-    "test:stage2.1": "tsx test/stage2-chaos-check.ts",
-    "test:stage3": "tsx test/stage3-ui-check.ts",
-    "test:all": "tsx test/stage1-check.ts && tsx test/stage2-check.ts && tsx test/stage2-chaos-check.ts && tsx test/stage3-ui-check.ts"
+    "test:stage1": "npx tsx test/stage1-check.ts",
+    "test:stage2": "npx tsx test/stage2-check.ts",
+    "test:stage2.1": "npx tsx test/stage2-chaos-check.ts",
+    "test:stage3": "npx tsx test/stage3-ui-check.ts",
+    "test:parity": "npx tsx test/backend-parity-check.ts",
+    "test:ingress": "npx tsx test/ingress-proxy-check.ts",
+    "test:all": "npx tsx test/stage1-check.ts && npx tsx test/stage2-check.ts && npx tsx test/stage2-chaos-check.ts && npx tsx test/stage3-ui-check.ts && npx tsx test/backend-parity-check.ts && npx tsx test/ingress-proxy-check.ts",
+    "test": "npm run test:all"
   },
   "dependencies": {},
   "devDependencies": {
