@@ -31,10 +31,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { OstraIcon } from './components/OstraBrand';
 
-export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'auth-showcase' | 'forgot-password' | 'solo-guard' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'about' | '404' | '500' | 'build-error' | '429';
+export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'auth-showcase' | 'forgot-password' | 'solo-guard' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'about' | '404' | '500' | 'build-error' | '429' | 'calendar' | 'daemon';
 
 // Routes that require authentication
-const PROTECTED_ROUTES: AppRoute[] = ['solo-guard', 'dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings'];
+const PROTECTED_ROUTES: AppRoute[] = ['solo-guard', 'dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings', 'calendar', 'daemon'];
 const HOMEPAGE_SECTIONS = ['#features', '#architecture', '#agents', '#developers', '#docs', '#quickstart', '#security', '#faq', '#ui-showcase', '#hero', '#about-sec'];
 
 const AppInner: React.FC = () => {
@@ -43,11 +43,22 @@ const AppInner: React.FC = () => {
   const getInitialRoute = (): AppRoute => {
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
+
+    // Check if user is authenticated (Firebase user or Client ID token saved)
+    const isAuthed = !!user || (() => {
+      try {
+        return localStorage.getItem('ostra_authenticated') === 'true' || !!localStorage.getItem('ostra_client_id');
+      } catch {
+        return false;
+      }
+    })();
+
     if (path.includes('onboarding') || hash.includes('onboarding')) return 'onboarding';
     if (path.includes('auth-showcase') || hash.includes('auth-showcase') || hash.includes('auth')) return 'auth-showcase';
-    if (path.includes('login') || hash.includes('login')) return 'login';
     if (path.includes('signup') || hash.includes('signup')) return 'signup';
     if (hash.includes('forgot-password')) return 'forgot-password';
+    if (path.includes('calendar') || hash.includes('calendar')) return 'calendar';
+    if (path.includes('daemon') || hash.includes('daemon')) return 'daemon';
     if (path.includes('settings') || hash.includes('settings')) return 'settings';
     if (path.includes('team') || hash.includes('team')) return 'team';
     if (path.includes('integrations') || hash.includes('integrations')) return 'integrations';
@@ -63,13 +74,11 @@ const AppInner: React.FC = () => {
     if (path.includes('cookies') || hash.includes('cookies') || path.includes('cookie') || hash.includes('cookie')) return 'cookies';
     if (path.includes('about') || hash.includes('about')) return 'about';
     if (path.includes('pricing') || hash.includes('pricing')) return 'pricing';
-    if (path.includes('429') || hash.includes('429') || path.includes('rate-limit') || hash.includes('rate-limit') || path.includes('quota') || hash.includes('quota')) return '429';
-    if (path.includes('build-error') || hash.includes('build-error') || path.includes('build') || hash.includes('build')) return 'build-error';
-    if (path.includes('500') || hash.includes('500') || path.includes('server-error') || hash.includes('server-error')) return '500';
-    if (path.includes('404') || hash.includes('404') || path.includes('not-found') || hash.includes('not-found')) return '404';
-    if (HOMEPAGE_SECTIONS.some(s => hash.startsWith(s))) return 'home';
-    if (hash && hash !== '#' && hash !== '#home' && hash !== '') return '404';
-    return 'home';
+    if (path.includes('login') || hash.includes('login')) return 'login';
+    if (HOMEPAGE_SECTIONS.some(s => hash.startsWith(s))) return isAuthed ? 'dashboard' : 'login';
+
+    // By default: Login page must come first, then dashboard
+    return isAuthed ? 'dashboard' : 'login';
   };
 
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(getInitialRoute);
@@ -83,24 +92,26 @@ const AppInner: React.FC = () => {
 
   const navigate = (route: AppRoute | string) => {
     try {
-      localStorage.setItem('ostraops_active_plan', 'team_scale');
-      localStorage.setItem('ostraops_user_tier', 'team');
+      localStorage.setItem('ostraops_active_plan', 'solo_guard');
+      localStorage.setItem('ostraops_user_tier', 'solo');
     } catch {}
 
-    // If navigating to a protected route without auth, redirect to signup (if pending plan) or login
-    if (PROTECTED_ROUTES.includes(route as AppRoute) && !user) {
-      let authTarget: AppRoute = 'login';
+    const isAuthed = !!user || (() => {
       try {
-        if (sessionStorage.getItem('ostraops_pending_plan') || localStorage.getItem('ostraops_pending_plan')) {
-          authTarget = 'signup';
-        }
-      } catch {}
-      setCurrentRoute(authTarget);
-      window.history.pushState(null, '', `#${authTarget}`);
+        return localStorage.getItem('ostra_authenticated') === 'true' || !!localStorage.getItem('ostra_client_id');
+      } catch {
+        return false;
+      }
+    })();
+
+    // If navigating to a protected route without auth, redirect to login
+    if (PROTECTED_ROUTES.includes(route as AppRoute) && !isAuthed) {
+      setCurrentRoute('login');
+      window.history.pushState(null, '', '#login');
       return;
     }
-    // If logged in and navigating to login/signup, go to their respective console
-    if (user && (route === 'login' || route === 'signup')) {
+    // If logged in and navigating to login/signup, go to dashboard
+    if (isAuthed && (route === 'login' || route === 'signup')) {
       const target = getPreferredConsole();
       setCurrentRoute(target);
       window.history.pushState(null, '', `#${target}`);
@@ -306,7 +317,7 @@ const AppInner: React.FC = () => {
             onNavigateHome={() => navigate('home')}
             onNavigatePricing={() => navigate('pricing')}
             onNavigateSoloGuard={() => navigate('solo-guard')}
-            initialTab={currentRoute === 'dashboard' ? 'dashboard' : currentRoute}
+            initialTab={currentRoute === 'dashboard' || currentRoute === 'daemon' ? 'daemon' : currentRoute}
           />
         </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
