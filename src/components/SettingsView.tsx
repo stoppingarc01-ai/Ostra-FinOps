@@ -322,8 +322,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
       </div>
 
       {/* RENDER SECURITY CONSOLE, PREFERENCES, BILLING, OR STANDARD 2-COLUMN VIEW */}
-      {activeSection === 'security' || activeSubTab === 'security' ? (
-        <SecurityConsoleView onNavigateTeam={() => { window.location.hash = '#team'; }} />
+      <div key={`${activeSection}-${activeSubTab}`} className="tab-transition-enter">
+        {activeSection === 'security' || activeSubTab === 'security' ? (
+          <SecurityConsoleView onNavigateTeam={() => { window.location.hash = '#team'; }} />
       ) : activeSection === 'general' || activeSubTab === 'preferences' ? (
         <PreferencesView />
       ) : activeSection === 'billing' ? (
@@ -1093,6 +1094,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

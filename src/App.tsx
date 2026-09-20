@@ -73,6 +73,11 @@ const AppInner: React.FC = () => {
   };
 
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(getInitialRoute);
+  const [navProgressKey, setNavProgressKey] = useState(0);
+
+  useEffect(() => {
+    setNavProgressKey((prev) => prev + 1);
+  }, [currentRoute]);
 
   const getPreferredConsole = (): AppRoute => 'dashboard';
 
@@ -200,11 +205,14 @@ const AppInner: React.FC = () => {
   if (currentRoute === 'privacy' || currentRoute === 'terms' || currentRoute === 'cookies') {
     return (
       <>
-        <LegalPage
-          initialTab={currentRoute}
-          onNavigateHome={() => navigate('home')}
-          onNavigatePricing={() => navigate('pricing')}
-        />
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <LegalPage
+            initialTab={currentRoute}
+            onNavigateHome={() => navigate('home')}
+            onNavigatePricing={() => navigate('pricing')}
+          />
+        </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
       </>
     );
@@ -214,7 +222,10 @@ const AppInner: React.FC = () => {
   if (currentRoute === 'onboarding') {
     return (
       <>
-        <OnboardingPage onNavigate={navigate} />
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <OnboardingPage onNavigate={navigate} />
+        </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
       </>
     );
@@ -224,7 +235,10 @@ const AppInner: React.FC = () => {
   if (currentRoute === 'auth-showcase') {
     return (
       <>
-        <AuthShowcasePage onNavigate={navigate} />
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <AuthShowcasePage onNavigate={navigate} />
+        </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
       </>
     );
@@ -234,7 +248,10 @@ const AppInner: React.FC = () => {
   if (currentRoute === 'login') {
     return (
       <>
-        <LoginPage onNavigate={navigate} />
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <LoginPage onNavigate={navigate} />
+        </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
       </>
     );
@@ -242,7 +259,10 @@ const AppInner: React.FC = () => {
   if (currentRoute === 'signup') {
     return (
       <>
-        <SignupPage onNavigate={navigate} />
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <SignupPage onNavigate={navigate} />
+        </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
       </>
     );
@@ -250,7 +270,10 @@ const AppInner: React.FC = () => {
   if (currentRoute === 'forgot-password') {
     return (
       <>
-        <ForgotPasswordPage onNavigate={navigate} />
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <ForgotPasswordPage onNavigate={navigate} />
+        </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
       </>
     );
@@ -260,11 +283,14 @@ const AppInner: React.FC = () => {
   if (currentRoute === 'solo-guard') {
     return (
       <>
-        <SoloGuardPage
-          onNavigateHome={() => navigate('home')}
-          onNavigateDashboard={() => navigate('dashboard')}
-          onNavigatePricing={() => navigate('pricing')}
-        />
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <SoloGuardPage
+            onNavigateHome={() => navigate('home')}
+            onNavigateDashboard={() => navigate('dashboard')}
+            onNavigatePricing={() => navigate('pricing')}
+          />
+        </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
       </>
     );
@@ -274,12 +300,15 @@ const AppInner: React.FC = () => {
   if (PROTECTED_ROUTES.includes(currentRoute)) {
     return (
       <>
-        <DashboardPage
-          onNavigateHome={() => navigate('home')}
-          onNavigatePricing={() => navigate('pricing')}
-          onNavigateSoloGuard={() => navigate('solo-guard')}
-          initialTab={currentRoute === 'dashboard' ? 'dashboard' : currentRoute}
-        />
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <DashboardPage
+            onNavigateHome={() => navigate('home')}
+            onNavigatePricing={() => navigate('pricing')}
+            onNavigateSoloGuard={() => navigate('solo-guard')}
+            initialTab={currentRoute === 'dashboard' ? 'dashboard' : currentRoute}
+          />
+        </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
       </>
     );
@@ -288,47 +317,68 @@ const AppInner: React.FC = () => {
   // Dedicated Error Pages (Individual standalone components)
   if (currentRoute === '404') {
     return (
-      <NotFoundPage
-        onNavigateHome={() => navigate('home')}
-        onNavigateDashboard={() => navigate('dashboard')}
-      />
+      <>
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <NotFoundPage
+            onNavigateHome={() => navigate('home')}
+            onNavigateDashboard={() => navigate('dashboard')}
+          />
+        </div>
+      </>
     );
   }
 
   if (currentRoute === 'build-error') {
     return (
-      <BuildErrorPage
-        onNavigateHome={() => navigate('home')}
-        onNavigateDashboard={() => navigate('dashboard')}
-      />
+      <>
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <BuildErrorPage
+            onNavigateHome={() => navigate('home')}
+            onNavigateDashboard={() => navigate('dashboard')}
+          />
+        </div>
+      </>
     );
   }
 
   if (currentRoute === '500') {
     return (
-      <ServerErrorPage
-        onNavigateHome={() => navigate('home')}
-        onNavigateDashboard={() => navigate('dashboard')}
-      />
+      <>
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <ServerErrorPage
+            onNavigateHome={() => navigate('home')}
+            onNavigateDashboard={() => navigate('dashboard')}
+          />
+        </div>
+      </>
     );
   }
 
   if (currentRoute === '429') {
     return (
-      <RateLimitPage
-        onNavigateHome={() => navigate('home')}
-        onNavigateDashboard={() => navigate('dashboard')}
-        onNavigatePricing={() => navigate('pricing')}
-      />
+      <>
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <RateLimitPage
+            onNavigateHome={() => navigate('home')}
+            onNavigateDashboard={() => navigate('dashboard')}
+            onNavigatePricing={() => navigate('pricing')}
+          />
+        </div>
+      </>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans antialiased selection:bg-ostraGold-500/20 selection:text-charcoal-900 overflow-x-hidden">
+      <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
       {/* Fixed Navigation Header */}
       <Navbar currentRoute={currentRoute} onNavigate={navigate} />
 
-      <main>
+      <main key={`page-${currentRoute}`} className="page-transition-enter">
         {currentRoute === 'home' ? (
           <>
             {/* Hero Section with 3D Interactive Dashboard and Provider Dock */}

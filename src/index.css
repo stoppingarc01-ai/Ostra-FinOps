@@ -382,3 +382,73 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #C7BDAB;
 }
+
+/* ============================================================ */
+/* LUXURY PAGE & TAB ROUTE TRANSITION SYSTEM                     */
+/* ============================================================ */
+
+/* Top route navigation progress indicator (GitHub / Vercel style) */
+@keyframes route-progress-bar {
+  0% {
+    width: 0%;
+    opacity: 1;
+  }
+  35% {
+    width: 60%;
+    opacity: 1;
+  }
+  75% {
+    width: 88%;
+    opacity: 1;
+  }
+  100% {
+    width: 100%;
+    opacity: 0;
+  }
+}
+
+.route-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #9E743A 0%, #C59E5F 50%, #E8CA9B 100%);
+  box-shadow: 0 0 12px rgba(197, 158, 95, 0.8), 0 0 4px rgba(232, 202, 155, 0.9);
+  z-index: 999999;
+  pointer-events: none;
+  animation: route-progress-bar 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Page entrance transition */
+@keyframes page-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.998);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+  }
+}
+
+.page-transition-enter {
+  animation: page-fade-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+
+/* Dashboard tab content transition */
+@keyframes tab-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+.tab-transition-enter {
+  animation: tab-fade-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}

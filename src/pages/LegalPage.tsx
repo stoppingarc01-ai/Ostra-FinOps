@@ -165,8 +165,9 @@ export const LegalPage: React.FC<LegalPageProps> = ({
         )}
 
         {/* ============================================================ */}
-        {/* TAB 1: PRIVACY POLICY                                        */}
+        {/* TABS CONTAINER WITH SMOOTH TRANSITION                       */}
         {/* ============================================================ */}
+        <div key={activeTab} className="tab-transition-enter">
         {activeTab === 'privacy' && (
           <div className="bg-white rounded-3xl border border-[#EAE5DC] shadow-subtle p-7 sm:p-12 space-y-10">
             
@@ -498,6 +499,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
 
           </div>
         )}
+        </div>
 
       </main>
 

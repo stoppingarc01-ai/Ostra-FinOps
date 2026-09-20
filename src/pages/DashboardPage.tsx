@@ -58,6 +58,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 }) => {
   const { user, profile, subscription, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState(initialTab || 'dashboard');
+  const [tabProgressKey, setTabProgressKey] = useState(0);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [assistantInput, setAssistantInput] = useState('');
 
@@ -65,6 +66,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   useEffect(() => {
     setActiveTab(initialTab || 'dashboard');
   }, [initialTab]);
+
+  useEffect(() => {
+    setTabProgressKey((prev) => prev + 1);
+  }, [activeTab]);
 
   // Calculate real-time live date ranges
   const formatRange = (daysBack = 6) => {
@@ -406,8 +411,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
         </header>
 
+        {/* Top Micro Progress Bar on Tab Transition */}
+        <div key={`tab-prog-${tabProgressKey}`} className="route-progress-bar" />
+
         {/* Dashboard / Content Container */}
-        <div className="px-6 lg:px-8 pt-6 space-y-6 max-w-[1600px] mx-auto w-full">
+        <div key={activeTab} className="tab-transition-enter px-6 lg:px-8 pt-6 space-y-6 max-w-[1600px] mx-auto w-full">
           {activeTab === 'solo-guard' ? (
             <div className="space-y-6">
               <div className="flex items-center justify-between bg-white border border-[#EAE5DC] p-4 rounded-2xl shadow-subtle">
