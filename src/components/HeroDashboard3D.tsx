@@ -77,11 +77,11 @@ export const HeroDashboard3D: React.FC = () => {
             {/* User Profile Pill */}
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-[#EAE4DA] text-charcoal-800 font-semibold text-xs flex items-center justify-center border border-[#DDD6C8] font-mono">
-                SP
+                LE
               </div>
               <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-bold text-charcoal-900 leading-tight">Shaon Prasad</span>
-                <span className="text-[10px] text-charcoal-400 leading-tight">Owner</span>
+                <span className="text-xs font-bold text-charcoal-900 leading-tight">Lead Engineer</span>
+                <span className="text-[10px] text-charcoal-400 leading-tight">Admin</span>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-charcoal-400" />
             </div>

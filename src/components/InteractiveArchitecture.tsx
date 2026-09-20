@@ -36,10 +36,10 @@ export const InteractiveArchitecture: React.FC = () => {
         <div className="mb-14">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-charcoal-700">
-              Zero-Overhead End-to-End Interception Pipeline
+              Local Loopback Interception Pipeline
             </h3>
             <span className="text-[11px] font-mono text-charcoal-700 font-bold bg-sandstone-200/80 px-2.5 py-0.5 rounded-full border border-sandstone-300">
-              Total In-Memory Overhead: &lt; 0.42ms
+              Measured Proxy Overhead: ~0.8ms – 1.8ms
             </span>
           </div>
 
@@ -63,21 +63,21 @@ export const InteractiveArchitecture: React.FC = () => {
                 step: '03',
                 title: 'Secret Redaction',
                 desc: 'Scans for API keys, bearer tokens & internal IPs before egress.',
-                badge: '0.18ms Regex',
+                badge: '~0.4ms Scan',
                 icon: Lock,
               },
               {
                 step: '04',
                 title: 'Provider Ingress',
                 desc: 'Dispatches request to Anthropic, OpenAI, or Gemini upstream.',
-                badge: 'Zero-Copy SSE',
+                badge: 'Streaming SSE',
                 icon: Server,
               },
               {
                 step: '05',
                 title: 'Intra-Family Fallback',
                 desc: 'If 429/529 occurs, cascades within family without broken tools.',
-                badge: 'Zero Jitter',
+                badge: '< 1ms Overhead',
                 icon: Zap,
               },
               {
@@ -203,7 +203,7 @@ export const InteractiveArchitecture: React.FC = () => {
               <div className="space-y-2 text-xs text-charcoal-600">
                 <div className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Zero Cross-Vendor Translation:</strong> Payload is forwarded byte-for-byte to sibling models.</span>
+                  <span><strong>Intra-Family Passthrough:</strong> Payload is forwarded byte-for-byte to sibling models.</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -214,7 +214,7 @@ export const InteractiveArchitecture: React.FC = () => {
 
             <div className="mt-6 pt-4 border-t border-emerald-100 flex items-center justify-between text-xs text-emerald-800 font-bold">
               <span>Result: Continuous Autonomous Coding</span>
-              <span className="font-mono">100% Tool Fidelity</span>
+              <span className="font-mono">High Tool Fidelity</span>
             </div>
           </div>
 
@@ -252,7 +252,7 @@ export const InteractiveArchitecture: React.FC = () => {
                 <tr>
                   <td className="py-3.5 px-4 font-sans font-bold text-charcoal-900">Added Proxy Latency</td>
                   <td className="py-3.5 px-4 text-emerald-700 font-bold bg-sandstone-100/50">
-                    &lt; 0.42 ms (Memory Loopback)
+                    ~0.8ms - 1.8ms (Local Loopback Overhead)
                   </td>
                   <td className="py-3.5 px-4 text-rose-600">+45 ms – 180 ms (Cloud Roundtrip)</td>
                   <td className="py-3.5 px-4 text-charcoal-500">0 ms</td>
@@ -268,7 +268,7 @@ export const InteractiveArchitecture: React.FC = () => {
                 <tr>
                   <td className="py-3.5 px-4 font-sans font-bold text-charcoal-900">Runaway Spend Circuit Breaker</td>
                   <td className="py-3.5 px-4 text-emerald-700 font-bold bg-sandstone-100/50">
-                    Microsecond Rate Limiter (&lt;1ms)
+                    Sub-Millisecond Budget Guard (&lt;1.2ms)
                   </td>
                   <td className="py-3.5 px-4 text-charcoal-600">Post-facto Webhook Alerts</td>
                   <td className="py-3.5 px-4 text-rose-600">None (Full Bill Accrues)</td>
@@ -284,7 +284,7 @@ export const InteractiveArchitecture: React.FC = () => {
                 <tr>
                   <td className="py-3.5 px-4 font-sans font-bold text-charcoal-900">Memory Footprint</td>
                   <td className="py-3.5 px-4 text-emerald-700 font-bold bg-sandstone-100/50">
-                    18 MB Resident RAM
+                    ~36 MB Resident RAM
                   </td>
                   <td className="py-3.5 px-4 text-charcoal-600">N/A (Hosted)</td>
                   <td className="py-3.5 px-4 text-charcoal-500">0 MB</td>

@@ -210,7 +210,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
             Floating Multi-Model Mesh.{' '}
-            <span className="gold-gradient-text block">One Zero-Overhead Gateway.</span>
+            <span className="gold-gradient-text block">One High-Throughput Local Gateway.</span>
           </h2>
           <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
             Autonomous coding agents hit disparate providers every minute. OstraOps wraps every LLM provider in an intelligent financial gateway and local loopback layer.
@@ -381,7 +381,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
                 </div>
                 <div className="flex justify-between text-zinc-400">
                   <span>Interception Mode:</span>
-                  <span className="text-emerald-400">Zero-Copy SSE Stream</span>
+                  <span className="text-emerald-400">Stream Passthrough (~0.8ms Overhead)</span>
                 </div>
                 <div className="flex justify-between text-zinc-400">
                   <span>Intra-Family Failover:</span>

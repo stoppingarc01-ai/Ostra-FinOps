@@ -19,7 +19,7 @@ export const AgentEcosystemSection: React.FC = () => {
   "anthropic_base_url": "http://127.0.0.1:8080/v1"
 }`,
       supportedModels: 'Claude 3.7 Sonnet, GPT-4o, o3-mini',
-      stat: '0 Tool Call Corruptions',
+      stat: 'Intra-Family Schema Safe',
     },
     {
       id: 'cline',
@@ -45,7 +45,7 @@ export const AgentEcosystemSection: React.FC = () => {
       codeSnippet: `export OPENAI_BASE_URL="http://127.0.0.1:8080/v1"
 export WINDSURF_PROXY_ENABLED="true"`,
       supportedModels: 'Claude 3.5 Sonnet, GPT-4o',
-      stat: '0.18ms Secret Redaction',
+      stat: '~0.4ms Secret Redaction',
     },
     {
       id: 'antigravity',

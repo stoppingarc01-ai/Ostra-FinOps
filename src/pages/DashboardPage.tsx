@@ -419,7 +419,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     <h2 className="text-base font-bold text-charcoal-900 flex items-center gap-2">
                       <span>Solo Developer Local Guard</span>
                     </h2>
-                    <p className="text-xs text-charcoal-500">Zero-latency financial gateway and on-device telemetry proxy for Cursor, Cline, and Roo-Code.</p>
+                    <p className="text-xs text-charcoal-500">Sub-millisecond loopback financial gateway and on-device telemetry proxy for Cursor, Cline, and Roo-Code.</p>
                   </div>
                 </div>
                 {onNavigateSoloGuard && (

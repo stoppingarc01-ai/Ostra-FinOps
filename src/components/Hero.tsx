@@ -143,7 +143,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                 )}
               </div>
               <span className="text-[11px] text-charcoal-500 font-mono">
-                0 install • 100% on-device loopback
+                Runs via npx • Local loopback proxy (127.0.0.1:8080)
               </span>
             </div>
 
@@ -156,7 +156,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                   </div>
                   <span>Hard Cap Limits</span>
                 </div>
-                <p className="text-[11px] text-charcoal-500 leading-tight">Instant circuit break at limit</p>
+                <p className="text-[11px] text-charcoal-500 leading-tight">Immediate HTTP 429 when cap is hit</p>
               </div>
 
               <div className="value-badge space-y-1 cursor-default">
@@ -166,7 +166,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                   </div>
                   <span>Deterministic</span>
                 </div>
-                <p className="text-[11px] text-charcoal-500 leading-tight">Zero cross-vendor tool bugs</p>
+                <p className="text-[11px] text-charcoal-500 leading-tight">Intra-family tool schema parity</p>
               </div>
 
               <div className="value-badge space-y-1 cursor-default">
@@ -174,9 +174,9 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                   <div className="value-badge-icon w-5 h-5 rounded-md bg-sandstone-200 flex items-center justify-center text-ostraGold-700">
                     <Zap className="w-3 h-3" />
                   </div>
-                  <span>&lt;0.42ms Overhead</span>
+                  <span>~0.8ms - 1.8ms Overhead</span>
                 </div>
-                <p className="text-[11px] text-charcoal-500 leading-tight">Zero buffering delay</p>
+                <p className="text-[11px] text-charcoal-500 leading-tight">Stream passthrough (p99 &lt; 2.5ms)</p>
               </div>
             </div>
           </div>

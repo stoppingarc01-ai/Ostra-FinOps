@@ -24,7 +24,7 @@ export const FAQSection: React.FC = () => {
       category: 'architecture',
       tags: ['latency', 'daemon', 'loopback', 'overhead', 'memory'],
       question: 'What is the actual latency overhead of running OstraOps locally?',
-      answer: 'OstraOps runs as a lightweight, zero-dependency compiled daemon bound directly to your local loopback interface (`http://127.0.0.1:8080`). Benchmarks measure in-memory parsing overhead at under 0.42 milliseconds. Because requests stream through zero-copy Server-Sent Events (SSE) directly to the upstream model provider, your Time-To-First-Token (TTFT) has zero perceptible buffering delay.',
+      answer: 'OstraOps runs as a local daemon bound to your loopback interface (`http://127.0.0.1:8080`). Every proxy introduces networking and parsing layers: benchmarks measure OstraOps proxy overhead at typically ~0.8ms to 1.8ms (p99 < 2.5ms). Because requests and responses stream chunk-by-chunk through Server-Sent Events (SSE) directly to the upstream model provider, your Time-To-First-Token (TTFT) overhead is limited to immediate packet transit without artificial full-body buffering.',
     },
     {
       id: 'faq-2',

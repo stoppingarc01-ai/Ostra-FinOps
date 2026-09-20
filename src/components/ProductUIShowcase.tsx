@@ -135,10 +135,10 @@ export const ProductUIShowcase: React.FC = () => {
                     <Clock className="w-4 h-4 text-blue-600" />
                   </div>
                   <div className="text-2xl font-extrabold text-emerald-600 font-mono mt-1">
-                    0.38 ms
+                    0.94 ms
                   </div>
                   <div className="text-[11px] text-charcoal-500 font-mono mt-1">
-                    Zero TTFT buffering delay
+                    p99 &lt; 2.2ms local proxy overhead
                   </div>
                 </div>
 
@@ -315,7 +315,7 @@ export const ProductUIShowcase: React.FC = () => {
                         <span>Intra-Family Fallback: Claude 3.7 Sonnet → Claude 3.5 Haiku</span>
                       </span>
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sandstone-200 text-charcoal-700">
-                        Zero Tool Schema Errors
+                        Native Schema Preserved
                       </span>
                     </div>
                     <p className="text-xs text-charcoal-500">
@@ -469,7 +469,7 @@ export const ProductUIShowcase: React.FC = () => {
               <div className="border border-[#EAE5DB] rounded-2xl overflow-hidden bg-white">
                 <div className="px-5 py-3.5 bg-[#FAF8F5] border-b border-[#EAE5DB] flex items-center justify-between">
                   <span className="text-xs font-bold text-charcoal-900 font-mono uppercase tracking-wider">
-                    Deterministic Provider Cascades (Zero Cross-Vendor Corruption)
+                    Deterministic Provider Cascades (Intra-Family Schema Integrity)
                   </span>
                   <span className="text-[11px] text-charcoal-500 font-mono">
                     Enforces Rule 2: Keep Same Architecture Family
@@ -508,7 +508,7 @@ export const ProductUIShowcase: React.FC = () => {
                       fallback1: 'DeepSeek-V3',
                       fallback2: 'Local VLLM DeepSeek 67B',
                       toolFidelity: 'Thought trace & reasoning stream preserved',
-                      crossVendorRisk: '0.00% (Zero cross-vendor payload jitter)',
+                      crossVendorRisk: 'Vendor-native schema pass-through',
                     },
                   ].map((row, idx) => (
                     <div key={idx} className="p-5 space-y-3 hover:bg-[#FAF8F5]/40 transition-colors">
