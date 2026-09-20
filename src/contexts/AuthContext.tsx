@@ -19,7 +19,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
   deleteDoc
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
@@ -129,9 +128,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const profileRef = doc(db, 'profiles', userId);
       const profileSnap = await getDoc(profileRef);
 
+      // Check local cached avatar for this user
+      let cachedAvatar: string | null = null;
+      try {
+        cachedAvatar = localStorage.getItem(`ostraops_avatar_${userId}`) || localStorage.getItem('ostraops_avatar_url');
+      } catch {}
+
       if (profileSnap.exists()) {
         const profileData = profileSnap.data() as Profile;
+        if (!profileData.avatar_url && (fbUser.photoURL || cachedAvatar)) {
+          profileData.avatar_url = fbUser.photoURL || cachedAvatar;
+          setDoc(profileRef, { avatar_url: profileData.avatar_url }, { merge: true }).catch(() => {});
+        }
         setProfile(profileData);
+        if (profileData.avatar_url) {
+          try {
+            localStorage.setItem('ostraops_avatar_url', profileData.avatar_url);
+            localStorage.setItem(`ostraops_avatar_${userId}`, profileData.avatar_url);
+          } catch {}
+        }
 
         if (profileData.org_id) {
           const orgRef = doc(db, 'organizations', profileData.org_id);
@@ -180,7 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           job_title: null,
           company_name: null,
           company_website: null,
-          avatar_url: fbUser.photoURL || null,
+          avatar_url: fbUser.photoURL || cachedAvatar || null,
           timezone: 'Asia/Kolkata',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -190,6 +205,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(initialProfile);
         setOrganization(initialOrg);
         setOrgRole('owner');
+        if (initialProfile.avatar_url) {
+          try {
+            localStorage.setItem('ostraops_avatar_url', initialProfile.avatar_url);
+            localStorage.setItem(`ostraops_avatar_${userId}`, initialProfile.avatar_url);
+          } catch {}
+        }
       }
 
       // Sync and isolate user subscription in Firestore
@@ -317,8 +338,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setOrgRole(null);
     setSubscription(null);
     try {
-      localStorage.clear();
       sessionStorage.clear();
+      localStorage.removeItem('ostraops_pending_plan');
+      localStorage.removeItem('ostraops_avatar_url');
     } catch {}
   };
 
@@ -334,12 +356,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error('Not authenticated') };
     try {
+      // 1. Optimistic React state update
+      setProfile((prev) => (prev ? { ...prev, ...updates } : (updates as Profile)));
+
+      // 2. Local persistence (scoped per user + global fallback)
+      try {
+        if (updates.avatar_url) {
+          localStorage.setItem('ostraops_avatar_url', updates.avatar_url);
+          localStorage.setItem(`ostraops_avatar_${user.id}`, updates.avatar_url);
+        }
+        const cached = localStorage.getItem(`ostraops_profile_${user.id}`);
+        const parsed = cached ? JSON.parse(cached) : {};
+        localStorage.setItem(`ostraops_profile_${user.id}`, JSON.stringify({ ...parsed, ...updates }));
+      } catch {}
+
+      // 3. Update Firebase Auth user profile (displayName & photoURL)
+      if (auth.currentUser) {
+        const authUpdates: { displayName?: string; photoURL?: string } = {};
+        if (updates.full_name) authUpdates.displayName = updates.full_name;
+        if (updates.avatar_url) authUpdates.photoURL = updates.avatar_url;
+        if (Object.keys(authUpdates).length > 0) {
+          try {
+            await updateAuthProfile(auth.currentUser, authUpdates);
+          } catch (e) {
+            console.warn('Firebase Auth update notice:', e);
+          }
+        }
+      }
+
+      // 4. Upsert into Firestore using setDoc with merge: true
       const profileRef = doc(db, 'profiles', user.id);
       const payload = { ...updates, updated_at: new Date().toISOString() };
-      await updateDoc(profileRef, payload);
-      if (auth.currentUser) await syncOrCreateUserDocs(auth.currentUser);
+      await setDoc(profileRef, payload, { merge: true });
+
       return { error: null };
     } catch (err) {
+      console.warn('Firestore updateProfile warning:', err);
       return { error: formatFirebaseError(err) };
     }
   };

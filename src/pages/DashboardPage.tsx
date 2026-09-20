@@ -261,13 +261,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
 
           {/* User Profile Card */}
-          <div className="flex items-center justify-between p-2 rounded-xl hover:bg-[#EFEAE0] transition-colors cursor-pointer">
+          <div 
+            onClick={() => setActiveTab('settings')}
+            className="flex items-center justify-between p-2 rounded-xl hover:bg-[#EFEAE0] transition-colors cursor-pointer group"
+          >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#18181B] text-white text-xs font-bold flex items-center justify-center font-mono">
-                {initials}
-              </div>
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={displayName}
+                  className="w-8 h-8 rounded-full object-cover border border-[#D5C9B3] shadow-2xs"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#18181B] text-white text-xs font-bold flex items-center justify-center font-mono">
+                  {initials}
+                </div>
+              )}
               <div className="text-left">
-                <div className="text-xs font-bold text-charcoal-900 leading-tight">
+                <div className="text-xs font-bold text-charcoal-900 leading-tight group-hover:text-black">
                   {displayName}
                 </div>
                 <div className="text-[10px] text-charcoal-500 font-mono truncate max-w-[110px]">
@@ -276,7 +287,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
             </div>
             <button
-              onClick={() => { signOut(); onNavigateHome(); }}
+              onClick={(e) => { e.stopPropagation(); signOut(); onNavigateHome(); }}
               className="p-1.5 rounded-lg text-charcoal-400 hover:text-charcoal-700 hover:bg-sandstone-300 transition-colors"
               title="Sign out"
             >

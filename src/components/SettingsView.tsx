@@ -47,35 +47,81 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
   const [companyName, setCompanyName] = useState('');
   const [companyWebsite, setCompanyWebsite] = useState('');
 
+  // Helper: compress image file using standard HTML canvas to ensure fast Firestore storage (<20KB)
+  const compressImage = (file: File, maxDimension = 180, quality = 0.85): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDimension) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            }
+          } else {
+            if (height > maxDimension) {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(event.target?.result as string);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => reject(new Error('Failed to parse selected image'));
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Avatar Upload & Local Storage
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
     try {
-      return localStorage.getItem('ostraops_avatar_url');
+      return profile?.avatar_url || localStorage.getItem('ostraops_avatar_url');
     } catch {
       return null;
     }
   });
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('Error: Image file size exceeds 2MB limit.');
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Error: Image file size exceeds 5MB limit.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        setAvatarUrl(dataUrl);
-        try {
-          localStorage.setItem('ostraops_avatar_url', dataUrl);
-        } catch {}
-        showToast('Avatar photo updated successfully.');
+    try {
+      showToast('Optimizing & saving photo to Firestore...');
+      const compressedDataUrl = await compressImage(file, 180, 0.85);
+      setAvatarUrl(compressedDataUrl);
+      try {
+        localStorage.setItem('ostraops_avatar_url', compressedDataUrl);
+        if (user?.id) {
+          localStorage.setItem(`ostraops_avatar_${user.id}`, compressedDataUrl);
+        }
+      } catch {}
+      const { error } = await updateProfile({ avatar_url: compressedDataUrl });
+      if (error) {
+        showToast(`Warning: Local preview ready, but Firestore sync error: ${error.message}`);
+      } else {
+        showToast('Profile photo saved to Firestore successfully.');
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err: any) {
+      showToast('Failed to process image. Please try another image.');
+    }
   };
 
   // Populate form when profile loads
@@ -87,6 +133,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
       setJobTitle(profile.job_title || '');
       setCompanyName(profile.company_name || '');
       setCompanyWebsite(profile.company_website || '');
+      if (profile.avatar_url) {
+        setAvatarUrl(profile.avatar_url);
+      }
     } else if (user) {
       setEmailAddress(user.email || '');
     }
@@ -209,9 +258,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
       job_title: jobTitle,
       company_name: companyName,
       company_website: companyWebsite,
+      avatar_url: avatarUrl || undefined,
     });
     setProfileSaving(false);
-    showToast(error ? `Error: ${error.message}` : 'Profile information successfully updated.');
+    showToast(error ? `Error: ${error.message}` : 'Profile information successfully updated in Firestore.');
   };
 
   return (
@@ -387,15 +437,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                         accept="image/png,image/jpeg,image/webp"
                         className="hidden"
                       />
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="px-3.5 py-1.5 rounded-xl bg-white border border-[#EAE5DC] hover:border-[#C59E5F] text-charcoal-800 text-xs font-semibold transition-all cursor-pointer shadow-2xs hover:bg-sandstone-100"
-                      >
-                        Change Photo
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="px-3.5 py-1.5 rounded-xl bg-white border border-[#EAE5DC] hover:border-[#C59E5F] text-charcoal-800 text-xs font-semibold transition-all cursor-pointer shadow-2xs hover:bg-sandstone-100"
+                        >
+                          Change Photo
+                        </button>
+                        {avatarUrl && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setAvatarUrl(null);
+                              try {
+                                localStorage.removeItem('ostraops_avatar_url');
+                                if (user?.id) localStorage.removeItem(`ostraops_avatar_${user.id}`);
+                              } catch {}
+                              await updateProfile({ avatar_url: '' });
+                              showToast('Avatar photo removed.');
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl text-red-600 hover:bg-red-50 text-xs font-semibold transition-all cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
                       <span className="text-[11px] text-charcoal-400 font-mono block mt-1">
-                        JPG, PNG or WebP. Max size 2MB.
+                        JPG, PNG or WebP. Auto-compressed & synced to Firestore.
                       </span>
                     </div>
                   </div>
