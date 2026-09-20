@@ -182,10 +182,22 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
             </button>
           )}
 
-          <a href="#docs" className="nav-link-animated hover:text-charcoal-900 transition-colors flex items-center gap-1.5">
+          <button
+            onClick={() => {
+              if (currentRoute !== 'home') {
+                onNavigate('home');
+                setTimeout(() => {
+                  document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              } else {
+                document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            className="nav-link-animated hover:text-charcoal-900 transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
             Docs
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-sandstone-300/80 text-charcoal-600 font-mono">v1.0</span>
-          </a>
+          </button>
 
           <button
             onClick={() => {
@@ -332,8 +344,38 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
                 Solo Guard
               </button>
             )}
-            <a href="#docs" onClick={() => setMobileMenuOpen(false)} className="py-1">Docs</a>
-            <a href="#blog" onClick={() => setMobileMenuOpen(false)} className="py-1">Blog</a>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (currentRoute !== 'home') {
+                  onNavigate('home');
+                  setTimeout(() => {
+                    document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                } else {
+                  document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="text-left py-1 text-charcoal-700 hover:text-charcoal-900"
+            >
+              Docs
+            </button>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (currentRoute !== 'home') {
+                  onNavigate('home');
+                  setTimeout(() => {
+                    document.getElementById('architecture')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                } else {
+                  document.getElementById('architecture')?.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="text-left py-1 text-charcoal-700 hover:text-charcoal-900"
+            >
+              Architecture Specs
+            </button>
             <a
               href="https://github.com/stoppingarc01-ai/Ostra-FinOps"
               target="_blank"

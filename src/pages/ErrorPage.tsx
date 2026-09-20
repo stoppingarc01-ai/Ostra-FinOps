@@ -401,7 +401,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
         <div className="flex items-center gap-4">
           <button onClick={onNavigateHome} className="hover:text-ostraGold-400 transition-colors">Home</button>
           <button onClick={onNavigateDashboard} className="hover:text-ostraGold-400 transition-colors">Console</button>
-          <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-ostraGold-400 transition-colors flex items-center gap-1">
+          <a href="https://github.com/stoppingarc01-ai/Ostra-FinOps" target="_blank" rel="noreferrer" className="hover:text-ostraGold-400 transition-colors flex items-center gap-1">
             <span>Status</span>
             <ExternalLink className="w-3 h-3" />
           </a>

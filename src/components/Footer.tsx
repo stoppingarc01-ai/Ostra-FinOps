@@ -53,10 +53,15 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   <ArrowUpRight className="w-3 h-3 text-charcoal-400" />
                 </a>
               </li>
-              <li><a href="#docs" className="hover:text-charcoal-900 transition-colors">Documentation</a></li>
-              <li><a href="#cursor" className="hover:text-charcoal-900 transition-colors">Cursor Integration</a></li>
-              <li><a href="#cline" className="hover:text-charcoal-900 transition-colors">Cline / Roo Integration</a></li>
-              <li><a href="#npm" className="hover:text-charcoal-900 transition-colors">npm ostraops-guard</a></li>
+              <li><button onClick={() => { if (onNavigate) { onNavigate('home'); setTimeout(() => document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' }), 100); } }} className="hover:text-charcoal-900 transition-colors cursor-pointer text-left">Documentation</button></li>
+              <li><button onClick={() => { if (onNavigate) { onNavigate('home'); setTimeout(() => document.getElementById('agents')?.scrollIntoView({ behavior: 'smooth' }), 100); } }} className="hover:text-charcoal-900 transition-colors cursor-pointer text-left">Cursor Integration</button></li>
+              <li><button onClick={() => { if (onNavigate) { onNavigate('home'); setTimeout(() => document.getElementById('agents')?.scrollIntoView({ behavior: 'smooth' }), 100); } }} className="hover:text-charcoal-900 transition-colors cursor-pointer text-left">Cline / Roo Integration</button></li>
+              <li>
+                <a href="https://www.npmjs.com/package/ostraops-guard" target="_blank" rel="noreferrer" className="hover:text-charcoal-900 transition-colors flex items-center gap-1">
+                  <span>npm ostraops-guard</span>
+                  <ArrowUpRight className="w-3 h-3 text-charcoal-400" />
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -68,7 +73,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <li><button onClick={() => onNavigate && onNavigate('privacy')} className="hover:text-charcoal-900 transition-colors text-left cursor-pointer">Privacy Policy</button></li>
               <li><button onClick={() => onNavigate && onNavigate('terms')} className="hover:text-charcoal-900 transition-colors text-left cursor-pointer">Terms &amp; Conditions</button></li>
               <li><button onClick={() => onNavigate && onNavigate('cookies')} className="hover:text-charcoal-900 transition-colors text-left cursor-pointer">Cookie Policy &amp; Controls</button></li>
-              <li><button onClick={() => onNavigate && onNavigate('home')} className="hover:text-charcoal-900 transition-colors text-left cursor-pointer">Security Architecture</button></li>
+              <li><button onClick={() => { if (onNavigate) { onNavigate('home'); setTimeout(() => document.getElementById('security')?.scrollIntoView({ behavior: 'smooth' }), 100); } }} className="hover:text-charcoal-900 transition-colors text-left cursor-pointer">Security Architecture</button></li>
             </ul>
           </div>
         </div>

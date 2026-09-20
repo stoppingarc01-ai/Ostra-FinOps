@@ -1192,7 +1192,7 @@ export const ReportsView: React.FC = () => {
                 <label className="font-bold text-charcoal-800 block">Destination Channel</label>
                 <input
                   type="email"
-                  defaultValue="shaan@acmecorp.com"
+                  defaultValue="finops-alerts@acmecorp.com"
                   placeholder="name@company.com or Slack Webhook"
                   className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 font-mono focus:outline-none focus:border-ostraGold-500"
                 />

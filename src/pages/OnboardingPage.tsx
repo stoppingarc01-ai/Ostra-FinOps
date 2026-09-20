@@ -76,10 +76,10 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
 
   // Sync auth state if it loads after mount
   useEffect(() => {
-    if (profile?.full_name && (fullName === 'Developer' || fullName === 'Shaan Prasad')) {
+    if (profile?.full_name && (fullName === 'Developer' || !fullName)) {
       setFullName(profile.full_name);
     }
-    if (user?.email && (email === 'developer@example.com' || email === 'shaan@example.com')) {
+    if (user?.email && (email === 'developer@example.com' || !email)) {
       setEmail(user.email);
     }
   }, [profile, user]);

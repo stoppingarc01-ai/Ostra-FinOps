@@ -23,6 +23,7 @@ import { BuildErrorPage } from './pages/BuildErrorPage';
 import { ServerErrorPage } from './pages/ServerErrorPage';
 import { RateLimitPage } from './pages/RateLimitPage';
 import { AboutUsPage } from './pages/AboutUsPage';
+import { SoloGuardPage } from './pages/SoloGuardPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CookieBanner } from './components/CookieBanner';
 import { Footer } from './components/Footer';
@@ -34,6 +35,7 @@ export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onb
 
 // Routes that require authentication
 const PROTECTED_ROUTES: AppRoute[] = ['solo-guard', 'dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings'];
+const HOMEPAGE_SECTIONS = ['#features', '#architecture', '#agents', '#developers', '#docs', '#quickstart', '#security', '#faq', '#ui-showcase', '#hero', '#about-sec'];
 
 const AppInner: React.FC = () => {
   const { user, loading } = useAuth();
@@ -65,6 +67,7 @@ const AppInner: React.FC = () => {
     if (path.includes('build-error') || hash.includes('build-error') || path.includes('build') || hash.includes('build')) return 'build-error';
     if (path.includes('500') || hash.includes('500') || path.includes('server-error') || hash.includes('server-error')) return '500';
     if (path.includes('404') || hash.includes('404') || path.includes('not-found') || hash.includes('not-found')) return '404';
+    if (HOMEPAGE_SECTIONS.some(s => hash.startsWith(s))) return 'home';
     if (hash && hash !== '#' && hash !== '#home' && hash !== '') return '404';
     return 'home';
   };
@@ -154,6 +157,7 @@ const AppInner: React.FC = () => {
       else if (path.includes('build-error') || hash.includes('build-error') || path.includes('build') || hash.includes('build')) route = 'build-error';
       else if (path.includes('500') || hash.includes('500') || path.includes('server-error') || hash.includes('server-error')) route = '500';
       else if (path.includes('404') || hash.includes('404') || path.includes('not-found') || hash.includes('not-found')) route = '404';
+      else if (HOMEPAGE_SECTIONS.some(s => hash.startsWith(s))) route = 'home';
       else if (hash && hash !== '#' && hash !== '#home' && hash !== '') route = '404';
       setCurrentRoute(route);
     };
@@ -165,6 +169,20 @@ const AppInner: React.FC = () => {
       window.removeEventListener('hashchange', handlePopState);
     };
   }, []);
+
+  // Smooth scroll to section if hash present on home route
+  useEffect(() => {
+    if (currentRoute === 'home' && window.location.hash) {
+      const rawId = window.location.hash.replace(/^#/, '');
+      const id = rawId === 'docs' ? 'developers' : rawId;
+      if (id) {
+        setTimeout(() => {
+          const el = document.getElementById(id);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
+    }
+  }, [currentRoute]);
 
   // Loading skeleton — prevents unauthenticated render flash
   if (loading) {
@@ -238,7 +256,19 @@ const AppInner: React.FC = () => {
     );
   }
 
-
+  // Dedicated Solo Guard Terminal & Loopback Console Page
+  if (currentRoute === 'solo-guard') {
+    return (
+      <>
+        <SoloGuardPage
+          onNavigateHome={() => navigate('home')}
+          onNavigateDashboard={() => navigate('dashboard')}
+          onNavigatePricing={() => navigate('pricing')}
+        />
+        <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
+      </>
+    );
+  }
 
   // Dashboard page provides its own full app shell with sidebar and top header
   if (PROTECTED_ROUTES.includes(currentRoute)) {

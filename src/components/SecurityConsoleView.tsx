@@ -82,7 +82,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       scope: 'models:infer, telemetry:write, cache:read',
       expiration: 'Never',
       lastUsed: '4 min ago',
-      createdBy: 'Shaan (Owner)',
+      createdBy: 'Admin (Owner)',
       createdDate: 'Sep 12, 2026'
     },
     {
@@ -104,7 +104,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       scope: 'models:infer (60 req/min limit)',
       expiration: '30 days',
       lastUsed: '2 hours ago',
-      createdBy: 'Shaan (Owner)',
+      createdBy: 'Admin (Owner)',
       createdDate: 'Aug 29, 2026'
     }
   ]);
@@ -126,7 +126,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       models: 'Gemini 3.8 Flash, 3.1 Pro, 2.5 Pro',
       storage: 'Hardware HSM Level 3',
       lastUsed: 'Just now',
-      createdBy: 'Shaan (Owner)',
+      createdBy: 'Admin (Owner)',
       status: 'Connected',
       latency: '34ms'
     },
@@ -138,7 +138,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       models: 'GPT-5.6, GPT-5.5, GPT-5.4',
       storage: 'AES-256-GCM Encrypted',
       lastUsed: '2 min ago',
-      createdBy: 'Shaan (Owner)',
+      createdBy: 'Admin (Owner)',
       status: 'Connected',
       latency: '41ms'
     },
@@ -174,7 +174,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       models: 'DeepSeek R1 Distill, Llama 3.3 70B',
       storage: 'AES-256-GCM Encrypted',
       lastUsed: '45 min ago',
-      createdBy: 'Shaan (Owner)',
+      createdBy: 'Admin (Owner)',
       status: 'Connected',
       latency: '19ms'
     }
@@ -194,7 +194,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
   const [restrictDashboardIP, setRestrictDashboardIP] = useState(false);
   const [restrictApiIP, setRestrictApiIP] = useState(false);
   const [ipAllowlist, setIpAllowlist] = useState([
-    { id: 'ip-1', label: 'Acme Mumbai HQ Gateway', cidr: '103.21.244.0/24', addedBy: 'Shaan' },
+    { id: 'ip-1', label: 'Acme Mumbai HQ Gateway', cidr: '103.21.244.0/24', addedBy: 'Admin' },
     { id: 'ip-2', label: 'AWS Production NAT Gateway (us-east-1)', cidr: '52.14.88.120/32', addedBy: 'Admin' },
     { id: 'ip-3', label: 'GCP Kubernetes Cluster Egress', cidr: '35.200.12.80/32', addedBy: 'Admin' }
   ]);
@@ -219,7 +219,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       category: 'Tokens',
       title: 'Virtual token created',
       detail: 'ost_live_production_v2 generated for Vercel AI SDK',
-      actor: 'Shaan (Owner)',
+      actor: 'Admin (Owner)',
       time: '4 minutes ago',
       ip: '103.21.244.18',
       type: 'token'
@@ -259,7 +259,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       category: 'Settings',
       title: '2FA policy enforced',
       detail: 'Require 2FA for all workspace members enabled',
-      actor: 'Shaan (Owner)',
+      actor: 'Admin (Owner)',
       time: '2 days ago',
       ip: '103.21.244.18',
       type: 'policy'
@@ -352,7 +352,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       scope: 'models:infer, telemetry:write',
       expiration: newTokenExpiry,
       lastUsed: 'Never',
-      createdBy: 'Shaan (Owner)',
+      createdBy: 'Admin (Owner)',
       createdDate: 'Today'
     };
 
@@ -395,7 +395,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       showToast('Please enter both label and CIDR.');
       return;
     }
-    setIpAllowlist([...ipAllowlist, { id: `ip-${Date.now()}`, label: newIpLabel, cidr: newIpCidr, addedBy: 'Shaan' }]);
+    setIpAllowlist([...ipAllowlist, { id: `ip-${Date.now()}`, label: newIpLabel, cidr: newIpCidr, addedBy: 'Admin' }]);
     setAddIpModalOpen(false);
     setNewIpLabel('');
     setNewIpCidr('');
@@ -770,7 +770,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                       </div>
                       <div>
                         <span className="text-xs font-bold text-charcoal-900 block">Google Workspace</span>
-                        <span className="text-[10px] font-mono text-charcoal-500">shaan@acmecorp.com</span>
+                        <span className="text-[10px] font-mono text-charcoal-500">lead-admin@acmecorp.com</span>
                       </div>
                     </div>
                     <span className="text-[11px] font-mono text-charcoal-500 hover:text-rose-600 font-bold cursor-pointer" onClick={() => showToast('Google SSO verified')}>
@@ -785,7 +785,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                       </div>
                       <div>
                         <span className="text-xs font-bold text-charcoal-900 block">GitHub Enterprise</span>
-                        <span className="text-[10px] font-mono text-charcoal-500">@shaan-prasad</span>
+                        <span className="text-[10px] font-mono text-charcoal-500">@lead-architect</span>
                       </div>
                     </div>
                     <span className="text-[11px] font-mono text-charcoal-500 hover:text-rose-600 font-bold cursor-pointer" onClick={() => showToast('GitHub SSO verified')}>
@@ -1820,7 +1820,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                     models: 'All Supported Tier Models',
                     storage: 'AES-256-GCM Encrypted',
                     lastUsed: 'Just now',
-                    createdBy: 'Shaan (Owner)',
+                    createdBy: 'Admin (Owner)',
                     status: 'Connected',
                     latency: '39ms'
                   }
