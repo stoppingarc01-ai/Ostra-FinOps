@@ -49,7 +49,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-800 font-mono">Developers</span>
             <ul className="space-y-2">
               <li>
-                <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-charcoal-900 transition-colors flex items-center gap-1">
+                <a href="https://github.com/stoppingarc01-ai/Ostra-FinOps" target="_blank" rel="noreferrer" className="hover:text-charcoal-900 transition-colors flex items-center gap-1">
                   <span>GitHub</span>
                   <ArrowUpRight className="w-3 h-3 text-charcoal-400" />
                 </a>
