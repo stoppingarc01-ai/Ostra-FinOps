@@ -10,7 +10,10 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
   const { user, profile, signOut, subscription } = useAuth();
-  const isSoloUser = subscription?.plan_id === 'solo_pro';
+  const isSoloUser =
+    subscription?.plan_id === 'solo_pro' ||
+    localStorage.getItem('ostraops_active_plan') === 'solo_pro' ||
+    localStorage.getItem('ostraops_user_tier') === 'solo';
   const consoleRoute = isSoloUser ? 'solo-guard' : 'dashboard';
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -59,14 +62,14 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
         <nav className="hidden md:flex items-center gap-8 text-[14px] font-medium text-charcoal-600">
           <button
             onClick={() => onNavigate('home')}
-            className={`transition-colors ${currentRoute === 'home' ? 'text-charcoal-900 font-medium' : 'hover:text-charcoal-900'}`}
+            className={`nav-link-animated transition-colors cursor-pointer ${currentRoute === 'home' ? 'text-charcoal-900 font-medium' : 'hover:text-charcoal-900'}`}
           >
             Product
           </button>
           
           <button
             onClick={() => onNavigate('home')}
-            className="hover:text-charcoal-900 transition-colors"
+            className="nav-link-animated hover:text-charcoal-900 transition-colors cursor-pointer"
           >
             Solutions
           </button>
@@ -95,19 +98,44 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
             Pricing
           </button>
 
-          {/* Dashboard / Console console link */}
-          <button
-            onClick={() => onNavigate(consoleRoute)}
-            className={`relative py-1 transition-all ${
-              (currentRoute === 'dashboard' || currentRoute === 'solo-guard')
-                ? 'text-charcoal-900 font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#B58E50] after:rounded-full'
-                : 'hover:text-charcoal-900'
-            }`}
-          >
-            {isSoloUser ? 'Solo Guard' : 'API Gateway'}
-          </button>
+          {/* Console Links */}
+          {user ? (
+            <>
+              <button
+                onClick={() => onNavigate('solo-guard')}
+                className={`relative py-1 transition-all ${
+                  currentRoute === 'solo-guard'
+                    ? 'text-charcoal-900 font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#B58E50] after:rounded-full'
+                    : 'hover:text-charcoal-900'
+                }`}
+              >
+                Solo Guard
+              </button>
+              <button
+                onClick={() => onNavigate('dashboard')}
+                className={`relative py-1 transition-all ${
+                  currentRoute === 'dashboard'
+                    ? 'text-charcoal-900 font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#B58E50] after:rounded-full'
+                    : 'hover:text-charcoal-900'
+                }`}
+              >
+                API Gateway
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => onNavigate('solo-guard')}
+              className={`relative py-1 transition-all ${
+                currentRoute === 'solo-guard'
+                  ? 'text-charcoal-900 font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#B58E50] after:rounded-full'
+                  : 'hover:text-charcoal-900'
+              }`}
+            >
+              Solo Guard
+            </button>
+          )}
 
-          <a href="#docs" className="hover:text-charcoal-900 transition-colors flex items-center gap-1.5">
+          <a href="#docs" className="nav-link-animated hover:text-charcoal-900 transition-colors flex items-center gap-1.5">
             Docs
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-sandstone-300/80 text-charcoal-600 font-mono">v1.0</span>
           </a>
@@ -123,9 +151,19 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
                 document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' });
               }
             }}
-            className="hover:text-charcoal-900 transition-colors cursor-pointer"
+            className="nav-link-animated hover:text-charcoal-900 transition-colors cursor-pointer"
           >
             FAQ
+          </button>
+          <button
+            onClick={() => onNavigate('about')}
+            className={`relative py-1 transition-all cursor-pointer ${
+              currentRoute === 'about'
+                ? 'text-charcoal-900 font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#B58E50] after:rounded-full'
+                : 'hover:text-charcoal-900'
+            }`}
+          >
+            About Us
           </button>
         </nav>
 
@@ -162,10 +200,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
               </button>
               <button
                 onClick={() => onNavigate('signup')}
-                className="group relative inline-flex items-center gap-2 px-4 py-2 rounded-full bg-charcoal-800 text-white text-[13.5px] font-medium shadow-sm hover:bg-charcoal-900 hover:shadow-md transition-all duration-200"
+                className="btn-primary-glow group inline-flex items-center gap-2 px-4 py-2 rounded-full bg-charcoal-800 text-white text-[13.5px] font-medium shadow-sm cursor-pointer"
               >
                 <span>Get Started</span>
-                <ArrowRight className="w-3.5 h-3.5 text-osterdGold-400 group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight className="w-3.5 h-3.5 text-ostraGold-400 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </>
           )}
@@ -204,23 +242,44 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
               Pricing
             </button>
             <button
-              onClick={() => { onNavigate(consoleRoute); setMobileMenuOpen(false); }}
-              className={`text-left py-1 ${(currentRoute === 'dashboard' || currentRoute === 'solo-guard') ? 'text-charcoal-900 font-bold' : ''}`}
+              onClick={() => { onNavigate('about'); setMobileMenuOpen(false); }}
+              className={`text-left py-1 ${currentRoute === 'about' ? 'text-charcoal-900 font-bold' : ''}`}
             >
-              {isSoloUser ? 'Solo Guard' : 'API Gateway'}
+              About Us
             </button>
+            {user ? (
+              <>
+                <button
+                  onClick={() => { onNavigate('solo-guard'); setMobileMenuOpen(false); }}
+                  className={`text-left py-1 ${currentRoute === 'solo-guard' ? 'text-charcoal-900 font-bold' : ''}`}
+                >
+                  Solo Guard (Local)
+                </button>
+                <button
+                  onClick={() => { onNavigate('dashboard'); setMobileMenuOpen(false); }}
+                  className={`text-left py-1 ${currentRoute === 'dashboard' ? 'text-charcoal-900 font-bold' : ''}`}
+                >
+                  API Gateway (Cloud)
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => { onNavigate('solo-guard'); setMobileMenuOpen(false); }}
+                className={`text-left py-1 ${currentRoute === 'solo-guard' ? 'text-charcoal-900 font-bold' : ''}`}
+              >
+                Solo Guard
+              </button>
+            )}
             <a href="#docs" onClick={() => setMobileMenuOpen(false)} className="py-1">Docs</a>
             <a href="#blog" onClick={() => setMobileMenuOpen(false)} className="py-1">Blog</a>
             <hr className="border-borderLight my-1" />
             <div className="flex items-center justify-between pt-2">
               {user ? (
                 <>
-                  <button
-                    onClick={() => { onNavigate(consoleRoute); setMobileMenuOpen(false); }}
-                    className="text-charcoal-700 font-medium"
-                  >
-                    {isSoloUser ? 'Solo Guard' : 'API Gateway'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-xs font-semibold text-charcoal-800 truncate max-w-[140px]">{profile?.full_name || user?.email}</span>
+                  </div>
                   <button
                     onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-charcoal-800 text-white text-sm font-medium"
@@ -242,7 +301,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-charcoal-800 text-white text-sm font-medium"
                   >
                     <span>Get Started</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-osterdGold-400" />
+                    <ArrowRight className="w-3.5 h-3.5 text-ostraGold-400" />
                   </button>
                 </>
               )}

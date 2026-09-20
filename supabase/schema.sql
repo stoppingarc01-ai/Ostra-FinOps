@@ -1,5 +1,5 @@
 -- ==============================================================================
--- OsterdOps 2.0 Enterprise Hosted Gateway & Multi-Tenant Schema (Phase 1)
+-- OstraOps 2.0 Enterprise Hosted Gateway & Multi-Tenant Schema (Phase 1)
 -- Run this in Supabase SQL Editor (Dashboard -> SQL Editor -> New query)
 -- ==============================================================================
 

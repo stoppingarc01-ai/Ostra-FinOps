@@ -31,7 +31,7 @@ export const AgentEcosystemSection: React.FC = () => {
       codeSnippet: `// In Cline Settings > API Provider:
 // Base URL: http://127.0.0.1:8080/v1
 // Model: claude-3-7-sonnet
-// Hard limit enforced automatically by OsterdOps Daemon.`,
+// Hard limit enforced automatically by OstraOps Daemon.`,
       supportedModels: 'Claude 3.7 Sonnet, DeepSeek-R1',
       stat: '$15/day Circuit Breaker',
     },
@@ -53,7 +53,7 @@ export WINDSURF_PROXY_ENABLED="true"`,
       category: 'Next-Gen Autonomous IDE',
       description: 'Native deep integration with loopback telemetry and subagent trace aggregation.',
       configType: 'Workspace Config / Daemon auto-bind',
-      envVar: 'OSTERDOPS_DAEMON_PORT=8080',
+      envVar: 'OSTRAOPS_DAEMON_PORT=8080',
       codeSnippet: `// .agents/config.json
 {
   "telemetry": "local",
@@ -70,7 +70,7 @@ export WINDSURF_PROXY_ENABLED="true"`,
       description: 'Add financial safeguards to multi-file git commit generation and diff loops in your shell.',
       configType: 'CLI Flag / Environment Variable',
       envVar: 'aider --openai-api-base http://127.0.0.1:8080/v1',
-      codeSnippet: `# Run Aider paired through the OsterdOps financial firewall
+      codeSnippet: `# Run Aider paired through the OstraOps financial gateway
 aider --openai-api-base http://127.0.0.1:8080/v1 \\
       --model openai/gpt-4o`,
       supportedModels: 'GPT-4o, Claude 3.5 Sonnet, DeepSeek-V3',
@@ -85,7 +85,7 @@ aider --openai-api-base http://127.0.0.1:8080/v1 \\
       envVar: 'base_url="http://127.0.0.1:8080/v1"',
       codeSnippet: `from openai import OpenAI
 
-# OsterdOps intercepts all outbound calls transparently
+# OstraOps intercepts all outbound calls transparently
 client = OpenAI(
     base_url="http://127.0.0.1:8080/v1",
     api_key="your-api-key"
@@ -110,7 +110,7 @@ client = OpenAI(
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-200 border border-sandstone-300/80 text-[11px] font-bold tracking-[0.16em] text-charcoal-700 uppercase font-mono mb-3">
-            <span className="w-2 h-2 rounded-full bg-osterdGold-500" />
+            <span className="w-2 h-2 rounded-full bg-ostraGold-500" />
             <span>UNIVERSAL AGENT COMPATIBILITY</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
@@ -118,7 +118,7 @@ client = OpenAI(
             <span className="gold-gradient-text block">Zero Code Rewrites.</span>
           </h2>
           <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
-            OsterdOps speaks fluent OpenAI and Anthropic HTTP protocol. Just point your agent's Base URL to <code className="bg-sandstone-200 px-1.5 py-0.5 rounded text-charcoal-900 font-mono text-xs">127.0.0.1:8080</code>.
+            OstraOps speaks fluent OpenAI and Anthropic HTTP protocol. Just point your agent's Base URL to <code className="bg-sandstone-200 px-1.5 py-0.5 rounded text-charcoal-900 font-mono text-xs">127.0.0.1:8080</code>.
           </p>
         </div>
 
@@ -132,7 +132,7 @@ client = OpenAI(
                 onClick={() => setSelectedAgent(a.id)}
                 className={`p-4 rounded-2xl text-left border transition-all duration-200 cursor-pointer ${
                   isSelected
-                    ? 'bg-white border-osterdGold-500 shadow-card-3d -translate-y-1'
+                    ? 'bg-white border-ostraGold-500 shadow-card-3d -translate-y-1'
                     : 'bg-[#FAF8F5] border-[#EAE5DB] hover:bg-white hover:border-sandstone-400'
                 }`}
               >
@@ -141,7 +141,7 @@ client = OpenAI(
                     {a.name}
                   </span>
                   {isSelected && (
-                    <span className="w-2 h-2 rounded-full bg-osterdGold-500 shadow-[0_0_8px_#D4AF7C]" />
+                    <span className="w-2 h-2 rounded-full bg-ostraGold-500 shadow-[0_0_8px_#D4AF7C]" />
                   )}
                 </div>
                 <span className="text-[10px] text-charcoal-500 font-mono block truncate">
@@ -201,7 +201,7 @@ client = OpenAI(
               <div className="rounded-2xl bg-charcoal-950 text-white border border-charcoal-800 shadow-2xl overflow-hidden font-mono text-xs">
                 <div className="flex items-center justify-between px-4 py-3 bg-charcoal-900 border-b border-charcoal-800">
                   <div className="flex items-center gap-2 text-zinc-400 text-[11px]">
-                    <Terminal className="w-3.5 h-3.5 text-osterdGold-400" />
+                    <Terminal className="w-3.5 h-3.5 text-ostraGold-400" />
                     <span>One-Line Connection Spec</span>
                   </div>
                   <button
@@ -222,7 +222,7 @@ client = OpenAI(
                   </button>
                 </div>
 
-                <pre className="p-5 text-[11px] leading-relaxed overflow-x-auto text-zinc-300 selection:bg-osterdGold-500/30">
+                <pre className="p-5 text-[11px] leading-relaxed overflow-x-auto text-zinc-300 selection:bg-ostraGold-500/30">
                   <code>{current.codeSnippet}</code>
                 </pre>
               </div>

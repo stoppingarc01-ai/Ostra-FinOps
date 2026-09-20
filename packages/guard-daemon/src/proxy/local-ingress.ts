@@ -86,7 +86,7 @@ export async function handleLocalIngress(
   const startTime = Date.now();
   let ttftMs: number | null = null;
   const provider = isOpenAI ? 'openai' : 'anthropic';
-  const sessionId = (req.headers['x-session-id'] as string) || (req.headers['osterdops-session'] as string) || 'default-session';
+  const sessionId = (req.headers['x-session-id'] as string) || (req.headers['ostraops-session'] as string) || 'default-session';
 
   // 1. Circuit Breaker: Check session budget
   try {
@@ -96,7 +96,7 @@ export async function handleLocalIngress(
       res.end(
         JSON.stringify({
           error: {
-            message: `OsterdOps Guard Circuit Breaker: Session budget cap of $${ctx.config.sessionBudgetUsd.toFixed(
+            message: `OstraOps Guard Circuit Breaker: Session budget cap of $${ctx.config.sessionBudgetUsd.toFixed(
               2
             )} USD reached. Current spend: $${sessionSummary.totalCostUsd.toFixed(4)} USD.`,
             type: 'budget_exceeded',

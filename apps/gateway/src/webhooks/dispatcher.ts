@@ -91,8 +91,8 @@ export async function dispatchSignedWebhook(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'OsterdOps-Webhook-Dispatcher/2.0',
-        'X-OsterdOps-Signature': signature,
+        'User-Agent': 'OstraOps-Webhook-Dispatcher/2.0',
+        'X-OstraOps-Signature': signature,
       },
       body: rawBody,
       signal: controller.signal,

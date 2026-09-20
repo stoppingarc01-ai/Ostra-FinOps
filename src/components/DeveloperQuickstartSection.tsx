@@ -6,22 +6,22 @@ export const DeveloperQuickstartSection: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const snippets = {
-    npx: `# 1. Start the local-first loopback financial firewall
-npx osterdops-guard
+    npx: `# 1. Start the local-first loopback financial gateway
+npx ostraops-guard
 
 # Output:
-# ✔ OsterdOps Loopback Daemon running on http://127.0.0.1:8080
+# ✔ OstraOps Loopback Daemon running on http://127.0.0.1:8080
 # ✔ Telemetry & Circuit Breaker Console at http://127.0.0.1:4040
-# ✔ Local SQLite persistent buffer at ~/.osterdops/traces.db
+# ✔ Local SQLite persistent buffer at ~/.ostraops/traces.db
 # ✔ Intra-family failover armed (Claude 3.7 -> 3.5 Haiku)`,
-    python: `# Install OsterdOps Python wrapper
-pip install osterdops-guard
+    python: `# Install OstraOps Python wrapper
+pip install ostraops-guard
 
 # Use transparently with OpenAI, Anthropic, or LangChain
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="http://127.0.0.1:8080/v1",  # Point to OsterdOps Daemon
+    base_url="http://127.0.0.1:8080/v1",  # Point to OstraOps Daemon
     api_key="sk-ant-..."                  # Your upstream API key
 )
 
@@ -41,13 +41,13 @@ const completion = await openai.chat.completions.create({
   model: 'claude-3-7-sonnet',
   messages: [{ role: 'user', content: 'Generate schema tests' }],
 });`,
-    curl: `# Direct cURL test against OsterdOps Local Gateway
+    curl: `# Direct cURL test against OstraOps Local Gateway
 curl http://127.0.0.1:8080/v1/chat/completions \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer $OPENAI_API_KEY" \\
   -d '{
     "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "Ping OsterdOps Daemon"}],
+    "messages": [{"role": "user", "content": "Ping OstraOps Daemon"}],
     "stream": true
   }'`,
   };
@@ -87,12 +87,12 @@ curl http://127.0.0.1:8080/v1/chat/completions \\
               Launch Local Daemon
             </h4>
             <p className="text-xs text-charcoal-600 leading-relaxed">
-              Run <code className="bg-sandstone-200 px-1.5 py-0.5 rounded font-mono text-charcoal-900">npx osterdops-guard</code> in any terminal. Binds to localhost port 8080 with 0 configuration.
+              Run <code className="bg-sandstone-200 px-1.5 py-0.5 rounded font-mono text-charcoal-900">npx ostraops-guard</code> in any terminal. Binds to localhost port 8080 with 0 configuration.
             </p>
           </div>
 
           <div className="p-6 rounded-2xl bg-white border border-[#EAE5DB] shadow-subtle space-y-3">
-            <div className="w-8 h-8 rounded-xl bg-osterdGold-600 text-white flex items-center justify-center font-mono text-xs font-bold">
+            <div className="w-8 h-8 rounded-xl bg-ostraGold-600 text-white flex items-center justify-center font-mono text-xs font-bold">
               2
             </div>
             <h4 className="text-base font-bold text-charcoal-900 font-display">
@@ -139,7 +139,7 @@ curl http://127.0.0.1:8080/v1/chat/completions \\
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
                     activeTab === tab.id
-                      ? 'bg-charcoal-800 text-osterdGold-300 font-bold'
+                      ? 'bg-charcoal-800 text-ostraGold-300 font-bold'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -167,7 +167,7 @@ curl http://127.0.0.1:8080/v1/chat/completions \\
           </div>
 
           {/* Terminal Body */}
-          <div className="p-6 sm:p-8 font-mono text-xs leading-relaxed overflow-x-auto text-zinc-300 selection:bg-osterdGold-500/30">
+          <div className="p-6 sm:p-8 font-mono text-xs leading-relaxed overflow-x-auto text-zinc-300 selection:bg-ostraGold-500/30">
             <pre>
               <code>{snippets[activeTab]}</code>
             </pre>

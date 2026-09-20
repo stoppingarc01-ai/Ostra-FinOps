@@ -142,7 +142,7 @@ async function runSelfCheck() {
 
     assert.strictEqual(getStatusCode(), 401, 'Must return 401 on missing auth');
     const json = getJson() as { error: { code: string; type: string; param: unknown; message: string } };
-    assert.strictEqual(json.error.code, 'OSTERDOPS_UNAUTHORIZED');
+    assert.strictEqual(json.error.code, 'OSTRAOPS_UNAUTHORIZED');
     assert.strictEqual(json.error.type, 'authentication_error');
     assert.strictEqual(json.error.param, null);
   }
@@ -169,7 +169,7 @@ async function runSelfCheck() {
     const check = limiter.checkLimit(mockKey);
     assert.strictEqual(check.allowed, false);
     assert.strictEqual(check.status, 429);
-    assert.strictEqual(check.errorPayload?.error.code, 'OSTERDOPS_RATE_LIMITED');
+    assert.strictEqual(check.errorPayload?.error.code, 'OSTRAOPS_RATE_LIMITED');
 
     // Release slots
     limiter.releaseSlot(mockKey.id);
@@ -194,7 +194,7 @@ async function runSelfCheck() {
 
     assert.strictEqual(getStatusCode(), 400, 'Must return 400 on malformed JSON');
     const json = getJson() as { error: { code: string } };
-    assert.strictEqual(json.error.code, 'OSTERDOPS_MALFORMED_JSON');
+    assert.strictEqual(json.error.code, 'OSTRAOPS_MALFORMED_JSON');
 
     // Concurrency slot MUST have been released in finally block
     assert.strictEqual(
@@ -234,8 +234,8 @@ async function runSelfCheck() {
 
     assert.strictEqual(getStatusCode(), 402, 'Must return 402 on budget cap exhaustion');
     const json = getJson() as { error: { code: string; type: string } };
-    assert.strictEqual(json.error.code, 'OSTERDOPS_BUDGET_EXCEEDED');
-    assert.strictEqual(json.error.type, 'osterdops_budget_exceeded');
+    assert.strictEqual(json.error.code, 'OSTRAOPS_BUDGET_EXCEEDED');
+    assert.strictEqual(json.error.type, 'ostraops_budget_exceeded');
 
     // Concurrency slot must still be 0
     assert.strictEqual(limiter.getActiveConcurrency(nearLimitKey.id), 0);

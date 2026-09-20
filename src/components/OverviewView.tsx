@@ -103,7 +103,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-charcoal-500">Total Spend</span>
-            <div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-100/80 flex items-center justify-center text-osterdGold-700">
+            <div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-100/80 flex items-center justify-center text-ostraGold-700">
               <DollarSign className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -170,7 +170,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-charcoal-500">Active Models</span>
-            <div className="w-7 h-7 rounded-lg bg-amber-50/80 border border-amber-100 flex items-center justify-center text-osterdGold-600">
+            <div className="w-7 h-7 rounded-lg bg-amber-50/80 border border-amber-100 flex items-center justify-center text-ostraGold-600">
               <Zap className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -292,7 +292,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                   onClick={() => setSelectedDay(i)}
                   className={`cursor-pointer transition-colors ${
                     selectedDay === i 
-                      ? 'font-bold text-charcoal-900 underline decoration-osterdGold-500 underline-offset-4' 
+                      ? 'font-bold text-charcoal-900 underline decoration-ostraGold-500 underline-offset-4' 
                       : 'hover:text-charcoal-800'
                   }`}
                 >
@@ -477,7 +477,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         {/* Net Saved Card (5 cols on lg, Dark Charcoal Card with Gold Waves) */}
         <div className="lg:col-span-5 relative p-7 rounded-3xl bg-gradient-to-br from-[#111414] via-[#18181B] to-[#0B0F0F] text-white overflow-hidden shadow-xl border border-charcoal-800/80 flex flex-col justify-between min-h-[220px]">
           
-          {/* Flowing Gold Topographic Waves (Signature OsterdOps wave art) */}
+          {/* Flowing Gold Topographic Waves (Signature OstraOps wave art) */}
           <div className="absolute inset-0 opacity-30 pointer-events-none">
             <svg className="w-full h-full" viewBox="0 0 300 180" preserveAspectRatio="none">
               <path d="M0,150 C80,100 160,170 300,110" stroke="#C59E5F" strokeWidth="1.4" fill="none" />

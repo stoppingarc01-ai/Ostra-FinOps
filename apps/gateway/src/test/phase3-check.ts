@@ -91,8 +91,8 @@ async function runPhase3Check() {
       outputClamped: true,
       clampedLimit: failoverRes.clampedLimit,
     });
-    assert.strictEqual(headers['X-OsterdOps-Output-Clamped'], String(failoverRes.clampedLimit));
-    assert.strictEqual(headers['X-OsterdOps-Fallback-Triggered'], 'true');
+    assert.strictEqual(headers['X-OstraOps-Output-Clamped'], String(failoverRes.clampedLimit));
+    assert.strictEqual(headers['X-OstraOps-Fallback-Triggered'], 'true');
 
     // Check SSE comment injection
     const sseComment = buildRoutingSseComment({
@@ -102,7 +102,7 @@ async function runPhase3Check() {
       outputClamped: true,
       clampedLimit: failoverRes.clampedLimit,
     });
-    assert.ok(sseComment.startsWith(': osterdops-routing: '));
+    assert.ok(sseComment.startsWith(': ostraops-routing: '));
     assert.ok(sseComment.includes('"clamped":true'));
     console.log(`   ✔ Clamped to ${failoverRes.clampedLimit} tokens with headers & SSE comment attached.`);
   }

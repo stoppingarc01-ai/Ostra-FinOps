@@ -19,20 +19,28 @@ import { AuthShowcasePage } from './pages/AuthShowcasePage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { SoloGuardPage } from './pages/SoloGuardPage';
 import { LegalPage } from './pages/LegalPage';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { BuildErrorPage } from './pages/BuildErrorPage';
+import { ServerErrorPage } from './pages/ServerErrorPage';
+import { RateLimitPage } from './pages/RateLimitPage';
+import { AboutUsPage } from './pages/AboutUsPage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { CookieBanner } from './components/CookieBanner';
 import { Footer } from './components/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
-export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'auth-showcase' | 'forgot-password' | 'solo-guard' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies';
+export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'auth-showcase' | 'forgot-password' | 'solo-guard' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'about' | '404' | '500' | 'build-error' | '429';
 
 // Routes that require authentication
 const PROTECTED_ROUTES: AppRoute[] = ['solo-guard', 'dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings'];
 
 const AppInner: React.FC = () => {
   const { user, loading, subscription } = useAuth();
-  const isSoloUser = subscription?.plan_id === 'solo_pro';
-  const defaultConsole = isSoloUser ? 'solo-guard' : 'dashboard';
+  const isSoloUser =
+    subscription?.plan_id === 'solo_pro' ||
+    localStorage.getItem('ostraops_active_plan') === 'solo_pro' ||
+    localStorage.getItem('ostraops_user_tier') === 'solo';
 
   const getInitialRoute = (): AppRoute => {
     const path = window.location.pathname.toLowerCase();
@@ -55,18 +63,52 @@ const AppInner: React.FC = () => {
     if (path.includes('privacy') || hash.includes('privacy')) return 'privacy';
     if (path.includes('terms') || hash.includes('terms')) return 'terms';
     if (path.includes('cookies') || hash.includes('cookies') || path.includes('cookie') || hash.includes('cookie')) return 'cookies';
+    if (path.includes('about') || hash.includes('about')) return 'about';
     if (path.includes('pricing') || hash.includes('pricing')) return 'pricing';
+    if (path.includes('429') || hash.includes('429') || path.includes('rate-limit') || hash.includes('rate-limit') || path.includes('quota') || hash.includes('quota')) return '429';
+    if (path.includes('build-error') || hash.includes('build-error') || path.includes('build') || hash.includes('build')) return 'build-error';
+    if (path.includes('500') || hash.includes('500') || path.includes('server-error') || hash.includes('server-error')) return '500';
+    if (path.includes('404') || hash.includes('404') || path.includes('not-found') || hash.includes('not-found')) return '404';
+    if (hash && hash !== '#' && hash !== '#home' && hash !== '') return '404';
     return 'home';
   };
 
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(getInitialRoute);
 
+  const getPreferredConsole = (): AppRoute => {
+    try {
+      const active = localStorage.getItem('ostraops_active_plan');
+      if (active === 'solo_pro') return 'solo-guard';
+      if (active === 'team_scale') return 'dashboard';
+
+      const raw = sessionStorage.getItem('ostraops_pending_plan') || localStorage.getItem('ostraops_pending_plan');
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p.planId === 'solo_pro' || p.type === 'solo') return 'solo-guard';
+        if (p.planId === 'team_scale' || p.type === 'hosted') return 'dashboard';
+      }
+    } catch {}
+    return isSoloUser ? 'solo-guard' : 'dashboard';
+  };
+
   const navigate = (route: AppRoute | string) => {
+    if (route === 'solo-guard') {
+      try {
+        localStorage.setItem('ostraops_active_plan', 'solo_pro');
+        localStorage.setItem('ostraops_user_tier', 'solo');
+      } catch {}
+    } else if (route === 'dashboard') {
+      try {
+        localStorage.setItem('ostraops_active_plan', 'team_scale');
+        localStorage.setItem('ostraops_user_tier', 'team');
+      } catch {}
+    }
+
     // If navigating to a protected route without auth, redirect to signup (if pending plan) or login
     if (PROTECTED_ROUTES.includes(route as AppRoute) && !user) {
       let authTarget: AppRoute = 'login';
       try {
-        if (sessionStorage.getItem('osterdops_pending_plan')) {
+        if (sessionStorage.getItem('ostraops_pending_plan') || localStorage.getItem('ostraops_pending_plan')) {
           authTarget = 'signup';
         }
       } catch {}
@@ -76,20 +118,9 @@ const AppInner: React.FC = () => {
     }
     // If logged in and navigating to login/signup, go to their respective console
     if (user && (route === 'login' || route === 'signup')) {
-      setCurrentRoute(defaultConsole);
-      window.history.pushState(null, '', `#${defaultConsole}`);
-      return;
-    }
-    // Solo Pro subscribers ONLY get the Solo Guard console (never hosted gateway/team routes)
-    if (user && isSoloUser && PROTECTED_ROUTES.includes(route as AppRoute) && route !== 'solo-guard') {
-      setCurrentRoute('solo-guard');
-      window.history.pushState(null, '', '#solo-guard');
-      return;
-    }
-    // Hosted Gateway subscribers ONLY get the API Gateway Dashboard (never solo guard)
-    if (user && !isSoloUser && route === 'solo-guard') {
-      setCurrentRoute('dashboard');
-      window.history.pushState(null, '', '#dashboard');
+      const target = getPreferredConsole();
+      setCurrentRoute(target);
+      window.history.pushState(null, '', `#${target}`);
       return;
     }
     setCurrentRoute(route as AppRoute);
@@ -104,7 +135,7 @@ const AppInner: React.FC = () => {
     if (PROTECTED_ROUTES.includes(currentRoute) && !user) {
       let authTarget: AppRoute = 'login';
       try {
-        if (sessionStorage.getItem('osterdops_pending_plan')) {
+        if (sessionStorage.getItem('ostraops_pending_plan')) {
           authTarget = 'signup';
         }
       } catch {}
@@ -113,20 +144,11 @@ const AppInner: React.FC = () => {
     }
     // If logged in and on auth pages, go to their console
     if (user && (currentRoute === 'login' || currentRoute === 'signup')) {
-      setCurrentRoute(defaultConsole);
-      window.history.replaceState(null, '', `#${defaultConsole}`);
+      const target = getPreferredConsole();
+      setCurrentRoute(target);
+      window.history.replaceState(null, '', `#${target}`);
     }
-    // Solo Pro subscribers ONLY get the Solo Guard page
-    if (user && isSoloUser && currentRoute !== 'solo-guard' && PROTECTED_ROUTES.includes(currentRoute)) {
-      setCurrentRoute('solo-guard');
-      window.history.replaceState(null, '', '#solo-guard');
-    }
-    // Hosted Gateway subscribers ONLY get the API Gateway Dashboard
-    if (user && !isSoloUser && currentRoute === 'solo-guard') {
-      setCurrentRoute('dashboard');
-      window.history.replaceState(null, '', '#dashboard');
-    }
-  }, [loading, user, currentRoute, isSoloUser, defaultConsole]);
+  }, [loading, user, currentRoute, isSoloUser]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -151,7 +173,13 @@ const AppInner: React.FC = () => {
       else if (path.includes('privacy') || hash.includes('privacy')) route = 'privacy';
       else if (path.includes('terms') || hash.includes('terms')) route = 'terms';
       else if (path.includes('cookies') || hash.includes('cookies') || path.includes('cookie') || hash.includes('cookie')) route = 'cookies';
+      else if (path.includes('about') || hash.includes('about')) route = 'about';
       else if (path.includes('pricing') || hash.includes('pricing')) route = 'pricing';
+      else if (path.includes('429') || hash.includes('429') || path.includes('rate-limit') || hash.includes('rate-limit') || path.includes('quota') || hash.includes('quota')) route = '429';
+      else if (path.includes('build-error') || hash.includes('build-error') || path.includes('build') || hash.includes('build')) route = 'build-error';
+      else if (path.includes('500') || hash.includes('500') || path.includes('server-error') || hash.includes('server-error')) route = '500';
+      else if (path.includes('404') || hash.includes('404') || path.includes('not-found') || hash.includes('not-found')) route = '404';
+      else if (hash && hash !== '#' && hash !== '#home' && hash !== '') route = '404';
       setCurrentRoute(route);
     };
 
@@ -260,6 +288,7 @@ const AppInner: React.FC = () => {
         <DashboardPage
           onNavigateHome={() => navigate('home')}
           onNavigatePricing={() => navigate('pricing')}
+          onNavigateSoloGuard={() => navigate('solo-guard')}
           initialTab={currentRoute === 'dashboard' ? 'dashboard' : currentRoute}
         />
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
@@ -267,8 +296,46 @@ const AppInner: React.FC = () => {
     );
   }
 
+  // Dedicated Error Pages (Individual standalone components)
+  if (currentRoute === '404') {
+    return (
+      <NotFoundPage
+        onNavigateHome={() => navigate('home')}
+        onNavigateDashboard={() => navigate('dashboard')}
+      />
+    );
+  }
+
+  if (currentRoute === 'build-error') {
+    return (
+      <BuildErrorPage
+        onNavigateHome={() => navigate('home')}
+        onNavigateDashboard={() => navigate('dashboard')}
+      />
+    );
+  }
+
+  if (currentRoute === '500') {
+    return (
+      <ServerErrorPage
+        onNavigateHome={() => navigate('home')}
+        onNavigateDashboard={() => navigate('dashboard')}
+      />
+    );
+  }
+
+  if (currentRoute === '429') {
+    return (
+      <RateLimitPage
+        onNavigateHome={() => navigate('home')}
+        onNavigateDashboard={() => navigate('dashboard')}
+        onNavigatePricing={() => navigate('pricing')}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans antialiased selection:bg-osterdGold-500/20 selection:text-charcoal-900 overflow-x-hidden">
+    <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans antialiased selection:bg-ostraGold-500/20 selection:text-charcoal-900 overflow-x-hidden">
       {/* Fixed Navigation Header */}
       <Navbar currentRoute={currentRoute} onNavigate={navigate} />
 
@@ -308,14 +375,24 @@ const AppInner: React.FC = () => {
             onNavigatePricing={() => navigate('pricing')}
             onNavigateDashboard={() => navigate('dashboard')}
           />
-        ) : (
+        ) : currentRoute === 'about' ? (
+          <AboutUsPage
+            onNavigateHome={() => navigate('home')}
+            onNavigatePricing={() => navigate('pricing')}
+            onNavigateModels={() => navigate('models')}
+            onNavigateSoloGuard={() => navigate('solo-guard')}
+          />
+        ) : currentRoute === 'pricing' ? (
           /* Separate Dedicated Pricing Page */
           <PricingPage
             onNavigateHome={() => navigate('home')}
             onNavigateLogin={() => navigate('login')}
-            onNavigateSignup={() => navigate('signup')}
+            onNavigateOnboarding={() => navigate('onboarding')}
+          />
+        ) : (
+          <NotFoundPage
+            onNavigateHome={() => navigate('home')}
             onNavigateDashboard={() => navigate('dashboard')}
-            onNavigateSoloGuard={() => navigate('solo-guard')}
           />
         )}
       </main>
@@ -330,9 +407,14 @@ const AppInner: React.FC = () => {
 };
 
 export const App: React.FC = () => (
-  <AuthProvider>
-    <AppInner />
-  </AuthProvider>
+  <ErrorBoundary
+    onNavigateHome={() => { window.location.hash = ''; window.location.pathname = '/'; }}
+    onNavigateDashboard={() => { window.location.hash = '#dashboard'; }}
+  >
+    <AuthProvider>
+      <AppInner />
+    </AuthProvider>
+  </ErrorBoundary>
 );
 
 export default App;

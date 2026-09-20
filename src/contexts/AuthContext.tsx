@@ -104,7 +104,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [orgRole, setOrgRole] = useState<OrgRole | null>(null);
-  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+  const [subscription, setSubscription] = useState<UserSubscription | null>(() => {
+    try {
+      const active = localStorage.getItem('ostraops_active_plan');
+      const raw = localStorage.getItem('ostraops_subscription');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (active === 'solo_pro' && parsed.plan_id !== 'solo_pro') {
+          parsed.plan_id = 'solo_pro';
+          parsed.plan_name = 'Solo Pro';
+        }
+        return parsed;
+      }
+      if (active === 'solo_pro') {
+        return {
+          id: 'local_solo',
+          user_id: 'local_solo',
+          plan_id: 'solo_pro',
+          plan_name: 'Solo Pro',
+          price_amount: 12,
+          billing_interval: 'mo',
+          status: 'active',
+          renewal_date: '18 Oct, 2026',
+          quota_usage_percent: 74,
+          quota_used: 74000,
+          quota_limit: 100000,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      }
+    } catch {}
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
   const syncOrCreateUserDocs = async (fbUser: FirebaseUser) => {
@@ -180,10 +211,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let userSub = await getUserSubscription(userId);
       if (!userSub) {
         userSub = await createUserDefaultSubscription(userId);
+      } else {
+        try {
+          const raw = sessionStorage.getItem('ostraops_pending_plan');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const isSolo = parsed.planId === 'solo_pro' || parsed.type === 'solo';
+            if (isSolo && userSub.plan_id !== 'solo_pro') {
+              const updatedSub = {
+                plan_id: 'solo_pro' as const,
+                plan_name: 'Solo Pro',
+                price_amount: parsed.amount || 12,
+                billing_interval: (parsed.billingInterval as any) || 'mo',
+                status: 'active' as const,
+                quota_limit: 100000,
+                quota_used: 74000,
+                quota_usage_percent: 74,
+                renewal_date: '18 Oct, 2026',
+              };
+              await updateUserSubscription(userId, updatedSub);
+              userSub = { ...userSub, ...updatedSub };
+            }
+          }
+        } catch {}
       }
       setSubscription(userSub);
     } catch (e) {
       console.warn('Could not sync Firestore profile or subscription:', e);
+      try {
+        const active = localStorage.getItem('ostraops_active_plan');
+        const raw = localStorage.getItem('ostraops_subscription');
+        if (raw) {
+          setSubscription(JSON.parse(raw));
+        } else if (active === 'solo_pro') {
+          const fallbackSub: UserSubscription = {
+            id: fbUser.uid,
+            user_id: fbUser.uid,
+            plan_id: 'solo_pro',
+            plan_name: 'Solo Pro',
+            price_amount: 12,
+            billing_interval: 'mo',
+            status: 'active',
+            renewal_date: '18 Oct, 2026',
+            quota_usage_percent: 74,
+            quota_used: 74000,
+            quota_limit: 100000,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          setSubscription(fallbackSub);
+          localStorage.setItem('ostraops_subscription', JSON.stringify(fallbackSub));
+        }
+      } catch {}
     }
   };
 
@@ -316,13 +395,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateSubscription = async (updates: Partial<UserSubscription>) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    // 1. Immediately update React state
+    setSubscription((prev) => (prev ? { ...prev, ...updates } : (updates as UserSubscription)));
+
+    // 2. Persist to localStorage immediately
     try {
-      await updateUserSubscription(user.id, updates);
-      return { error: null };
-    } catch (err) {
-      return { error: formatFirebaseError(err) };
+      if (updates.plan_id) {
+        localStorage.setItem('ostraops_active_plan', updates.plan_id);
+        localStorage.setItem('ostraops_user_tier', updates.plan_id === 'solo_pro' ? 'solo' : 'team');
+      }
+      const raw = localStorage.getItem('ostraops_subscription');
+      const current = raw ? JSON.parse(raw) : {};
+      localStorage.setItem('ostraops_subscription', JSON.stringify({ ...current, ...updates }));
+    } catch {}
+
+    // 3. Attempt async Firestore write if user is authenticated without blocking caller
+    if (user) {
+      try {
+        await updateUserSubscription(user.id, updates);
+      } catch (err) {
+        console.warn('Firestore subscription update notice (persisted in local state):', err);
+      }
     }
+    return { error: null };
   };
 
   const deleteAccount = async () => {

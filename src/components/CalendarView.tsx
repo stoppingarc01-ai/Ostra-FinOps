@@ -109,7 +109,7 @@ const INITIAL_TASKS: CalendarTask[] = [
   },
   {
     id: 'task_6',
-    title: 'Deploy OsterdOps Guard v2.0 to Staging Cluster',
+    title: 'Deploy OstraOps Guard v2.0 to Staging Cluster',
     description: 'Verify loopback binding and local SQLite WAL performance.',
     targetDate: '2026-09-14',
     targetTime: '15:00',
@@ -137,7 +137,7 @@ export const CalendarView: React.FC = () => {
   // Tasks state with LocalStorage persistence & initial mock data
   const [tasks, setTasks] = useState<CalendarTask[]>(() => {
     try {
-      const saved = localStorage.getItem('osterdops_calendar_tasks');
+      const saved = localStorage.getItem('ostraops_calendar_tasks');
       return saved ? JSON.parse(saved) : INITIAL_TASKS;
     } catch {
       return INITIAL_TASKS;
@@ -147,7 +147,7 @@ export const CalendarView: React.FC = () => {
   // Save to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('osterdops_calendar_tasks', JSON.stringify(tasks));
+      localStorage.setItem('ostraops_calendar_tasks', JSON.stringify(tasks));
     } catch {
       // Ignored
     }

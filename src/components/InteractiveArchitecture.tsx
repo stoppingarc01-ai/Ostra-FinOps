@@ -14,13 +14,13 @@ export const InteractiveArchitecture: React.FC = () => {
   return (
     <section id="architecture" className="relative py-24 bg-[#F5F2EB] border-t border-[#EAE5DB] overflow-hidden">
       {/* Ambient background glow */}
-      <div className="absolute top-0 right-1/4 w-[600px] h-[500px] bg-gradient-to-br from-osterdGold-400/10 via-amber-200/10 to-transparent blur-[120px] pointer-events-none -z-10" />
+      <div className="absolute top-0 right-1/4 w-[600px] h-[500px] bg-gradient-to-br from-ostraGold-400/10 via-amber-200/10 to-transparent blur-[120px] pointer-events-none -z-10" />
 
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-300/80 border border-sandstone-400/60 text-[11px] font-bold tracking-[0.16em] text-charcoal-700 uppercase font-mono mb-3">
-            <span className="w-2 h-2 rounded-full bg-osterdGold-600" />
+            <span className="w-2 h-2 rounded-full bg-ostraGold-600" />
             <span>DETERMINISTIC ARCHITECTURE SPECIFICATION</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
@@ -28,7 +28,7 @@ export const InteractiveArchitecture: React.FC = () => {
             <span className="gold-gradient-text block">Local Loopback & Intra-Family Failover.</span>
           </h2>
           <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
-            Traditional AI proxies fail autonomous agents because they swap vendors mid-turn and corrupt JSON tool schemas. OsterdOps isolates provider families and validates payloads locally before charges accrue.
+            Traditional AI proxies fail autonomous agents because they swap vendors mid-turn and corrupt JSON tool schemas. OstraOps isolates provider families and validates payloads locally before charges accrue.
           </p>
         </div>
 
@@ -38,7 +38,7 @@ export const InteractiveArchitecture: React.FC = () => {
             <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-charcoal-700">
               Zero-Overhead End-to-End Interception Pipeline
             </h3>
-            <span className="text-[11px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+            <span className="text-[11px] font-mono text-charcoal-700 font-bold bg-sandstone-200/80 px-2.5 py-0.5 rounded-full border border-sandstone-300">
               Total In-Memory Overhead: &lt; 0.42ms
             </span>
           </div>
@@ -96,7 +96,7 @@ export const InteractiveArchitecture: React.FC = () => {
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-bold text-osterdGold-600 bg-sandstone-200 px-2 py-0.5 rounded">
+                      <span className="text-xs font-mono font-bold text-ostraGold-600 bg-sandstone-200 px-2 py-0.5 rounded">
                         {card.step}
                       </span>
                       <Icon className="w-4 h-4 text-charcoal-400 group-hover:text-charcoal-900 transition-colors" />
@@ -171,7 +171,7 @@ export const InteractiveArchitecture: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: OsterdOps Deterministic Intra-Family Cascading (6 cols) */}
+          {/* Right: OstraOps Deterministic Intra-Family Cascading (6 cols) */}
           <div className="lg:col-span-6 p-6 sm:p-8 rounded-3xl bg-white border border-emerald-300/80 shadow-card-3d flex flex-col justify-between">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -180,7 +180,7 @@ export const InteractiveArchitecture: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-base font-bold text-charcoal-900 font-display">
-                    OsterdOps Deterministic Intra-Family Engine
+                    OstraOps Deterministic Intra-Family Engine
                   </h4>
                   <p className="text-xs text-emerald-700 font-mono">
                     Solution: Strict Provider-Family Isolation
@@ -189,11 +189,11 @@ export const InteractiveArchitecture: React.FC = () => {
               </div>
 
               <p className="text-xs text-charcoal-600 leading-relaxed">
-                OsterdOps strictly restricts failovers to sibling models within the exact same provider family, maintaining identical API contracts, tool blocks, and streaming formats:
+                OstraOps strictly restricts failovers to sibling models within the exact same provider family, maintaining identical API contracts, tool blocks, and streaming formats:
               </p>
 
               <div className="p-4 rounded-xl bg-charcoal-950 text-emerald-300 font-mono text-[11px] leading-relaxed border border-charcoal-800 space-y-1">
-                <p className="text-zinc-500">// OsterdOps Intra-Family Cascade:</p>
+                <p className="text-zinc-500">// OstraOps Intra-Family Cascade:</p>
                 <p className="text-amber-400">⚡ 429 Detected: claude-3-7-sonnet rate-limited</p>
                 <p className="text-emerald-400">✔ Cascading to sibling: claude-3-5-haiku</p>
                 <p className="text-emerald-400">✔ Tool schema: 100% native tool_use retained</p>
@@ -228,7 +228,7 @@ export const InteractiveArchitecture: React.FC = () => {
                 Engineering Specification Matrix
               </h3>
               <p className="text-xs text-charcoal-500 font-mono">
-                OsterdOps Local Daemon vs. Remote Cloud Proxies vs. Direct API Calls
+                OstraOps Local Daemon vs. Remote Cloud Proxies vs. Direct API Calls
               </p>
             </div>
             <span className="text-[11px] font-mono text-charcoal-500 hidden sm:inline-block">
@@ -241,8 +241,8 @@ export const InteractiveArchitecture: React.FC = () => {
               <thead>
                 <tr className="border-b border-[#EAE5DB] text-[11px] text-charcoal-400 uppercase tracking-wider">
                   <th className="py-3 px-4">Architecture Metric</th>
-                  <th className="py-3 px-4 text-osterdGold-600 font-bold bg-sandstone-100/80 rounded-t-xl">
-                    OsterdOps (Local Loopback)
+                  <th className="py-3 px-4 text-ostraGold-600 font-bold bg-sandstone-100/80 rounded-t-xl">
+                    OstraOps (Local Loopback)
                   </th>
                   <th className="py-3 px-4">Hosted Cloud Gateways</th>
                   <th className="py-3 px-4">Direct LLM Calls</th>
@@ -292,7 +292,7 @@ export const InteractiveArchitecture: React.FC = () => {
                 <tr>
                   <td className="py-3.5 px-4 font-sans font-bold text-charcoal-900">Deployment Overhead</td>
                   <td className="py-3.5 px-4 text-emerald-700 font-bold bg-sandstone-100/50 rounded-b-xl">
-                    1 command (<code className="bg-sandstone-200 px-1 rounded">npx osterdops-guard</code>)
+                    1 command (<code className="bg-sandstone-200 px-1 rounded">npx ostraops-guard</code>)
                   </td>
                   <td className="py-3.5 px-4 text-charcoal-600">DNS CNAMEs, API Keys, Signups</td>
                   <td className="py-3.5 px-4 text-charcoal-500">API Key per vendor</td>

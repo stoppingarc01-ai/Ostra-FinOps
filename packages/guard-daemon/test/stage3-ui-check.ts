@@ -76,7 +76,7 @@ async function runStage3Verification() {
   console.log(`✔ Found UI artifacts: ${jsFile} & ${cssFile}`);
 
   // 2. Setup server with UI static directory
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'osterdops-stage3-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ostraops-stage3-'));
   const testDbPath = path.join(tmpDir, 'daemon.db');
   const testTokenPath = path.join(tmpDir, 'daemon.token');
 

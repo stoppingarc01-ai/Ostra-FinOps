@@ -29,5 +29,5 @@ export function extractOrGenerateRequestId(headers: IncomingHttpHeaders): string
  * Attaches the correlation identifier to client response headers.
  */
 export function attachCorrelationHeader(res: ServerResponse, requestId: string): void {
-  res.setHeader('X-OsterdOps-Request-ID', requestId);
+  res.setHeader('X-OstraOps-Request-ID', requestId);
 }

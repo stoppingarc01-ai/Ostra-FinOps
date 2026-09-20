@@ -48,7 +48,7 @@ async function runTaskTests() {
     const baseUrl = `http://127.0.0.1:${port}`;
     const headers = {
         'Content-Type': 'application/json',
-        'X-OsterdOps-Daemon-Token': 'test_token_12345',
+        'X-OstraOps-Daemon-Token': 'test_token_12345',
     };
     // GET /api/tasks?month=2026-09
     const resGet = await fetch(`${baseUrl}/api/tasks?month=2026-09`, { headers });

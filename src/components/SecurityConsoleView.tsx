@@ -249,7 +249,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       category: 'Authentication',
       title: 'Failed authentication attempt',
       detail: '3 failed password attempts detected from untrusted origin (Blocked by WAF Rate Limiter)',
-      actor: 'System Firewall',
+      actor: 'System Gateway',
       time: 'Yesterday at 02:11 PM',
       ip: '194.26.29.11',
       type: 'security_alert'
@@ -382,7 +382,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(auditEvents, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `osterdops-security-audit-${new Date().toISOString().split('T')[0]}.json`);
+    downloadAnchor.setAttribute('download', `ostraops-security-audit-${new Date().toISOString().split('T')[0]}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -424,10 +424,6 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wider uppercase bg-[#F4EFE6] text-[#9C7938] border border-[#E5DBCA]">
                 AI Infrastructure Security Console
-              </span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                HSM Level 3 Active
               </span>
             </div>
             <h1 className="text-2xl lg:text-3xl font-extrabold text-charcoal-900 tracking-tight font-sans">
@@ -706,7 +702,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                 <div>
                   <h3 className="text-base font-bold font-sans">Two-factor authentication</h3>
                   <p className="text-xs text-charcoal-300 mt-1 leading-relaxed">
-                    Add an extra layer of protection to your OsterdOps account. Prevents unauthorized model access even if credentials leak.
+                    Add an extra layer of protection to your OstraOps account. Prevents unauthorized model access even if credentials leak.
                   </p>
                 </div>
 
@@ -815,7 +811,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                 2. Active Sessions & Hardware Logins
               </h2>
               <p className="text-xs text-charcoal-500 font-sans">
-                Review devices currently authenticated into your OsterdOps dashboard and revoke stale sessions.
+                Review devices currently authenticated into your OstraOps dashboard and revoke stale sessions.
               </p>
             </div>
             {otherSessions.length > 0 && (
@@ -1298,7 +1294,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                 7. Webhook Security & HMAC Verification
               </h2>
               <p className="text-xs text-charcoal-500 font-sans">
-                Sign outgoing events with HMAC-SHA256 signatures to verify payloads originate from OsterdOps.
+                Sign outgoing events with HMAC-SHA256 signatures to verify payloads originate from OstraOps.
               </p>
             </div>
           </div>
@@ -1342,7 +1338,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               <div>
                 <span className="text-xs font-bold text-charcoal-900 block">Sign outgoing webhooks</span>
                 <span className="text-[11px] text-charcoal-500">
-                  Computes <code>X-OsterdOps-Signature</code> header using HMAC-SHA256 on every dispatched alert.
+                  Computes <code>X-OstraOps-Signature</code> header using HMAC-SHA256 on every dispatched alert.
                 </span>
               </div>
               <input
@@ -1671,7 +1667,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                     <span>Copy this virtual token now.</span>
                   </div>
                   <p className="text-[11px] leading-relaxed">
-                    For security reasons, OsterdOps <strong>never displays the complete token again</strong> after closing this dialog.
+                    For security reasons, OstraOps <strong>never displays the complete token again</strong> after closing this dialog.
                   </p>
                 </div>
 

@@ -13,7 +13,7 @@ import type { ModelSpec } from '../registry/types';
 import type { TelemetryLogRecord } from '../accounting/types';
 
 async function runLiveChecks() {
-  console.log('--- Starting OsterdOps 2.0 Enterprise Backend Verification ---\n');
+  console.log('--- Starting OstraOps 2.0 Enterprise Backend Verification ---\n');
 
   // ==========================================================================
   // Test 1: Cryptographic Virtual Key Engine
@@ -87,7 +87,7 @@ async function runLiveChecks() {
 
   assert.strictEqual(cache.isEligible({ temperature: 0.7 }), false, 'Stochastic temperature > 0 must not cache');
   assert.strictEqual(cache.isEligible({ temperature: 0 }), true, 'Deterministic temperature = 0 must cache');
-  assert.strictEqual(cache.isEligible({ temperature: 0.7 }, 'true'), true, 'Explicit X-OsterdOps-Cache: true must cache');
+  assert.strictEqual(cache.isEligible({ temperature: 0.7 }, 'true'), true, 'Explicit X-OstraOps-Cache: true must cache');
 
   const cacheKey = cache.computeKey('org_test', 'env_test', 'gpt-4o', {
     messages: [{ role: 'user', content: 'What is 2+2?' }],
@@ -248,13 +248,13 @@ async function runLiveChecks() {
 
     // 5. Prompt Cache Test via Server
     const cacheKey = promptCache.computeKey('org_test', 'env_test', 'gpt-4o-mini', {
-      messages: [{ role: 'user', content: 'What is OsterdOps?' }],
+      messages: [{ role: 'user', content: 'What is OstraOps?' }],
     });
     await promptCache.set({
       cacheKey,
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      rawResponse: JSON.stringify({ choices: [{ message: { content: 'OsterdOps is AI governance.' } }] }),
+      rawResponse: JSON.stringify({ choices: [{ message: { content: 'OstraOps is AI governance.' } }] }),
       usage: { inputTokens: 8, outputTokens: 8, cacheReadTokens: 0, isEstimated: false },
       createdAt: Date.now(),
       expiresAt: Date.now() + 60_000,
@@ -270,15 +270,15 @@ async function runLiveChecks() {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         temperature: 0,
-        messages: [{ role: 'user', content: 'What is OsterdOps?' }],
+        messages: [{ role: 'user', content: 'What is OstraOps?' }],
       }),
     });
 
     console.log('    [7.6] Received response status:', cachedReq.status);
     assert.strictEqual(cachedReq.status, 200);
-    assert.strictEqual(cachedReq.headers.get('x-osterdops-prompt-cache'), 'HIT');
+    assert.strictEqual(cachedReq.headers.get('x-ostraops-prompt-cache'), 'HIT');
     const cachedBody = (await cachedReq.json()) as { choices: Array<{ message: { content: string } }> };
-    assert.strictEqual(cachedBody.choices[0].message.content, 'OsterdOps is AI governance.');
+    assert.strictEqual(cachedBody.choices[0].message.content, 'OstraOps is AI governance.');
 
     // 6. Graceful Shutdown
     console.log('    [7.7] Initiating graceful shutdown...');

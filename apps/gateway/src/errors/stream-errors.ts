@@ -35,7 +35,7 @@ export class StreamError extends Error {
 export function createStreamInterruptedError(): StreamError {
   return new StreamError(
     'Upstream stream interrupted mid-generation. Response terminated to prevent corruption.',
-    'OSTERDOPS_STREAM_INTERRUPTED',
+    'OSTRAOPS_STREAM_INTERRUPTED',
     502,
     'stream_interrupted_error'
   );
@@ -44,7 +44,7 @@ export function createStreamInterruptedError(): StreamError {
 export function createFailoverExhaustedError(attempts: number): StreamError {
   return new StreamError(
     `All upstream failover attempts exhausted (${attempts} attempts failed).`,
-    'OSTERDOPS_FAILOVER_EXHAUSTED',
+    'OSTRAOPS_FAILOVER_EXHAUSTED',
     503,
     'failover_exhausted_error'
   );
@@ -53,7 +53,7 @@ export function createFailoverExhaustedError(attempts: number): StreamError {
 export function createClientAbortedError(): StreamError {
   return new StreamError(
     'Client connection closed before response completed.',
-    'OSTERDOPS_CLIENT_ABORTED',
+    'OSTRAOPS_CLIENT_ABORTED',
     499,
     'client_closed_request'
   );

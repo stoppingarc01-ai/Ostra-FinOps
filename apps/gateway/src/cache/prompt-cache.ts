@@ -33,7 +33,7 @@ export class InMemoryPromptCache implements IPromptCache {
 
   /**
    * Safe qualification check: Only cache if temperature === 0 / top_p === 0,
-   * or client explicitly passed `X-OsterdOps-Cache: true`.
+   * or client explicitly passed `X-OstraOps-Cache: true`.
    */
   isEligible(payload: Record<string, unknown>, explicitOptInHeader?: string | null): boolean {
     if (explicitOptInHeader === 'true' || explicitOptInHeader === '1') {

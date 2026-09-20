@@ -158,7 +158,7 @@ export class SseBroker {
         return `id: ${id}\nevent: ${event}\ndata: ${JSON.stringify(envelope)}\n\n`;
     }
     sendHeartbeat() {
-        const comment = `: osterdops-heartbeat ${Date.now()}\n\n`;
+        const comment = `: ostraops-heartbeat ${Date.now()}\n\n`;
         for (const client of this.clients.values()) {
             if (!client.res.destroyed && !client.res.writableEnded && !client.isDraining) {
                 client.res.write(comment);

@@ -82,9 +82,9 @@ export class InMemoryRateLimitStore implements IRateLimitStore {
         errorPayload: {
           error: {
             message: `Concurrent connection limit exceeded (${currentConcurrency}/${key.rateLimits.maxConcurrency}).`,
-            type: 'osterdops_rate_limited',
+            type: 'ostraops_rate_limited',
             param: null,
-            code: 'OSTERDOPS_RATE_LIMITED',
+            code: 'OSTRAOPS_RATE_LIMITED',
           },
         },
       };
@@ -102,9 +102,9 @@ export class InMemoryRateLimitStore implements IRateLimitStore {
         errorPayload: {
           error: {
             message: `Requests per minute (RPM) threshold exceeded (${timestamps.length}/${key.rateLimits.rpm}).`,
-            type: 'osterdops_rate_limited',
+            type: 'ostraops_rate_limited',
             param: null,
-            code: 'OSTERDOPS_RATE_LIMITED',
+            code: 'OSTRAOPS_RATE_LIMITED',
           },
         },
       };
@@ -158,9 +158,9 @@ export class BudgetGatekeeper {
         errorPayload: {
           error: {
             message: 'Monthly spend cap for this virtual key has been reached. Contact your organization administrator.',
-            type: 'osterdops_budget_exceeded',
+            type: 'ostraops_budget_exceeded',
             param: null,
-            code: 'OSTERDOPS_BUDGET_EXCEEDED',
+            code: 'OSTRAOPS_BUDGET_EXCEEDED',
           },
         },
       };
@@ -173,9 +173,9 @@ export class BudgetGatekeeper {
         errorPayload: {
           error: {
             message: 'Virtual key has been revoked.',
-            type: 'osterdops_key_inactive',
+            type: 'ostraops_key_inactive',
             param: null,
-            code: 'OSTERDOPS_KEY_INACTIVE',
+            code: 'OSTRAOPS_KEY_INACTIVE',
           },
         },
       };
@@ -207,9 +207,9 @@ export class BudgetGatekeeper {
         errorPayload: {
           error: {
             message: 'Monthly spend cap for this virtual key has been reached. Contact your organization administrator.',
-            type: 'osterdops_budget_exceeded',
+            type: 'ostraops_budget_exceeded',
             param: null,
-            code: 'OSTERDOPS_BUDGET_EXCEEDED',
+            code: 'OSTRAOPS_BUDGET_EXCEEDED',
           },
         },
       };

@@ -715,7 +715,7 @@ export const CATALOG_MODELS: ModelIntegration[] = [
     provider: 'Meta',
     modelId: 'llama-3.3-70b-instruct',
     status: 'Ready',
-    description: 'The standard enterprise open-source baseline running on dedicated OsterdOps LPU inference nodes.',
+    description: 'The standard enterprise open-source baseline running on dedicated OstraOps LPU inference nodes.',
     contextWindow: '128k tokens',
     tokenCost: '$0.59 / $0.79',
     tags: ['Open Source', 'LPU Dedicated', 'JSON Mode'],
@@ -978,10 +978,10 @@ export const IntegrationsView: React.FC = () => {
     if (codeSnippetLang === 'typescript') {
       return `import { createOpenAI } from '@ai-sdk/openai';
 
-// OsterdOps Hosted Team Gateway Client
+// OstraOps Hosted Team Gateway Client
 export const gateway = createOpenAI({
-  baseURL: 'https://gateway.osterdops.com/v1',
-  apiKey: process.env.OSTERDOPS_TEAM_KEY, // Dynamic key swap active
+  baseURL: 'https://gateway.ostraops.com/v1',
+  apiKey: process.env.OSTRAOPS_TEAM_KEY, // Dynamic key swap active
 });
 
 // Drop-in streaming invocation with intra-family failover
@@ -995,8 +995,8 @@ const result = await gateway.chat('${effectiveModelIdentifier}', {
 import os
 
 client = OpenAI(
-    base_url="https://gateway.osterdops.com/v1",
-    api_key=os.environ.get("OSTERDOPS_TEAM_KEY"),
+    base_url="https://gateway.ostraops.com/v1",
+    api_key=os.environ.get("OSTRAOPS_TEAM_KEY"),
 )
 
 response = client.chat.completions.create(
@@ -1005,8 +1005,8 @@ response = client.chat.completions.create(
 )`;
     }
 
-    return `curl -X POST "https://gateway.osterdops.com/v1/chat/completions" \\
-  -H "Authorization: Bearer $OSTERDOPS_TEAM_KEY" \\
+    return `curl -X POST "https://gateway.ostraops.com/v1/chat/completions" \\
+  -H "Authorization: Bearer $OSTRAOPS_TEAM_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
     "model": "${effectiveModelIdentifier}",
@@ -1055,7 +1055,7 @@ response = client.chat.completions.create(
       </div>
 
       {/* ============================================================ */}
-      {/* 4 STATS METRICS CARDS (OsterdOps Warm Sandstone Palette)      */}
+      {/* 4 STATS METRICS CARDS (OstraOps Warm Sandstone Palette)      */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
@@ -1189,7 +1189,7 @@ response = client.chat.completions.create(
                 <span>{prov.label}</span>
                 <span
                   className={`text-[10px] font-mono px-1.5 py-0.2 rounded-md ${
-                    isActive ? 'bg-[#27272A] text-osterdGold-300' : 'bg-sandstone-200 text-charcoal-500'
+                    isActive ? 'bg-[#27272A] text-ostraGold-300' : 'bg-sandstone-200 text-charcoal-500'
                   }`}
                 >
                   {prov.count}
@@ -1700,9 +1700,9 @@ response = client.chat.completions.create(
                       1-Line Gateway Base URL
                     </label>
                     <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-[#EAE5DC] font-mono text-xs text-charcoal-900">
-                      <span className="text-emerald-700 font-semibold">https://gateway.osterdops.com/v1</span>
+                      <span className="text-emerald-700 font-semibold">https://gateway.ostraops.com/v1</span>
                       <button
-                        onClick={() => copyToClipboard('https://gateway.osterdops.com/v1', 'Gateway URL')}
+                        onClick={() => copyToClipboard('https://gateway.ostraops.com/v1', 'Gateway URL')}
                         className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sandstone-100 hover:bg-sandstone-200 text-charcoal-700 font-sans text-xs font-semibold cursor-pointer"
                       >
                         {copiedKey === 'Gateway URL' ? (

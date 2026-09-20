@@ -77,7 +77,7 @@ export function createUpstreamDispatcher(options?: DispatcherOptions): UpstreamD
     // 2. Build Provider-Specific Headers (Strips downstream client headers)
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'User-Agent': 'OsterdOps-Gateway/2.0',
+      'User-Agent': 'OstraOps-Gateway/2.0',
     };
 
     if (apiKey) {

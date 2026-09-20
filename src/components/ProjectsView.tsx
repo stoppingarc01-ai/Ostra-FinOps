@@ -245,13 +245,13 @@ export const ProjectsView: React.FC = () => {
           onClick={() => setModalOpen(true)}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm shrink-0 self-start sm:self-auto"
         >
-          <Plus className="w-4 h-4 text-osterdGold-400" />
+          <Plus className="w-4 h-4 text-ostraGold-400" />
           <span>New Project Endpoint</span>
         </button>
       </div>
 
       {/* ============================================================ */}
-      {/* TOP SUMMARY METRICS (4 Cards, OsterdOps Palette)            */}
+      {/* TOP SUMMARY METRICS (4 Cards, OstraOps Palette)            */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
@@ -305,7 +305,7 @@ export const ProjectsView: React.FC = () => {
             </div>
             <div className="h-1.5 w-full bg-[#EAE5DC] rounded-full overflow-hidden mt-1.5">
               <div 
-                className="h-full bg-osterdGold-500 rounded-full"
+                className="h-full bg-ostraGold-500 rounded-full"
                 style={{ width: `${(totalSpend / totalBudget) * 100}%` }}
               />
             </div>
@@ -362,7 +362,7 @@ export const ProjectsView: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, ID, or model..."
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#FAF8F5] border border-[#EAE5DC] rounded-xl text-charcoal-800 placeholder:text-charcoal-400 focus:outline-none focus:border-osterdGold-500 transition-colors"
+            className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#FAF8F5] border border-[#EAE5DC] rounded-xl text-charcoal-800 placeholder:text-charcoal-400 focus:outline-none focus:border-ostraGold-500 transition-colors"
           />
         </div>
       </div>
@@ -440,7 +440,7 @@ export const ProjectsView: React.FC = () => {
                   <div className="h-1.5 w-full bg-[#EAE5DC] rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
-                        isNearCap ? 'bg-charcoal-900' : 'bg-osterdGold-500'
+                        isNearCap ? 'bg-charcoal-900' : 'bg-ostraGold-500'
                       }`}
                       style={{ width: `${spendPercent}%` }}
                     />
@@ -491,7 +491,7 @@ export const ProjectsView: React.FC = () => {
               <div className="pt-4 mt-2 border-t border-[#EAE5DC] flex items-center justify-between text-xs">
                 <button
                   onClick={() => alert(`Opening telemetry traces for ${project.name} (${project.id})`)}
-                  className="font-bold text-charcoal-900 hover:text-osterdGold-600 flex items-center gap-1 group transition-colors"
+                  className="font-bold text-charcoal-900 hover:text-ostraGold-600 flex items-center gap-1 group transition-colors"
                 >
                   <span>Inspect Traces</span>
                   <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -547,7 +547,7 @@ export const ProjectsView: React.FC = () => {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. Mobile Copilot Engine"
-                  className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-osterdGold-500 transition-colors"
+                  className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-ostraGold-500 transition-colors"
                 />
               </div>
 
@@ -583,7 +583,7 @@ export const ProjectsView: React.FC = () => {
                   <select
                     value={newPrimaryModel}
                     onChange={(e) => setNewPrimaryModel(e.target.value)}
-                    className="w-full px-2.5 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 focus:outline-none focus:border-osterdGold-500 font-mono"
+                    className="w-full px-2.5 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 focus:outline-none focus:border-ostraGold-500 font-mono"
                   >
                     <option value="GPT-4o">GPT-4o</option>
                     <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
@@ -600,7 +600,7 @@ export const ProjectsView: React.FC = () => {
                   <select
                     value={newFailoverModel}
                     onChange={(e) => setNewFailoverModel(e.target.value)}
-                    className="w-full px-2.5 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 focus:outline-none focus:border-osterdGold-500 font-mono"
+                    className="w-full px-2.5 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 focus:outline-none focus:border-ostraGold-500 font-mono"
                   >
                     <option value="Claude 3.5 Haiku">Claude 3.5 Haiku</option>
                     <option value="GPT-4o-mini">GPT-4o-mini</option>
@@ -621,7 +621,7 @@ export const ProjectsView: React.FC = () => {
                   step="10"
                   value={newBudget}
                   onChange={(e) => setNewBudget(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 font-mono focus:outline-none focus:border-osterdGold-500 transition-colors"
+                  className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 font-mono focus:outline-none focus:border-ostraGold-500 transition-colors"
                 />
               </div>
 

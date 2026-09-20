@@ -30,6 +30,7 @@ packages/*/dist/
 *.db-journal
 *.db-wal
 *.db-shm
+.ostraops/
 .osterdops/
 traces.db
 

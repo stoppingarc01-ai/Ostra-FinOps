@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const OsterdOpsLogoAuth: React.FC<{ className?: string }> = ({
+export const OstraOpsLogoAuth: React.FC<{ className?: string }> = ({
   className = 'w-9 h-9',
 }) => (
   <div className="flex items-center gap-2.5">
@@ -29,7 +29,7 @@ export const OsterdOpsLogoAuth: React.FC<{ className?: string }> = ({
       </svg>
     </div>
     <span className="text-xl font-bold tracking-tight text-white font-sans">
-      OsterdOps
+      OstraOps
     </span>
   </div>
 );
@@ -291,7 +291,7 @@ export const SignupTabletScene: React.FC<{ className?: string }> = ({
             <div className="w-2.5 h-2.5 rounded-full bg-[#10B981]/20 border border-[#10B981] flex items-center justify-center">
               <div className="w-1 h-1 rounded-full bg-[#10B981]" />
             </div>
-            <span className="font-bold text-white tracking-tight">OsterdOps</span>
+            <span className="font-bold text-white tracking-tight">OstraOps</span>
           </div>
           <div className="w-1.5 h-1.5 rounded-full bg-[#2A3F33]" />
         </div>

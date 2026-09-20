@@ -8,7 +8,7 @@ export function sendJson(res, statusCode, data, origin, extraHeaders) {
         'Content-Length': String(Buffer.byteLength(payload)),
         'Access-Control-Allow-Origin': origin || '*',
         'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-OsterdOps-Daemon-Token, Last-Event-ID',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-OstraOps-Daemon-Token, Last-Event-ID',
         'Access-Control-Allow-Credentials': 'true',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
@@ -22,7 +22,7 @@ export function handleCorsPreflight(req, res) {
     res.writeHead(204, {
         'Access-Control-Allow-Origin': req.headers['origin'] || '*',
         'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-OsterdOps-Daemon-Token, Last-Event-ID',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-OstraOps-Daemon-Token, Last-Event-ID',
         'Access-Control-Max-Age': '86400',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
@@ -57,7 +57,7 @@ function parseJsonBody(req, maxBytes = 65536) {
 let exchangeFailures = 0;
 let lastFailureWindow = Date.now();
 /**
- * Handles incoming HTTP API requests for the OsterdOps daemon.
+ * Handles incoming HTTP API requests for the OstraOps daemon.
  */
 export function handleApiRoute(req, res, ctx) {
     const origin = req.headers['origin'];
@@ -109,7 +109,7 @@ export function handleApiRoute(req, res, ctx) {
             }
         });
         req.on('end', () => {
-            let tokenToVerify = req.headers['x-osterdops-daemon-token'];
+            let tokenToVerify = req.headers['x-ostraops-daemon-token'];
             if (!tokenToVerify && body) {
                 try {
                     const parsed = JSON.parse(body);
@@ -127,7 +127,7 @@ export function handleApiRoute(req, res, ctx) {
             // Reset failure counter on success
             exchangeFailures = 0;
             sendJson(res, 200, { ok: true, message: 'Authenticated successfully' }, origin, {
-                'Set-Cookie': `osterdops_token=${ctx.daemonToken}; Path=/; HttpOnly; SameSite=Strict`,
+                'Set-Cookie': `ostraops_token=${ctx.daemonToken}; Path=/; HttpOnly; SameSite=Strict`,
             });
         });
         return true;
@@ -471,7 +471,7 @@ export function handleApiRoute(req, res, ctx) {
             warningThresholdPct: ctx.config.warningThresholdPct,
             rateLimitRpm: ctx.config.rateLimitRpm,
             dbPath: ctx.config.dbPath,
-            upstreamGatewayUrl: ctx.config.upstreamGatewayUrl || 'https://gateway.osterdops.com/v1',
+            upstreamGatewayUrl: ctx.config.upstreamGatewayUrl || 'https://gateway.ostraops.com/v1',
             hasAnthropicKey: Boolean(ctx.config.anthropicApiKey),
             maskedAnthropicKey: ctx.config.anthropicApiKey
                 ? `${ctx.config.anthropicApiKey.substring(0, 7)}••••••••${ctx.config.anthropicApiKey.slice(-4)}`

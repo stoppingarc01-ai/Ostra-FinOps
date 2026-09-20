@@ -3,12 +3,12 @@ import { join } from 'node:path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 const DEFAULT_CREDENTIALS = {
     linked: true,
-    gatewayUrl: 'https://gateway.osterdops.com/v1',
+    gatewayUrl: 'https://gateway.ostraops.com/v1',
     orgId: 'org_98f2b740e1a',
     orgName: 'Acme Engineering',
     projectId: 'prj_11a09d3b4',
     projectName: 'AI Coding Agents',
-    userEmail: 'solo@osterdops.com',
+    userEmail: 'solo@ostraops.com',
     activeKeyId: 'key_live_dev',
     virtualKeys: [
         {
@@ -44,7 +44,7 @@ const DEFAULT_CREDENTIALS = {
     linkedAt: '2026-05-10T12:00:00Z',
 };
 function getCredentialsFilePath() {
-    const dir = join(homedir(), '.osterdops');
+    const dir = join(homedir(), '.ostraops');
     if (!existsSync(dir)) {
         try {
             mkdirSync(dir, { recursive: true });
@@ -100,7 +100,7 @@ export function getAccountPayload(bindHost = '127.0.0.1') {
             orgName: creds.linked ? creds.orgName || 'Standalone Machine' : 'Standalone Mode',
             projectId: creds.linked ? creds.projectId || 'prj_local' : 'N/A',
             projectName: creds.linked ? creds.projectName || 'Local Environment' : 'Offline Mode',
-            userEmail: creds.linked ? creds.userEmail || 'solo@osterdops.com' : 'unlinked',
+            userEmail: creds.linked ? creds.userEmail || 'solo@ostraops.com' : 'unlinked',
             linkedAt: creds.linkedAt,
         },
         activeKey: {
@@ -175,7 +175,7 @@ export function pairMachineCredentials(input) {
         createdAt: new Date().toISOString(),
     };
     creds.linked = true;
-    creds.gatewayUrl = input.gatewayUrl?.trim() || creds.gatewayUrl || 'https://gateway.osterdops.com/v1';
+    creds.gatewayUrl = input.gatewayUrl?.trim() || creds.gatewayUrl || 'https://gateway.ostraops.com/v1';
     creds.orgName = input.orgName?.trim() || 'Connected Organization';
     creds.projectName = input.projectName?.trim() || 'Active Project';
     creds.linkedAt = new Date().toISOString();

@@ -200,7 +200,7 @@ export class SseBroker {
   }
 
   private sendHeartbeat(): void {
-    const comment = `: osterdops-heartbeat ${Date.now()}\n\n`;
+    const comment = `: ostraops-heartbeat ${Date.now()}\n\n`;
     for (const client of this.clients.values()) {
       if (!client.res.destroyed && !client.res.writableEnded && !client.isDraining) {
         client.res.write(comment);

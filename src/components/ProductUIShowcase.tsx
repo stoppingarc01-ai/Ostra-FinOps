@@ -25,7 +25,7 @@ export const ProductUIShowcase: React.FC = () => {
   return (
     <section id="ui-showcase" className="relative py-24 bg-[#FAF8F5] border-t border-[#EAE5DB] overflow-hidden">
       {/* 3D Background Lighting */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-osterdGold-500/10 via-sandstone-300/20 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-ostraGold-500/10 via-sandstone-300/20 to-transparent blur-[140px] pointer-events-none -z-10" />
 
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
         {/* Section Heading */}
@@ -47,7 +47,7 @@ export const ProductUIShowcase: React.FC = () => {
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
           {[
             { id: 'telemetry', label: 'Token Velocity & Latency Telemetry', icon: Activity },
-            { id: 'firewall', label: 'Financial Firewall & Circuit Breakers', icon: ShieldAlert },
+            { id: 'firewall', label: 'Financial Gateway & Circuit Breakers', icon: ShieldAlert },
             { id: 'security', label: 'PII Redactor & Prompt Guard', icon: Lock },
             { id: 'router', label: 'Intra-Family Model Router Matrix', icon: Workflow },
           ].map((tab) => {
@@ -63,7 +63,7 @@ export const ProductUIShowcase: React.FC = () => {
                     : 'bg-white text-charcoal-600 hover:text-charcoal-900 hover:bg-sandstone-100 border border-[#EAE5DB] shadow-2xs'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-osterdGold-400' : 'text-charcoal-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-ostraGold-400' : 'text-charcoal-400'}`} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -84,17 +84,13 @@ export const ProductUIShowcase: React.FC = () => {
               </div>
               <div className="h-4 w-px bg-sandstone-300 mx-1 hidden sm:block" />
               <span className="text-xs font-mono font-bold text-charcoal-700 hidden sm:inline-block">
-                osterdops-daemon v2.4.1 // loopback-ui:4040
+                ostraops-daemon v2.4.1 // loopback-ui:4040
               </span>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-mono font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>DAEMON ACTIVE • 0.42ms PROXY</span>
-              </div>
               <span className="text-[11px] font-mono text-charcoal-500 hidden md:inline-block">
-                SQLite: ~/.osterdops/traces.db
+                SQLite: ~/.ostraops/traces.db
               </span>
             </div>
           </div>
@@ -109,7 +105,7 @@ export const ProductUIShowcase: React.FC = () => {
                 <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#EAE5DB]">
                   <div className="flex items-center justify-between text-xs font-semibold text-charcoal-500">
                     <span>Live Token Velocity</span>
-                    <Activity className="w-4 h-4 text-osterdGold-600" />
+                    <Activity className="w-4 h-4 text-ostraGold-600" />
                   </div>
                   <div className="text-2xl font-extrabold text-charcoal-900 font-mono mt-1">
                     4,120 <span className="text-xs font-sans font-normal text-charcoal-500">tok/sec</span>
@@ -129,7 +125,7 @@ export const ProductUIShowcase: React.FC = () => {
                     $8.42 <span className="text-xs font-sans font-normal text-charcoal-500">/ $25.00 limit</span>
                   </div>
                   <div className="w-full bg-sandstone-300 h-1.5 rounded-full mt-2 overflow-hidden">
-                    <div className="bg-osterdGold-500 h-full rounded-full w-[33%]" />
+                    <div className="bg-ostraGold-500 h-full rounded-full w-[33%]" />
                   </div>
                 </div>
 
@@ -247,7 +243,7 @@ export const ProductUIShowcase: React.FC = () => {
           )}
 
           {/* ============================================================ */}
-          {/* TAB 2: FINANCIAL FIREWALL & CIRCUIT BREAKERS                 */}
+          {/* TAB 2: FINANCIAL GATEWAY & CIRCUIT BREAKERS                 */}
           {/* ============================================================ */}
           {activeTab === 'firewall' && (
             <div className="p-6 sm:p-8 space-y-6">
@@ -275,7 +271,7 @@ export const ProductUIShowcase: React.FC = () => {
                       step="5"
                       value={hardLimit}
                       onChange={(e) => setHardLimit(Number(e.target.value))}
-                      className="w-full accent-osterdGold-500 cursor-pointer"
+                      className="w-full accent-ostraGold-500 cursor-pointer"
                     />
 
                     <div className="flex justify-between text-[11px] font-mono text-charcoal-400">
@@ -289,7 +285,7 @@ export const ProductUIShowcase: React.FC = () => {
                   <div className="p-5 rounded-2xl bg-white border border-[#EAE5DB] flex items-center justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-osterdGold-600" />
+                        <Zap className="w-4 h-4 text-ostraGold-600" />
                         <h4 className="text-sm font-bold text-charcoal-900">Runaway Loop Velocity Brake</h4>
                       </div>
                       <p className="text-xs text-charcoal-500">
@@ -323,7 +319,7 @@ export const ProductUIShowcase: React.FC = () => {
                       </span>
                     </div>
                     <p className="text-xs text-charcoal-500">
-                      When Anthropic responds with HTTP 429 / 529 overload, OsterdOps automatically downgrades to Claude 3.5 Haiku instead of breaking Cursor's file-editing tool schemas.
+                      When Anthropic responds with HTTP 429 / 529 overload, OstraOps automatically downgrades to Claude 3.5 Haiku instead of breaking Cursor's file-editing tool schemas.
                     </p>
                   </div>
                 </div>
@@ -339,7 +335,7 @@ export const ProductUIShowcase: React.FC = () => {
 
                   <div className="space-y-1">
                     <span className="text-[11px] text-zinc-400 font-mono">PROJECTED MONTHLY SAVINGS</span>
-                    <div className="text-3xl font-extrabold text-osterdGold-300 font-mono">
+                    <div className="text-3xl font-extrabold text-ostraGold-300 font-mono">
                       $412.80
                     </div>
                     <p className="text-[11px] text-zinc-500">
@@ -382,7 +378,7 @@ export const ProductUIShowcase: React.FC = () => {
                 <div className="lg:col-span-8 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-charcoal-900 font-mono flex items-center gap-2">
-                      <FileCode className="w-4 h-4 text-osterdGold-600" />
+                      <FileCode className="w-4 h-4 text-ostraGold-600" />
                       <span>INCOMING PROMPT PAYLOAD (CURSOR AGENT → LOOPBACK 8080)</span>
                     </span>
                     <div className="flex items-center gap-2">
@@ -414,7 +410,7 @@ export const ProductUIShowcase: React.FC = () => {
                     
                     <div className="my-2 border-t border-charcoal-800 pt-2 text-emerald-400 flex items-center gap-2">
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>OsterdOps Sanitized Stream sent to Upstream LLM:</span>
+                      <span>OstraOps Sanitized Stream sent to Upstream LLM:</span>
                     </div>
 
                     <p>
@@ -430,7 +426,7 @@ export const ProductUIShowcase: React.FC = () => {
                   </div>
 
                   <p className="text-xs text-charcoal-500">
-                    OsterdOps replaces high-entropy secrets and sensitive environment variables before any byte reaches the model provider, re-hydrating tokens in the return completion automatically.
+                    OstraOps replaces high-entropy secrets and sensitive environment variables before any byte reaches the model provider, re-hydrating tokens in the return completion automatically.
                   </p>
                 </div>
 
@@ -454,7 +450,7 @@ export const ProductUIShowcase: React.FC = () => {
                         </div>
                         <div className="flex justify-between text-[11px] text-charcoal-500 font-mono">
                           <span>{item.status}</span>
-                          <span className="text-osterdGold-600 font-bold">{item.hitCount}</span>
+                          <span className="text-ostraGold-600 font-bold">{item.hitCount}</span>
                         </div>
                       </div>
                     ))}

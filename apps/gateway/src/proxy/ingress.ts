@@ -42,7 +42,7 @@ export function sendOpenAiError(
   res.writeHead(statusCode, {
     'Content-Type': 'application/json',
     'Content-Length': Buffer.byteLength(serialized),
-    'X-OsterdOps-Request-ID': requestId,
+    'X-OstraOps-Request-ID': requestId,
   });
   res.end(serialized);
 }
@@ -70,7 +70,7 @@ async function streamRequestBodyWithLimit(req: IncomingMessage, maxBytes = MAX_P
  * Main Hosted Gateway Ingress Pipeline.
  *
  * Execution Protocol:
- * 1. Generate & propagate correlation identifier (X-OsterdOps-Request-ID).
+ * 1. Generate & propagate correlation identifier (X-OstraOps-Request-ID).
  * 2. Guarded Client AbortController instantiation (!res.writableEnded && !isCompleted).
  * 3. ZERO-BYTE PRE-INGEST:
  *    - Authenticate headers (extract token, hash SHA-256, query hot-path cache).
@@ -106,7 +106,7 @@ export async function handleGatewayIngress(
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Authorization, Content-Type, x-api-key, X-Request-ID',
-      'X-OsterdOps-Request-ID': requestId,
+      'X-OstraOps-Request-ID': requestId,
     });
     res.end();
     return;
@@ -138,7 +138,7 @@ export async function handleGatewayIngress(
     sendOpenAiError(
       res,
       404,
-      'OSTERDOPS_ROUTE_NOT_FOUND',
+      'OSTRAOPS_ROUTE_NOT_FOUND',
       'invalid_request_error',
       `Unknown gateway endpoint: ${url}`,
       requestId
@@ -154,7 +154,7 @@ export async function handleGatewayIngress(
     sendOpenAiError(
       res,
       401,
-      'OSTERDOPS_UNAUTHORIZED',
+      'OSTRAOPS_UNAUTHORIZED',
       'authentication_error',
       'Missing or malformed authorization credentials. Provide Bearer ost_live_... or x-api-key.',
       requestId
@@ -175,7 +175,7 @@ export async function handleGatewayIngress(
     sendOpenAiError(
       res,
       401,
-      'OSTERDOPS_INVALID_KEY',
+      'OSTRAOPS_INVALID_KEY',
       'authentication_error',
       'Invalid or unrecognized virtual key.',
       requestId
@@ -189,8 +189,8 @@ export async function handleGatewayIngress(
     sendOpenAiError(
       res,
       velocityCheck.status || 429,
-      velocityCheck.errorPayload?.error.code || 'OSTERDOPS_RATE_LIMITED',
-      velocityCheck.errorPayload?.error.type || 'osterdops_rate_limited',
+      velocityCheck.errorPayload?.error.code || 'OSTRAOPS_RATE_LIMITED',
+      velocityCheck.errorPayload?.error.type || 'ostraops_rate_limited',
       velocityCheck.errorPayload?.error.message || 'Rate limit exceeded.',
       requestId
     );
@@ -217,7 +217,7 @@ export async function handleGatewayIngress(
         sendOpenAiError(
           res,
           413,
-          'OSTERDOPS_PAYLOAD_TOO_LARGE',
+          'OSTRAOPS_PAYLOAD_TOO_LARGE',
           'invalid_request_error',
           `Payload exceeds maximum allowable size of ${MAX_PAYLOAD_BYTES / 1024 / 1024}MB.`,
           requestId
@@ -227,7 +227,7 @@ export async function handleGatewayIngress(
       sendOpenAiError(
         res,
         400,
-        'OSTERDOPS_MALFORMED_JSON',
+        'OSTRAOPS_MALFORMED_JSON',
         'invalid_request_error',
         'Failed to parse JSON request body.',
         requestId
@@ -244,8 +244,8 @@ export async function handleGatewayIngress(
       sendOpenAiError(
         res,
         budgetCheck.status || 402,
-        budgetCheck.errorPayload?.error.code || 'OSTERDOPS_BUDGET_EXCEEDED',
-        budgetCheck.errorPayload?.error.type || 'osterdops_budget_exceeded',
+        budgetCheck.errorPayload?.error.code || 'OSTRAOPS_BUDGET_EXCEEDED',
+        budgetCheck.errorPayload?.error.type || 'ostraops_budget_exceeded',
         budgetCheck.errorPayload?.error.message || 'Monthly spend cap reached.',
         requestId
       );
@@ -280,7 +280,7 @@ export async function handleGatewayIngress(
       res.writeHead(200, {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(ackPayload),
-        'X-OsterdOps-Request-ID': requestId,
+        'X-OstraOps-Request-ID': requestId,
       });
       res.end(ackPayload);
     }

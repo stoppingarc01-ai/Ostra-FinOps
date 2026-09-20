@@ -56,7 +56,7 @@ async function main() {
 
   if (args.includes('--help') || args.includes('-h')) {
     console.log(`
-  🛡️  OsterdOps Sentinel Local Daemon CLI
+  🛡️  OstraOps Sentinel Local Daemon CLI
 
   Usage:
     node packages/guard-daemon/bin/cli.js [options]
@@ -73,7 +73,25 @@ async function main() {
     process.exit(0);
   }
 
-  // 1. Check for CLI arguments for authentication & custom port
+  // 1. Validation helpers for official Solo Developer Console keys
+  function isValidClientId(id) {
+    if (typeof id !== 'string') return false;
+    const clean = id.trim();
+    return /^ost_client_solo_[a-zA-Z0-9_-]{4,48}$/.test(clean);
+  }
+
+  function isValidSecret(sec) {
+    if (typeof sec !== 'string') return false;
+    const clean = sec.trim();
+    return /^ost_sec_[a-zA-Z0-9_-]{12,64}$/.test(clean);
+  }
+
+  function isValidPort(p) {
+    const num = Number(p);
+    return Number.isInteger(num) && num >= 1024 && num <= 65535;
+  }
+
+  // 2. Check for CLI arguments for authentication & custom port
   let clientId = undefined;
   const idIdx = args.findIndex((a) => a === '--id' || a === '--client-id');
   if (idIdx !== -1 && args[idIdx + 1]) {
@@ -89,84 +107,174 @@ async function main() {
   let customProxyPort;
   const proxyPortIdx = args.findIndex((a) => a === '--proxy-port' || a === '--port' || a === '-p');
   if (proxyPortIdx !== -1 && args[proxyPortIdx + 1]) {
-    customProxyPort = parseInt(args[proxyPortIdx + 1], 10);
+    const p = parseInt(args[proxyPortIdx + 1], 10);
+    if (!isValidPort(p)) {
+      console.error(`\x1b[31m❌ Error: Invalid Ingress Port '${args[proxyPortIdx + 1]}'. Port must be a number between 1024 and 65535.\x1b[0m`);
+      process.exit(1);
+    }
+    customProxyPort = p;
   }
 
-  // 2. Auth cache file in user's home directory (~/.osterdops/daemon.auth)
+  // 3. Auth & Pairing cache files (searches workspace .ostraops first, then home dir)
   const homeDir = process.env.HOME || process.env.USERPROFILE || '.';
-  const authStoreDir = path.join(homeDir, '.osterdops');
-  const authStoreFile = path.join(authStoreDir, 'daemon.auth');
+  const candidateDirs = [
+    path.join(process.cwd(), '.ostraops'),
+    path.join(homeDir, '.ostraops'),
+  ];
 
-  if (!resetAuth && (!clientId || !secretPasskey)) {
-    if (fs.existsSync(authStoreFile)) {
+  // Load expected pairing from Solo Developer Console if available
+  let expectedPairing = null;
+  for (const dir of candidateDirs) {
+    const pairFile = path.join(dir, 'solo_pairing.json');
+    if (fs.existsSync(pairFile)) {
       try {
-        const saved = JSON.parse(fs.readFileSync(authStoreFile, 'utf-8'));
-        if (saved.clientId && saved.secret) {
-          clientId = clientId || saved.clientId;
-          secretPasskey = secretPasskey || saved.secret;
-          if (!customProxyPort && saved.port) {
-            customProxyPort = saved.port;
-          }
+        const data = JSON.parse(fs.readFileSync(pairFile, 'utf-8'));
+        if (isValidClientId(data.clientId) && isValidSecret(data.secret)) {
+          expectedPairing = data;
+          break;
+        }
+      } catch {}
+    }
+    const authFile = path.join(dir, 'daemon.auth');
+    if (!expectedPairing && fs.existsSync(authFile)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(authFile, 'utf-8'));
+        if (isValidClientId(data.clientId) && isValidSecret(data.secret)) {
+          expectedPairing = data;
+          break;
         }
       } catch {}
     }
   }
 
-  // 3. Prompt interactively if ID or Secret are still missing
-  if (!clientId || !secretPasskey) {
-    console.log(`
-  \x1b[33m🔒 OsterdOps Sentinel — Security Pairing Required\x1b[0m
-  ─────────────────────────────────────────────────────────────────────────────
-  To ensure end-to-end local safety, please enter the pairing credentials
-  from your Solo Developer Console (\x1b[36mhttp://localhost:5173/#solo-guard\x1b[0m):
-  ─────────────────────────────────────────────────────────────────────────────
-    `);
+  // If credentials were provided via CLI flags, validate format and verify against paired console
+  if (clientId !== undefined || secretPasskey !== undefined) {
+    if (!isValidClientId(clientId)) {
+      console.error(`\x1b[31m❌ Error: Invalid Client ID '${clientId}'.\x1b[0m`);
+      console.error('Client ID must be the official key from your Solo Developer Console (e.g. ost_client_solo_...).');
+      process.exit(1);
+    }
 
-    const rl = readline.createInterface({ input, output });
-    try {
-      if (!clientId) {
-        const ans = await rl.question('  🔑 Enter Client ID (e.g. ost_client_solo_...): ');
-        clientId = ans.trim();
+    if (!isValidSecret(secretPasskey)) {
+      console.error('\x1b[31m❌ Error: Invalid Secret Passkey.\x1b[0m');
+      console.error('Secret Passkey must start with "ost_sec_" from your Solo Developer Console (e.g. ost_sec_...).');
+      process.exit(1);
+    }
+
+    if (expectedPairing) {
+      if (clientId !== expectedPairing.clientId || secretPasskey !== expectedPairing.secret) {
+        console.error('\x1b[31m❌ Security Mismatch: The provided credentials do not match your Solo Developer Console!\x1b[0m');
+        console.error(`  Expected Client ID: \x1b[32m${expectedPairing.clientId}\x1b[0m`);
+        console.error(`  Received Client ID: \x1b[31m${clientId}\x1b[0m`);
+        console.error('Please copy the exact credentials from your console: \x1b[36mhttp://localhost:5174/#solo-guard\x1b[0m');
+        process.exit(1);
       }
-      if (!secretPasskey) {
-        const ans = await rl.question('  🛡️  Enter Secret Passkey (e.g. ost_sec_...): ');
-        secretPasskey = ans.trim();
-      }
-      if (!customProxyPort) {
-        const ans = await rl.question('  🌐 Enter Unique Ingress Port [Default: 8080]: ');
-        const p = parseInt(ans.trim(), 10);
-        if (p && !isNaN(p)) {
-          customProxyPort = p;
-        }
-      }
-    } finally {
-      rl.close();
     }
   }
 
-  if (!clientId || clientId.length < 4) {
-    console.error('\x1b[31m❌ Error: Client ID is required. Obtain it from your Solo Developer Console.\x1b[0m');
-    process.exit(1);
-  }
+  // If credentials not provided via flags:
+  if (!clientId || !secretPasskey) {
+    if (expectedPairing && !resetAuth) {
+      console.log(`
+  \x1b[36m⚡ Solo Developer Console Pairing Detected\x1b[0m
+  ─────────────────────────────────────────────────────────────────────────────
+  Active pairing credentials found from your Solo Developer Console:
+    🔑 Client ID:    \x1b[32m${expectedPairing.clientId}\x1b[0m
+    🛡️  Secret Pass:  \x1b[33most_sec_••••••••••••••••\x1b[0m
+    🌐 Ingress Port: \x1b[35m${customProxyPort || expectedPairing.port || 8080}\x1b[0m
+  ─────────────────────────────────────────────────────────────────────────────
+      `);
 
-  if (!secretPasskey || secretPasskey.length < 6) {
-    console.error('\x1b[31m❌ Error: Secret Passkey is required (min 6 chars). Obtain it from your Solo Developer Console.\x1b[0m');
-    process.exit(1);
+      const rl = readline.createInterface({ input, output });
+      try {
+        const choice = await rl.question('  Press [ENTER] to connect with paired console, or type "c" to enter manually: ');
+        if (choice.trim().toLowerCase() !== 'c') {
+          clientId = expectedPairing.clientId;
+          secretPasskey = expectedPairing.secret;
+          customProxyPort = customProxyPort || expectedPairing.port || 8080;
+        }
+      } finally {
+        rl.close();
+      }
+    }
+
+    // Interactive prompt if manual entry or no pairing found
+    if (!clientId || !secretPasskey) {
+      console.log(`
+  \x1b[33m🔒 OstraOps Sentinel — Security Pairing Required\x1b[0m
+  ─────────────────────────────────────────────────────────────────────────────
+  Enter the exact pairing credentials shown on your Solo Developer Console:
+  👉 \x1b[36mhttp://localhost:5174/#solo-guard\x1b[0m (or http://localhost:5173/#solo-guard)
+  ─────────────────────────────────────────────────────────────────────────────
+      `);
+
+      const rl = readline.createInterface({ input, output });
+      try {
+        if (!clientId) {
+          const ans = (await rl.question('  🔑 Enter Client ID (e.g. ost_client_solo_...): ')).trim();
+          if (!isValidClientId(ans)) {
+            console.error(`\x1b[31m❌ Error: Invalid Client ID '${ans}'.\x1b[0m`);
+            console.error('Client ID must start with "ost_client_solo_" from your Solo Developer Console.');
+            process.exit(1);
+          }
+          clientId = ans;
+        }
+
+        if (!secretPasskey) {
+          const ans = (await rl.question('  🛡️  Enter Secret Passkey (e.g. ost_sec_...): ')).trim();
+          if (!isValidSecret(ans)) {
+            console.error('\x1b[31m❌ Error: Invalid Secret Passkey.\x1b[0m');
+            console.error('Secret Passkey must start with "ost_sec_" from your Solo Developer Console.');
+            process.exit(1);
+          }
+          secretPasskey = ans;
+        }
+
+        if (!customProxyPort) {
+          const ans = (await rl.question('  🌐 Enter Unique Ingress Port [Default: 8080]: ')).trim();
+          if (ans) {
+            const p = parseInt(ans, 10);
+            if (!isValidPort(p)) {
+              console.error(`\x1b[31m❌ Error: Invalid Ingress Port '${ans}'. Port must be a number between 1024 and 65535.\x1b[0m`);
+              process.exit(1);
+            }
+            customProxyPort = p;
+          }
+        }
+      } finally {
+        rl.close();
+      }
+
+      // Check match with expected pairing if one was on disk
+      if (expectedPairing) {
+        if (clientId !== expectedPairing.clientId || secretPasskey !== expectedPairing.secret) {
+          console.error('\x1b[31m❌ Security Mismatch: The entered credentials do not match your Solo Developer Console!\x1b[0m');
+          console.error(`  Expected Client ID: \x1b[32m${expectedPairing.clientId}\x1b[0m`);
+          console.error(`  Received Client ID: \x1b[31m${clientId}\x1b[0m`);
+          console.error('Please copy the exact credentials from: \x1b[36mhttp://localhost:5174/#solo-guard\x1b[0m');
+          process.exit(1);
+        }
+      }
+    }
   }
 
   customProxyPort = customProxyPort || 8080;
 
   // Persist secure pairing locally with strict permissions
-  try {
-    if (!fs.existsSync(authStoreDir)) {
-      fs.mkdirSync(authStoreDir, { recursive: true, mode: 0o700 });
-    }
-    fs.writeFileSync(
-      authStoreFile,
-      JSON.stringify({ clientId, secret: secretPasskey, port: customProxyPort, pairedAt: new Date().toISOString() }, null, 2),
-      { mode: 0o600 }
-    );
-  } catch {}
+  const pairingData = JSON.stringify(
+    { clientId, secret: secretPasskey, port: customProxyPort, pairedAt: new Date().toISOString() },
+    null,
+    2
+  );
+  for (const dir of candidateDirs) {
+    try {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+      }
+      fs.writeFileSync(path.join(dir, 'solo_pairing.json'), pairingData, { mode: 0o600 });
+      fs.writeFileSync(path.join(dir, 'daemon.auth'), pairingData, { mode: 0o600 });
+    } catch {}
+  }
 
   let customUiPort;
   const uiPortIdx = args.findIndex((a) => a === '--ui-port');
@@ -227,7 +335,7 @@ async function main() {
   const finalProxyUrl = proxyUrl || `http://${config.bindHost}:${proxyPort || port}`;
 
   console.log(`
-  \x1b[36m⚡ OsterdOps Guard Sentinel v2.0 Active\x1b[0m
+  \x1b[36m⚡ OstraOps Guard Sentinel v2.0 Active\x1b[0m
   ┌─────────────────────────────────────────────────────────────────────────────┐
   │ \x1b[1mClient Paired:\x1b[0m   \x1b[32m${clientId}\x1b[0m
   │ \x1b[1mSecret Lock:\x1b[0m     \x1b[33mVerified (Constant-Time Match)\x1b[0m

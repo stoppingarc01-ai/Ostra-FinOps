@@ -133,7 +133,7 @@ function serveStaticFile(
     if (fs.existsSync(indexPath)) {
       const headers: Record<string, string> = { 'Content-Type': 'text/html; charset=utf-8' };
       if (token) {
-        headers['Set-Cookie'] = `osterdops_token=${token}; Path=/; HttpOnly; SameSite=Lax`;
+        headers['Set-Cookie'] = `ostraops_token=${token}; Path=/; HttpOnly; SameSite=Lax`;
       }
       res.writeHead(200, headers);
       fs.createReadStream(indexPath).pipe(res);
@@ -221,9 +221,9 @@ export function createDaemonServer(options: DaemonServerOptions): DaemonServerIn
     res.end(`
       <!DOCTYPE html>
       <html>
-        <head><title>OsterdOps Guard Daemon</title></head>
+        <head><title>OstraOps Guard Daemon</title></head>
         <body style="font-family: monospace; padding: 2rem; background: #0f172a; color: #f8fafc;">
-          <h2>OsterdOps Guard Daemon</h2>
+          <h2>OstraOps Guard Daemon</h2>
           <p>Status: Healthy</p>
           <p>Session Token: <code>${token}</code></p>
           <p>Health Check: <a href="/healthz" style="color: #38bdf8;">/healthz</a></p>

@@ -143,9 +143,9 @@ async function runPhase4Check() {
     assert.notStrictEqual(dispatchedModels[1], 'gpt-4o', 'Fallback must route to a different model');
 
     const body = mock.getFullBody();
-    assert.ok(body.includes(': osterdops-retry-pending\n\n'), 'Must emit retry-pending heartbeat comment');
+    assert.ok(body.includes(': ostraops-retry-pending\n\n'), 'Must emit retry-pending heartbeat comment');
     assert.ok(body.includes('Fallback output'), 'Client must receive fallback generation');
-    assert.strictEqual(mock.getHeaders()['x-osterdops-fallback-triggered'], 'true');
+    assert.strictEqual(mock.getHeaders()['x-ostraops-fallback-triggered'], 'true');
     console.log(`   ✔ 429 intercepted: retried with fallback candidate '${dispatchedModels[1]}'.`);
   }
 
@@ -180,7 +180,7 @@ async function runPhase4Check() {
 
     assert.strictEqual(result.finalState, 'COMPLETED');
     assert.strictEqual(result.failoverAttempts, 1);
-    assert.ok(mock.getFullBody().includes(': osterdops-retry-pending\n\n'));
+    assert.ok(mock.getFullBody().includes(': ostraops-retry-pending\n\n'));
     assert.ok(mock.getFullBody().includes('Recovered'));
     console.log('   ✔ 503 intercepted and successfully recovered on fallback.');
   }
@@ -224,7 +224,7 @@ async function runPhase4Check() {
 
     const body = mock.getFullBody();
     assert.ok(body.includes('Token zero '), 'Client must have received initial output');
-    assert.ok(body.includes('OSTERDOPS_STREAM_INTERRUPTED'), 'Must emit terminal structured error chunk');
+    assert.ok(body.includes('OSTRAOPS_STREAM_INTERRUPTED'), 'Must emit terminal structured error chunk');
     console.log('   ✔ Zero-failover boundary preserved: mid-stream crash emitted terminal error without retry.');
   }
 
@@ -333,7 +333,7 @@ async function runPhase4Check() {
     assert.strictEqual(totalAttempts, 3, `Expected exactly 3 dispatch attempts (Primary + 2 fallbacks), got ${totalAttempts}`);
     assert.strictEqual(result.failoverAttempts, 2);
     assert.strictEqual(mock.getStatusCode(), 503);
-    assert.ok(mock.getFullBody().includes('OSTERDOPS_FAILOVER_EXHAUSTED'));
+    assert.ok(mock.getFullBody().includes('OSTRAOPS_FAILOVER_EXHAUSTED'));
     console.log('   ✔ Hard failover ceiling enforced: halted at MAX_FAILOVER_ATTEMPTS = 2.');
   }
 
@@ -375,7 +375,7 @@ async function runPhase4Check() {
     assert.ok(body.includes('JSON reply'));
     // CRITICAL USER RULE 3: ZERO SSE heartbeats or comments in non-streaming responses!
     assert.strictEqual(
-      body.includes(': osterdops-'),
+      body.includes(': ostraops-'),
       false,
       'CRITICAL: Non-streaming JSON response MUST NOT contain any SSE comments'
     );

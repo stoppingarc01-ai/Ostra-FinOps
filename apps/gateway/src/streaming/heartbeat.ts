@@ -1,8 +1,8 @@
 import type { ServerResponse } from 'node:http';
 
 export const HEARTBEAT_INTERVAL_MS = 5000;
-export const SSE_HEARTBEAT_COMMENT = ': osterdops-heartbeat\n\n';
-export const SSE_RETRY_PENDING_COMMENT = ': osterdops-retry-pending\n\n';
+export const SSE_HEARTBEAT_COMMENT = ': ostraops-heartbeat\n\n';
+export const SSE_RETRY_PENDING_COMMENT = ': ostraops-retry-pending\n\n';
 
 /**
  * Manages active SSE keepalive heartbeats and retry notifications.

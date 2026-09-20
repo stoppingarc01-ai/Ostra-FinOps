@@ -525,7 +525,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                       Active Browser & Agent Sessions
                     </h3>
                     <p className="text-xs text-charcoal-500">
-                      Devices currently signed into your OsterdOps account.
+                      Devices currently signed into your OstraOps account.
                     </p>
                   </div>
                   <button

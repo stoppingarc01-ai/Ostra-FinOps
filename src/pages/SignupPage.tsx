@@ -25,7 +25,7 @@ interface SignupPageProps {
 }
 
 export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
-  const { signUp, signInWithGoogle, signInWithGithub, updateSubscription } = useAuth();
+  const { signUp, signInWithGoogle, signInWithGithub } = useAuth();
 
   // Inspect if user arrived having pre-selected a plan from Pricing Page
   const [pendingPlan] = useState<{
@@ -37,7 +37,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     currency?: string;
   } | null>(() => {
     try {
-      const saved = sessionStorage.getItem('osterdops_pending_plan');
+      const saved = sessionStorage.getItem('ostraops_pending_plan');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -50,17 +50,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [accountType, setAccountType] = useState<'solo' | 'team'>(() => {
-    try {
-      const saved = sessionStorage.getItem('osterdops_pending_plan');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.type === 'hosted' || parsed.planId === 'team_scale') return 'team';
-        if (parsed.type === 'solo' || parsed.planId === 'solo_pro') return 'solo';
-      }
-    } catch {}
-    return 'team';
-  });
+  const [accountType, setAccountType] = useState<'solo' | 'team'>('solo');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
@@ -122,25 +112,14 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
       showToast(error.message || 'Registration failed.');
     } else {
       const isHosted = accountType === 'team' || pendingPlan?.type === 'hosted' || pendingPlan?.planId === 'team_scale';
+      const chosenPlan = isHosted ? 'team_scale' : 'solo_pro';
       try {
-        await updateSubscription({
-          plan_id: isHosted ? 'team_scale' : 'solo_pro',
-          plan_name: isHosted ? 'Team Hosted Gateway' : 'Solo Pro',
-          price_amount: pendingPlan?.amount || (isHosted ? 49 : 12),
-          billing_interval: (pendingPlan?.billingInterval as any) || 'mo',
-          status: 'active',
-          quota_limit: isHosted ? 500000 : 100000,
-          quota_used: isHosted ? 12000 : 74000,
-          quota_usage_percent: isHosted ? 2.4 : 74,
-          renewal_date: '18 Oct, 2026',
-        });
-        sessionStorage.removeItem('osterdops_pending_plan');
-      } catch (e) {
-        console.warn('Sub sync notice:', e);
-      }
+        localStorage.setItem('ostraops_active_plan', chosenPlan);
+        localStorage.setItem('ostraops_user_tier', isHosted ? 'team' : 'solo');
+      } catch {}
 
-      showToast(isHosted ? 'Team Hosted Gateway workspace activated!' : 'Solo Guard workspace activated!');
-      setTimeout(() => onNavigate(isHosted ? 'dashboard' : 'solo-guard'), 600);
+      showToast('Account created! Taking you to workspace setup & onboarding...');
+      setTimeout(() => onNavigate('onboarding'), 400);
     }
   };
 
@@ -152,25 +131,14 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
       showToast(error.message);
     } else {
       const isHosted = accountType === 'team' || pendingPlan?.type === 'hosted' || pendingPlan?.planId === 'team_scale';
+      const chosenPlan = isHosted ? 'team_scale' : 'solo_pro';
       try {
-        await updateSubscription({
-          plan_id: isHosted ? 'team_scale' : 'solo_pro',
-          plan_name: isHosted ? 'Team Hosted Gateway' : 'Solo Pro',
-          price_amount: pendingPlan?.amount || (isHosted ? 49 : 12),
-          billing_interval: (pendingPlan?.billingInterval as any) || 'mo',
-          status: 'active',
-          quota_limit: isHosted ? 500000 : 100000,
-          quota_used: isHosted ? 12000 : 74000,
-          quota_usage_percent: isHosted ? 2.4 : 74,
-          renewal_date: '18 Oct, 2026',
-        });
-        sessionStorage.removeItem('osterdops_pending_plan');
-      } catch (e) {
-        console.warn('Sub sync notice:', e);
-      }
+        localStorage.setItem('ostraops_active_plan', chosenPlan);
+        localStorage.setItem('ostraops_user_tier', isHosted ? 'team' : 'solo');
+      } catch {}
 
-      showToast(isHosted ? 'Team Hosted Gateway workspace ready!' : 'Solo Guard workspace ready!');
-      setTimeout(() => onNavigate(isHosted ? 'dashboard' : 'solo-guard'), 600);
+      showToast('Signed in! Taking you to workspace setup & onboarding...');
+      setTimeout(() => onNavigate('onboarding'), 400);
     }
   };
 

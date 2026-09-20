@@ -140,7 +140,7 @@ export async function executeStreamingPipeline(
             cleanup.execute();
             const err = new StreamError(
               candidateResult.reason || 'No compatible failover candidate available.',
-              'OSTERDOPS_NO_FAILOVER_CANDIDATE',
+              'OSTRAOPS_NO_FAILOVER_CANDIDATE',
               503
             );
             sendTerminalErrorResponse(res, err, identity.requestId);
@@ -220,7 +220,7 @@ export async function executeStreamingPipeline(
         cleanup.execute();
         const streamErr = new StreamError(
           err instanceof Error ? err.message : 'Upstream dispatch failed',
-          'OSTERDOPS_UPSTREAM_DISPATCH_FAILED',
+          'OSTRAOPS_UPSTREAM_DISPATCH_FAILED',
           502
         );
         sendTerminalErrorResponse(res, streamErr, identity.requestId);
@@ -265,7 +265,7 @@ export async function executeStreamingPipeline(
       const responseBody = activeDispatchResult.body ?? '';
       res.writeHead(activeDispatchResult.statusCode, {
         'Content-Type': 'application/json',
-        'X-OsterdOps-Request-ID': identity.requestId,
+        'X-OstraOps-Request-ID': identity.requestId,
         ...routingHeaders,
       });
       res.end(responseBody);
@@ -296,7 +296,7 @@ export async function executeStreamingPipeline(
     if (!stream) {
       stateMachine.error();
       cleanup.execute();
-      const err = new StreamError('Upstream did not return valid stream iterator', 'OSTERDOPS_INVALID_STREAM', 502);
+      const err = new StreamError('Upstream did not return valid stream iterator', 'OSTRAOPS_INVALID_STREAM', 502);
       sendTerminalErrorResponse(res, err, identity.requestId);
       return {
         finalState: 'ERROR',
@@ -337,7 +337,7 @@ export async function executeStreamingPipeline(
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
-            'X-OsterdOps-Request-ID': identity.requestId,
+            'X-OstraOps-Request-ID': identity.requestId,
             ...routingHeaders,
           });
 
@@ -437,7 +437,7 @@ function sendTerminalErrorResponse(res: ServerResponse, error: StreamError, requ
   res.writeHead(error.statusCode, {
     'Content-Type': 'application/json',
     'Content-Length': Buffer.byteLength(payload),
-    'X-OsterdOps-Request-ID': requestId,
+    'X-OstraOps-Request-ID': requestId,
   });
   res.end(payload);
 }

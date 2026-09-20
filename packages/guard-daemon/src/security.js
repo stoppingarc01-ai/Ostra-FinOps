@@ -121,14 +121,14 @@ export function verifyDaemonToken(providedToken, expectedToken) {
 function extractCookieToken(cookieHeader) {
     if (!cookieHeader)
         return undefined;
-    const match = cookieHeader.match(/(?:^|;\s*)osterdops_token=([a-f0-9]{32})(?:;|$)/i);
+    const match = cookieHeader.match(/(?:^|;\s*)ostraops_token=([a-f0-9]{32})(?:;|$)/i);
     return match ? match[1] : undefined;
 }
 /**
  * Comprehensive security check for local daemon HTTP requests:
  * 1. Host header validation (DNS rebinding prevention)
  * 2. Origin validation (CSRF prevention)
- * 3. Token validation (via Authorization header, X-OsterdOps-Daemon-Token, Cookie, or URL query param)
+ * 3. Token validation (via Authorization header, X-OstraOps-Daemon-Token, Cookie, or URL query param)
  */
 export function authorizeRequest(req, expectedToken, allowedPort) {
     const host = req.headers['host'];
@@ -141,8 +141,8 @@ export function authorizeRequest(req, expectedToken, allowedPort) {
     }
     // Token extraction hierarchy:
     // 1. Authorization: Bearer <token>
-    // 2. X-OsterdOps-Daemon-Token header
-    // 3. HttpOnly Cookie `osterdops_token`
+    // 2. X-OstraOps-Daemon-Token header
+    // 3. HttpOnly Cookie `ostraops_token`
     // 4. URL query param `?token=`
     let token;
     const authHeader = req.headers['authorization'];
@@ -150,7 +150,7 @@ export function authorizeRequest(req, expectedToken, allowedPort) {
         token = authHeader.substring(7);
     }
     if (!token) {
-        const headerToken = req.headers['x-osterdops-daemon-token'];
+        const headerToken = req.headers['x-ostraops-daemon-token'];
         if (typeof headerToken === 'string') {
             token = headerToken;
         }

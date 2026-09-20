@@ -1,8 +1,8 @@
 <div align="center">
 
-# Ostra FinOps (OsterdOps 2.0)
+# Ostra FinOps (OstraOps 2.0)
 
-### *The Deterministic Financial Firewall & Telemetry Proxy for Autonomous AI Agents*
+### *The Deterministic Financial Gateway & Telemetry Proxy for Autonomous AI Agents*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-amber.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Latency](https://img.shields.io/badge/Proxy%20Overhead-%3C0.42ms-emerald.svg?style=flat-square)](http://127.0.0.1:8080)
@@ -16,7 +16,7 @@
 </p>
 
 ```bash
-npx osterdops-guard
+npx ostraops-guard
 ```
 
 [Live Console (localhost:4040)](http://127.0.0.1:4040) • [Architecture](#-architecture) • [Agent Setup](#-agent-setup) • [Model Catalog](#-40-model-catalog) • [License](#-license)
@@ -35,7 +35,7 @@ Traditional cost monitors only send an email **after** your provider billing thr
 - **Microsecond Financial Circuit Breaker:** Injects an instant HTTP 429 locally when rolling token velocity ($/min) or your daily hard cap ($15.00/day) is crossed.
 - **Deterministic Intra-Family Failover:** Prevents cross-vendor tool crashes by cascading strictly within sibling models (e.g. Claude 3.7 Sonnet → Claude 3.5 Haiku) with 100% schema fidelity.
 - **0.42ms In-Memory Proxy Overhead:** Zero perceptible buffering delay on streaming Server-Sent Events (SSE).
-- **100% Local-First & Zero Egress:** Traces, metrics, and prompt histories reside encrypted in on-device SQLite (`~/.osterdops/traces.db`). Zero cloud data retention.
+- **100% Local-First & Zero Egress:** Traces, metrics, and prompt histories reside encrypted in on-device SQLite (`~/.ostraops/traces.db`). Zero cloud data retention.
 
 ---
 
@@ -52,7 +52,7 @@ Traditional cost monitors only send an email **after** your provider billing thr
 │  [2] High-Entropy Secret Mask  ───> API Keys, JWTs & IPs │
 │  [3] In-Memory SSE Streamer    ───> Zero Buffering Delay │
 │  [4] Intra-Family Cascader     ───> Sonnet -> Haiku      │
-│  [5] Encrypted SQLite Buffer   ───> ~/.osterdops/traces  │
+│  [5] Encrypted SQLite Buffer   ───> ~/.ostraops/traces  │
 └────────────────────────────┬─────────────────────────────┘
                              │
                              ▼ (Encrypted TLS)
@@ -68,13 +68,13 @@ Traditional cost monitors only send an email **after** your provider billing thr
 No signup or cloud API keys required to use the local guard daemon:
 
 ```bash
-npx osterdops-guard
+npx ostraops-guard
 ```
 
 The daemon will bind to:
 - **Proxy Gateway:** `http://127.0.0.1:8080/v1`
 - **Telemetry UI:** `http://127.0.0.1:4040`
-- **Local SQLite DB:** `~/.osterdops/traces.db`
+- **Local SQLite DB:** `~/.ostraops/traces.db`
 
 ### 2. Connect Your Agent
 
@@ -120,7 +120,7 @@ client = OpenAI(
 | **Circuit Breakers** | Delayed webhooks / emails | **Real-Time Sliding Window Killswitch** |
 | **Failover Safety** | Swaps vendors (corrupts XML/JSON tools) | **Deterministic Intra-Family Isolation** |
 | **Secret Scrubbing** | None or Cloud Regex | **0.18ms On-Device High-Entropy Masking** |
-| **Deployment** | DNS CNAMEs & Cloud Config | **Single Command (`npx osterdops-guard`)** |
+| **Deployment** | DNS CNAMEs & Cloud Config | **Single Command (`npx ostraops-guard`)** |
 
 ---
 

@@ -90,7 +90,7 @@ export const PreferencesView: React.FC = () => {
     { id: 'general', label: 'General', icon: Sliders, desc: 'Workspace experience & localization' },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, desc: 'Widgets layout & refresh interval' },
     { id: 'notifications', label: 'Notifications', icon: Bell, desc: 'Alert matrix & digest delivery' },
-    { id: 'cost', label: 'Cost & Optimization', icon: TrendingDown, desc: 'OsterdOps routing & savings mode' },
+    { id: 'cost', label: 'Cost & Optimization', icon: TrendingDown, desc: 'OstraOps routing & savings mode' },
     { id: 'usage', label: 'Usage & Tracking', icon: Activity, desc: 'Telemetry collection & retention' },
     { id: 'appearance', label: 'Appearance', icon: Palette, desc: 'Theme, density & motion' }
   ] as const;
@@ -116,7 +116,7 @@ export const PreferencesView: React.FC = () => {
           Preferences
         </h1>
         <p className="text-xs sm:text-sm text-charcoal-500 mt-1 font-sans">
-          Customize how OsterdOps behaves, routes models, displays telemetry, and communicates with your engineering team.
+          Customize how OstraOps behaves, routes models, displays telemetry, and communicates with your engineering team.
         </p>
       </div>
 
@@ -184,7 +184,7 @@ export const PreferencesView: React.FC = () => {
                       Default Landing Page
                     </span>
                     <span className="text-[11px] text-charcoal-500 font-sans">
-                      The initial view displayed when opening the OsterdOps application.
+                      The initial view displayed when opening the OstraOps application.
                     </span>
                   </div>
                   <select
@@ -531,7 +531,7 @@ export const PreferencesView: React.FC = () => {
                   Cost & Optimization Preferences
                 </h2>
                 <p className="text-xs text-charcoal-500 mt-0.5 font-sans">
-                  Govern OsterdOps smart routing heuristics, downgrade recommendations, and fallback policies.
+                  Govern OstraOps smart routing heuristics, downgrade recommendations, and fallback policies.
                 </p>
               </div>
 

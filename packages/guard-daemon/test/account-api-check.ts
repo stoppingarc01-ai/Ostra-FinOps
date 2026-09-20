@@ -24,7 +24,7 @@ async function runAccountTests() {
   const baseUrl = `http://127.0.0.1:${port}`;
   const headers = {
     'Content-Type': 'application/json',
-    'X-OsterdOps-Daemon-Token': 'account_test_token',
+    'X-OstraOps-Daemon-Token': 'account_test_token',
   };
 
   // 1. GET /api/account

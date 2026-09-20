@@ -9,7 +9,7 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({ onNavigateToCookies 
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem('osterdops_cookie_consent');
+    const consent = localStorage.getItem('ostraops_cookie_consent');
     if (!consent) {
       // Delay display slightly so it doesn't jarringly block the initial load
       const timer = setTimeout(() => setVisible(true), 1200);
@@ -18,12 +18,12 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({ onNavigateToCookies 
   }, []);
 
   const handleAcceptAll = () => {
-    localStorage.setItem('osterdops_cookie_consent', 'all');
+    localStorage.setItem('ostraops_cookie_consent', 'all');
     setVisible(false);
   };
 
   const handleEssentialOnly = () => {
-    localStorage.setItem('osterdops_cookie_consent', 'essential');
+    localStorage.setItem('ostraops_cookie_consent', 'essential');
     setVisible(false);
   };
 

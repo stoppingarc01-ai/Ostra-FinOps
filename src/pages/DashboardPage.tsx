@@ -23,7 +23,8 @@ import {
   ExternalLink,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Terminal
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { ProjectsView } from '../components/ProjectsView';
@@ -40,30 +41,29 @@ import { BudgetsView } from '../components/BudgetsView';
 import { DashboardHomeView } from '../components/DashboardHomeView';
 import { SpendVelocityChart } from '../components/SpendVelocityChart';
 import { OstraLogo } from '../components/OstraBrand';
+import { SoloGuardView } from '../components/SoloGuardView';
 
 interface DashboardPageProps {
   onNavigateHome: () => void;
   onNavigatePricing: () => void;
+  onNavigateSoloGuard?: () => void;
   initialTab?: string;
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   onNavigateHome,
   onNavigatePricing,
+  onNavigateSoloGuard,
   initialTab,
 }) => {
   const { user, profile, subscription, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState(initialTab && initialTab !== 'solo-guard' ? initialTab : 'dashboard');
+  const [activeTab, setActiveTab] = useState(initialTab || 'dashboard');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [assistantInput, setAssistantInput] = useState('');
 
   // Sync activeTab when initialTab changes
   useEffect(() => {
-    if (initialTab && initialTab !== 'solo-guard') {
-      setActiveTab(initialTab);
-    } else {
-      setActiveTab('dashboard');
-    }
+    setActiveTab(initialTab || 'dashboard');
   }, [initialTab]);
 
   // Calculate real-time live date ranges
@@ -98,6 +98,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const sidebarNavItems = [
     { id: 'dashboard', label: 'Gateway Overview', icon: LayoutDashboard },
+    { id: 'solo-guard', label: 'Solo Guard (Local)', icon: Terminal, badge: 'Daemon' },
     { id: 'projects', label: 'API Keys & Projects', icon: FolderKanban },
     { id: 'integrations', label: 'API Key Vault', icon: Cable },
     { id: 'models', label: 'Models & Routing', icon: Cpu },
@@ -111,7 +112,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
-  // Heatmap intensity matrix (7 days x 5 time slots) in pure OsterdOps sandstone & gold palette
+  // Heatmap intensity matrix (7 days x 5 time slots) in pure OstraOps sandstone & gold palette
   const heatmapData = [
     // 12 AM
     [0.1, 0.15, 0.2, 0.25, 0.35, 0.2, 0.1],
@@ -134,7 +135,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans flex antialiased selection:bg-osterdGold-500/20 selection:text-charcoal-900">
+    <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans flex antialiased selection:bg-ostraGold-500/20 selection:text-charcoal-900">
       
       {/* Mobile Sidebar Overlay */}
       {mobileSidebarOpen && (
@@ -239,7 +240,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
               <div className="h-1.5 w-full bg-[#EAE4D8] rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-osterdGold-500 rounded-full transition-all duration-500"
+                  className="h-full bg-ostraGold-500 rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, subscription?.quota_usage_percent ?? 74)}%` }}
                 />
               </div>
@@ -314,7 +315,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <input
                 type="text"
                 placeholder="Search anything... ⌘K"
-                className="w-44 lg:w-56 pl-8 pr-3 py-1.5 text-xs bg-white border border-[#EAE5DC] rounded-xl text-charcoal-800 placeholder:text-charcoal-400 focus:outline-none focus:border-osterdGold-500 transition-colors"
+                className="w-44 lg:w-56 pl-8 pr-3 py-1.5 text-xs bg-white border border-[#EAE5DC] rounded-xl text-charcoal-800 placeholder:text-charcoal-400 focus:outline-none focus:border-ostraGold-500 transition-colors"
               />
             </div>
 
@@ -383,20 +384,60 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <Bell className="w-4 h-4" />
               <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white" />
             </button>
+            {/* Quick Switch to Solo Guard Console */}
+            {onNavigateSoloGuard && (
+              <button
+                onClick={onNavigateSoloGuard}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200/80 text-amber-900 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                title="Switch to Solo Developer Local Console"
+              >
+                <Terminal className="w-3.5 h-3.5 text-amber-700" />
+                <span>Solo Guard</span>
+              </button>
+            )}
             {/* Quick exit to website */}
             <button
               onClick={onNavigateHome}
               className="px-3 py-1.5 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-medium transition-all shadow-xs flex items-center gap-1.5"
             >
               <span>Exit Console</span>
-              <ExternalLink className="w-3 h-3 text-osterdGold-400" />
+              <ExternalLink className="w-3 h-3 text-ostraGold-400" />
             </button>
           </div>
         </header>
 
         {/* Dashboard / Content Container */}
         <div className="px-6 lg:px-8 pt-6 space-y-6 max-w-[1600px] mx-auto w-full">
-          {activeTab === 'alerts' ? (
+          {activeTab === 'solo-guard' ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between bg-white border border-[#EAE5DC] p-4 rounded-2xl shadow-subtle">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700">
+                    <Terminal className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-charcoal-900 flex items-center gap-2">
+                      <span>Solo Developer Local Guard</span>
+                    </h2>
+                    <p className="text-xs text-charcoal-500">Zero-latency financial gateway and on-device telemetry proxy for Cursor, Cline, and Roo-Code.</p>
+                  </div>
+                </div>
+                {onNavigateSoloGuard && (
+                  <button
+                    onClick={onNavigateSoloGuard}
+                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-900 text-white text-xs font-semibold hover:bg-black transition-colors cursor-pointer"
+                  >
+                    <span>Full Screen Console</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-[#B58E50]" />
+                  </button>
+                )}
+              </div>
+              <SoloGuardView
+                onNavigateToPricing={onNavigatePricing}
+                isHostedGatewayUser={true}
+              />
+            </div>
+          ) : activeTab === 'alerts' ? (
             <AlertsView />
           ) : activeTab === 'budgets' ? (
             <BudgetsView />
@@ -427,7 +468,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           ) : (
             <>
 {/* ========================================================== */}
-              {/* ROW 1: TOP 5 METRICS CARDS (Pure OsterdOps palette)        */}
+              {/* ROW 1: TOP 5 METRICS CARDS (Pure OstraOps palette)        */}
               {/* ========================================================== */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             
@@ -444,7 +485,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   $4,328.64
                 </div>
                 <div className="flex items-center gap-1 text-[11px] font-medium text-charcoal-600 mt-1 font-mono">
-                  <TrendingUp className="w-3 h-3 text-osterdGold-600" />
+                  <TrendingUp className="w-3 h-3 text-ostraGold-600" />
                   <span>28.6% vs last month</span>
                 </div>
               </div>
@@ -487,7 +528,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   312.6M
                 </div>
                 <div className="flex items-center gap-1 text-[11px] font-medium text-charcoal-600 mt-1 font-mono">
-                  <TrendingUp className="w-3 h-3 text-osterdGold-600" />
+                  <TrendingUp className="w-3 h-3 text-ostraGold-600" />
                   <span>18.2% vs last month</span>
                 </div>
               </div>
@@ -559,7 +600,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   89,732
                 </div>
                 <div className="flex items-center gap-1 text-[11px] font-medium text-charcoal-600 mt-1 font-mono">
-                  <TrendingUp className="w-3 h-3 text-osterdGold-600" />
+                  <TrendingUp className="w-3 h-3 text-ostraGold-600" />
                   <span>24.1% vs last month</span>
                 </div>
               </div>
@@ -643,7 +684,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <SpendVelocityChart />
             </div>
 
-            {/* Right Col (4 cols): Active Financial Firewall Card */}
+            {/* Right Col (4 cols): Active Financial Gateway Card */}
             <div className="lg:col-span-4 p-6 rounded-3xl bg-charcoal-900 text-white shadow-xl flex flex-col justify-between relative overflow-hidden border border-charcoal-800">
               
               {/* Subtle Ambient Gold Vector Background */}
@@ -656,9 +697,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
               <div className="relative z-10 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-charcoal-800 text-osterdGold-400 text-[10px] font-mono font-bold border border-charcoal-700">
-                    <Shield className="w-3 h-3 text-osterdGold-400" />
-                    <span>LOCAL FINANCIAL FIREWALL</span>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-charcoal-800 text-ostraGold-400 text-[10px] font-mono font-bold border border-charcoal-700">
+                    <Shield className="w-3 h-3 text-ostraGold-400" />
+                    <span>LOCAL FINANCIAL GATEWAY</span>
                   </div>
                   <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -682,10 +723,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-zinc-400">Hard Kill Limit:</span>
-                    <span className="font-mono font-bold text-osterdGold-400">$15.00 / hour</span>
+                    <span className="font-mono font-bold text-ostraGold-400">$15.00 / hour</span>
                   </div>
                   <div className="w-full bg-charcoal-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-osterdGold-500 h-full rounded-full" style={{ width: '18%' }} />
+                    <div className="bg-ostraGold-500 h-full rounded-full" style={{ width: '18%' }} />
                   </div>
                 </div>
               </div>
@@ -774,7 +815,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
                 <div className="space-y-4">
                   {[
-                    { name: 'Claude 3.7 Sonnet', share: '48%', cost: '$2,077.74', color: 'bg-osterdGold-600' },
+                    { name: 'Claude 3.7 Sonnet', share: '48%', cost: '$2,077.74', color: 'bg-ostraGold-600' },
                     { name: 'GPT-4o', share: '32%', cost: '$1,385.16', color: 'bg-charcoal-800' },
                     { name: 'Claude 3.5 Haiku', share: '12%', cost: '$519.43', color: 'bg-sandstone-300' },
                     { name: 'Gemini 1.5 Pro', share: '8%', cost: '$346.29', color: 'bg-zinc-400' },
@@ -801,7 +842,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="lg:col-span-3 p-6 rounded-3xl bg-[#18181B] text-white border border-charcoal-800 shadow-xl flex flex-col justify-between">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-osterdGold-400 font-mono">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-ostraGold-400 font-mono">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>OPS COPILOT</span>
                   </div>
@@ -821,7 +862,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     appliedRec
                       ? 'bg-emerald-600 text-white'
-                      : 'bg-osterdGold-500 hover:bg-osterdGold-600 text-charcoal-950 shadow-xs'
+                      : 'bg-ostraGold-500 hover:bg-ostraGold-600 text-charcoal-950 shadow-xs'
                   }`}
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
@@ -846,11 +887,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     value={assistantInput}
                     onChange={(e) => setAssistantInput(e.target.value)}
                     placeholder="Ask anything about your proxy spend..."
-                    className="w-full pl-3 pr-9 py-2 rounded-xl bg-[#242427] border border-zinc-700 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-osterdGold-500 transition-colors"
+                    className="w-full pl-3 pr-9 py-2 rounded-xl bg-[#242427] border border-zinc-700 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-ostraGold-500 transition-colors"
                   />
                   <button
                     type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-osterdGold-400 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-ostraGold-400 transition-colors"
                   >
                     <Send className="w-3.5 h-3.5" />
                   </button>

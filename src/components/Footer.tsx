@@ -22,16 +22,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <circle cx="18" cy="18" r="2" fill="#C59E5F" />
               </svg>
               <span className="text-base font-bold tracking-tight text-charcoal-900">
-                Osterd<span className="text-charcoal-600 font-medium">Ops</span>
+                Ostra<span className="text-charcoal-600 font-medium">Ops</span>
               </span>
             </button>
             <p className="text-xs text-charcoal-500 max-w-sm leading-relaxed">
-              Deterministic financial firewall and observability engine for autonomous AI coding agents (Cursor, Cline, Antigravity, Aider).
+              Deterministic financial gateway and observability engine for autonomous AI coding agents (Cursor, Cline, Antigravity, Aider).
             </p>
-            <div className="flex items-center gap-2 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full w-fit border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Proxy Engine v1.0.0 • All Systems Operational</span>
-            </div>
           </div>
 
           {/* Column 1: Product */}
@@ -61,7 +57,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <li><a href="#docs" className="hover:text-charcoal-900 transition-colors">Documentation</a></li>
               <li><a href="#cursor" className="hover:text-charcoal-900 transition-colors">Cursor Integration</a></li>
               <li><a href="#cline" className="hover:text-charcoal-900 transition-colors">Cline / Roo Integration</a></li>
-              <li><a href="#npm" className="hover:text-charcoal-900 transition-colors">npm osterdops-guard</a></li>
+              <li><a href="#npm" className="hover:text-charcoal-900 transition-colors">npm ostraops-guard</a></li>
             </ul>
           </div>
 
@@ -69,6 +65,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <div className="space-y-3">
             <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-800 font-mono">Trust &amp; Company</span>
             <ul className="space-y-2">
+              <li><button onClick={() => onNavigate && onNavigate('about')} className="hover:text-charcoal-900 transition-colors text-left cursor-pointer">About Us</button></li>
               <li><button onClick={() => onNavigate && onNavigate('privacy')} className="hover:text-charcoal-900 transition-colors text-left cursor-pointer">Privacy Policy</button></li>
               <li><button onClick={() => onNavigate && onNavigate('terms')} className="hover:text-charcoal-900 transition-colors text-left cursor-pointer">Terms &amp; Conditions</button></li>
               <li><button onClick={() => onNavigate && onNavigate('cookies')} className="hover:text-charcoal-900 transition-colors text-left cursor-pointer">Cookie Policy &amp; Controls</button></li>
@@ -80,7 +77,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         {/* Bottom copyright */}
         <div className="pt-8 border-t border-borderLight flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-charcoal-400">
           <div>
-            © {new Date().getFullYear()} OsterdOps Technologies Inc. All rights reserved. Zero external code retention guaranteed.
+            © {new Date().getFullYear()} OstraOps Technologies Inc. All rights reserved. Zero external code retention guaranteed.
           </div>
           <div className="font-mono text-charcoal-500">
             Aesthetic: Warm Sandstone &amp; Deep Charcoal (#FAF8F5 / #18181B)

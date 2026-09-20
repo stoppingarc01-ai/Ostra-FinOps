@@ -44,19 +44,19 @@ export const LegalPage: React.FC<LegalPageProps> = ({
   };
 
   const handleSaveCookiePreferences = () => {
-    localStorage.setItem('osterdops_cookie_preferences', JSON.stringify({
+    localStorage.setItem('ostraops_cookie_preferences', JSON.stringify({
       essential: true,
       functional: prefFunctional,
       telemetry: prefTelemetry,
       updated_at: new Date().toISOString(),
     }));
-    localStorage.setItem('osterdops_cookie_consent', 'custom');
+    localStorage.setItem('ostraops_cookie_consent', 'custom');
     setCookieSavedToast(true);
     setTimeout(() => setCookieSavedToast(false), 3000);
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans antialiased selection:bg-osterdGold-500/20 selection:text-charcoal-900 pb-24">
+    <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans antialiased selection:bg-ostraGold-500/20 selection:text-charcoal-900 pb-24">
       
       {/* Top Header Bar */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#EAE5DC] px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
@@ -107,7 +107,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
           </h1>
 
           <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed max-w-xl mx-auto">
-            Clear, transparent, and developer-centric. Learn how OsterdOps protects your source code, governs AI spending, and handles data.
+            Clear, transparent, and developer-centric. Learn how OstraOps protects your source code, governs AI spending, and handles data.
           </p>
 
           <div className="text-[11px] font-mono text-charcoal-400 pt-1">
@@ -180,7 +180,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
                   Zero Prompt &amp; Code Retention Commitment
                 </h3>
                 <p className="text-xs text-charcoal-600 leading-relaxed">
-                  When you run <code>osterdops-guard</code> locally, it binds strictly to <code>127.0.0.1:8080</code>. Your prompts, source code files, and model completions never transit through OsterdOps servers. Logs persist exclusively to your local disk (<code>~/.osterdops/telemetry.db</code>).
+                  When you run <code>ostraops-guard</code> locally, it binds strictly to <code>127.0.0.1:8080</code>. Your prompts, source code files, and model completions never transit through OstraOps servers. Logs persist exclusively to your local disk (<code>~/.ostraops/telemetry.db</code>).
                 </p>
               </div>
             </div>
@@ -188,25 +188,25 @@ export const LegalPage: React.FC<LegalPageProps> = ({
             {/* Section 1 */}
             <div className="space-y-3">
               <h2 className="text-lg font-extrabold text-charcoal-900 flex items-center gap-2">
-                <span className="text-osterdGold-600 font-mono text-sm">01.</span>
+                <span className="text-ostraGold-600 font-mono text-sm">01.</span>
                 <span>Introduction &amp; Scope</span>
               </h2>
               <p className="text-xs sm:text-sm text-charcoal-700 leading-relaxed">
-                This Privacy Policy outlines how OsterdOps Technologies Inc. (&quot;OsterdOps&quot;, &quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) collects, uses, and safeguards information when you use our local telemetry proxy daemon (<code>osterdops-guard</code>), cloud-hosted API gateway (<code>gateway.osterdops.com</code>), and management console.
+                This Privacy Policy outlines how OstraOps Technologies Inc. (&quot;OstraOps&quot;, &quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) collects, uses, and safeguards information when you use our local telemetry proxy daemon (<code>ostraops-guard</code>), cloud-hosted API gateway (<code>gateway.ostraops.com</code>), and management console.
               </p>
             </div>
 
             {/* Section 2 */}
             <div className="space-y-3">
               <h2 className="text-lg font-extrabold text-charcoal-900 flex items-center gap-2">
-                <span className="text-osterdGold-600 font-mono text-sm">02.</span>
+                <span className="text-ostraGold-600 font-mono text-sm">02.</span>
                 <span>Information We Collect</span>
               </h2>
               <div className="text-xs sm:text-sm text-charcoal-700 leading-relaxed space-y-3">
                 <p>We believe in radical data minimization. We only collect the following operational data:</p>
                 <ul className="list-disc list-inside space-y-1.5 pl-2">
                   <li><strong>Account Credentials:</strong> Email address, user identifier, and profile name managed securely via Firebase Authentication.</li>
-                  <li><strong>Subscription &amp; Billing Records:</strong> Chosen tier (Solo Pro, Team Gateway), billing cycle, country of payment, and transaction status. Raw card numbers are processed directly by Stripe or Razorpay and are never stored on OsterdOps servers.</li>
+                  <li><strong>Subscription &amp; Billing Records:</strong> Chosen tier (Solo Pro, Team Gateway), billing cycle, country of payment, and transaction status. Raw card numbers are processed directly by Stripe or Razorpay and are never stored on OstraOps servers.</li>
                   <li><strong>Aggregated Gateway Telemetry:</strong> For Hosted Gateway users, we log metadata including request timestamp, model identifier (e.g. <code>claude-3-5-sonnet</code>), token consumption volume, HTTP status code, and latency for spend enforcement.</li>
                   <li><strong>Voluntary Support Communications:</strong> Bug reports, feature suggestions, or direct inquiries sent to our engineering team.</li>
                 </ul>
@@ -216,7 +216,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
             {/* Section 3 */}
             <div className="space-y-3">
               <h2 className="text-lg font-extrabold text-charcoal-900 flex items-center gap-2">
-                <span className="text-osterdGold-600 font-mono text-sm">03.</span>
+                <span className="text-ostraGold-600 font-mono text-sm">03.</span>
                 <span>How We Protect Your API Keys</span>
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
@@ -245,11 +245,11 @@ export const LegalPage: React.FC<LegalPageProps> = ({
             {/* Section 4 */}
             <div className="space-y-3">
               <h2 className="text-lg font-extrabold text-charcoal-900 flex items-center gap-2">
-                <span className="text-osterdGold-600 font-mono text-sm">04.</span>
+                <span className="text-ostraGold-600 font-mono text-sm">04.</span>
                 <span>Global Compliance &amp; Regional Rights</span>
               </h2>
               <p className="text-xs sm:text-sm text-charcoal-700 leading-relaxed">
-                OsterdOps complies with international privacy frameworks:
+                OstraOps complies with international privacy frameworks:
               </p>
               <div className="space-y-2 text-xs text-charcoal-700 pl-2">
                 <div>• <strong>European Union (GDPR):</strong> You have the right to access, rectify, or request erasure of your account records under Articles 15-20.</div>
@@ -262,7 +262,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
             <div className="space-y-3 border-t border-[#EAE5DC] pt-6">
               <h2 className="text-sm font-bold text-charcoal-900">Contact the Privacy Officer</h2>
               <p className="text-xs text-charcoal-600">
-                For questions, data export, or deletion requests, contact our legal team at <a href="mailto:privacy@osterdops.com" className="font-bold underline text-charcoal-900">privacy@osterdops.com</a>.
+                For questions, data export, or deletion requests, contact our legal team at <a href="mailto:privacy@ostraops.com" className="font-bold underline text-charcoal-900">privacy@ostraops.com</a>.
               </p>
             </div>
 
@@ -277,21 +277,21 @@ export const LegalPage: React.FC<LegalPageProps> = ({
             
             <div className="space-y-3">
               <h2 className="text-lg font-extrabold text-charcoal-900 flex items-center gap-2">
-                <span className="text-osterdGold-600 font-mono text-sm">01.</span>
+                <span className="text-ostraGold-600 font-mono text-sm">01.</span>
                 <span>Acceptance of Agreement</span>
               </h2>
               <p className="text-xs sm:text-sm text-charcoal-700 leading-relaxed">
-                By installing, downloading, or accessing OsterdOps software, including the CLI package (<code>npm i -g osterdops-guard</code>), the hosted API gateway, or cloud console, you agree to be bound by these Terms of Service. If you are accepting on behalf of an enterprise or entity, you represent and warrant that you have the authority to bind such entity.
+                By installing, downloading, or accessing OstraOps software, including the CLI package (<code>npm i -g ostraops-guard</code>), the hosted API gateway, or cloud console, you agree to be bound by these Terms of Service. If you are accepting on behalf of an enterprise or entity, you represent and warrant that you have the authority to bind such entity.
               </p>
             </div>
 
             <div className="space-y-3">
               <h2 className="text-lg font-extrabold text-charcoal-900 flex items-center gap-2">
-                <span className="text-osterdGold-600 font-mono text-sm">02.</span>
+                <span className="text-ostraGold-600 font-mono text-sm">02.</span>
                 <span>Service Provision &amp; Permitted Use</span>
               </h2>
               <div className="text-xs sm:text-sm text-charcoal-700 leading-relaxed space-y-2">
-                <p>OsterdOps grants you a non-exclusive, revocable, non-transferable license to deploy our telemetry proxies for AI cost control and rate limiting.</p>
+                <p>OstraOps grants you a non-exclusive, revocable, non-transferable license to deploy our telemetry proxies for AI cost control and rate limiting.</p>
                 <p><strong>Restrictions:</strong> You agree not to:</p>
                 <ul className="list-disc list-inside space-y-1 pl-2 text-charcoal-600">
                   <li>Use the gateway to intentionally bypass third-party AI provider terms of service or safety policies.</li>
@@ -303,7 +303,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
 
             <div className="space-y-3">
               <h2 className="text-lg font-extrabold text-charcoal-900 flex items-center gap-2">
-                <span className="text-osterdGold-600 font-mono text-sm">03.</span>
+                <span className="text-ostraGold-600 font-mono text-sm">03.</span>
                 <span>Subscriptions, Billing &amp; Currencies</span>
               </h2>
               <div className="text-xs sm:text-sm text-charcoal-700 leading-relaxed space-y-2">
@@ -321,17 +321,17 @@ export const LegalPage: React.FC<LegalPageProps> = ({
 
             <div className="space-y-3">
               <h2 className="text-lg font-extrabold text-charcoal-900 flex items-center gap-2">
-                <span className="text-osterdGold-600 font-mono text-sm">04.</span>
-                <span>Financial Firewall &amp; Circuit Breaker Disclaimers</span>
+                <span className="text-ostraGold-600 font-mono text-sm">04.</span>
+                <span>Financial Gateway &amp; Circuit Breaker Disclaimers</span>
               </h2>
               <p className="text-xs sm:text-sm text-charcoal-700 leading-relaxed">
-                While OsterdOps employs strict deterministic kill-switches and rate limits to halt runaway loops, network conditions or upstream provider delays may introduce brief accounting latency. OsterdOps shall not be liable for third-party upstream API provider invoices incurred through compromised personal keys outside our managed gateway boundaries.
+                While OstraOps employs strict deterministic kill-switches and rate limits to halt runaway loops, network conditions or upstream provider delays may introduce brief accounting latency. OstraOps shall not be liable for third-party upstream API provider invoices incurred through compromised personal keys outside our managed gateway boundaries.
               </p>
             </div>
 
             <div className="space-y-3">
               <h2 className="text-lg font-extrabold text-charcoal-900 flex items-center gap-2">
-                <span className="text-osterdGold-600 font-mono text-sm">05.</span>
+                <span className="text-ostraGold-600 font-mono text-sm">05.</span>
                 <span>Service Level Objective (SLA)</span>
               </h2>
               <p className="text-xs sm:text-sm text-charcoal-700 leading-relaxed">
@@ -342,7 +342,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
             <div className="space-y-3 border-t border-[#EAE5DC] pt-6">
               <h2 className="text-sm font-bold text-charcoal-900">Questions Concerning These Terms</h2>
               <p className="text-xs text-charcoal-600">
-                Contact legal counsel and enterprise licensing at <a href="mailto:legal@osterdops.com" className="font-bold underline text-charcoal-900">legal@osterdops.com</a>.
+                Contact legal counsel and enterprise licensing at <a href="mailto:legal@ostraops.com" className="font-bold underline text-charcoal-900">legal@ostraops.com</a>.
               </p>
             </div>
 
@@ -361,7 +361,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
                 <span>Cookie Policy &amp; Storage Transparency</span>
               </h2>
               <p className="text-xs sm:text-sm text-charcoal-700 leading-relaxed">
-                Cookies and local browser storage (<code>localStorage</code>) are small data fragments saved on your device to make the OsterdOps console fast, secure, and personalized. We maintain a strict policy against cross-site advertising cookies.
+                Cookies and local browser storage (<code>localStorage</code>) are small data fragments saved on your device to make the OstraOps console fast, secure, and personalized. We maintain a strict policy against cross-site advertising cookies.
               </p>
             </div>
 
@@ -480,13 +480,13 @@ export const LegalPage: React.FC<LegalPageProps> = ({
                       <td className="py-2.5 px-4">Session / 30 Days</td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 px-4 font-mono font-bold text-charcoal-800">osterdops_user_currency</td>
+                      <td className="py-2.5 px-4 font-mono font-bold text-charcoal-800">ostraops_user_currency</td>
                       <td className="py-2.5 px-4">localStorage</td>
                       <td className="py-2.5 px-4">Persists selected display currency (INR, USD, EUR, GBP).</td>
                       <td className="py-2.5 px-4">1 Year</td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 px-4 font-mono font-bold text-charcoal-800">osterdops_cookie_consent</td>
+                      <td className="py-2.5 px-4 font-mono font-bold text-charcoal-800">ostraops_cookie_consent</td>
                       <td className="py-2.5 px-4">localStorage</td>
                       <td className="py-2.5 px-4">Stores your cookie consent choice.</td>
                       <td className="py-2.5 px-4">1 Year</td>

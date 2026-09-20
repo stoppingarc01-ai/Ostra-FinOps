@@ -233,7 +233,7 @@ export const BudgetsView: React.FC = () => {
             onClick={() => setCreateModalOpen(true)}
             className="px-3.5 py-2 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-bold transition-all shadow-subtle flex items-center gap-1.5 cursor-pointer shrink-0"
           >
-            <Plus className="w-3.5 h-3.5 text-osterdGold-400" />
+            <Plus className="w-3.5 h-3.5 text-ostraGold-400" />
             <span>Set New Budget Cap</span>
           </button>
         </div>

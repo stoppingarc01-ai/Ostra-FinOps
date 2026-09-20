@@ -2,7 +2,7 @@ import React from 'react';
 import { SoloGuardView } from '../components/SoloGuardView';
 import { OstraLogo } from '../components/OstraBrand';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, ArrowLeft, Terminal } from 'lucide-react';
+import { LogOut, ArrowLeft, Terminal, LayoutDashboard } from 'lucide-react';
 
 interface SoloGuardPageProps {
   onNavigateHome: () => void;
@@ -12,6 +12,7 @@ interface SoloGuardPageProps {
 
 export const SoloGuardPage: React.FC<SoloGuardPageProps> = ({
   onNavigateHome,
+  onNavigateDashboard,
   onNavigatePricing,
 }) => {
   const { user, profile, signOut } = useAuth();
@@ -19,10 +20,10 @@ export const SoloGuardPage: React.FC<SoloGuardPageProps> = ({
   const displayEmail = profile?.email || user?.email || '';
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans flex flex-col antialiased selection:bg-osterdGold-500/20 selection:text-charcoal-900">
+    <div className="min-h-screen bg-[#0C1519] text-[#F5EFEB] font-sans flex flex-col antialiased selection:bg-[#724B39]/40 selection:text-[#CF9D7B]">
       
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-30 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#EAE5DC] px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-30 bg-[#162127]/90 backdrop-blur-md border-b border-[#3A3534] px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
         
         {/* Logo & Identity */}
         <div className="flex items-center gap-3">
@@ -32,30 +33,41 @@ export const SoloGuardPage: React.FC<SoloGuardPageProps> = ({
           >
             <OstraLogo
               iconClassName="w-8 h-8 group-hover:scale-105 transition-transform duration-200"
-              textClassName="text-xl font-bold tracking-tight text-[#0B0F0F] font-sans"
-              variant="charcoal"
+              textClassName="text-xl font-bold tracking-tight text-white font-sans"
+              variant="gold"
               showTagline={true}
               taglineType="control"
             />
           </button>
         </div>
 
-        {/* Right Actions: Solo Developer Plan Badge & Profile */}
+        {/* Right Actions: Switch to Hosted Gateway, Solo Developer Plan Badge & Profile */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-mono font-bold">
-            <Terminal className="w-3.5 h-3.5 text-amber-700" />
+          {onNavigateDashboard && (
+            <button
+              onClick={onNavigateDashboard}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0C1519] border border-[#3A3534] text-[#CF9D7B] hover:text-white hover:bg-[#3A3534]/50 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              title="Open Cloud Hosted Gateway Console"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5 text-[#CF9D7B]" />
+              <span>Hosted Gateway</span>
+            </button>
+          )}
+
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#724B39]/30 border border-[#724B39] text-[#CF9D7B] text-xs font-mono font-bold">
+            <Terminal className="w-3.5 h-3.5 text-[#CF9D7B]" />
             <span>Solo Developer Console</span>
           </div>
 
           {/* User pill */}
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-sandstone-100 border border-[#EAE4D8]" title={displayEmail}>
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-xs font-semibold text-charcoal-900">{displayName}</span>
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-[#0C1519] border border-[#3A3534]" title={displayEmail}>
+            <span className="w-2 h-2 rounded-full bg-[#CF9D7B]" />
+            <span className="text-xs font-semibold text-white">{displayName}</span>
           </div>
 
           <button
             onClick={() => { signOut(); onNavigateHome(); }}
-            className="p-1.5 rounded-lg text-charcoal-500 hover:text-charcoal-900 hover:bg-sandstone-200 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-[#A69C95] hover:text-[#CF9D7B] hover:bg-[#3A3534]/50 transition-colors cursor-pointer"
             title="Sign out"
           >
             <LogOut className="w-4 h-4" />
@@ -68,10 +80,10 @@ export const SoloGuardPage: React.FC<SoloGuardPageProps> = ({
         <div className="mb-4">
           <button
             onClick={onNavigateHome}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-charcoal-600 hover:text-charcoal-950 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#CF9D7B] hover:text-[#DBB093] transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to OsterdOps Home</span>
+            <span>Back to OstraOps Home</span>
           </button>
         </div>
 

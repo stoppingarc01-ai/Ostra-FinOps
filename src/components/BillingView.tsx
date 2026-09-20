@@ -82,7 +82,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ onNavigateUsage }) => 
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="px-2.5 py-0.5 rounded-md bg-[#F4EFE6] text-[#9C7938] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#E5DBCA]">
-                OsterdOps Subscription
+                OstraOps Subscription
               </span>
               <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1 font-semibold">
                 <ShieldCheck className="w-3 h-3 text-emerald-600" />
@@ -93,7 +93,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ onNavigateUsage }) => 
               Billing & Subscription
             </h2>
             <p className="text-xs text-charcoal-500 mt-1 max-w-2xl">
-              Manage your OsterdOps subscription tier, payment details, usage quotas, and historical invoices.
+              Manage your OstraOps subscription tier, payment details, usage quotas, and historical invoices.
             </p>
           </div>
 
@@ -178,7 +178,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ onNavigateUsage }) => 
       {/* ============================================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         
-        {/* CARD A: PLAN USAGE (OsterdOps Platform Quota) */}
+        {/* CARD A: PLAN USAGE (OstraOps Platform Quota) */}
         <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 shadow-subtle flex flex-col justify-between space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-[#EAE5DC] pb-3">
@@ -295,7 +295,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ onNavigateUsage }) => 
             <div className="p-3.5 rounded-xl bg-[#F5F2EB] border border-[#EAE5DC] text-charcoal-700 text-xs leading-relaxed flex items-start gap-2.5">
               <Info className="w-4 h-4 text-[#9C7938] flex-shrink-0 mt-0.5" />
               <div className="font-sans">
-                <strong className="text-charcoal-900 font-semibold">Separate billing entity:</strong> Your AI model execution costs are billed directly by your model providers (OpenAI, Anthropic, Google), not OsterdOps. OsterdOps monitors, caches, and governs this spend.
+                <strong className="text-charcoal-900 font-semibold">Separate billing entity:</strong> Your AI model execution costs are billed directly by your model providers (OpenAI, Anthropic, Google), not OstraOps. OstraOps monitors, caches, and governs this spend.
               </div>
             </div>
 
@@ -489,7 +489,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ onNavigateUsage }) => 
                   Subscription Plans
                 </span>
                 <h3 className="text-xl font-extrabold text-charcoal-900 font-sans">
-                  Choose Your OsterdOps Plan
+                  Choose Your OstraOps Plan
                 </h3>
               </div>
               <button

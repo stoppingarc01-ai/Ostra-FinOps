@@ -22,7 +22,7 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
-  const { signIn, signInWithGoogle, signInWithGithub, updateSubscription, subscription } = useAuth();
+  const { signIn, signInWithGoogle, signInWithGithub } = useAuth();
 
   // Inspect if a plan was pre-selected on the pricing page
   const [pendingPlan] = useState<{
@@ -34,7 +34,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     currency?: string;
   } | null>(() => {
     try {
-      const saved = sessionStorage.getItem('osterdops_pending_plan');
+      const saved = sessionStorage.getItem('ostraops_pending_plan');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -53,32 +53,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
-  };
-
-  const resolveTargetConsole = async (): Promise<string> => {
-    try {
-      const pendingRaw = sessionStorage.getItem('osterdops_pending_plan');
-      if (pendingRaw) {
-        const parsed = JSON.parse(pendingRaw);
-        const isHosted = parsed.type === 'hosted' || parsed.planId === 'team_scale';
-        await updateSubscription({
-          plan_id: isHosted ? 'team_scale' : 'solo_pro',
-          plan_name: isHosted ? 'Team Hosted Gateway' : 'Solo Pro',
-          price_amount: parsed.amount || (isHosted ? 49 : 12),
-          billing_interval: parsed.billingInterval || 'mo',
-          status: 'active',
-          quota_limit: isHosted ? 500000 : 100000,
-          quota_used: isHosted ? 12000 : 74000,
-          quota_usage_percent: isHosted ? 2.4 : 74,
-          renewal_date: '18 Oct, 2026',
-        });
-        sessionStorage.removeItem('osterdops_pending_plan');
-        return isHosted ? 'dashboard' : 'solo-guard';
-      }
-    } catch (e) {
-      console.warn('Sub sync error on login:', e);
-    }
-    return subscription?.plan_id === 'solo_pro' ? 'solo-guard' : 'dashboard';
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -112,9 +86,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
       });
       showToast(error.message || 'Authentication failed.');
     } else {
-      const target = await resolveTargetConsole();
-      showToast(target === 'dashboard' ? 'Welcome back! Loading Hosted Gateway console...' : 'Welcome back! Loading Solo Guard...');
-      setTimeout(() => onNavigate(target), 600);
+      showToast('Welcome back! Taking you to workspace setup & onboarding...');
+      setTimeout(() => onNavigate('onboarding'), 400);
     }
   };
 
@@ -125,9 +98,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     if (error) {
       showToast(error.message);
     } else {
-      const target = await resolveTargetConsole();
-      showToast(target === 'dashboard' ? 'Signed in! Loading Hosted Gateway console...' : 'Signed in! Loading Solo Guard...');
-      setTimeout(() => onNavigate(target), 600);
+      showToast('Signed in! Taking you to workspace setup & onboarding...');
+      setTimeout(() => onNavigate('onboarding'), 400);
     }
   };
 
@@ -374,7 +346,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
           </div>
 
           <div className="pt-6 text-center text-[11px] text-[#525A64]">
-            Protected by OsterdOps Guard Sentinel 2.0 telemetry and TLS encryption.
+            Protected by OstraOps Guard Sentinel 2.0 telemetry and TLS encryption.
           </div>
         </div>
       </div>

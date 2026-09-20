@@ -32,8 +32,8 @@ const spendSync = new AtomicSpendSync(async (keyId, delta) => {
 });
 
 export function createGatewayServer(options?: GatewayServerOptions): Server {
-  const webhookSecret = options?.webhookSecret || process.env.OSTERDOPS_WEBHOOK_SECRET || 'whsec_local_development';
-  const webhookUrl = options?.webhookUrl || process.env.OSTERDOPS_WEBHOOK_URL;
+  const webhookSecret = options?.webhookSecret || process.env.OSTRAOPS_WEBHOOK_SECRET || 'whsec_local_development';
+  const webhookUrl = options?.webhookUrl || process.env.OSTRAOPS_WEBHOOK_URL;
 
   const governance = new GovernanceEngine(async (payload) => {
     if (webhookUrl) {
@@ -112,8 +112,8 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
               if (rec.status === 'COMPLETED' && !isStreaming && rec.body && rec.statusCode) {
                 forwardRes.writeHead(rec.statusCode, {
                   ...rec.headers,
-                  'X-OsterdOps-Idempotency-Replayed': 'true',
-                  'X-OsterdOps-Request-ID': ctx.requestId,
+                  'X-OstraOps-Idempotency-Replayed': 'true',
+                  'X-OstraOps-Request-ID': ctx.requestId,
                 });
                 forwardRes.end(rec.body);
                 return;
@@ -122,7 +122,7 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
               sendOpenAiError(
                 forwardRes,
                 409,
-                'OSTERDOPS_IDEMPOTENCY_CONFLICT',
+                'OSTRAOPS_IDEMPOTENCY_CONFLICT',
                 'conflict_error',
                 'A request with this Idempotency-Key is currently in-flight or already completed.',
                 ctx.requestId
@@ -134,7 +134,7 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
           // ------------------------------------------------------------------
           // 2. Exact-Match Prompt Cache Check
           // ------------------------------------------------------------------
-          const explicitCacheHeader = (req.headers['x-osterdops-cache'] as string) || null;
+          const explicitCacheHeader = (req.headers['x-ostraops-cache'] as string) || null;
           const requestedModelId = (ctx.parsedPayload?.model as string) || 'gpt-4o-mini';
           const isCacheEligible = promptCache.isEligible(
             ctx.parsedPayload || {},
@@ -158,8 +158,8 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
                   'Content-Type': 'text/event-stream',
                   'Cache-Control': 'no-cache',
                   'Connection': 'keep-alive',
-                  'X-OsterdOps-Prompt-Cache': 'HIT',
-                  'X-OsterdOps-Request-ID': ctx.requestId,
+                  'X-OstraOps-Prompt-Cache': 'HIT',
+                  'X-OstraOps-Request-ID': ctx.requestId,
                 });
                 const sseData = `data: ${JSON.stringify(cached.parsedResponse || { cached: true })}\n\ndata: [DONE]\n\n`;
                 forwardRes.write(sseData);
@@ -168,8 +168,8 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
                 // Emit cached JSON
                 forwardRes.writeHead(200, {
                   'Content-Type': 'application/json',
-                  'X-OsterdOps-Prompt-Cache': 'HIT',
-                  'X-OsterdOps-Request-ID': ctx.requestId,
+                  'X-OstraOps-Prompt-Cache': 'HIT',
+                  'X-OstraOps-Request-ID': ctx.requestId,
                 });
                 forwardRes.end(cached.rawResponse);
               }
@@ -330,7 +330,7 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
       });
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      sendOpenAiError(res, 500, 'OSTERDOPS_INTERNAL_ERROR', 'internal_error', errMsg, 'ost_req_err');
+      sendOpenAiError(res, 500, 'OSTRAOPS_INTERNAL_ERROR', 'internal_error', errMsg, 'ost_req_err');
     }
   });
 
@@ -385,11 +385,11 @@ if (isDirectRun) {
   const server = createGatewayServer();
 
   server.listen(port, () => {
-    console.log(`[OsterdOps Gateway] Listening on http://localhost:${port}`);
+    console.log(`[OstraOps Gateway] Listening on http://localhost:${port}`);
   });
 
   const onSignal = async (signal: string) => {
-    console.log(`[OsterdOps Gateway] Received ${signal}, starting graceful shutdown...`);
+    console.log(`[OstraOps Gateway] Received ${signal}, starting graceful shutdown...`);
     await gracefulShutdown(server);
     process.exit(0);
   };
@@ -398,10 +398,10 @@ if (isDirectRun) {
   process.on('SIGTERM', () => onSignal('SIGTERM'));
 
   process.on('unhandledRejection', (reason) => {
-    console.error('[OsterdOps Gateway] Unhandled Rejection:', reason);
+    console.error('[OstraOps Gateway] Unhandled Rejection:', reason);
   });
 
   process.on('uncaughtException', (err) => {
-    console.error('[OsterdOps Gateway] Uncaught Exception:', err);
+    console.error('[OstraOps Gateway] Uncaught Exception:', err);
   });
 }

@@ -73,7 +73,7 @@ export const EnterpriseTrustSection: React.FC<EnterpriseTrustProps> = ({ onNavig
                   </div>
                 </div>
                 <div className="mt-5 pt-3 border-t border-[#EFEBE3]">
-                  <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <span className="text-[10px] font-mono font-bold text-charcoal-700 bg-sandstone-200/80 px-2.5 py-0.5 rounded-full border border-sandstone-300">
                     {item.badge}
                   </span>
                 </div>
@@ -85,11 +85,11 @@ export const EnterpriseTrustSection: React.FC<EnterpriseTrustProps> = ({ onNavig
         {/* Bottom Call to Action Card with 3D Depth */}
         <div className="relative rounded-3xl bg-charcoal-950 text-white border border-charcoal-800 shadow-dashboard-3d p-8 sm:p-12 overflow-hidden">
           {/* Ambient Glow */}
-          <div className="absolute top-0 right-0 w-[500px] h-[350px] bg-gradient-to-bl from-osterdGold-500/20 via-amber-500/10 to-transparent blur-[90px] pointer-events-none" />
+          <div className="absolute top-0 right-0 w-[500px] h-[350px] bg-gradient-to-bl from-ostraGold-500/20 via-amber-500/10 to-transparent blur-[90px] pointer-events-none" />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
             <div className="lg:col-span-8 space-y-4">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-osterdGold-400">
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-ostraGold-400">
                 READY TO PROTECT YOUR AGENT WORKFLOWS?
               </span>
               <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-display leading-tight">
@@ -104,14 +104,14 @@ export const EnterpriseTrustSection: React.FC<EnterpriseTrustProps> = ({ onNavig
             <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-end">
               <button
                 onClick={onNavigateToPricing}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-osterdGold-500 hover:bg-osterdGold-400 text-charcoal-950 font-bold text-sm shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-ostraGold-500 hover:bg-ostraGold-400 text-charcoal-950 font-bold text-sm shadow-lg hover:shadow-xl transition-all cursor-pointer"
               >
                 <span>Get Started Free</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
               <div className="px-4 py-2.5 rounded-2xl bg-charcoal-900 border border-charcoal-800 text-center font-mono text-xs text-zinc-300">
-                <span className="text-zinc-500">$</span> npx osterdops-guard
+                <span className="text-zinc-500">$</span> npx ostraops-guard
               </div>
             </div>
           </div>

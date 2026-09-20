@@ -243,9 +243,6 @@ export const OptimizationView: React.FC = () => {
             <span className="px-2.5 py-0.5 rounded-md bg-[#F4EFE6] text-[#9C7938] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#E5DBCA]">
               Cost & Latency Governance
             </span>
-            <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 font-semibold">
-              Proxy Engine Active
-            </span>
           </div>
           <h1 className="text-2xl lg:text-3xl font-extrabold text-charcoal-900 tracking-tight font-sans">
             AI Spend & Model Optimization
@@ -271,7 +268,7 @@ export const OptimizationView: React.FC = () => {
       <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-start gap-3">
         <Info className="w-4 h-4 text-[#9C7938] flex-shrink-0 mt-0.5" />
         <div className="text-xs text-charcoal-600 leading-relaxed font-sans">
-          <strong className="text-charcoal-900 font-semibold">Strict Governance Mode:</strong> All optimization rules require explicit policy toggling or verification. OsterdOps never alters upstream prompt payloads or downgrades models silently without your configured rules.
+          <strong className="text-charcoal-900 font-semibold">Strict Governance Mode:</strong> All optimization rules require explicit policy toggling or verification. OstraOps never alters upstream prompt payloads or downgrades models silently without your configured rules.
         </div>
       </div>
 

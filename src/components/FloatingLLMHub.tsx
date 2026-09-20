@@ -199,13 +199,13 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
   return (
     <section className="relative py-20 bg-[#FAF8F5] border-t border-[#EAE5DB] overflow-hidden">
       {/* 3D Radial Background Aura */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[550px] bg-gradient-to-tr from-osterdGold-300/15 via-sandstone-300/25 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[550px] bg-gradient-to-tr from-ostraGold-300/15 via-sandstone-300/25 to-transparent blur-[140px] pointer-events-none -z-10" />
 
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-200 border border-sandstone-300/80 text-[11px] font-bold tracking-[0.16em] text-charcoal-700 uppercase font-mono mb-3">
-            <span className="w-2 h-2 rounded-full bg-osterdGold-500 animate-ping" />
+            <span className="w-2 h-2 rounded-full bg-ostraGold-500 animate-ping" />
             <span>UNIFIED 3D MODEL ECOSYSTEM</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
@@ -213,7 +213,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
             <span className="gold-gradient-text block">One Zero-Overhead Gateway.</span>
           </h2>
           <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
-            Autonomous coding agents hit disparate providers every minute. OsterdOps wraps every LLM provider in an intelligent financial firewall and local loopback layer.
+            Autonomous coding agents hit disparate providers every minute. OstraOps wraps every LLM provider in an intelligent financial gateway and local loopback layer.
           </p>
         </div>
 
@@ -230,7 +230,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
                   m.floatClass
                 } ${
                   isSelected
-                    ? 'border-osterdGold-500 shadow-[0_15px_30px_-10px_rgba(212,175,124,0.35),0_0_0_2px_rgba(212,175,124,0.5)] -translate-y-2'
+                    ? 'border-ostraGold-500 shadow-[0_15px_30px_-10px_rgba(212,175,124,0.35),0_0_0_2px_rgba(212,175,124,0.5)] -translate-y-2'
                     : 'border-[#EAE5DB] hover:border-sandstone-400 shadow-subtle hover:shadow-card-3d hover:-translate-y-1'
                 }`}
               >
@@ -261,7 +261,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
 
                   {/* Active Indicator */}
                   {isSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-osterdGold-500 mt-1 shadow-[0_0_8px_#D4AF7C]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-ostraGold-500 mt-1 shadow-[0_0_8px_#D4AF7C]" />
                   )}
                 </div>
               </div>
@@ -342,7 +342,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5 text-xs text-charcoal-700">
-                  <ShieldCheck className="w-4 h-4 text-osterdGold-600 shrink-0 mt-0.5" />
+                  <ShieldCheck className="w-4 h-4 text-ostraGold-600 shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-charcoal-900">Circuit Breaker Strategy: </span>
                     <span>Instant velocity throttle when prompt repetition exceeds 3 cycles.</span>
@@ -365,7 +365,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
                   <span className="text-zinc-300 font-bold">DAEMON LOOPBACK GATEWAY</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-charcoal-800 text-osterdGold-400 border border-charcoal-700">
+                <span className="text-[10px] px-2 py-0.5 rounded bg-charcoal-800 text-ostraGold-400 border border-charcoal-700">
                   127.0.0.1:8080
                 </span>
               </div>
@@ -377,7 +377,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
                 </div>
                 <div className="flex justify-between text-zinc-400">
                   <span>Target Model:</span>
-                  <span className="text-osterdGold-300">{selected.flagship}</span>
+                  <span className="text-ostraGold-300">{selected.flagship}</span>
                 </div>
                 <div className="flex justify-between text-zinc-400">
                   <span>Interception Mode:</span>
@@ -395,9 +395,9 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
 
               {/* Live cURL / Config snippet */}
               <div className="p-3 rounded-xl bg-charcoal-900/90 border border-charcoal-800 text-[11px] text-zinc-300 space-y-1">
-                <p className="text-zinc-500"># Point Cursor / Cline / Antigravity to OsterdOps</p>
+                <p className="text-zinc-500"># Point Cursor / Cline / Antigravity to OstraOps</p>
                 <p className="text-emerald-400">OPENAI_BASE_URL="http://127.0.0.1:8080/v1"</p>
-                <p className="text-osterdGold-300">ANTHROPIC_BASE_URL="http://127.0.0.1:8080/v1"</p>
+                <p className="text-ostraGold-300">ANTHROPIC_BASE_URL="http://127.0.0.1:8080/v1"</p>
               </div>
             </div>
           </div>
@@ -416,7 +416,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-charcoal-900 hover:bg-black text-white text-xs sm:text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer group"
           >
             <span>Explore All 40+ Models &amp; Technical Specifications</span>
-            <ArrowRight className="w-4 h-4 text-osterdGold-400 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-4 h-4 text-ostraGold-400 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>

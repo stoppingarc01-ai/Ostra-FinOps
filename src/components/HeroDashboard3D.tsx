@@ -40,7 +40,7 @@ export const HeroDashboard3D: React.FC = () => {
       
       {/* Soft Ambient Warm Glow behind dashboard card */}
       <div className="absolute -inset-4 -z-10 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[75%] bg-gradient-to-tr from-osterdGold-500/10 via-sandstone-300/20 to-amber-100/15 blur-[60px] rounded-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[75%] bg-gradient-to-tr from-ostraGold-500/10 via-sandstone-300/20 to-amber-100/15 blur-[60px] rounded-3xl" />
       </div>
 
       {/* Main Dashboard Card matching the reference screenshot exactly */}
@@ -57,7 +57,7 @@ export const HeroDashboard3D: React.FC = () => {
               iconClassName="w-5 h-5"
               textClassName="text-sm font-bold tracking-tight text-charcoal-900 font-sans"
               variant="charcoal"
-              brandName="OsterdOps"
+              brandName="OstraOps"
             />
 
             {/* Search Input Box */}
@@ -173,7 +173,7 @@ export const HeroDashboard3D: React.FC = () => {
               <div className="p-3.5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[11px] font-medium text-charcoal-500">Total Spend</span>
-                  <div className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-osterdGold-700">
+                  <div className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-ostraGold-700">
                     <DollarSign className="w-3.5 h-3.5" />
                   </div>
                 </div>
@@ -217,7 +217,7 @@ export const HeroDashboard3D: React.FC = () => {
               <div className="p-3.5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[11px] font-medium text-charcoal-500">Active Models</span>
-                  <div className="w-6 h-6 rounded-lg bg-amber-50/80 border border-amber-100 flex items-center justify-center text-osterdGold-600">
+                  <div className="w-6 h-6 rounded-lg bg-amber-50/80 border border-amber-100 flex items-center justify-center text-ostraGold-600">
                     <Zap className="w-3.5 h-3.5" />
                   </div>
                 </div>

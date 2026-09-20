@@ -202,7 +202,7 @@ export const OstraLogo: React.FC<OstraLogoProps> = ({
   showTagline = false,
   taglineType = 'control',
   className = '',
-  brandName = 'OsterdOps',
+  brandName = 'OstraOps',
 }) => {
   const isDark = variant === 'gold' || variant === 'white';
   const defaultTextClass = isDark ? 'text-white' : 'text-[#0B0F0F]';

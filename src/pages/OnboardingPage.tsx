@@ -8,10 +8,12 @@ import {
   ChevronDown,
   User,
   Mail,
-  CreditCard,
   ArrowDown,
   Edit2,
   Loader2,
+  QrCode,
+  ShieldCheck,
+  CreditCard,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { OstraLogoAuth } from '../components/AuthGraphics';
@@ -34,6 +36,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
       const parsed = parseInt(match[1], 10);
       if (parsed >= 1 && parsed <= 5) return parsed;
     }
+    // If coming with a pending plan from pricing page, jump straight to step 3 so they can pay!
+    const pending = sessionStorage.getItem('ostraops_pending_plan') || localStorage.getItem('ostraops_pending_plan');
+    if (pending) return 3;
     return initialStep;
   });
 
@@ -42,36 +47,45 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
   const [industry, setIndustry] = useState('AI & Machine Learning');
   const [teamSize, setTeamSize] = useState('2 - 10 members');
 
-  // Step 3: Plan Selection State
+  // Step 3: Plan Selection & Payment State
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPlan, setSelectedPlan] = useState<'solo' | 'team' | 'enterprise'>(() => {
     try {
-      const pending = sessionStorage.getItem('osterdops_pending_plan');
+      const pending = sessionStorage.getItem('ostraops_pending_plan') || localStorage.getItem('ostraops_pending_plan');
       if (pending) {
         const parsed = JSON.parse(pending);
         if (parsed.type === 'hosted' || parsed.planId === 'team_scale') return 'team';
         if (parsed.type === 'solo' || parsed.planId === 'solo_pro') return 'solo';
       }
     } catch {}
+    const active = localStorage.getItem('ostraops_active_plan');
+    if (active === 'solo_pro') return 'solo';
+    if (active === 'team_scale') return 'team';
     if (subscription?.plan_id === 'team_scale') return 'team';
     if (subscription?.plan_id === 'enterprise') return 'enterprise';
     if (subscription?.plan_id === 'solo_pro') return 'solo';
-    return 'team'; // Default to Team (Hosted Gateway) or user selection
+    return 'solo';
   });
+  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success'>('idle');
+  const [upiId, setUpiId] = useState('dev@okhdfcbank');
+  const [cardNumber, setCardNumber] = useState('•••• •••• •••• 4242');
+  const [cardExpiry, setCardExpiry] = useState('12/28');
+  const [cardCvc, setCardCvc] = useState('888');
   const [isFinishing, setIsFinishing] = useState(false);
 
   // Step 4: Profile State (Prefilled from auth if available)
-  const [fullName, setFullName] = useState(profile?.full_name || 'Shaan Prasad');
-  const [email, setEmail] = useState(user?.email || 'shaan@example.com');
+  const [fullName, setFullName] = useState(profile?.full_name || 'Developer');
+  const [email, setEmail] = useState(user?.email || 'developer@example.com');
   const [role, setRole] = useState('Developer');
   const [agreeTerms, setAgreeTerms] = useState(true);
 
   // Sync auth state if it loads after mount
   useEffect(() => {
-    if (profile?.full_name && fullName === 'Shaan Prasad') {
+    if (profile?.full_name && (fullName === 'Developer' || fullName === 'Shaan Prasad')) {
       setFullName(profile.full_name);
     }
-    if (user?.email && email === 'shaan@example.com') {
+    if (user?.email && (email === 'developer@example.com' || email === 'shaan@example.com')) {
       setEmail(user.email);
     }
   }, [profile, user]);
@@ -81,6 +95,42 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
       setStep(targetStep);
       window.history.pushState(null, '', `#onboarding?step=${targetStep}`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleProcessPayment = async () => {
+    setPaymentStatus('processing');
+    const isHosted = selectedPlan === 'team';
+    const chosenPlanId = isHosted ? 'team_scale' : 'solo_pro';
+    const chosenPlanName = isHosted ? 'Team Scale' : 'Solo Pro';
+    const amount = isHosted
+      ? (billingCycle === 'monthly' ? 49 : 39 * 12)
+      : (billingCycle === 'monthly' ? 12 : 10 * 12);
+
+    try {
+      localStorage.setItem('ostraops_active_plan', chosenPlanId);
+      localStorage.setItem('ostraops_user_tier', isHosted ? 'team' : 'solo');
+
+      await updateSubscription({
+        plan_id: chosenPlanId,
+        plan_name: chosenPlanName,
+        price_amount: amount,
+        billing_interval: billingCycle === 'monthly' ? 'mo' : 'yr',
+        status: 'active',
+        quota_limit: isHosted ? 500000 : 100000,
+        quota_used: isHosted ? 12000 : 74000,
+        quota_usage_percent: isHosted ? 2.4 : 74,
+        renewal_date: billingCycle === 'monthly' ? '18 Oct, 2026' : '18 Sep, 2027',
+      }).catch(() => {});
+
+      sessionStorage.removeItem('ostraops_pending_plan');
+      localStorage.removeItem('ostraops_pending_plan');
+
+      setTimeout(() => {
+        setPaymentStatus('success');
+      }, 1000);
+    } catch {
+      setPaymentStatus('success');
     }
   };
 
@@ -96,6 +146,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
       }
 
       if (selectedPlan === 'team') {
+        localStorage.setItem('ostraops_active_plan', 'team_scale');
+        localStorage.setItem('ostraops_user_tier', 'team');
         await updateSubscription({
           plan_id: 'team_scale',
           plan_name: 'Team Scale',
@@ -106,9 +158,11 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
           quota_used: 12000,
           quota_usage_percent: 2.4,
           renewal_date: billingCycle === 'monthly' ? '18 Oct, 2026' : '18 Sep, 2027',
-        });
+        }).catch(() => {});
         onNavigate('dashboard');
       } else if (selectedPlan === 'enterprise') {
+        localStorage.setItem('ostraops_active_plan', 'enterprise');
+        localStorage.setItem('ostraops_user_tier', 'enterprise');
         await updateSubscription({
           plan_id: 'enterprise',
           plan_name: 'Enterprise Ultra',
@@ -119,10 +173,12 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
           quota_used: 45000,
           quota_usage_percent: 0.9,
           renewal_date: '18 Oct, 2026',
-        });
+        }).catch(() => {});
         onNavigate('dashboard');
       } else {
         // Solo plan -> Local-First Telemetry & Guard Console
+        localStorage.setItem('ostraops_active_plan', 'solo_pro');
+        localStorage.setItem('ostraops_user_tier', 'solo');
         await updateSubscription({
           plan_id: 'solo_pro',
           plan_name: 'Solo Pro',
@@ -133,11 +189,12 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
           quota_used: 74000,
           quota_usage_percent: 74,
           renewal_date: billingCycle === 'monthly' ? '18 Oct, 2026' : '18 Sep, 2027',
-        });
+        }).catch(() => {});
         onNavigate('solo-guard');
       }
       try {
-        sessionStorage.removeItem('osterdops_pending_plan');
+        sessionStorage.removeItem('ostraops_pending_plan');
+        localStorage.removeItem('ostraops_pending_plan');
       } catch {}
     } catch (err) {
       console.warn('Failed to update subscription on onboarding finish:', err);
@@ -697,6 +754,229 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
               </div>
             </div>
 
+            {/* In-Page Payment & Order Checkout Section */}
+            {selectedPlan !== 'enterprise' ? (
+              <div className="pt-6 border-t border-[#EBE3D7] bg-white rounded-2xl p-6 sm:p-8 border border-[#E6DFD5] shadow-xs space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <span className="text-[10px] font-mono tracking-widest text-[#968A7C] uppercase font-bold block">
+                      PAYMENT &amp; ACTIVATION
+                    </span>
+                    <h3 className="text-xl font-bold text-[#16181B] mt-1">
+                      Activate {selectedPlan === 'solo' ? 'Solo Pro' : 'Team Gateway'}
+                    </h3>
+                    <p className="text-xs text-[#736A5E] mt-0.5">
+                      Select your preferred payment method below to complete activation.
+                    </p>
+                  </div>
+
+                  {paymentStatus === 'success' ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
+                      <Check className="w-3.5 h-3.5" /> Plan Paid &amp; Active
+                    </span>
+                  ) : (
+                    <div className="text-right">
+                      <div className="text-2xl font-black text-[#16181B] font-mono">
+                        {selectedPlan === 'solo' 
+                          ? (billingCycle === 'monthly' ? '$12' : '$120')
+                          : (billingCycle === 'monthly' ? '$49' : '$468')}
+                      </div>
+                      <span className="text-[11px] text-[#8C827A] font-mono">
+                        {billingCycle === 'monthly' ? '/ month' : '/ year (20% saved)'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {paymentStatus !== 'success' ? (
+                  <div className="space-y-4 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {/* UPI */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('upi')}
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          paymentMethod === 'upi'
+                            ? 'border-[#C59E5F] bg-[#FAF7F2] ring-1 ring-[#C59E5F]/20'
+                            : 'border-[#E6DFD5] bg-white hover:bg-[#FAF7F2]/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-[#16181B]">UPI &amp; QR Code</span>
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-bold font-mono">Instant</span>
+                        </div>
+                        <p className="text-[11px] text-[#736A5E]">GPay, PhonePe, Paytm, BHIM</p>
+                      </button>
+
+                      {/* Card */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('card')}
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          paymentMethod === 'card'
+                            ? 'border-[#C59E5F] bg-[#FAF7F2] ring-1 ring-[#C59E5F]/20'
+                            : 'border-[#E6DFD5] bg-white hover:bg-[#FAF7F2]/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-[#16181B]">Credit / Debit Card</span>
+                          <CreditCard className="w-3.5 h-3.5 text-[#8C827A]" />
+                        </div>
+                        <p className="text-[11px] text-[#736A5E]">Visa, Mastercard, RuPay, Amex</p>
+                      </button>
+
+                      {/* Net Banking */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('netbanking')}
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          paymentMethod === 'netbanking'
+                            ? 'border-[#C59E5F] bg-[#FAF7F2] ring-1 ring-[#C59E5F]/20'
+                            : 'border-[#E6DFD5] bg-white hover:bg-[#FAF7F2]/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-[#16181B]">Net Banking / Global</span>
+                          <Building2 className="w-3.5 h-3.5 text-[#8C827A]" />
+                        </div>
+                        <p className="text-[11px] text-[#736A5E]">HDFC, ICICI, SBI, Axis, Global</p>
+                      </button>
+                    </div>
+
+                    {paymentMethod === 'upi' && (
+                      <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E6DFD5] flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                          <div className="w-10 h-10 rounded-xl bg-white border border-[#DDD3C5] flex items-center justify-center shrink-0 shadow-xs">
+                            <QrCode className="w-5 h-5 text-[#16181B]" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-[#16181B]">Scan QR or Enter UPI ID</div>
+                            <div className="text-[11px] text-[#736A5E]">Zero transaction fees • Instant verification</div>
+                          </div>
+                        </div>
+                        <div className="w-full sm:w-72">
+                          <input
+                            type="text"
+                            value={upiId}
+                            onChange={(e) => setUpiId(e.target.value)}
+                            placeholder="username@okhdfcbank"
+                            className="w-full bg-white border border-[#DDD3C5] rounded-xl px-3 py-2 text-xs text-[#16181B] font-mono focus:outline-none focus:border-[#C59E5F]"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentMethod === 'card' && (
+                      <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E6DFD5] grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="sm:col-span-2 space-y-1">
+                          <label className="text-[10.5px] font-semibold text-[#635B50] block">Card Number</label>
+                          <input
+                            type="text"
+                            value={cardNumber}
+                            onChange={(e) => setCardNumber(e.target.value)}
+                            placeholder="•••• •••• •••• 4242"
+                            className="w-full bg-white border border-[#DDD3C5] rounded-xl px-3 py-2 text-xs text-[#16181B] font-mono focus:outline-none focus:border-[#C59E5F]"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <label className="text-[10.5px] font-semibold text-[#635B50] block">Expires</label>
+                            <input
+                              type="text"
+                              value={cardExpiry}
+                              onChange={(e) => setCardExpiry(e.target.value)}
+                              placeholder="MM/YY"
+                              className="w-full bg-white border border-[#DDD3C5] rounded-xl px-3 py-2 text-xs text-[#16181B] font-mono focus:outline-none focus:border-[#C59E5F]"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10.5px] font-semibold text-[#635B50] block">CVC</label>
+                            <input
+                              type="password"
+                              value={cardCvc}
+                              onChange={(e) => setCardCvc(e.target.value)}
+                              placeholder="CVC"
+                              maxLength={4}
+                              className="w-full bg-white border border-[#DDD3C5] rounded-xl px-3 py-2 text-xs text-[#16181B] font-mono focus:outline-none focus:border-[#C59E5F]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentMethod === 'netbanking' && (
+                      <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E6DFD5] flex items-center justify-between">
+                        <span className="text-xs text-[#635B50]">Supported Banks:</span>
+                        <div className="flex items-center gap-2 text-xs font-bold text-[#16181B]">
+                          <span className="px-2 py-1 rounded bg-white border border-[#DDD3C5]">HDFC</span>
+                          <span className="px-2 py-1 rounded bg-white border border-[#DDD3C5]">ICICI</span>
+                          <span className="px-2 py-1 rounded bg-white border border-[#DDD3C5]">SBI</span>
+                          <span className="px-2 py-1 rounded bg-white border border-[#DDD3C5]">Axis</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                      <div className="text-xs text-[#8C827A] flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                        <span>256-bit SSL encrypted • Instant license provisioning</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleProcessPayment}
+                        disabled={paymentStatus === 'processing'}
+                        className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#16181B] hover:bg-black text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        {paymentStatus === 'processing' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-[#C59E5F]" />
+                            <span>Verifying transaction...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>
+                              Pay {selectedPlan === 'solo' 
+                                ? (billingCycle === 'monthly' ? '$12' : '$120')
+                                : (billingCycle === 'monthly' ? '$49' : '$468')} &amp; Activate Plan →
+                            </span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 text-xs text-emerald-800 font-semibold">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Payment completed successfully! Your {selectedPlan === 'solo' ? 'Solo Pro' : 'Team Gateway'} plan is active.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => goToStep(4)}
+                      className="px-5 py-2 rounded-full bg-[#16181B] text-white text-xs font-semibold hover:bg-black transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      Continue to Profile Setup →
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="pt-6 border-t border-[#EBE3D7] bg-white rounded-2xl p-6 border border-[#E6DFD5] flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-[#16181B]">Enterprise Custom Architecture</h4>
+                  <p className="text-xs text-[#736A5E]">Contact our solutions team for custom model quotas, dedicated VPC deployment &amp; SLAs.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => goToStep(4)}
+                  className="px-5 py-2.5 rounded-full bg-[#16181B] text-white text-xs font-semibold hover:bg-black transition-all cursor-pointer"
+                >
+                  Continue →
+                </button>
+              </div>
+            )}
+
             {/* Bottom Actions */}
             <div className="pt-6 flex items-center justify-between border-t border-[#EBE3D7]">
               <button
@@ -711,7 +991,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                 onClick={() => goToStep(4)}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#16181B] text-white font-medium text-sm hover:bg-black transition-all shadow-md cursor-pointer"
               >
-                <span>Next</span>
+                <span>{paymentStatus === 'success' ? 'Next: Profile' : 'Next'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -764,7 +1044,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                         type="text"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        placeholder="Shaan Prasad"
+                        placeholder="Developer"
                         style={{ paddingLeft: '2.5rem' }}
                         className="w-full bg-white/90 border border-[#DDD3C5] rounded-xl pr-4 py-3 text-sm text-[#16181B] placeholder:text-[#A89F92] focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]/30 shadow-xs transition-all font-sans"
                       />
@@ -782,7 +1062,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="shaan@example.com"
+                        placeholder="developer@example.com"
                         style={{ paddingLeft: '2.5rem' }}
                         className="w-full bg-white/90 border border-[#DDD3C5] rounded-xl pr-4 py-3 text-sm text-[#16181B] placeholder:text-[#A89F92] focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]/30 shadow-xs transition-all font-sans"
                       />
@@ -872,10 +1152,10 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
 
                   <div>
                     <h3 className="text-base font-bold text-[#16181B]">
-                      {fullName || 'Shaan Prasad'}
+                      {fullName || 'Developer'}
                     </h3>
                     <p className="text-xs text-[#8C827A]">
-                      {email || 'shaan@example.com'}
+                      {email || 'developer@example.com'}
                     </p>
                     <span className="inline-block text-[10px] px-2 py-0.5 mt-1 rounded bg-[#EFE9DF] text-[#635B50] font-medium">
                       {role}

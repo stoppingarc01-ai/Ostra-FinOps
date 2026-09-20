@@ -181,8 +181,8 @@ export const ReportsView: React.FC = () => {
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-[#18181B] text-white px-4 py-2.5 rounded-2xl shadow-xl border border-osterdGold-500/40 text-xs font-mono flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-          <Check className="w-4 h-4 text-osterdGold-400" />
+        <div className="fixed top-6 right-6 z-50 bg-[#18181B] text-white px-4 py-2.5 rounded-2xl shadow-xl border border-ostraGold-500/40 text-xs font-mono flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+          <Check className="w-4 h-4 text-ostraGold-400" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -248,7 +248,7 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* ============================================================ */}
-      {/* ROW 1: TOP 4 METRIC CARDS (OsterdOps Palette)                */}
+      {/* ROW 1: TOP 4 METRIC CARDS (OstraOps Palette)                */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
@@ -263,7 +263,7 @@ export const ReportsView: React.FC = () => {
               $4,328.64
             </div>
             <div className="flex items-center gap-1 text-[11px] font-mono text-charcoal-600 mt-1">
-              <TrendingUp className="w-3 h-3 text-osterdGold-600" />
+              <TrendingUp className="w-3 h-3 text-ostraGold-600" />
               <span>↑ 28.6% vs May 3 - May 9</span>
             </div>
           </div>
@@ -286,7 +286,7 @@ export const ReportsView: React.FC = () => {
               312.6M
             </div>
             <div className="flex items-center gap-1 text-[11px] font-mono text-charcoal-600 mt-1">
-              <TrendingUp className="w-3 h-3 text-osterdGold-600" />
+              <TrendingUp className="w-3 h-3 text-ostraGold-600" />
               <span>↑ 18.2% vs May 3 - May 9</span>
             </div>
           </div>
@@ -309,7 +309,7 @@ export const ReportsView: React.FC = () => {
               89,732
             </div>
             <div className="flex items-center gap-1 text-[11px] font-mono text-charcoal-600 mt-1">
-              <TrendingUp className="w-3 h-3 text-osterdGold-600" />
+              <TrendingUp className="w-3 h-3 text-ostraGold-600" />
               <span>↑ 24.1% vs May 3 - May 9</span>
             </div>
           </div>
@@ -550,7 +550,7 @@ export const ReportsView: React.FC = () => {
                   strokeLinejoin="round"
                 />
 
-                {/* Forward Forecast Line (Dashed Osterd Gold) */}
+                {/* Forward Forecast Line (Dashed Ostra Gold) */}
                 <path
                   d={forecastPathD}
                   fill="none"
@@ -669,7 +669,7 @@ export const ReportsView: React.FC = () => {
 
               <button
                 onClick={() => setBreakdownModal('project')}
-                className="w-full pt-3 border-t border-[#EAE5DC] flex items-center justify-center gap-1.5 text-xs font-bold text-charcoal-900 hover:text-osterdGold-600 transition-colors group cursor-pointer"
+                className="w-full pt-3 border-t border-[#EAE5DC] flex items-center justify-center gap-1.5 text-xs font-bold text-charcoal-900 hover:text-ostraGold-600 transition-colors group cursor-pointer"
               >
                 <span>View full breakdown</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -708,7 +708,7 @@ export const ReportsView: React.FC = () => {
 
               <button
                 onClick={() => setBreakdownModal('model')}
-                className="w-full pt-3 border-t border-[#EAE5DC] flex items-center justify-center gap-1.5 text-xs font-bold text-charcoal-900 hover:text-osterdGold-600 transition-colors group cursor-pointer"
+                className="w-full pt-3 border-t border-[#EAE5DC] flex items-center justify-center gap-1.5 text-xs font-bold text-charcoal-900 hover:text-ostraGold-600 transition-colors group cursor-pointer"
               >
                 <span>View full breakdown</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -745,7 +745,7 @@ export const ReportsView: React.FC = () => {
 
               <button
                 onClick={() => setBreakdownModal('status')}
-                className="w-full pt-3 border-t border-[#EAE5DC] flex items-center justify-center gap-1.5 text-xs font-bold text-charcoal-900 hover:text-osterdGold-600 transition-colors group cursor-pointer"
+                className="w-full pt-3 border-t border-[#EAE5DC] flex items-center justify-center gap-1.5 text-xs font-bold text-charcoal-900 hover:text-ostraGold-600 transition-colors group cursor-pointer"
               >
                 <span>View details</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -838,7 +838,7 @@ export const ReportsView: React.FC = () => {
               {/* Action 1: Generate PDF */}
               <button
                 onClick={() => setPdfModalOpen(true)}
-                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-osterdGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
+                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-ostraGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
               >
                 <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <FileText className="w-4 h-4 text-charcoal-800" />
@@ -856,7 +856,7 @@ export const ReportsView: React.FC = () => {
               {/* Action 2: Schedule Report */}
               <button
                 onClick={() => setScheduleModalOpen(true)}
-                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-osterdGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
+                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-ostraGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
               >
                 <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <Clock className="w-4 h-4 text-charcoal-800" />
@@ -874,7 +874,7 @@ export const ReportsView: React.FC = () => {
               {/* Action 3: Create Custom Report */}
               <button
                 onClick={() => showToast('Opening Custom Report Query Builder')}
-                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-osterdGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
+                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-ostraGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
               >
                 <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <SlidersHorizontal className="w-4 h-4 text-charcoal-800" />
@@ -897,7 +897,7 @@ export const ReportsView: React.FC = () => {
                   showToast('Report link copied to clipboard!');
                   setTimeout(() => setCopiedLink(false), 2000);
                 }}
-                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-osterdGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
+                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-ostraGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
               >
                 <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-charcoal-800" />}
@@ -934,7 +934,7 @@ export const ReportsView: React.FC = () => {
                 </p>
                 <button 
                   onClick={() => showToast('Opening Production traffic drilldown')}
-                  className="text-[10px] font-bold text-charcoal-900 hover:text-osterdGold-600 font-mono block pt-1"
+                  className="text-[10px] font-bold text-charcoal-900 hover:text-ostraGold-600 font-mono block pt-1"
                 >
                   View Details →
                 </button>
@@ -950,7 +950,7 @@ export const ReportsView: React.FC = () => {
                 </p>
                 <button 
                   onClick={() => showToast('Routing optimization rules ready')}
-                  className="text-[10px] font-bold text-charcoal-900 hover:text-osterdGold-600 font-mono block pt-1"
+                  className="text-[10px] font-bold text-charcoal-900 hover:text-ostraGold-600 font-mono block pt-1"
                 >
                   View Recommendations →
                 </button>
@@ -966,7 +966,7 @@ export const ReportsView: React.FC = () => {
                 </p>
                 <button 
                   onClick={() => showToast('Opening Model Analysis')}
-                  className="text-[10px] font-bold text-charcoal-900 hover:text-osterdGold-600 font-mono block pt-1"
+                  className="text-[10px] font-bold text-charcoal-900 hover:text-ostraGold-600 font-mono block pt-1"
                 >
                   View Model Analysis →
                 </button>
@@ -1027,7 +1027,7 @@ export const ReportsView: React.FC = () => {
 
             <button 
               onClick={() => showToast('Opening deep cost attribution report')}
-              className="text-left text-[11px] font-bold text-charcoal-900 hover:text-osterdGold-600 pt-3 border-t border-[#EAE5DC] flex items-center gap-1 group w-full"
+              className="text-left text-[11px] font-bold text-charcoal-900 hover:text-ostraGold-600 pt-3 border-t border-[#EAE5DC] flex items-center gap-1 group w-full"
             >
               <span>View full cost analysis</span>
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -1096,7 +1096,7 @@ export const ReportsView: React.FC = () => {
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm"
               >
-                <Download className="w-3.5 h-3.5 text-osterdGold-400" />
+                <Download className="w-3.5 h-3.5 text-ostraGold-400" />
                 <span>Download PDF</span>
               </button>
             </div>
@@ -1130,7 +1130,7 @@ export const ReportsView: React.FC = () => {
             <div className="space-y-3.5 text-xs">
               <div className="space-y-1.5">
                 <label className="font-bold text-charcoal-800 block">Frequency</label>
-                <select className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 font-mono focus:outline-none focus:border-osterdGold-500">
+                <select className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 font-mono focus:outline-none focus:border-ostraGold-500">
                   <option>Weekly (Every Monday at 9:00 AM)</option>
                   <option>Monthly (1st day of each month)</option>
                   <option>Daily (Every morning at 8:00 AM)</option>
@@ -1143,7 +1143,7 @@ export const ReportsView: React.FC = () => {
                   type="email"
                   defaultValue="shaan@acmecorp.com"
                   placeholder="name@company.com or Slack Webhook"
-                  className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 font-mono focus:outline-none focus:border-osterdGold-500"
+                  className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 font-mono focus:outline-none focus:border-ostraGold-500"
                 />
               </div>
 
@@ -1236,7 +1236,7 @@ export const ReportsView: React.FC = () => {
                 { name: 'Other Models (Mistral / Llama)', val: '$197.09', pct: 4.5, color: '#D4CABE', count: '5.1M tokens' },
               ] : [
                 { name: 'Successful (200 OK)', val: '82,123 reqs', pct: 91.5, color: '#18181B', count: '99.98% SLA' },
-                { name: 'Blocked (Guardrail / Firewall)', val: '4,312 reqs', pct: 4.8, color: '#C59E5F', count: 'Zero leakage' },
+                { name: 'Blocked (Guardrail / Gateway)', val: '4,312 reqs', pct: 4.8, color: '#C59E5F', count: 'Zero leakage' },
                 { name: 'Failed / Upstream 5xx', val: '2,145 reqs', pct: 2.4, color: '#8E6B2C', count: 'Auto-retried' },
                 { name: 'Provider Rate Limits', val: '1,152 reqs', pct: 1.3, color: '#D4CABE', count: 'Fallback triggered' },
               ]).map((it) => (

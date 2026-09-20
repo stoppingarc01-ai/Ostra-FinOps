@@ -132,6 +132,233 @@
   animation: spin-slow 24s linear infinite;
 }
 
+/* ============================================================ */
+/* PREMIUM BUTTON HOVER & MICRO-ANIMATION SYSTEM                */
+/* ============================================================ */
+
+/* Shimmer sweep across buttons and badges */
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Soft glow pulse behind primary CTAs */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px -4px rgba(197, 158, 95, 0.0); }
+  50% { box-shadow: 0 0 32px -4px rgba(197, 158, 95, 0.35); }
+}
+
+/* Animated gradient border rotation */
+@keyframes border-rotate {
+  0% { --angle: 0deg; }
+  100% { --angle: 360deg; }
+}
+
+/* Hero text reveal slide-up */
+@keyframes text-reveal {
+  0% { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero badge entrance */
+@keyframes badge-pop {
+  0% { opacity: 0; transform: scale(0.85) translateY(10px); }
+  60% { transform: scale(1.04) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Subtle bounce for scroll indicators */
+@keyframes soft-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Particle drift for hero background */
+@keyframes particle-drift {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.4; }
+  50% { transform: translateY(-30px) translateX(15px) scale(1.2); opacity: 0.7; }
+  100% { transform: translateY(-60px) translateX(-10px) scale(0.8); opacity: 0; }
+}
+
+/* Primary CTA button with shimmer overlay */
+.btn-primary-glow {
+  position: relative;
+  overflow: hidden;
+  animation: glow-pulse 3s ease-in-out infinite;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-primary-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.15) 45%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.15) 55%,
+    transparent 60%
+  );
+  animation: shimmer-sweep 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.btn-primary-glow:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 40px -8px rgba(197, 158, 95, 0.4), 0 4px 12px -2px rgba(0,0,0,0.1);
+}
+
+.btn-primary-glow:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* Secondary button with glass hover */
+.btn-secondary-glass {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-secondary-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(197, 158, 95, 0.08), rgba(197, 158, 95, 0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.btn-secondary-glass:hover::before {
+  opacity: 1;
+}
+
+.btn-secondary-glass:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 28px -6px rgba(0,0,0,0.08), 0 0 0 1px rgba(197, 158, 95, 0.2);
+  border-color: rgba(197, 158, 95, 0.4);
+}
+
+.btn-secondary-glass:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* Text reveal animation classes */
+.animate-text-reveal {
+  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-text-reveal-delay-1 {
+  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+.animate-text-reveal-delay-2 {
+  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+.animate-text-reveal-delay-3 {
+  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
+}
+
+.animate-text-reveal-delay-4 {
+  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+}
+
+.animate-text-reveal-delay-5 {
+  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both;
+}
+
+.animate-badge-pop {
+  animation: badge-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+.animate-soft-bounce {
+  animation: soft-bounce 2s ease-in-out infinite;
+}
+
+/* Interactive terminal copy badge */
+.terminal-badge {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.terminal-badge:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 20px -4px rgba(0,0,0,0.08);
+  border-color: rgba(197, 158, 95, 0.5);
+  background: rgba(197, 158, 95, 0.1);
+}
+
+.terminal-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(197, 158, 95, 0.08) 45%,
+    rgba(197, 158, 95, 0.12) 50%,
+    rgba(197, 158, 95, 0.08) 55%,
+    transparent 65%
+  );
+  animation: shimmer-sweep 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Navbar link hover underline animation */
+.nav-link-animated {
+  position: relative;
+}
+
+.nav-link-animated::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #C59E5F, #D4AF7C);
+  border-radius: 9999px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateX(-50%);
+}
+
+.nav-link-animated:hover::after {
+  width: 80%;
+}
+
+/* Floating particle dots for hero background */
+.hero-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(197, 158, 95, 0.4);
+  animation: particle-drift 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Value badge hover lift */
+.value-badge {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.value-badge:hover {
+  transform: translateY(-4px);
+}
+
+.value-badge:hover .value-badge-icon {
+  transform: scale(1.15) rotate(-5deg);
+  background: rgba(197, 158, 95, 0.2);
+}
+
+.value-badge-icon {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 /* Custom subtle scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

@@ -535,7 +535,7 @@ export const ModelsView: React.FC = () => {
                 <span>Zero-Drop Intelligent Failover Architecture</span>
               </div>
               <p className="text-[11px] text-charcoal-600 font-sans leading-relaxed">
-                If {activeDetailModel.name} experiences provider rate limits (HTTP 429) or momentary upstream timeouts, OsterdOps automatically reroutes pending inference requests to <strong>{activeDetailModel.fallback}</strong> within 12ms.
+                If {activeDetailModel.name} experiences provider rate limits (HTTP 429) or momentary upstream timeouts, OstraOps automatically reroutes pending inference requests to <strong>{activeDetailModel.fallback}</strong> within 12ms.
               </p>
             </div>
 

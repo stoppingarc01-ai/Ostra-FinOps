@@ -163,9 +163,9 @@ export function createDaemonServer(options) {
         res.end(`
       <!DOCTYPE html>
       <html>
-        <head><title>OsterdOps Guard Daemon</title></head>
+        <head><title>OstraOps Guard Daemon</title></head>
         <body style="font-family: monospace; padding: 2rem; background: #0f172a; color: #f8fafc;">
-          <h2>OsterdOps Guard Daemon</h2>
+          <h2>OstraOps Guard Daemon</h2>
           <p>Status: Healthy</p>
           <p>Session Token: <code>${token}</code></p>
           <p>Health Check: <a href="/healthz" style="color: #38bdf8;">/healthz</a></p>

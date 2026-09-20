@@ -88,10 +88,10 @@ export function sanitizePayloadForModel(
  */
 export function buildRoutingHeaders(telemetry: RoutingTelemetry): Record<string, string> {
   return {
-    'X-OsterdOps-Original-Model': telemetry.originalModel,
-    'X-OsterdOps-Routed-Model': telemetry.routedModel,
-    'X-OsterdOps-Fallback-Triggered': telemetry.fallbackTriggered ? 'true' : 'false',
-    'X-OsterdOps-Output-Clamped': telemetry.outputClamped
+    'X-OstraOps-Original-Model': telemetry.originalModel,
+    'X-OstraOps-Routed-Model': telemetry.routedModel,
+    'X-OstraOps-Fallback-Triggered': telemetry.fallbackTriggered ? 'true' : 'false',
+    'X-OstraOps-Output-Clamped': telemetry.outputClamped
       ? String(telemetry.clampedLimit ?? 'true')
       : 'none',
   };
@@ -109,5 +109,5 @@ export function buildRoutingSseComment(telemetry: RoutingTelemetry): string {
     clamped: telemetry.outputClamped,
     clamped_limit: telemetry.clampedLimit ?? null,
   });
-  return `: osterdops-routing: ${payload}\n\n`;
+  return `: ostraops-routing: ${payload}\n\n`;
 }

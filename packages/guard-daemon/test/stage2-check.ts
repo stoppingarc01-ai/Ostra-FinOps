@@ -78,7 +78,7 @@ async function runStage2Checks() {
   console.log('✔ Test 1 passed: Security primitives verified.');
 
   // Setup test environment
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'osterdops-daemon-stage2-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ostraops-daemon-stage2-'));
   const testDbPath = path.join(tmpDir, 'daemon-test.db');
   const db = initializeDatabase(testDbPath);
   const repository = new TraceRepository(db);
@@ -130,7 +130,7 @@ async function runStage2Checks() {
     // Test 4: Authenticated API /api/session & /api/traces
     console.log('Test 4: Authenticated REST APIs...');
     const authSessionRes = await requestHttp(`http://127.0.0.1:${port}/api/session`, {
-      headers: { 'X-OsterdOps-Daemon-Token': token },
+      headers: { 'X-OstraOps-Daemon-Token': token },
     });
     assert.strictEqual(authSessionRes.statusCode, 200);
     const sessionData = JSON.parse(authSessionRes.body);

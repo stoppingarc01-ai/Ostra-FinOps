@@ -13,18 +13,14 @@ import {
   ShieldCheck,
   Globe,
   CheckCircle2,
-  X,
-  CreditCard,
-  QrCode
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface PricingPageProps {
   onNavigateHome?: () => void;
   onNavigateLogin?: () => void;
-  onNavigateSignup?: () => void;
-  onNavigateDashboard?: () => void;
-  onNavigateSoloGuard?: () => void;
+  onNavigateOnboarding?: () => void;
 }
 
 export type SupportedCurrency = 'INR' | 'USD' | 'EUR' | 'GBP';
@@ -52,29 +48,29 @@ const CURRENCY_CONFIGS: Record<SupportedCurrency, CurrencyConfig> = {
     flag: '🇮🇳',
     name: 'Indian Rupee',
     country: 'India',
-    regionLabel: 'India (Domestic)',
-    soloMonthly: 399,
-    soloAnnualMonthly: 319,
-    teamMonthly: 3999,
-    teamAnnualMonthly: 3199,
-    teamSeatPrice: 799,
-    paymentMethods: ['UPI (GPay / PhonePe / Paytm)', 'RuPay Cards', 'NetBanking', 'Domestic Debit & Credit Cards'],
-    gatewayNote: 'Domestic GST compliant invoices with Indian payment gateways (Razorpay / Cashfree)',
+    regionLabel: 'India Region (UPI / RuPay / NetBanking)',
+    soloMonthly: 799,
+    soloAnnualMonthly: 649, // 20% discount
+    teamMonthly: 3499,
+    teamAnnualMonthly: 2799,
+    teamSeatPrice: 499,
+    paymentMethods: ['UPI (GPay / PhonePe / Paytm)', 'RuPay / Visa / Mastercard Debit & Credit', 'Net Banking (All Indian Banks)', 'GST Invoicing available'],
+    gatewayNote: 'Razorpay / Cashfree PCI-DSS compliant direct settlement',
   },
   USD: {
     code: 'USD',
     symbol: '$',
-    flag: '🌐',
+    flag: '🇺🇸',
     name: 'US Dollar',
     country: 'United States & Global',
-    regionLabel: 'International / US',
+    regionLabel: 'Global Default (Stripe / International)',
     soloMonthly: 12,
-    soloAnnualMonthly: 9,
+    soloAnnualMonthly: 10,
     teamMonthly: 49,
     teamAnnualMonthly: 39,
     teamSeatPrice: 10,
-    paymentMethods: ['Stripe Checkout', 'Visa / Mastercard / Amex', 'Apple Pay', 'Global Wire / ACH'],
-    gatewayNote: 'International credit cards, global currency billing processed through Stripe',
+    paymentMethods: ['Credit / Debit Cards (Visa, Mastercard, Amex)', 'Apple Pay / Google Pay', 'ACH Bank Transfer (Annual teams)'],
+    gatewayNote: 'Stripe Global Payments with zero foreign markup',
   },
   EUR: {
     code: 'EUR',
@@ -82,14 +78,14 @@ const CURRENCY_CONFIGS: Record<SupportedCurrency, CurrencyConfig> = {
     flag: '🇪🇺',
     name: 'Euro',
     country: 'European Union',
-    regionLabel: 'European Union',
+    regionLabel: 'Europe / SEPA (GDPR Compliant)',
     soloMonthly: 11,
-    soloAnnualMonthly: 8,
+    soloAnnualMonthly: 9,
     teamMonthly: 45,
     teamAnnualMonthly: 36,
     teamSeatPrice: 9,
-    paymentMethods: ['SEPA Direct Debit', 'iDEAL', 'Bancontact', 'Visa & Mastercard'],
-    gatewayNote: 'EU VAT reverse charge supported with Stripe Europe',
+    paymentMethods: ['SEPA Direct Debit', 'Cards (Cartes Bancaires, Visa, MC)', 'iDEAL / Sofort / Bancontact'],
+    gatewayNote: 'Local European acquirers with native reverse-charge VAT handling',
   },
   GBP: {
     code: 'GBP',
@@ -97,25 +93,23 @@ const CURRENCY_CONFIGS: Record<SupportedCurrency, CurrencyConfig> = {
     flag: '🇬🇧',
     name: 'British Pound',
     country: 'United Kingdom',
-    regionLabel: 'United Kingdom',
-    soloMonthly: 10,
+    regionLabel: 'UK Region (BACS / Cards)',
+    soloMonthly: 9.5,
     soloAnnualMonthly: 8,
     teamMonthly: 39,
     teamAnnualMonthly: 31,
     teamSeatPrice: 8,
-    paymentMethods: ['BACS Direct Debit', 'UK Debit / Credit Cards', 'Apple Pay'],
-    gatewayNote: 'HMRC VAT compliant invoices generated automatically',
+    paymentMethods: ['UK Cards', 'BACS Direct Debit', 'Apple Pay'],
+    gatewayNote: 'FCA-regulated UK gateway handling with UK VAT invoices',
   },
 };
 
 export const PricingPage: React.FC<PricingPageProps> = ({ 
   onNavigateHome, 
   onNavigateLogin,
-  onNavigateSignup,
-  onNavigateDashboard,
-  onNavigateSoloGuard
+  onNavigateOnboarding,
 }) => {
-  const { user, updateSubscription } = useAuth();
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   
   // Selected Currency State
@@ -123,21 +117,12 @@ export const PricingPage: React.FC<PricingPageProps> = ({
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [detectedCountry, setDetectedCountry] = useState<string>('Detecting location...');
   const [isAutoDetected, setIsAutoDetected] = useState<boolean>(true);
-  
-  // Checkout modal state
-  const [selectedPlanModal, setSelectedPlanModal] = useState<{
-    id: 'solo_pro' | 'team_scale';
-    name: string;
-    amount: number;
-    billingInterval: 'mo' | 'yr';
-  } | null>(null);
-  const [checkoutStatus, setCheckoutStatus] = useState<'idle' | 'processing' | 'success'>('idle');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Background Automatic Geo & Locale detection
   useEffect(() => {
     // 1. Check if user already manually selected a currency in previous session
-    const savedCurrency = localStorage.getItem('osterdops_user_currency') as SupportedCurrency | null;
+    const savedCurrency = localStorage.getItem('ostraops_user_currency') as SupportedCurrency | null;
     if (savedCurrency && CURRENCY_CONFIGS[savedCurrency]) {
       setCurrency(savedCurrency);
       setDetectedCountry(`Saved preference: ${CURRENCY_CONFIGS[savedCurrency].flag} ${CURRENCY_CONFIGS[savedCurrency].name}`);
@@ -206,12 +191,12 @@ export const PricingPage: React.FC<PricingPageProps> = ({
   const handleSelectCurrency = (code: SupportedCurrency) => {
     setCurrency(code);
     setIsAutoDetected(false);
-    localStorage.setItem('osterdops_user_currency', code);
+    localStorage.setItem('ostraops_user_currency', code);
     setDetectedCountry(`Manual: ${CURRENCY_CONFIGS[code].flag} ${CURRENCY_CONFIGS[code].name}`);
   };
 
   const copyGuardCmd = () => {
-    navigator.clipboard.writeText('npx osterdops-guard');
+    navigator.clipboard.writeText('npx ostraops-guard');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -241,82 +226,41 @@ export const PricingPage: React.FC<PricingPageProps> = ({
       currency: currentCfg.code,
     };
     try {
-      sessionStorage.setItem('osterdops_pending_plan', JSON.stringify(pendingPlan));
+      localStorage.setItem('ostraops_active_plan', planId);
+      localStorage.setItem('ostraops_user_tier', planId === 'team_scale' ? 'team' : 'solo');
+      sessionStorage.setItem('ostraops_pending_plan', JSON.stringify(pendingPlan));
+      localStorage.setItem('ostraops_pending_plan', JSON.stringify(pendingPlan));
     } catch {}
 
-    // If user is not logged in, route directly to signup page
+    // Pricing page redirects to login page (if not logged in) or directly to onboarding step 3 (if already logged in)
     if (!user) {
-      if (onNavigateSignup) {
-        onNavigateSignup();
-      } else if (onNavigateLogin) {
-        onNavigateLogin();
-      }
+      showToast(`Selected ${name}. Please log in to complete your setup & payment.`);
+      setTimeout(() => {
+        if (onNavigateLogin) {
+          onNavigateLogin();
+        } else {
+          window.location.hash = '#login';
+        }
+      }, 400);
       return;
     }
 
-    // User is logged in: show checkout / confirmation modal
-    setSelectedPlanModal({
-      id: planId,
-      name,
-      amount: finalAmount,
-      billingInterval: isAnnual ? 'yr' : 'mo',
-    });
-    setCheckoutStatus('idle');
-  };
-
-  const handleConfirmSubscription = async () => {
-    if (!selectedPlanModal) return;
-    setCheckoutStatus('processing');
-
-    try {
-      if (user) {
-        const isHosted = selectedPlanModal.id === 'team_scale';
-        // Update user subscription in Firestore with clear plan limits
-        await updateSubscription({
-          plan_id: selectedPlanModal.id,
-          plan_name: isHosted ? 'Team Hosted Gateway' : 'Solo Pro',
-          price_amount: selectedPlanModal.amount,
-          billing_interval: selectedPlanModal.billingInterval,
-          status: 'active',
-          quota_limit: isHosted ? 500000 : 100000,
-          quota_used: isHosted ? 12000 : 74000,
-          quota_usage_percent: isHosted ? 2.4 : 74,
-          renewal_date: isAnnual ? '18 Sep, 2027' : '18 Oct, 2026',
-        });
-        try {
-          sessionStorage.removeItem('osterdops_pending_plan');
-        } catch {}
+    // User is already logged in: route to onboarding step 3 to complete payment there
+    showToast(`Loading ${name} checkout on your onboarding console...`);
+    setTimeout(() => {
+      if (onNavigateOnboarding) {
+        onNavigateOnboarding();
+      } else {
+        window.location.hash = '#onboarding?step=3';
       }
-
-      setCheckoutStatus('success');
-      showToast(`Successfully activated ${selectedPlanModal.name} in ${currentCfg.code}!`);
-      setTimeout(() => {
-        const chosenPlan = selectedPlanModal.id;
-        setSelectedPlanModal(null);
-        if (chosenPlan === 'solo_pro') {
-          if (onNavigateSoloGuard) {
-            onNavigateSoloGuard();
-          } else if (onNavigateDashboard) {
-            onNavigateDashboard();
-          }
-        } else {
-          if (onNavigateDashboard) {
-            onNavigateDashboard();
-          }
-        }
-      }, 1500);
-    } catch {
-      setCheckoutStatus('idle');
-      showToast('Payment initialization succeeded. Redirecting...');
-      setTimeout(() => setSelectedPlanModal(null), 1200);
-    }
+    }, 400);
   };
 
   const comparisonRows = [
     {
       feature: 'Traffic Route',
       solo: '127.0.0.1:8080 (Local Loopback)',
-      team: 'gateway.osterdops.com (Cloud Edge)',
+      team: 'gateway.ostraops.com (Cloud Edge)',
       icon: Server,
     },
     {
@@ -349,7 +293,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
     <div className="pt-24 pb-20 overflow-hidden bg-[#FAF8F5] relative min-h-screen">
       
       {/* Background warm ambient radial light */}
-      <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[900px] h-[450px] bg-gradient-to-b from-osterdGold-300/12 via-sandstone-300/20 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[900px] h-[450px] bg-gradient-to-b from-ostraGold-300/12 via-sandstone-300/20 to-transparent blur-[140px] pointer-events-none -z-10" />
 
       {/* Floating Toast Notification */}
       {toastMessage && (
@@ -544,7 +488,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-charcoal-700 shrink-0 mt-0.5" />
-                    <span>100% prompt privacy — logs persist in local SQLite (~/.osterdops)</span>
+                    <span>100% prompt privacy — logs persist in local SQLite (~/.ostraops)</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-charcoal-700 shrink-0 mt-0.5" />
@@ -565,7 +509,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-zinc-300">$ npx osterdops-guard</span>
+                    <span className="text-zinc-300">$ npx ostraops-guard</span>
                   </div>
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-zinc-400" />}
                 </button>
@@ -595,7 +539,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
           </div>
 
           {/* Card 2: For Startups & Teams (Deep Charcoal) */}
-          <div className="relative p-7 sm:p-9 rounded-3xl bg-[#141416] text-white border border-[#27272A] shadow-2xl flex flex-col justify-between hover:border-osterdGold-500/40 transition-all overflow-hidden">
+          <div className="relative p-7 sm:p-9 rounded-3xl bg-[#141416] text-white border border-[#27272A] shadow-2xl flex flex-col justify-between hover:border-ostraGold-500/40 transition-all overflow-hidden">
             
             {/* Generative gold waves in background bottom */}
             <div className="absolute inset-0 opacity-15 pointer-events-none">
@@ -630,7 +574,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-zinc-300 block">Team Gateway</span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-osterdGold-500/20 text-osterdGold-300 font-mono">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-ostraGold-500/20 text-ostraGold-300 font-mono">
                       {currentCfg.flag} {currentCfg.code}
                     </span>
                   </div>
@@ -674,7 +618,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                 <div className="space-y-2.5 text-xs text-zinc-300">
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>Endpoint: <strong>gateway.osterdops.com/v1</strong></span>
+                    <span>Endpoint: <strong>gateway.ostraops.com/v1</strong></span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
@@ -704,7 +648,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
             <div className="relative z-10 pt-8">
               <div className="p-3.5 rounded-2xl bg-[#1A1A1E] border border-[#27272C] flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-osterdGold-400 shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-ostraGold-400 shrink-0">
                     <Lock className="w-4 h-4" />
                   </div>
                   <div>
@@ -759,7 +703,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                     </th>
                     <th className="py-4 px-6 font-bold text-charcoal-900 w-[37%] bg-[#FAF8F5]">
                       <div>Team API Gateway (Hosted)</div>
-                      <div className="text-[11px] font-normal text-charcoal-400 font-mono">gateway.osterdops.com</div>
+                      <div className="text-[11px] font-normal text-charcoal-400 font-mono">gateway.ostraops.com</div>
                     </th>
                   </tr>
                 </thead>
@@ -796,122 +740,19 @@ export const PricingPage: React.FC<PricingPageProps> = ({
               <ShieldCheck className="w-4 h-4" />
             </div>
             <span>
-              <strong>Built for the way you code.</strong> From solo hackers to scaling teams in India and worldwide, OsterdOps keeps your AI spend, agents and data under control.
+              <strong>Built for the way you code.</strong> From solo hackers to scaling teams in India and worldwide, OstraOps keeps your AI spend, agents and data under control.
             </span>
           </div>
 
           <button
             onClick={onNavigateHome}
-            className="font-bold text-charcoal-900 hover:text-osterdGold-600 transition-colors whitespace-nowrap flex items-center gap-1 shrink-0 cursor-pointer"
+            className="font-bold text-charcoal-900 hover:text-ostraGold-600 transition-colors whitespace-nowrap flex items-center gap-1 shrink-0 cursor-pointer"
           >
             <span>Explore our docs →</span>
           </button>
         </div>
 
       </div>
-
-      {/* Checkout / Subscription Confirmation Modal */}
-      {selectedPlanModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
-          <div className="relative w-full max-w-md bg-white rounded-3xl border border-[#EAE5DC] shadow-2xl p-6 sm:p-8 space-y-6">
-            
-            {/* Close button */}
-            <button
-              onClick={() => setSelectedPlanModal(null)}
-              className="absolute top-5 right-5 p-1.5 rounded-full text-charcoal-400 hover:text-charcoal-900 hover:bg-sandstone-200 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            {/* Header */}
-            <div>
-              <span className="text-[11px] font-bold text-charcoal-500 uppercase tracking-wider font-mono">
-                Order Summary
-              </span>
-              <h3 className="text-xl font-extrabold text-charcoal-900 mt-1">
-                Activate {selectedPlanModal.name}
-              </h3>
-              <p className="text-xs text-charcoal-500 mt-1">
-                Localized billing in {currentCfg.name} ({currentCfg.code})
-              </p>
-            </div>
-
-            {/* Price Box */}
-            <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE4D8] space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-charcoal-700">Plan Selected</span>
-                <span className="text-xs font-bold text-charcoal-900 font-mono">{selectedPlanModal.name}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-charcoal-700">Billing Term</span>
-                <span className="text-xs text-charcoal-800 font-mono">
-                  {selectedPlanModal.billingInterval === 'yr' ? 'Annual (20% Discounted)' : 'Monthly'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-charcoal-700">Region &amp; Currency</span>
-                <span className="text-xs font-bold text-charcoal-900 flex items-center gap-1 font-mono">
-                  <span>{currentCfg.flag}</span>
-                  <span>{currentCfg.code}</span>
-                </span>
-              </div>
-              <div className="pt-2 border-t border-[#EAE4D8] flex items-baseline justify-between">
-                <span className="text-sm font-bold text-charcoal-900">Total Due Today</span>
-                <div className="text-right">
-                  <span className="text-2xl font-extrabold text-charcoal-900 font-mono">
-                    {currentCfg.symbol}{selectedPlanModal.amount}
-                  </span>
-                  <span className="text-xs text-charcoal-500 font-mono block">
-                    + local taxes if applicable
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Supported Payment Gateways for the user's detected region */}
-            <div className="p-3.5 rounded-xl bg-sandstone-100/70 border border-[#E8E1D2] space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-charcoal-800">
-                {currency === 'INR' ? <QrCode className="w-4 h-4 text-emerald-700" /> : <CreditCard className="w-4 h-4 text-charcoal-800" />}
-                <span>Payment Methods for {currentCfg.country}:</span>
-              </div>
-              <ul className="text-[11px] text-charcoal-700 space-y-1 list-disc list-inside">
-                {currentCfg.paymentMethods.map((m, idx) => (
-                  <li key={idx}>{m}</li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Actions */}
-            <div className="space-y-2.5 pt-2">
-              <button
-                onClick={handleConfirmSubscription}
-                disabled={checkoutStatus === 'processing' || checkoutStatus === 'success'}
-                className="w-full py-3.5 rounded-xl bg-charcoal-900 hover:bg-black text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {checkoutStatus === 'processing' ? (
-                  <span>Connecting to {currentCfg.code} gateway...</span>
-                ) : checkoutStatus === 'success' ? (
-                  <span className="flex items-center gap-1 text-emerald-400">
-                    <CheckCircle2 className="w-4 h-4" /> Plan Activated!
-                  </span>
-                ) : (
-                  <span>
-                    Proceed with {currentCfg.symbol}{selectedPlanModal.amount} ({currentCfg.code}) →
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setSelectedPlanModal(null)}
-                className="w-full py-2 text-center text-xs text-charcoal-500 hover:text-charcoal-800 transition-colors cursor-pointer"
-              >
-                Cancel and return
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
 
     </div>
   );

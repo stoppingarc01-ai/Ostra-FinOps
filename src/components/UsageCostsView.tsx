@@ -142,7 +142,7 @@ export const UsageCostsView: React.FC = () => {
       </div>
 
       {/* ============================================================ */}
-      {/* TOP SUMMARY METRIC CARDS (4 Cards, OsterdOps Palette)        */}
+      {/* TOP SUMMARY METRIC CARDS (4 Cards, OstraOps Palette)        */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
@@ -157,7 +157,7 @@ export const UsageCostsView: React.FC = () => {
               $4,328.64
             </div>
             <div className="flex items-center gap-1 text-[11px] font-mono text-charcoal-600 mt-1">
-              <TrendingUp className="w-3.5 h-3.5 text-osterdGold-600" />
+              <TrendingUp className="w-3.5 h-3.5 text-ostraGold-600" />
               <span>+28.6% vs April pacing</span>
             </div>
           </div>
@@ -174,7 +174,7 @@ export const UsageCostsView: React.FC = () => {
               $6,712.00
             </div>
             <div className="h-1.5 w-full bg-[#EAE5DC] rounded-full overflow-hidden mt-2">
-              <div className="h-full bg-osterdGold-500 rounded-full w-[78.9%]" />
+              <div className="h-full bg-ostraGold-500 rounded-full w-[78.9%]" />
             </div>
             <div className="text-[10px] text-charcoal-500 font-mono mt-1 flex justify-between">
               <span>78.9% projected quota used</span>
@@ -227,7 +227,7 @@ export const UsageCostsView: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EAE5DC] pb-4">
           <div>
             <h3 className="text-base font-extrabold text-charcoal-900 tracking-tight font-sans flex items-center gap-2">
-              <BarChart2 className="w-4 h-4 text-osterdGold-600" />
+              <BarChart2 className="w-4 h-4 text-ostraGold-600" />
               <span>Daily Spend &amp; Model Routing Distribution</span>
             </h3>
             <p className="text-xs text-charcoal-500 mt-0.5">
@@ -337,7 +337,7 @@ export const UsageCostsView: React.FC = () => {
                   {/* Stacked Pillar */}
                   <div
                     className={`w-full max-w-[48px] rounded-t-lg overflow-hidden flex flex-col justify-end transition-all ${
-                      isSelected ? 'ring-2 ring-osterdGold-500 ring-offset-2' : ''
+                      isSelected ? 'ring-2 ring-ostraGold-500 ring-offset-2' : ''
                     } ${day.forecast ? 'border border-dashed border-charcoal-400' : ''}`}
                     style={{ height: `${heightPct}%` }}
                   >
@@ -419,7 +419,7 @@ export const UsageCostsView: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-extrabold text-charcoal-900 tracking-tight font-sans flex items-center gap-2">
-                  <LineChart className="w-4 h-4 text-osterdGold-600" />
+                  <LineChart className="w-4 h-4 text-ostraGold-600" />
                   <span>Cumulative Spend Trajectory (Line Graph)</span>
                 </h3>
                 <p className="text-xs text-charcoal-500 mt-0.5">
@@ -567,7 +567,7 @@ export const UsageCostsView: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-extrabold text-charcoal-900 tracking-tight font-sans flex items-center gap-2">
-                  <PieChart className="w-4 h-4 text-osterdGold-600" />
+                  <PieChart className="w-4 h-4 text-ostraGold-600" />
                   <span>Market Share by Model (Pie Chart)</span>
                 </h3>
                 <p className="text-xs text-charcoal-500 mt-0.5">

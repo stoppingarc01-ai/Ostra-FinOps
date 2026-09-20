@@ -58,7 +58,7 @@ async function runChaosAndResilienceChecks() {
   console.log('--- Starting Stage 2.1 Concurrency, Chaos & Hardening Tests ---');
   console.log('================================================================');
 
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'osterdops-daemon-chaos-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ostraops-daemon-chaos-'));
   const testDbPath = path.join(tmpDir, 'daemon-chaos.db');
   const testTokenPath = path.join(tmpDir, 'daemon.token');
   const staticDir = path.join(tmpDir, 'public');
@@ -124,7 +124,7 @@ async function runChaosAndResilienceChecks() {
     assert.strictEqual(exchangeRes.statusCode, 200);
     const setCookie = exchangeRes.headers['set-cookie'];
     assert.ok(setCookie && setCookie.length > 0);
-    assert.ok(setCookie[0].includes('osterdops_token='));
+    assert.ok(setCookie[0].includes('ostraops_token='));
     assert.ok(setCookie[0].includes('HttpOnly'));
 
     // Request using solely the cookie (no query param, no auth header)

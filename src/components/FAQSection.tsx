@@ -23,64 +23,64 @@ export const FAQSection: React.FC = () => {
       id: 'faq-1',
       category: 'architecture',
       tags: ['latency', 'daemon', 'loopback', 'overhead', 'memory'],
-      question: 'What is the actual latency overhead of running OsterdOps locally?',
-      answer: 'OsterdOps runs as a lightweight, zero-dependency compiled daemon bound directly to your local loopback interface (`http://127.0.0.1:8080`). Benchmarks measure in-memory parsing overhead at under 0.42 milliseconds. Because requests stream through zero-copy Server-Sent Events (SSE) directly to the upstream model provider, your Time-To-First-Token (TTFT) has zero perceptible buffering delay.',
+      question: 'What is the actual latency overhead of running OstraOps locally?',
+      answer: 'OstraOps runs as a lightweight, zero-dependency compiled daemon bound directly to your local loopback interface (`http://127.0.0.1:8080`). Benchmarks measure in-memory parsing overhead at under 0.42 milliseconds. Because requests stream through zero-copy Server-Sent Events (SSE) directly to the upstream model provider, your Time-To-First-Token (TTFT) has zero perceptible buffering delay.',
     },
     {
       id: 'faq-2',
       category: 'guardrails',
       tags: ['circuit breaker', 'runaway loops', 'billing', 'cost limit', 'hard cap'],
       question: 'How does the Financial Circuit Breaker stop runaway agent loops?',
-      answer: 'Autonomous agents (such as Cursor Composer or Cline) can get trapped in repetitive retry loops, consuming thousands of dollars in tokens overnight. OsterdOps computes a real-time spending derivative ($/minute) over a rolling 180-second window and tracks cumulative daily spend. If velocity spikes or your daily hard cap (e.g. $15.00/day) is crossed, OsterdOps injects a clean HTTP 429 backoff locally before the request leaves your computer, preventing unauthorized charges.',
+      answer: 'Autonomous agents (such as Cursor Composer or Cline) can get trapped in repetitive retry loops, consuming thousands of dollars in tokens overnight. OstraOps computes a real-time spending derivative ($/minute) over a rolling 180-second window and tracks cumulative daily spend. If velocity spikes or your daily hard cap (e.g. $15.00/day) is crossed, OstraOps injects a clean HTTP 429 backoff locally before the request leaves your computer, preventing unauthorized charges.',
     },
     {
       id: 'faq-3',
       category: 'architecture',
       tags: ['intra-family', 'failover', 'tool calling', 'json schema', 'claude', 'gpt'],
       question: 'Why do other AI proxies break agent tool calls, and how does Intra-Family Failover solve this?',
-      answer: 'Generic AI proxies attempt cross-vendor swapping (e.g., redirecting Claude to GPT-4o when rate-limited). This breaks agents because Claude expects XML-based `tool_use` blocks while OpenAI relies on JSON-based `tool_calls` schemas. OsterdOps enforces deterministic Intra-Family Failover: if Claude 3.7 Sonnet encounters a 429/529 overload, OsterdOps automatically cascades to Claude 3.5 Haiku, keeping the exact same provider API contract, parameter definitions, and file-editing tools intact with 0% session disruption.',
+      answer: 'Generic AI proxies attempt cross-vendor swapping (e.g., redirecting Claude to GPT-4o when rate-limited). This breaks agents because Claude expects XML-based `tool_use` blocks while OpenAI relies on JSON-based `tool_calls` schemas. OstraOps enforces deterministic Intra-Family Failover: if Claude 3.7 Sonnet encounters a 429/529 overload, OstraOps automatically cascades to Claude 3.5 Haiku, keeping the exact same provider API contract, parameter definitions, and file-editing tools intact with 0% session disruption.',
     },
     {
       id: 'faq-4',
       category: 'privacy',
       tags: ['sqlite', 'cloud retention', 'privacy', 'aes-256', 'gdpr', 'soc2'],
-      question: 'Does OsterdOps store or log my codebase and prompts on remote cloud servers?',
-      answer: 'No. OsterdOps is strictly local-first with a Zero-Data-Retention architecture. All agent dispatches, tokens, and telemetry are buffered locally in an on-device SQLite database at `~/.osterdops/traces.db` encrypted with local AES-256 keys. No prompts, completion tokens, codebase files, or secrets ever egress to OsterdOps cloud servers.',
+      question: 'Does OstraOps store or log my codebase and prompts on remote cloud servers?',
+      answer: 'No. OstraOps is strictly local-first with a Zero-Data-Retention architecture. All agent dispatches, tokens, and telemetry are buffered locally in an on-device SQLite database at `~/.ostraops/traces.db` encrypted with local AES-256 keys. No prompts, completion tokens, codebase files, or secrets ever egress to OstraOps cloud servers.',
     },
     {
       id: 'faq-5',
       category: 'setup',
       tags: ['cursor', 'cline', 'windsurf', 'aider', 'setup', 'config'],
-      question: 'How do I connect Cursor, Cline, or Windsurf to OsterdOps?',
-      answer: 'Setup takes under 30 seconds. In Cursor, open Settings > Models, enable OpenAI API Key, and set the OpenAI Base URL to `http://127.0.0.1:8080/v1`. For Cline or Claude Dev, set Custom Base URL to `http://127.0.0.1:8080/v1`. OsterdOps automatically intercepts prompt streams without requiring changes to your source code or agent scripts.',
+      question: 'How do I connect Cursor, Cline, or Windsurf to OstraOps?',
+      answer: 'Setup takes under 30 seconds. In Cursor, open Settings > Models, enable OpenAI API Key, and set the OpenAI Base URL to `http://127.0.0.1:8080/v1`. For Cline or Claude Dev, set Custom Base URL to `http://127.0.0.1:8080/v1`. OstraOps automatically intercepts prompt streams without requiring changes to your source code or agent scripts.',
     },
     {
       id: 'faq-6',
       category: 'setup',
       tags: ['npx', 'cli', 'install', 'free', 'open-core'],
       question: 'Do I need to create an account or provide a credit card to run the daemon?',
-      answer: 'No account or credit card is required. Individual developers can run `npx osterdops-guard` in any terminal immediately. The local loopback firewall, real-time telemetry console (localhost:4040), and local SQLite trace buffer are completely free and open-core for local developers.',
+      answer: 'No account or credit card is required. Individual developers can run `npx ostraops-guard` in any terminal immediately. The local loopback gateway, real-time telemetry console (localhost:4040), and local SQLite trace buffer are completely free and open-core for local developers.',
     },
     {
       id: 'faq-7',
       category: 'privacy',
       tags: ['pii', 'redaction', 'secrets', 'jwt', 'security'],
       question: 'How does the local PII and secret redaction engine work?',
-      answer: 'Before any prompt payload is dispatched to an upstream provider, OsterdOps executes an in-memory high-entropy scanner (0.18ms latency). It identifies API keys (sk-live-...), JWT tokens, and private internal IP addresses (RFC1918), replacing them with deterministic masks before transmission. Tokens are re-hydrated dynamically in the completion stream before being returned to your agent.',
+      answer: 'Before any prompt payload is dispatched to an upstream provider, OstraOps executes an in-memory high-entropy scanner (0.18ms latency). It identifies API keys (sk-live-...), JWT tokens, and private internal IP addresses (RFC1918), replacing them with deterministic masks before transmission. Tokens are re-hydrated dynamically in the completion stream before being returned to your agent.',
     },
     {
       id: 'faq-8',
       category: 'architecture',
       tags: ['vllm', 'ollama', 'local models', 'deepseek', 'llama'],
-      question: 'Can I use OsterdOps with local LLMs like Ollama or vLLM?',
-      answer: 'Yes. OsterdOps fully supports local inference engines. You can configure OsterdOps to route background indexing or fast code review tasks to your local Ollama or vLLM endpoints (e.g. Llama 3.3 70B or DeepSeek-R1) while routing complex reasoning to frontier models, enforcing budget limits across all combined channels.',
+      question: 'Can I use OstraOps with local LLMs like Ollama or vLLM?',
+      answer: 'Yes. OstraOps fully supports local inference engines. You can configure OstraOps to route background indexing or fast code review tasks to your local Ollama or vLLM endpoints (e.g. Llama 3.3 70B or DeepSeek-R1) while routing complex reasoning to frontier models, enforcing budget limits across all combined channels.',
     },
     {
       id: 'faq-9',
       category: 'guardrails',
       tags: ['pricing', 'teams', 'hosted', 'enterprise'],
       question: 'When should a team upgrade from Solo Guard to Team Gateway?',
-      answer: 'Solo Guard is optimized for individual developers working locally on their own machines. Teams upgrade to OsterdOps Team Gateway when they need centralized team budget pooling, shared project API keys, role-based governance, multi-seat audit exports for SOC2 compliance, and unified organization analytics across dozens of engineers.',
+      answer: 'Solo Guard is optimized for individual developers working locally on their own machines. Teams upgrade to OstraOps Team Gateway when they need centralized team budget pooling, shared project API keys, role-based governance, multi-seat audit exports for SOC2 compliance, and unified organization analytics across dozens of engineers.',
     },
   ];
 
@@ -122,14 +122,14 @@ export const FAQSection: React.FC = () => {
   return (
     <section id="faq" className="relative py-24 bg-[#FAF8F5] border-t border-[#EAE5DB] overflow-hidden">
       {/* Subtle 3D Ambient Light Aura */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-gradient-to-b from-osterdGold-400/10 via-sandstone-300/15 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-gradient-to-b from-ostraGold-400/10 via-sandstone-300/15 to-transparent blur-[140px] pointer-events-none -z-10" />
 
       <div className="max-w-[1280px] mx-auto px-6 sm:px-8 lg:px-12">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-200 border border-sandstone-300/80 text-[11px] font-bold tracking-[0.16em] text-charcoal-700 uppercase font-mono mb-3">
-            <HelpCircle className="w-3.5 h-3.5 text-osterdGold-600" />
+            <HelpCircle className="w-3.5 h-3.5 text-ostraGold-600" />
             <span>FREQUENTLY ASKED QUESTIONS</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
@@ -151,7 +151,7 @@ export const FAQSection: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search topics (e.g. latency, Cursor, tool calling, SQLite, circuit breaker)..."
-              className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white border border-[#EAE5DB] text-sm text-charcoal-900 placeholder:text-charcoal-400 shadow-subtle focus:outline-none focus:border-osterdGold-500 transition-colors font-sans"
+              className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white border border-[#EAE5DB] text-sm text-charcoal-900 placeholder:text-charcoal-400 shadow-subtle focus:outline-none focus:border-ostraGold-500 transition-colors font-sans"
             />
             {searchQuery && (
               <button
@@ -216,7 +216,7 @@ export const FAQSection: React.FC = () => {
                   key={item.id}
                   className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
                     isOpen
-                      ? 'bg-white border-osterdGold-500/60 shadow-card-3d'
+                      ? 'bg-white border-ostraGold-500/60 shadow-card-3d'
                       : 'bg-white/80 hover:bg-white border-[#EAE5DB] shadow-2xs hover:shadow-subtle'
                   }`}
                 >
@@ -278,7 +278,7 @@ export const FAQSection: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <div className="px-3 py-1.5 rounded-lg bg-sandstone-200 font-mono text-xs text-charcoal-800 border border-sandstone-300">
-              npx osterdops-guard
+              npx ostraops-guard
             </div>
           </div>
         </div>
