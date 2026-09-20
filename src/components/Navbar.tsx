@@ -23,6 +23,51 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
   const consoleRoute = isSoloUser ? 'solo-guard' : 'dashboard';
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [starCount, setStarCount] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ostraops_gh_stars') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchStars = async () => {
+      try {
+        const cachedTime = localStorage.getItem('ostraops_gh_stars_time');
+        const cachedCount = localStorage.getItem('ostraops_gh_stars');
+        if (cachedCount && cachedTime && Date.now() - parseInt(cachedTime, 10) < 5 * 60 * 1000) {
+          if (isMounted) setStarCount(cachedCount);
+          return;
+        }
+
+        const res = await fetch('https://api.github.com/repos/stoppingarc01-ai/Ostra-FinOps');
+        if (!res.ok) throw new Error('GitHub API response not ok');
+        const data = await res.json();
+        const stars: number = typeof data.stargazers_count === 'number' ? data.stargazers_count : 0;
+        const formatted = stars >= 1000 
+          ? `${(stars / 1000).toFixed(1).replace(/\.0$/, '')}K` 
+          : stars.toString();
+        
+        if (isMounted) {
+          setStarCount(formatted);
+          localStorage.setItem('ostraops_gh_stars', formatted);
+          localStorage.setItem('ostraops_gh_stars_time', Date.now().toString());
+        }
+      } catch {
+        if (isMounted) {
+          const fallback = localStorage.getItem('ostraops_gh_stars') || '0';
+          setStarCount(fallback);
+        }
+      }
+    };
+
+    fetchStars();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -175,18 +220,18 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
 
         {/* Right CTA — changes based on auth state */}
         <div className="hidden md:flex items-center gap-3.5">
-          {/* GitHub Star Badge: [GitHub Icon] 6.1K */}
+          {/* GitHub Star Badge: Realtime Stars/Likes */}
           <a
             href="https://github.com/stoppingarc01-ai/Ostra-FinOps"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-sandstone-100 border border-[#EAE5DB] text-charcoal-900 hover:text-black shadow-2xs transition-all hover:scale-105 group cursor-pointer"
-            title="Star OstraOps on GitHub (6.1K stars)"
-            aria-label="GitHub repository: 6.1K stars"
+            title={`Star OstraOps on GitHub (${starCount || '0'} stars)`}
+            aria-label={`GitHub repository: ${starCount || '0'} stars`}
           >
             <GithubIcon className="w-4 h-4 text-charcoal-900 group-hover:scale-110 transition-transform" />
             <span className="text-[13px] font-semibold text-charcoal-900 font-sans tracking-tight leading-none">
-              6.1K
+              {starCount || '0'}
             </span>
           </a>
 
@@ -305,7 +350,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
                 <span>GitHub</span>
               </div>
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-sandstone-200 text-charcoal-900 font-bold">
-                6.1K
+                {starCount || '0'}
               </span>
             </a>
             <hr className="border-borderLight my-1" />
