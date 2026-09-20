@@ -5,6 +5,8 @@ import { TraceRepository, type LocalTraceRecord } from '../db/repository.js';
 import { RollingVelocityEngine } from '../engine/velocity.js';
 import { SseBroker } from '../engine/sse-broker.js';
 import { calculateCost } from './pricing.js';
+import { estimateMessageTokens, estimateTextTokens, extractStreamingChunk } from './tokenizer.js';
+import { getIntraFamilyFallback, isFailoverEligible } from './failover.js';
 
 export interface IngressContext {
   config: DaemonConfig;
@@ -144,7 +146,11 @@ export async function handleLocalIngress(
     (req.headers['x-user-id'] as string) ||
     'default-session';
 
-  // 1. Circuit Breaker: Check session budget
+  // =========================================================================
+  // 1. FINANCIAL & VELOCITY CIRCUIT BREAKER ENFORCEMENT
+  // =========================================================================
+
+  // A. Total Session Budget Cap Check
   try {
     const sessionSummary = ctx.repository.getSessionSummary(sessionId);
     if (sessionSummary.totalCostUsd >= ctx.config.sessionBudgetUsd) {
@@ -162,11 +168,40 @@ export async function handleLocalIngress(
       );
       return true;
     }
-  } catch (err) {
-    // Non-fatal, proceed
+  } catch {
+    // Non-fatal if session query fails
   }
 
-  // 2. Read client payload
+  // B. Rolling Velocity Hard Circuit Breaker ($/min, TPM, RPM)
+  const velocityBreaker = ctx.velocity.checkVelocityBreaker({
+    maxCostPerMinUsd: ctx.config.maxVelocityUsdPerMin,
+    maxTpm: ctx.config.maxTpm,
+    maxRpm: ctx.config.rateLimitRpm,
+  });
+
+  if (velocityBreaker.tripped) {
+    res.writeHead(429, { 'Content-Type': 'application/json' });
+    res.end(
+      JSON.stringify({
+        error: {
+          message: `OstraOps Financial Circuit Breaker: ${velocityBreaker.reason}`,
+          type: 'velocity_limit_exceeded',
+          code: 'circuit_breaker_tripped',
+          details: {
+            metric: velocityBreaker.metric,
+            current: velocityBreaker.current,
+            limit: velocityBreaker.limit,
+            window_seconds: velocityBreaker.metrics.windowSeconds,
+          },
+        },
+      })
+    );
+    return true;
+  }
+
+  // =========================================================================
+  // 2. READ CLIENT PAYLOAD
+  // =========================================================================
   let body: Record<string, any>;
   try {
     body = await readJsonBody(req);
@@ -180,12 +215,20 @@ export async function handleLocalIngress(
   const isStreaming = Boolean(body.stream);
   const requestId = (req.headers['x-request-id'] as string) || `req_${crypto.randomBytes(8).toString('hex')}`;
 
-  // Helicone Parity: Inject stream_options to get ground-truth token usage in final SSE frame
+  // Estimate baseline input tokens accurately up front
+  const estimatedInputTokens = estimateMessageTokens(
+    body.messages || body.prompt || (body.system ? [{ role: 'system', content: body.system }] : undefined),
+    body.tools || body.functions
+  );
+
+  // Force stream_options: { include_usage: true } on OpenAI streaming to receive ground-truth tokens
   if (isOpenAIChat && isStreaming && !body.stream_options) {
     body.stream_options = { include_usage: true };
   }
 
-  // 3. Resolve upstream destination and credentials
+  // =========================================================================
+  // 3. RESOLVE UPSTREAM DESTINATION AND HEADERS
+  // =========================================================================
   let upstreamUrl: string;
   const upstreamHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -228,7 +271,9 @@ export async function handleLocalIngress(
     }
   }
 
-  // 3.5 Check Response Cache (Helicone Cache Parity)
+  // =========================================================================
+  // 3.5 RESPONSE CACHING (Helicone Cache Parity)
+  // =========================================================================
   const isCacheRequested =
     req.headers['x-ostra-cache'] === 'true' ||
     req.headers['helicone-cache-enabled'] === 'true' ||
@@ -254,10 +299,10 @@ export async function handleLocalIngress(
         'Content-Type': cached.contentType,
         'X-Ostra-Cache': 'HIT',
         'Helicone-Cache-Status': 'HIT',
+        'X-Ostra-Spend-Velocity': `${ctx.velocity.getMetrics().velocityCostPerMinuteUsd.toFixed(4)}/min`,
       });
       res.end(cached.responseBody);
 
-      // Record zero-cost cached trace
       recordTrace(ctx, {
         id: crypto.randomUUID(),
         requestId,
@@ -280,7 +325,9 @@ export async function handleLocalIngress(
     }
   }
 
-  // 4. Setup AbortController for client disconnect propagation
+  // =========================================================================
+  // 4. DISPATCH UPSTREAM CALL WITH INTRA-FAMILY CASCADING
+  // =========================================================================
   const abortController = new AbortController();
   req.on('close', () => {
     if (!res.writableEnded) {
@@ -288,61 +335,108 @@ export async function handleLocalIngress(
     }
   });
 
-  // 5. Dispatch upstream request
-  let upstreamRes: Response;
-  try {
-    upstreamRes = await fetch(upstreamUrl, {
+  let upstreamRes: Response | null = null;
+  let routedModel = requestedModel;
+  let isFailedOver = false;
+
+  const executeFetch = async (modelToUse: string): Promise<Response> => {
+    const payload = { ...body, model: modelToUse };
+    return await fetch(upstreamUrl, {
       method: 'POST',
       headers: upstreamHeaders,
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
       signal: abortController.signal,
     });
+  };
+
+  try {
+    upstreamRes = await executeFetch(requestedModel);
+
+    // Check if intra-family failover applies (e.g. 5xx or overloaded 429)
+    const fallbackModel = ctx.config.intraFamilyFailover ? getIntraFamilyFallback(requestedModel) : null;
+    if (fallbackModel && isFailoverEligible(upstreamRes.status)) {
+      console.warn(`[Guard] Upstream status ${upstreamRes.status} for ${requestedModel}. Cascading to sibling: ${fallbackModel}`);
+      try {
+        const cascadeRes = await executeFetch(fallbackModel);
+        if (cascadeRes.status < 500) {
+          upstreamRes = cascadeRes;
+          routedModel = fallbackModel;
+          isFailedOver = true;
+        }
+      } catch (cascadeErr) {
+        console.warn('[Guard] Cascade attempt encountered error:', cascadeErr);
+      }
+    }
   } catch (fetchErr: any) {
     if (abortController.signal.aborted) {
       return true;
     }
-    const durationMs = Date.now() - startTime;
-    const errMsg = fetchErr.message || 'Upstream gateway unreachable';
-    res.writeHead(502, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: { message: errMsg, type: 'gateway_error' } }));
 
-    // Record failure trace
-    recordTrace(ctx, {
-      id: crypto.randomUUID(),
-      requestId,
-      sessionId,
-      provider,
-      requestedModel,
-      routedModel: requestedModel,
-      statusCode: 502,
-      inputTokens: 0,
-      outputTokens: 0,
-      costUsd: 0,
-      durationMs,
-      ttftMs: null,
-      stream: isStreaming,
-      errorMessage: errMsg,
-      timestamp: startTime,
-      createdAt: new Date(startTime).toISOString(),
-    });
+    // Attempt cascade on network outage
+    const fallbackModel = ctx.config.intraFamilyFailover ? getIntraFamilyFallback(requestedModel) : null;
+    if (fallbackModel) {
+      console.warn(`[Guard] Upstream unreachable for ${requestedModel}. Attempting cascade to: ${fallbackModel}`);
+      try {
+        upstreamRes = await executeFetch(fallbackModel);
+        routedModel = fallbackModel;
+        isFailedOver = true;
+      } catch {
+        // Fall through to 502
+      }
+    }
 
-    return true;
+    if (!upstreamRes) {
+      const durationMs = Date.now() - startTime;
+      const errMsg = fetchErr.message || 'Upstream gateway unreachable';
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: { message: errMsg, type: 'gateway_error' } }));
+
+      recordTrace(ctx, {
+        id: crypto.randomUUID(),
+        requestId,
+        sessionId,
+        provider,
+        requestedModel,
+        routedModel: requestedModel,
+        statusCode: 502,
+        inputTokens: estimatedInputTokens,
+        outputTokens: 0,
+        costUsd: 0,
+        durationMs,
+        ttftMs: null,
+        stream: isStreaming,
+        errorMessage: errMsg,
+        timestamp: startTime,
+        createdAt: new Date(startTime).toISOString(),
+      });
+
+      return true;
+    }
   }
 
   const statusCode = upstreamRes.status;
 
-  // 6. Handle Streaming vs Non-Streaming
+  // =========================================================================
+  // 5. STREAMING RESPONSE HANDLER (SSE)
+  // =========================================================================
   if (isStreaming && statusCode === 200) {
-    res.writeHead(200, {
+    const streamHeaders: Record<string, string> = {
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
       Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
-    });
+      'X-Ostra-Spend-Velocity': `${ctx.velocity.getMetrics().velocityCostPerMinuteUsd.toFixed(4)}/min`,
+    };
+    if (isFailedOver) {
+      streamHeaders['X-Ostra-Failover'] = 'true';
+      streamHeaders['X-Ostra-Original-Model'] = requestedModel;
+      streamHeaders['X-Ostra-Routed-Model'] = routedModel;
+    }
 
-    let inputTokens = 0;
+    res.writeHead(200, streamHeaders);
+
+    let inputTokens = estimatedInputTokens;
     let outputTokens = 0;
-    let routedModel = requestedModel;
     let accumulatedText = '';
     let buffer = '';
 
@@ -360,10 +454,10 @@ export async function handleLocalIngress(
             ttftMs = Date.now() - startTime;
           }
 
-          // Forward chunk directly to client immediately
+          // Forward chunk immediately to client with zero added latency
           res.write(value);
 
-          // Parse SSE chunk for token usage and model metadata
+          // Parse SSE chunk
           const textChunk = decoder.decode(value, { stream: true });
           buffer += textChunk;
 
@@ -378,35 +472,14 @@ export async function handleLocalIngress(
 
             try {
               const dataObj = JSON.parse(dataStr);
-              if (dataObj.model) routedModel = dataObj.model;
+              const delta = extractStreamingChunk(dataObj, provider);
 
-              if (isOpenAI) {
-                // OpenAI streaming usage or delta
-                if (dataObj.usage) {
-                  if (dataObj.usage.prompt_tokens) inputTokens = dataObj.usage.prompt_tokens;
-                  if (dataObj.usage.completion_tokens) outputTokens = dataObj.usage.completion_tokens;
-                }
-                const deltaContent = dataObj.choices?.[0]?.delta?.content;
-                if (deltaContent) accumulatedText += deltaContent;
-              } else {
-                // Anthropic SSE events
-                if (dataObj.type === 'message_start' && dataObj.message) {
-                  if (dataObj.message.model) routedModel = dataObj.message.model;
-                  if (dataObj.message.usage?.input_tokens) {
-                    inputTokens = dataObj.message.usage.input_tokens;
-                  }
-                }
-                if (dataObj.type === 'message_delta' && dataObj.usage) {
-                  if (dataObj.usage.output_tokens) {
-                    outputTokens = dataObj.usage.output_tokens;
-                  }
-                }
-                if (dataObj.type === 'content_block_delta' && dataObj.delta?.text) {
-                  accumulatedText += dataObj.delta.text;
-                }
-              }
+              if (delta.routedModel) routedModel = delta.routedModel;
+              if (delta.textDelta) accumulatedText += delta.textDelta;
+              if (typeof delta.inputTokens === 'number') inputTokens = delta.inputTokens;
+              if (typeof delta.outputTokens === 'number') outputTokens = delta.outputTokens;
             } catch {
-              // Ignore unparseable SSE sub-frame
+              // Ignore unparseable SSE frame
             }
           }
         }
@@ -421,14 +494,12 @@ export async function handleLocalIngress(
       res.end();
     }
 
-    // Fallback token estimation if upstream didn't send usage chunks
+    // Precise fallback token counting if upstream omitted usage frame
     if (outputTokens === 0 && accumulatedText.length > 0) {
-      outputTokens = Math.max(1, Math.ceil(accumulatedText.length / 4));
+      outputTokens = estimateTextTokens(accumulatedText);
     }
     if (inputTokens === 0) {
-      // Estimate input tokens from request body messages length
-      const rawPrompt = JSON.stringify(body.messages || body.prompt || '');
-      inputTokens = Math.max(1, Math.ceil(rawPrompt.length / 4));
+      inputTokens = Math.max(1, estimatedInputTokens);
     }
 
     const durationMs = Date.now() - startTime;
@@ -456,7 +527,9 @@ export async function handleLocalIngress(
     return true;
   }
 
-  // 7. Handle Non-Streaming (or Error Response)
+  // =========================================================================
+  // 6. NON-STREAMING RESPONSE (OR ERROR) HANDLER
+  // =========================================================================
   let rawResponseText = '';
   try {
     rawResponseText = await upstreamRes.text();
@@ -472,9 +545,8 @@ export async function handleLocalIngress(
     // Non-JSON response
   }
 
-  let inputTokens = 0;
+  let inputTokens = estimatedInputTokens;
   let outputTokens = 0;
-  let routedModel = requestedModel;
   let errorMessage: string | null = null;
 
   if (statusCode >= 400) {
@@ -484,21 +556,32 @@ export async function handleLocalIngress(
 
     if (isOpenAI) {
       if (parsedRes.usage) {
-        inputTokens = parsedRes.usage.prompt_tokens || 0;
+        inputTokens = parsedRes.usage.prompt_tokens || inputTokens;
         outputTokens = parsedRes.usage.completion_tokens || 0;
       }
     } else {
       // Anthropic
       if (parsedRes.usage) {
-        inputTokens = parsedRes.usage.input_tokens || 0;
+        inputTokens = parsedRes.usage.input_tokens || inputTokens;
         outputTokens = parsedRes.usage.output_tokens || 0;
+      }
+    }
+
+    // If usage block was absent in non-streaming response
+    if (outputTokens === 0) {
+      const completionText =
+        parsedRes.choices?.[0]?.message?.content ||
+        parsedRes.content?.[0]?.text ||
+        '';
+      if (completionText) {
+        outputTokens = estimateTextTokens(completionText);
       }
     }
   }
 
   const costUsd = calculateCost(routedModel, inputTokens, outputTokens);
 
-  // Save to cache if eligible
+  // Save to Cache if eligible
   if (isCacheRequested && statusCode === 200) {
     const cacheKey = crypto
       .createHash('sha256')
@@ -523,13 +606,20 @@ export async function handleLocalIngress(
     res.setHeader('Helicone-Cache-Status', 'MISS');
   }
 
-  // Send upstream response back to client
-  res.writeHead(statusCode, {
+  const responseHeaders: Record<string, string> = {
     'Content-Type': upstreamRes.headers.get('content-type') || 'application/json',
-  });
+    'X-Ostra-Spend-Velocity': `${ctx.velocity.getMetrics().velocityCostPerMinuteUsd.toFixed(4)}/min`,
+    'X-Ostra-Session-Cost': `$${(ctx.repository.getSessionSummary(sessionId).totalCostUsd + costUsd).toFixed(4)}`,
+  };
+  if (isFailedOver) {
+    responseHeaders['X-Ostra-Failover'] = 'true';
+    responseHeaders['X-Ostra-Original-Model'] = requestedModel;
+    responseHeaders['X-Ostra-Routed-Model'] = routedModel;
+  }
+
+  res.writeHead(statusCode, responseHeaders);
   res.end(rawResponseText);
 
-  // Record completed trace
   recordTrace(ctx, {
     id: crypto.randomUUID(),
     requestId,
@@ -553,12 +643,12 @@ export async function handleLocalIngress(
 }
 
 /**
- * Commits trace to SQLite WAL and broadcasts update to SSE consumers.
+ * Commits trace to SQLite WAL and broadcasts updates to SSE consumers.
  */
 function recordTrace(ctx: IngressContext, trace: LocalTraceRecord): void {
   try {
     ctx.repository.insert(trace);
-    ctx.velocity.record(trace.inputTokens, trace.outputTokens, trace.timestamp);
+    ctx.velocity.record(trace.inputTokens, trace.outputTokens, trace.costUsd, trace.timestamp);
     ctx.sseBroker.broadcast('trace', trace);
     ctx.sseBroker.broadcast('metrics', {
       velocity: ctx.velocity.getMetrics(),

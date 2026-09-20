@@ -62,10 +62,14 @@ async function main() {
     node packages/guard-daemon/bin/cli.js [options]
 
   Options:
+    --local, --standalone   Run in 100% local-first standalone mode (no console pairing needed)
     --id <client_id>        Solo Client ID from Console
     --secret <passkey>      Secret passkey from Console
     --port <number>         Ingress proxy port (default: 8080)
     --telemetry <number>    Telemetry UI port (default: 4040)
+    --budget <number>       Session budget cap in USD (default: $5.00)
+    --max-velocity <number> Hard circuit breaker spend rate cap in $/min (default: $2.00/min)
+    --no-failover           Disable deterministic intra-family failover (Sonnet -> Haiku)
     --no-browser            Do not automatically open browser
     --reset                 Reset cached authentication credentials
     -h, --help              Show this help message
@@ -91,14 +95,17 @@ async function main() {
     return Number.isInteger(num) && num >= 1024 && num <= 65535;
   }
 
+  // Check for local-first standalone mode flag
+  const isStandalone = args.includes('--local') || args.includes('--standalone') || args.includes('-l');
+
   // 2. Check for CLI arguments for authentication & custom port
-  let clientId = undefined;
+  let clientId = isStandalone ? 'ost_client_solo_local_standalone' : undefined;
   const idIdx = args.findIndex((a) => a === '--id' || a === '--client-id');
   if (idIdx !== -1 && args[idIdx + 1]) {
     clientId = args[idIdx + 1].trim();
   }
 
-  let secretPasskey = undefined;
+  let secretPasskey = isStandalone ? 'ost_sec_local_standalone_dev' : undefined;
   const secIdx = args.findIndex((a) => a === '--secret' || a === '--pass' || a === '--password');
   if (secIdx !== -1 && args[secIdx + 1]) {
     secretPasskey = args[secIdx + 1].trim();
@@ -187,8 +194,12 @@ async function main() {
 
       const rl = readline.createInterface({ input, output });
       try {
-        const choice = await rl.question('  Press [ENTER] to connect with paired console, or type "c" to enter manually: ');
-        if (choice.trim().toLowerCase() !== 'c') {
+        const choice = await rl.question('  Press [ENTER] to connect with paired console, "s" for standalone local mode, or "c" to enter manually: ');
+        if (choice.trim().toLowerCase() === 's' || choice.trim().toLowerCase() === 'local') {
+          clientId = 'ost_client_solo_local_standalone';
+          secretPasskey = 'ost_sec_local_standalone_dev';
+          customProxyPort = customProxyPort || 8080;
+        } else if (choice.trim().toLowerCase() !== 'c') {
           clientId = expectedPairing.clientId;
           secretPasskey = expectedPairing.secret;
           customProxyPort = customProxyPort || expectedPairing.port || 8080;
@@ -203,7 +214,7 @@ async function main() {
       console.log(`
   \x1b[33m🔒 OstraOps Sentinel — Security Pairing Required\x1b[0m
   ─────────────────────────────────────────────────────────────────────────────
-  Enter the exact pairing credentials shown on your Solo Developer Console:
+  Enter your Solo Developer Console credentials (or "s" for standalone offline mode):
   👉 \x1b[36mhttp://localhost:5174/#solo-guard\x1b[0m (or http://localhost:5173/#solo-guard)
   ─────────────────────────────────────────────────────────────────────────────
       `);
@@ -211,13 +222,17 @@ async function main() {
       const rl = readline.createInterface({ input, output });
       try {
         if (!clientId) {
-          const ans = (await rl.question('  🔑 Enter Client ID (e.g. ost_client_solo_...): ')).trim();
-          if (!isValidClientId(ans)) {
+          const ans = (await rl.question('  🔑 Enter Client ID (or "s" for standalone local mode): ')).trim();
+          if (ans.toLowerCase() === 's' || ans.toLowerCase() === 'local') {
+            clientId = 'ost_client_solo_local_standalone';
+            secretPasskey = 'ost_sec_local_standalone_dev';
+          } else if (!isValidClientId(ans)) {
             console.error(`\x1b[31m❌ Error: Invalid Client ID '${ans}'.\x1b[0m`);
-            console.error('Client ID must start with "ost_client_solo_" from your Solo Developer Console.');
+            console.error('Client ID must start with "ost_client_solo_" or type "s" for local standalone.');
             process.exit(1);
+          } else {
+            clientId = ans;
           }
-          clientId = ans;
         }
 
         if (!secretPasskey) {
@@ -300,10 +315,19 @@ async function main() {
     customGatewayUrl = args[gwIdx + 1].trim();
   }
 
+  let customMaxVelocity;
+  const velIdx = args.findIndex((a) => a === '--max-velocity' || a === '--velocity');
+  if (velIdx !== -1 && args[velIdx + 1]) {
+    customMaxVelocity = parseFloat(args[velIdx + 1]);
+  }
+  const noFailover = args.includes('--no-failover');
+
   const config = loadConfig();
   if (customUiPort) config.uiPort = customUiPort;
   if (customProxyPort) config.proxyPort = customProxyPort;
   if (customBudget) config.sessionBudgetUsd = customBudget;
+  if (customMaxVelocity) config.maxVelocityUsdPerMin = customMaxVelocity;
+  if (noFailover) config.intraFamilyFailover = false;
   if (customGatewayUrl) config.upstreamGatewayUrl = customGatewayUrl;
   if (customDataDir) {
     config.dbPath = path.join(customDataDir, 'daemon.sqlite');

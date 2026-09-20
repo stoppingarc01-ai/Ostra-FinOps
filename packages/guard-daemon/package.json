@@ -6,7 +6,6 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "ostraops-guard": "bin/cli.js",
     "ostraops-guard": "bin/cli.js"
   },
   "files": [
@@ -37,6 +36,8 @@
     "directory": "packages/guard-daemon"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
     "start": "node bin/cli.js",
     "build:ui": "vite build --config ui/vite.config.ts",
     "test:stage1": "tsx test/stage1-check.ts",

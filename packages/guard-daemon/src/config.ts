@@ -14,6 +14,9 @@ export interface DaemonConfig {
   hardCutoff: boolean;
   warningThresholdPct: number;
   rateLimitRpm: number;
+  maxVelocityUsdPerMin: number;
+  maxTpm: number;
+  intraFamilyFailover: boolean;
   upstreamGatewayUrl?: string;
   anthropicApiKey?: string;
   openaiApiKey?: string;
@@ -31,6 +34,9 @@ export const DEFAULT_CONFIG: DaemonConfig = {
   hardCutoff: true,
   warningThresholdPct: 80,
   rateLimitRpm: 60,
+  maxVelocityUsdPerMin: 2.0, // Hard limit of $2.00/min burn rate
+  maxTpm: 200_000, // Hard limit of 200k tokens/min
+  intraFamilyFailover: true, // Auto-cascade (e.g. Sonnet -> Haiku) on upstream outage
 };
 
 /**
@@ -72,6 +78,11 @@ export function loadConfig(customConfigPath?: string): DaemonConfig {
   const hardCutoff = fileConfig.hardCutoff !== undefined ? Boolean(fileConfig.hardCutoff) : DEFAULT_CONFIG.hardCutoff;
   const warningThresholdPct = Number(fileConfig.warningThresholdPct) || DEFAULT_CONFIG.warningThresholdPct;
   const rateLimitRpm = Number(fileConfig.rateLimitRpm) || DEFAULT_CONFIG.rateLimitRpm;
+  const maxVelocityUsdPerMin = Number(process.env.OSTRAOPS_MAX_VELOCITY_USD_PER_MIN) || fileConfig.maxVelocityUsdPerMin || DEFAULT_CONFIG.maxVelocityUsdPerMin;
+  const maxTpm = Number(process.env.OSTRAOPS_MAX_TPM) || fileConfig.maxTpm || DEFAULT_CONFIG.maxTpm;
+  const intraFamilyFailover = fileConfig.intraFamilyFailover !== undefined
+    ? Boolean(fileConfig.intraFamilyFailover)
+    : (process.env.OSTRAOPS_INTRA_FAMILY_FAILOVER !== 'false' ? DEFAULT_CONFIG.intraFamilyFailover : false);
 
   return {
     proxyPort,
@@ -85,6 +96,9 @@ export function loadConfig(customConfigPath?: string): DaemonConfig {
     hardCutoff,
     warningThresholdPct,
     rateLimitRpm,
+    maxVelocityUsdPerMin,
+    maxTpm,
+    intraFamilyFailover,
     upstreamGatewayUrl: process.env.OSTRAOPS_GATEWAY_URL || fileConfig.upstreamGatewayUrl,
     anthropicApiKey: process.env.ANTHROPIC_API_KEY || fileConfig.anthropicApiKey,
     openaiApiKey: process.env.OPENAI_API_KEY || fileConfig.openaiApiKey,

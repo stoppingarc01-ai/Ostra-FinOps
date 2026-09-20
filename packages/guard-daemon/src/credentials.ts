@@ -68,46 +68,30 @@ export interface AccountPayload {
 }
 
 const DEFAULT_CREDENTIALS: StoredCredentials = {
-  linked: true,
-  gatewayUrl: 'https://gateway.ostraops.com/v1',
-  orgId: 'org_98f2b740e1a',
-  orgName: 'Acme Engineering',
-  projectId: 'prj_11a09d3b4',
-  projectName: 'AI Coding Agents',
-  userEmail: 'solo@ostraops.com',
-  activeKeyId: 'key_live_dev',
+  linked: false,
+  gatewayUrl: 'http://127.0.0.1:8080/v1',
+  orgId: 'local_standalone',
+  orgName: 'Local Daemon (Unlinked)',
+  projectId: 'prj_local',
+  projectName: 'Local Development',
+  userEmail: 'local-dev@localhost',
+  activeKeyId: 'key_local_default',
   virtualKeys: [
     {
-      id: 'key_live_dev',
-      name: 'Development Virtual Key',
-      key: 'ost_live_9b4e721a94f08c3d17e5a820b41e3a9f',
-      maskedKey: 'ost_live_••••••••••••••••3a9f',
-      tier: 'Enterprise Gateway (Auto-Failover On)',
-      createdAt: '2026-05-01T10:00:00Z',
-    },
-    {
-      id: 'key_live_stg',
-      name: 'Staging Ingress Key',
-      key: 'ost_live_6c8d231e78a04b1f92d6e410a72b8d1c',
-      maskedKey: 'ost_live_••••••••••••••••8d1c',
-      tier: 'Standard Gateway',
-      createdAt: '2026-06-15T14:30:00Z',
-    },
-    {
-      id: 'key_live_personal',
-      name: 'Personal Standalone Key',
-      key: 'ost_live_1f4a908d32b56e7c81a0d240e93a7b5e',
-      maskedKey: 'ost_live_••••••••••••••••7b5e',
-      tier: 'Solo Developer (Direct Routing)',
-      createdAt: '2026-07-20T08:00:00Z',
+      id: 'key_local_default',
+      name: 'Local Ingress Key',
+      key: 'ost_live_local_dev_key',
+      maskedKey: 'ost_live_••••••••••••••••local',
+      tier: 'Local First (Offline Capable)',
+      createdAt: new Date().toISOString(),
     },
   ],
   preferences: {
-    syncAggregatedMetrics: true,
-    allowPromptCaching: false,
+    syncAggregatedMetrics: false,
+    allowPromptCaching: true,
     offlineSpooling: true,
   },
-  linkedAt: '2026-05-10T12:00:00Z',
+  linkedAt: new Date().toISOString(),
 };
 
 function getCredentialsFilePath(): string {
