@@ -1,37 +1,15 @@
 import React from 'react';
+import { OstraLogo, OstraIcon, OstraAppIcon } from './OstraBrand';
 
 export const OstraOpsLogoAuth: React.FC<{ className?: string }> = ({
   className = 'w-9 h-9',
 }) => (
-  <div className="flex items-center gap-2.5">
-    <div className={`relative ${className} flex items-center justify-center shrink-0`}>
-      <svg viewBox="0 0 36 36" fill="none" className="w-full h-full">
-        {/* Outer Ring */}
-        <ellipse
-          cx="18"
-          cy="18"
-          rx="14"
-          ry="14"
-          stroke="#EAE4D8"
-          strokeWidth="3.2"
-          strokeLinecap="round"
-          strokeDasharray="60 30"
-        />
-        {/* Inner Arc */}
-        <path
-          d="M12 7 C 22 12, 22 24, 12 29"
-          stroke="#D4AF77"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-        />
-        {/* Core Dot */}
-        <circle cx="18" cy="18" r="2.5" fill="#D4AF77" />
-      </svg>
-    </div>
-    <span className="text-xl font-bold tracking-tight text-white font-sans">
-      OstraOps
-    </span>
-  </div>
+  <OstraLogo
+    iconClassName={className}
+    textClassName="text-xl font-bold tracking-tight text-white font-sans"
+    variant="gold"
+    showTagline={false}
+  />
 );
 
 export const GoogleAuthIcon: React.FC<{ className?: string }> = ({
@@ -410,8 +388,6 @@ export const SignupTabletScene: React.FC<{ className?: string }> = ({
     </div>
   );
 };
-
-import { OstraLogo, OstraIcon, OstraAppIcon } from './OstraBrand';
 
 /**
  * Modern golden Ostra emblem + wordmark matching the new uploaded mock

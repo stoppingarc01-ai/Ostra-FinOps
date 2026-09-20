@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
+import { OstraLogo } from './OstraBrand';
 
 interface FooterProps {
   onNavigate?: (route: any) => void;
@@ -14,16 +15,14 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <div className="col-span-2 space-y-4">
             <button 
               onClick={() => onNavigate && onNavigate('home')}
-              className="flex items-center gap-2.5 text-left cursor-pointer"
+              className="flex items-center gap-2.5 text-left cursor-pointer group"
             >
-              <svg viewBox="0 0 36 36" fill="none" className="w-7 h-7">
-                <ellipse cx="18" cy="18" rx="14" ry="14" stroke="#C59E5F" strokeWidth="3" strokeLinecap="round" strokeDasharray="60 30" />
-                <path d="M12 7 C 22 12, 22 24, 12 29" stroke="#18181B" strokeWidth="3" strokeLinecap="round" />
-                <circle cx="18" cy="18" r="2" fill="#C59E5F" />
-              </svg>
-              <span className="text-base font-bold tracking-tight text-charcoal-900">
-                Ostra<span className="text-charcoal-600 font-medium">Ops</span>
-              </span>
+              <OstraLogo
+                iconClassName="w-8 h-8 group-hover:scale-105 transition-transform duration-300"
+                textClassName="text-xl font-bold tracking-tight text-charcoal-900 font-sans"
+                variant="gold"
+                showTagline={false}
+              />
             </button>
             <p className="text-xs text-charcoal-500 max-w-sm leading-relaxed">
               Deterministic financial gateway and observability engine for autonomous AI coding agents (Cursor, Cline, Antigravity, Aider).

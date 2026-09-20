@@ -28,6 +28,7 @@ import { CookieBanner } from './components/CookieBanner';
 import { Footer } from './components/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { OstraIcon } from './components/OstraBrand';
 
 export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'auth-showcase' | 'forgot-password' | 'solo-guard' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'about' | '404' | '500' | 'build-error' | '429';
 
@@ -170,12 +171,8 @@ const AppInner: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <svg viewBox="0 0 36 36" fill="none" className="w-10 h-10 animate-pulse">
-            <ellipse cx="18" cy="18" rx="14" ry="14" stroke="#C59E5F" strokeWidth="3.2" strokeLinecap="round" strokeDasharray="60 30" />
-            <path d="M12 7 C 22 12, 22 24, 12 29" stroke="#18181B" strokeWidth="3.5" strokeLinecap="round" />
-            <circle cx="18" cy="18" r="2.5" fill="#C59E5F" />
-          </svg>
-          <Loader2 className="w-5 h-5 animate-spin text-[#C59E5F]" />
+          <OstraIcon className="w-12 h-12 animate-pulse" variant="gold" />
+          <Loader2 className="w-5 h-5 animate-spin text-ostraGold-500" />
         </div>
       </div>
     );
