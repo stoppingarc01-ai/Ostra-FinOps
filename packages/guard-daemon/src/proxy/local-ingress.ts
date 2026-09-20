@@ -48,6 +48,22 @@ async function readJsonBody(req: http.IncomingMessage, maxBytes = 10 * 1024 * 10
 }
 
 /**
+ * In-memory response cache for deterministic / cached requests (Helicone Parity).
+ * Persists across requests with LRU max capacity.
+ */
+interface CacheEntry {
+  responseBody: string;
+  contentType: string;
+  statusCode: number;
+  inputTokens: number;
+  outputTokens: number;
+  routedModel: string;
+  expiresAt: number;
+}
+const MAX_CACHE_ENTRIES = 1000;
+const localResponseCache = new Map<string, CacheEntry>();
+
+/**
  * Handles incoming OpenAI and Anthropic proxy requests.
  * Returns true if the route was matched and handled, false otherwise.
  */
@@ -120,7 +136,13 @@ export async function handleLocalIngress(
   const startTime = Date.now();
   let ttftMs: number | null = null;
   const provider = isOpenAI ? 'openai' : 'anthropic';
-  const sessionId = (req.headers['x-session-id'] as string) || (req.headers['ostraops-session'] as string) || 'default-session';
+  const sessionId =
+    (req.headers['x-session-id'] as string) ||
+    (req.headers['ostraops-session'] as string) ||
+    (req.headers['helicone-session-id'] as string) ||
+    (req.headers['helicone-user-id'] as string) ||
+    (req.headers['x-user-id'] as string) ||
+    'default-session';
 
   // 1. Circuit Breaker: Check session budget
   try {
@@ -158,23 +180,16 @@ export async function handleLocalIngress(
   const isStreaming = Boolean(body.stream);
   const requestId = (req.headers['x-request-id'] as string) || `req_${crypto.randomBytes(8).toString('hex')}`;
 
+  // Helicone Parity: Inject stream_options to get ground-truth token usage in final SSE frame
+  if (isOpenAIChat && isStreaming && !body.stream_options) {
+    body.stream_options = { include_usage: true };
+  }
+
   // 3. Resolve upstream destination and credentials
   let upstreamUrl: string;
   const upstreamHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-
-// Simple in-memory LRU response cache for deterministic / cached requests (Helicone parity)
-interface CacheEntry {
-  responseBody: string;
-  contentType: string;
-  statusCode: number;
-  inputTokens: number;
-  outputTokens: number;
-  routedModel: string;
-  expiresAt: number;
-}
-const localResponseCache = new Map<string, CacheEntry>();
 
   if (isOpenAI) {
     const base = ctx.config.upstreamGatewayUrl || 'https://api.openai.com';
@@ -214,10 +229,18 @@ const localResponseCache = new Map<string, CacheEntry>();
   }
 
   // 3.5 Check Response Cache (Helicone Cache Parity)
-  const isCacheRequested = 
-    req.headers['x-ostra-cache'] === 'true' || 
+  const isCacheRequested =
+    req.headers['x-ostra-cache'] === 'true' ||
     req.headers['helicone-cache-enabled'] === 'true' ||
     (body.temperature === 0 && !isStreaming);
+
+  const customTtlSec = parseInt(
+    (req.headers['x-ostra-cache-ttl'] as string) ||
+    (req.headers['helicone-cache-ttl'] as string) ||
+    '3600',
+    10
+  );
+  const cacheTtlMs = Math.max(60, isNaN(customTtlSec) ? 3600 : customTtlSec) * 1000;
 
   if (isCacheRequested && !isStreaming) {
     const cacheKey = crypto
@@ -230,6 +253,7 @@ const localResponseCache = new Map<string, CacheEntry>();
       res.writeHead(cached.statusCode, {
         'Content-Type': cached.contentType,
         'X-Ostra-Cache': 'HIT',
+        'Helicone-Cache-Status': 'HIT',
       });
       res.end(cached.responseBody);
 
@@ -480,6 +504,12 @@ const localResponseCache = new Map<string, CacheEntry>();
       .createHash('sha256')
       .update(`${provider}:${requestedModel}:${JSON.stringify(body)}`)
       .digest('hex');
+
+    if (localResponseCache.size >= MAX_CACHE_ENTRIES) {
+      const oldestKey = localResponseCache.keys().next().value;
+      if (oldestKey) localResponseCache.delete(oldestKey);
+    }
+
     localResponseCache.set(cacheKey, {
       responseBody: rawResponseText,
       contentType: upstreamRes.headers.get('content-type') || 'application/json',
@@ -487,9 +517,10 @@ const localResponseCache = new Map<string, CacheEntry>();
       inputTokens,
       outputTokens,
       routedModel,
-      expiresAt: Date.now() + 1000 * 60 * 60, // 1 hour TTL
+      expiresAt: Date.now() + cacheTtlMs,
     });
     res.setHeader('X-Ostra-Cache', 'MISS');
+    res.setHeader('Helicone-Cache-Status', 'MISS');
   }
 
   // Send upstream response back to client
