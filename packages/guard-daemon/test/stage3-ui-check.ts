@@ -12,6 +12,8 @@ import { readOrCreateDaemonToken } from '../src/security.js';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const candidates = [
+  path.resolve(currentDir, '../../../dist'),
+  path.resolve(currentDir, '../../dist'),
   path.resolve(currentDir, '../dist/ui'),
   path.resolve(currentDir, '../../dist/ui'),
   path.resolve(currentDir, '../ui/dist'),

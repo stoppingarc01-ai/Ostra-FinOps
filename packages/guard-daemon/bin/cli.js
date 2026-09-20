@@ -321,7 +321,13 @@ async function main() {
   const repository = new TraceRepository(db);
   const token = readOrCreateDaemonToken(config.tokenPath);
 
-  const staticDir = path.resolve(__dirname, '../dist/ui');
+  const staticCandidates = [
+    path.resolve(__dirname, '../../../dist'),
+    path.resolve(__dirname, '../../dist'),
+    path.resolve(__dirname, '../dist/ui'),
+    path.resolve(process.cwd(), 'dist'),
+  ];
+  const staticDir = staticCandidates.find((p) => fs.existsSync(path.join(p, 'index.html'))) || staticCandidates[0];
 
   const daemon = createDaemonServer({
     config,
