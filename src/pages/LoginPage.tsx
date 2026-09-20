@@ -86,8 +86,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
       });
       showToast(error.message || 'Authentication failed.');
     } else {
-      showToast('Welcome back! Taking you to workspace setup & onboarding...');
-      setTimeout(() => onNavigate('onboarding'), 400);
+      showToast('Welcome back! Taking you to your dashboard...');
+      setTimeout(() => onNavigate('dashboard'), 400);
     }
   };
 
@@ -98,8 +98,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     if (error) {
       showToast(error.message);
     } else {
-      showToast('Signed in! Taking you to workspace setup & onboarding...');
-      setTimeout(() => onNavigate('onboarding'), 400);
+      showToast('Signed in successfully! Loading your dashboard...');
+      setTimeout(() => onNavigate('dashboard'), 400);
     }
   };
 

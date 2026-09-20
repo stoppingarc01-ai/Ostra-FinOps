@@ -191,7 +191,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
         .join('')
         .toUpperCase()
         .slice(0, 2)
-    : 'SP';
+    : 'DV';
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#16181B] font-sans flex flex-col justify-between selection:bg-[#E2BA7D]/30 selection:text-[#16181B]">
