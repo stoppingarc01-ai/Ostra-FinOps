@@ -4,7 +4,7 @@ import type { TraceRepository, TraceFilterOptions } from '../db/repository.js';
 import type { TaskRepository, LocalTaskRecord, TaskPriority, TaskStatus } from '../db/tasks-repository.js';
 import type { RollingVelocityEngine } from '../engine/velocity.js';
 import type { SseBroker } from '../engine/sse-broker.js';
-import { authorizeRequest, verifyDaemonToken } from '../security.js';
+import { authorizeRequest, verifyDaemonToken, isLoopbackHost } from '../security.js';
 import {
   getAccountPayload,
   updateAccountPreferences,
@@ -34,28 +34,52 @@ export function sendJson(
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Content-Length': String(Buffer.byteLength(payload)),
-    'Access-Control-Allow-Origin': origin || '*',
     'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-OstraOps-Daemon-Token, Last-Event-ID',
-    'Access-Control-Allow-Credentials': 'true',
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'no-referrer',
     ...extraHeaders,
   };
+
+  // Only permit credentials and echo origin if it is a validated loopback origin
+  if (origin) {
+    try {
+      const parsed = new URL(origin);
+      if (isLoopbackHost(parsed.hostname)) {
+        headers['Access-Control-Allow-Origin'] = origin;
+        headers['Access-Control-Allow-Credentials'] = 'true';
+        headers['Vary'] = 'Origin';
+      }
+    } catch {}
+  }
+
   res.writeHead(statusCode, headers);
   res.end(payload);
 }
 
 export function handleCorsPreflight(req: IncomingMessage, res: ServerResponse): void {
-  res.writeHead(204, {
-    'Access-Control-Allow-Origin': (req.headers['origin'] as string) || '*',
+  const origin = req.headers['origin'] as string | undefined;
+  const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-OstraOps-Daemon-Token, Last-Event-ID',
     'Access-Control-Max-Age': '86400',
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
-  });
+  };
+
+  if (origin) {
+    try {
+      const parsed = new URL(origin);
+      if (isLoopbackHost(parsed.hostname)) {
+        headers['Access-Control-Allow-Origin'] = origin;
+        headers['Access-Control-Allow-Credentials'] = 'true';
+        headers['Vary'] = 'Origin';
+      }
+    } catch {}
+  }
+
+  res.writeHead(204, headers);
   res.end();
 }
 

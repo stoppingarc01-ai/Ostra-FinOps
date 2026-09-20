@@ -223,6 +223,39 @@ export interface PairCredentialsInput {
   projectName?: string;
 }
 
+function validateGatewayUrl(urlStr: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(urlStr);
+  } catch {
+    throw new Error('Invalid gateway URL format');
+  }
+
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw new Error('Invalid gateway protocol: Only HTTPS (or local loopback HTTP) is permitted');
+  }
+
+  // If HTTP, ensure it is exclusively loopback
+  if (parsed.protocol === 'http:') {
+    const host = parsed.hostname.toLowerCase();
+    if (host !== '127.0.0.1' && host !== 'localhost' && host !== '::1') {
+      throw new Error('Insecure HTTP is only permitted for local loopback development (127.0.0.1)');
+    }
+  }
+
+  // Block AWS/GCP/Azure instance metadata endpoints and link-local addresses
+  const hostname = parsed.hostname.toLowerCase();
+  if (
+    hostname === '169.254.169.254' ||
+    hostname === 'metadata.google.internal' ||
+    hostname.startsWith('169.254.')
+  ) {
+    throw new Error('Gateway URL cannot point to internal cloud metadata endpoints');
+  }
+
+  return urlStr.trim().replace(/\/+$/, '');
+}
+
 export function pairMachineCredentials(input: PairCredentialsInput): AccountPayload {
   const key = input.virtualKey.trim();
   if (!key) {
@@ -245,7 +278,11 @@ export function pairMachineCredentials(input: PairCredentialsInput): AccountPayl
   };
 
   creds.linked = true;
-  creds.gatewayUrl = input.gatewayUrl?.trim() || creds.gatewayUrl || 'https://gateway.ostraops.com/v1';
+  if (input.gatewayUrl && input.gatewayUrl.trim()) {
+    creds.gatewayUrl = validateGatewayUrl(input.gatewayUrl.trim());
+  } else {
+    creds.gatewayUrl = creds.gatewayUrl || 'https://gateway.ostraops.com/v1';
+  }
   creds.orgName = input.orgName?.trim() || 'Connected Organization';
   creds.projectName = input.projectName?.trim() || 'Active Project';
   creds.linkedAt = new Date().toISOString();

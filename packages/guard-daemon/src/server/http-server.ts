@@ -9,7 +9,7 @@ import { TraceRepository, type LocalTraceRecord } from '../db/repository.js';
 import { TaskRepository } from '../db/tasks-repository.js';
 import { RollingVelocityEngine } from '../engine/velocity.js';
 import { SseBroker } from '../engine/sse-broker.js';
-import { readOrCreateDaemonToken, isLoopbackHost } from '../security.js';
+import { readOrCreateDaemonToken, isLoopbackHost, verifyDaemonToken } from '../security.js';
 import { handleApiRoute, type RouteContext } from './api-routes.js';
 import { handleLocalIngress, type IngressContext } from '../proxy/local-ingress.js';
 
@@ -132,8 +132,15 @@ function serveStaticFile(
     const indexPath = path.join(resolvedBase, 'index.html');
     if (fs.existsSync(indexPath)) {
       const headers: Record<string, string> = { 'Content-Type': 'text/html; charset=utf-8' };
-      if (token) {
-        headers['Set-Cookie'] = `ostraops_token=${token}; Path=/; HttpOnly; SameSite=Lax`;
+      // Only set session cookie if client proved possession of the token via query param
+      if (token && rawUrl.includes('token=')) {
+        try {
+          const parsed = new URL(rawUrl, 'http://127.0.0.1');
+          const providedToken = parsed.searchParams.get('token');
+          if (providedToken && verifyDaemonToken(providedToken, token)) {
+            headers['Set-Cookie'] = `ostraops_token=${token}; Path=/; HttpOnly; SameSite=Strict`;
+          }
+        } catch {}
       }
       res.writeHead(200, headers);
       fs.createReadStream(indexPath).pipe(res);
@@ -216,7 +223,7 @@ export function createDaemonServer(options: DaemonServerOptions): DaemonServerIn
       return;
     }
 
-    // 4. Fallback placeholder
+    // 4. Fallback placeholder (no raw token exposed)
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(`
       <!DOCTYPE html>
@@ -225,7 +232,7 @@ export function createDaemonServer(options: DaemonServerOptions): DaemonServerIn
         <body style="font-family: monospace; padding: 2rem; background: #0f172a; color: #f8fafc;">
           <h2>OstraOps Guard Daemon</h2>
           <p>Status: Healthy</p>
-          <p>Session Token: <code>${token}</code></p>
+          <p>Security: Loopback Local-First Guard Active</p>
           <p>Health Check: <a href="/healthz" style="color: #38bdf8;">/healthz</a></p>
         </body>
       </html>

@@ -7,6 +7,7 @@ import { SseBroker } from '../engine/sse-broker.js';
 import { calculateCost } from './pricing.js';
 import { estimateMessageTokens, estimateTextTokens, extractStreamingChunk } from './tokenizer.js';
 import { getIntraFamilyFallback, isFailoverEligible } from './failover.js';
+import { isLoopbackHost } from '../security.js';
 
 export interface IngressContext {
   config: DaemonConfig;
@@ -77,10 +78,36 @@ export async function handleLocalIngress(
   const url = (req.url || '/').split('?')[0];
   const method = req.method?.toUpperCase();
 
+  // Validate Cross-Origin requests: block third-party websites from abusing local proxy
+  const origin = req.headers['origin'] as string | undefined;
+  if (origin) {
+    try {
+      const parsedOrigin = new URL(origin);
+      if (!isLoopbackHost(parsedOrigin.hostname)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(
+          JSON.stringify({
+            error: {
+              message: `OstraOps Security Guard: Cross-origin access from external web origin '${origin}' is forbidden.`,
+              type: 'security_error',
+              code: 'untrusted_origin',
+            },
+          })
+        );
+        return true;
+      }
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+    } catch {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: { message: 'Invalid Origin header', type: 'security_error' } }));
+      return true;
+    }
+  }
+
   // 1. Standard Model Discovery (Fixes Cursor / Cline / LibreChat connection tests)
   const isModelsRoute = url === '/v1/models' || url === '/models';
   if (isModelsRoute) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', '*');
     if (method === 'OPTIONS') {
@@ -118,8 +145,7 @@ export async function handleLocalIngress(
     return false;
   }
 
-  // Support CORS preflight for browser-based extensions or local apps
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Support CORS preflight for browser-based extensions or local apps on loopback
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', '*');
 
