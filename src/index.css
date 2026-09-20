@@ -124,6 +124,11 @@
   animation: float-3d-4 8s ease-in-out infinite;
 }
 
+.hover-pause:hover,
+.group:hover.hover-pause {
+  animation-play-state: paused;
+}
+
 .animate-pulse-halo {
   animation: pulse-halo 4s ease-in-out infinite;
 }

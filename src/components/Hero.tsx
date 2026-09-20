@@ -188,45 +188,51 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
 
         </div>
 
-        {/* Model Providers Dock — Only logos by default, details revealed on hover */}
-        <div className="mt-12 pt-6 border-t border-[#EAE5DB]/60 flex flex-col items-center justify-center gap-3">
-          <div className="flex items-center gap-2 text-[11px] font-mono text-charcoal-500 uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-ostraGold-500" />
-            <span>Supported LLM Lineages • Hover for Live Gateway Telemetry</span>
+        {/* Model Providers Dock — Floating 3D Satellite Logos that expand details on hover */}
+        <div className="mt-14 pt-8 border-t border-[#EAE5DB]/60 flex flex-col items-center justify-center gap-4">
+          <div className="flex items-center gap-2 text-[11px] font-mono font-medium text-charcoal-500 uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-ostraGold-500 animate-ping" />
+            <span>Supported LLM Lineages • Hover Floating Logo for Telemetry</span>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 p-2 sm:p-2.5 rounded-2xl bg-white/85 backdrop-blur-md border border-[#EAE5DB] shadow-sm">
-            {providerBadges.map((provider) => (
-              <div
-                key={provider.name}
-                onClick={onNavigateToModels}
-                className="relative group flex items-center justify-center cursor-pointer"
-                title={`${provider.name} (${provider.status})`}
-              >
-                {/* Default: Just the clean logo */}
-                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-200 transform group-hover:scale-110 group-hover:shadow-md ${provider.iconBg}`}>
-                  <provider.Logo className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                </div>
+          <div className="flex flex-wrap items-center justify-center gap-3.5 sm:gap-5 py-3 perspective-1200">
+            {providerBadges.map((provider, idx) => {
+              const floatClass = 
+                idx % 4 === 0 ? 'animate-float-1' :
+                idx % 4 === 1 ? 'animate-float-2' :
+                idx % 4 === 2 ? 'animate-float-3' : 'animate-float-4';
 
-                {/* Hover Details Popover — exact match for the user's satellite pill */}
-                <div className="opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-md border border-[#EAE5DB] shadow-card-3d whitespace-nowrap">
-                  <div className={`w-6 h-6 rounded-lg ${provider.iconBg} flex items-center justify-center p-1 shadow-xs shrink-0`}>
-                    <provider.Logo className="w-3.5 h-3.5" />
+              return (
+                <div
+                  key={provider.name}
+                  onClick={onNavigateToModels}
+                  className={`${floatClass} hover-pause preserve-3d group relative flex items-center cursor-pointer transition-transform duration-300 hover:scale-105`}
+                  style={{ animationDelay: `${idx * 0.4}s` }}
+                  title={`${provider.name} (${provider.status})`}
+                >
+                  {/* Floating 3D Pill — expands smoothly on hover */}
+                  <div className="flex items-center rounded-2xl bg-white/95 backdrop-blur-md border border-[#EAE5DB] shadow-card-3d transition-all duration-300 group-hover:border-ostraGold-400 group-hover:shadow-dashboard-3d p-1.5 sm:p-2">
+                    {/* Default: Just the clean logo tile */}
+                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all duration-200 ${provider.iconBg} shadow-xs shrink-0`}>
+                      <provider.Logo className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                    </div>
+
+                    {/* Details: Reveals on hover */}
+                    <div className="max-w-0 opacity-0 group-hover:max-w-[240px] group-hover:opacity-100 group-hover:px-2.5 transition-all duration-300 ease-out overflow-hidden flex items-center gap-2.5 whitespace-nowrap">
+                      <div className="flex flex-col text-left py-0.5">
+                        <span className="text-[11px] font-bold text-charcoal-900 font-display leading-tight">
+                          {provider.name}
+                        </span>
+                        <span className="text-[9px] text-emerald-600 font-mono font-semibold">
+                          {provider.status}
+                        </span>
+                      </div>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                    </div>
                   </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-[11px] font-bold text-charcoal-900 font-display leading-tight">
-                      {provider.name}
-                    </span>
-                    <span className="text-[9px] text-emerald-600 font-mono font-semibold">
-                      {provider.status}
-                    </span>
-                  </div>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-0.5 shrink-0" />
-                  {/* Caret pointing down to the logo */}
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-white" />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
