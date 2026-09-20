@@ -1,15 +1,55 @@
 import React, { useState } from 'react';
 import { ArrowRight, Terminal, Copy, Check, ShieldCheck, Zap, Layers, Activity, ChevronDown } from 'lucide-react';
 import { HeroDashboard3D } from './HeroDashboard3D';
-import { AnthropicLogo, OpenAILogo, GeminiLogo, MetaLlamaLogo } from './LLMLogos';
+import { AnthropicLogo, OpenAILogo, GeminiLogo, MetaLlamaLogo, DeepSeekLogo, MistralLogo } from './LLMLogos';
 
 interface HeroProps {
   onNavigateToPricing?: () => void;
   onNavigateToUiShowcase?: () => void;
+  onNavigateToModels?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiShowcase }) => {
+export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiShowcase, onNavigateToModels }) => {
   const [copied, setCopied] = useState(false);
+
+  const providerBadges = [
+    {
+      name: 'Claude 3.7 Sonnet',
+      status: 'Protected • 310ms',
+      Logo: AnthropicLogo,
+      iconBg: 'bg-charcoal-900 text-white',
+    },
+    {
+      name: 'GPT-4o & o3-mini',
+      status: 'Protected • 280ms',
+      Logo: OpenAILogo,
+      iconBg: 'bg-emerald-700 text-white',
+    },
+    {
+      name: 'Gemini 2.5 Pro',
+      status: 'Protected • 190ms',
+      Logo: GeminiLogo,
+      iconBg: 'bg-white text-blue-600 border border-[#EAE5DB]',
+    },
+    {
+      name: 'Llama 3.3 70B',
+      status: 'Protected • Local',
+      Logo: MetaLlamaLogo,
+      iconBg: 'bg-sky-600 text-white',
+    },
+    {
+      name: 'DeepSeek R1 & V3',
+      status: 'Protected • 420ms',
+      Logo: DeepSeekLogo,
+      iconBg: 'bg-blue-700 text-white',
+    },
+    {
+      name: 'Mistral Large 2',
+      status: 'Protected • 220ms',
+      Logo: MistralLogo,
+      iconBg: 'bg-amber-600 text-white',
+    },
+  ];
 
   const copyCommand = () => {
     navigator.clipboard.writeText('npx ostraops-guard');
@@ -42,52 +82,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
       <div className="hero-particle top-[45%] left-[8%]" style={{ animationDelay: '4s' }} />
       <div className="hero-particle top-[70%] left-[35%]" style={{ animationDelay: '1s', width: 6, height: 6, opacity: 0.25 }} />
 
-      {/* Floating 3D LLM Satellite Badges in the Background / Foreground */}
-      
-      {/* Satellite 1: Claude Floating Pill (Top Right of Text) */}
-      <div className="hidden lg:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-[#EAE5DB] shadow-card-3d absolute top-20 left-[42%] z-20 animate-float-1 preserve-3d">
-        <div className="w-6 h-6 rounded-lg bg-charcoal-900 text-white flex items-center justify-center p-1 shadow-xs">
-          <AnthropicLogo className="w-3.5 h-3.5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[11px] font-bold text-charcoal-900 font-display leading-tight">Claude 3.7 Sonnet</span>
-          <span className="text-[9px] text-emerald-600 font-mono font-semibold">Protected • 310ms</span>
-        </div>
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-1" />
-      </div>
 
-      {/* Satellite 2: OpenAI Floating Pill (Left Edge) */}
-      <div className="hidden xl:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-[#EAE5DB] shadow-card-3d absolute top-72 left-[2%] z-20 animate-float-2 preserve-3d">
-        <div className="w-6 h-6 rounded-lg bg-emerald-700 text-white flex items-center justify-center p-1 shadow-xs">
-          <OpenAILogo className="w-3.5 h-3.5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[11px] font-bold text-charcoal-900 font-display leading-tight">GPT-4o & o3-mini</span>
-          <span className="text-[9px] text-charcoal-500 font-mono">Hard Cap: $15.00/day</span>
-        </div>
-      </div>
-
-      {/* Satellite 3: Gemini Floating Pill (Bottom of Left Column) */}
-      <div className="hidden lg:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-[#EAE5DB] shadow-card-3d absolute bottom-12 left-[36%] z-20 animate-float-3 preserve-3d">
-        <div className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center p-1 shadow-xs">
-          <GeminiLogo className="w-3.5 h-3.5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[11px] font-bold text-charcoal-900 font-display leading-tight">Gemini 2.5 Pro</span>
-          <span className="text-[9px] text-blue-600 font-mono font-semibold">2M Context Guard</span>
-        </div>
-      </div>
-
-      {/* Satellite 4: Meta Llama Floating Pill (Right Top Edge) */}
-      <div className="hidden 2xl:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-[#EAE5DB] shadow-card-3d absolute top-28 right-[4%] z-20 animate-float-4 preserve-3d">
-        <div className="w-6 h-6 rounded-lg bg-sky-600 text-white flex items-center justify-center p-1 shadow-xs">
-          <MetaLlamaLogo className="w-3.5 h-3.5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[11px] font-bold text-charcoal-900 font-display leading-tight">Llama 3.3 70B</span>
-          <span className="text-[9px] text-sky-600 font-mono font-semibold">Local vLLM Loopback</span>
-        </div>
-      </div>
 
       <div className="max-w-[1540px] mx-auto px-6 sm:px-8 lg:px-12">
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 xl:gap-12 items-center">
@@ -193,8 +188,50 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
 
         </div>
 
+        {/* Model Providers Dock — Only logos by default, details revealed on hover */}
+        <div className="mt-12 pt-6 border-t border-[#EAE5DB]/60 flex flex-col items-center justify-center gap-3">
+          <div className="flex items-center gap-2 text-[11px] font-mono text-charcoal-500 uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-ostraGold-500" />
+            <span>Supported LLM Lineages • Hover for Live Gateway Telemetry</span>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-3 p-2 sm:p-2.5 rounded-2xl bg-white/85 backdrop-blur-md border border-[#EAE5DB] shadow-sm">
+            {providerBadges.map((provider) => (
+              <div
+                key={provider.name}
+                onClick={onNavigateToModels}
+                className="relative group flex items-center justify-center cursor-pointer"
+                title={`${provider.name} (${provider.status})`}
+              >
+                {/* Default: Just the clean logo */}
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-200 transform group-hover:scale-110 group-hover:shadow-md ${provider.iconBg}`}>
+                  <provider.Logo className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                </div>
+
+                {/* Hover Details Popover — exact match for the user's satellite pill */}
+                <div className="opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-md border border-[#EAE5DB] shadow-card-3d whitespace-nowrap">
+                  <div className={`w-6 h-6 rounded-lg ${provider.iconBg} flex items-center justify-center p-1 shadow-xs shrink-0`}>
+                    <provider.Logo className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[11px] font-bold text-charcoal-900 font-display leading-tight">
+                      {provider.name}
+                    </span>
+                    <span className="text-[9px] text-emerald-600 font-mono font-semibold">
+                      {provider.status}
+                    </span>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-0.5 shrink-0" />
+                  {/* Caret pointing down to the logo */}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-white" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Scroll down indicator */}
-        <div className="hidden md:flex justify-center mt-8">
+        <div className="hidden md:flex justify-center mt-6">
           <button 
             onClick={scrollToUi}
             className="animate-soft-bounce flex flex-col items-center gap-1 text-charcoal-400 hover:text-charcoal-600 transition-colors cursor-pointer"

@@ -342,8 +342,11 @@ const AppInner: React.FC = () => {
       <main>
         {currentRoute === 'home' ? (
           <>
-            {/* Hero Section with 3D Interactive Dashboard and Floating Satellites */}
-            <Hero onNavigateToPricing={() => navigate('pricing')} />
+            {/* Hero Section with 3D Interactive Dashboard and Provider Dock */}
+            <Hero 
+              onNavigateToPricing={() => navigate('pricing')} 
+              onNavigateToModels={() => navigate('models')}
+            />
 
             {/* Floating 3D Multi-Model Mesh & Provider Ecosystem */}
             <FloatingLLMHub onNavigateToModels={() => navigate('models')} />
