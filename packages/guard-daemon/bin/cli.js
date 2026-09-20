@@ -1,4 +1,12 @@
 #!/usr/bin/env node
+// Validate Node.js runtime version
+const [nodeMajor] = process.versions.node.split('.').map(Number);
+if (nodeMajor < 22) {
+  console.error(`\x1b[31m❌ Error: Node.js 22.0+ is required for OstraOps Guard SQLite WAL engine (detected v${process.versions.node}).\x1b[0m`);
+  console.error('Please upgrade Node.js to v22+ (https://nodejs.org) to run ostraops-guard.');
+  process.exit(1);
+}
+
 import { exec } from 'node:child_process';
 import net from 'node:net';
 import path from 'node:path';

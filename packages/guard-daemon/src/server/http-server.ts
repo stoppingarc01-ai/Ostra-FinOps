@@ -314,7 +314,7 @@ export function createDaemonServer(options: DaemonServerOptions): DaemonServerIn
 
     recordAndBroadcast(trace: LocalTraceRecord): void {
       options.repository.insert(trace);
-      velocity.record(trace.inputTokens, trace.outputTokens, trace.timestamp);
+      velocity.record(trace.inputTokens, trace.outputTokens, trace.costUsd, trace.timestamp);
       sseBroker.broadcast('trace', trace);
       sseBroker.broadcast('metrics', {
         velocity: velocity.getMetrics(),
