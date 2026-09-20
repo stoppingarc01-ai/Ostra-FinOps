@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, ArrowUpRight, Menu, X, LogOut } from 'lucide-react';
+import { ArrowRight, Menu, X, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { OstraLogo } from './OstraBrand';
 
@@ -175,17 +175,19 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
 
         {/* Right CTA — changes based on auth state */}
         <div className="hidden md:flex items-center gap-3.5">
-          {/* GitHub Open Source Link */}
+          {/* GitHub Star Badge: [GitHub Icon] 6.1K */}
           <a
             href="https://github.com/stoppingarc01-ai/Ostra-FinOps"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-sandstone-100 border border-[#EAE5DB] text-charcoal-800 hover:text-charcoal-950 text-xs font-semibold shadow-2xs transition-all hover:scale-105"
-            title="OstraOps is 100% Open Source on GitHub"
-            aria-label="GitHub Repository"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-sandstone-100 border border-[#EAE5DB] text-charcoal-900 hover:text-black shadow-2xs transition-all hover:scale-105 group cursor-pointer"
+            title="Star OstraOps on GitHub (6.1K stars)"
+            aria-label="GitHub repository: 6.1K stars"
           >
-            <GithubIcon className="w-4 h-4 text-charcoal-900" />
-            <span>Open Source</span>
+            <GithubIcon className="w-4 h-4 text-charcoal-900 group-hover:scale-110 transition-transform" />
+            <span className="text-[13px] font-semibold text-charcoal-900 font-sans tracking-tight leading-none">
+              6.1K
+            </span>
           </a>
 
           {user ? (
@@ -300,9 +302,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
             >
               <div className="flex items-center gap-2">
                 <GithubIcon className="w-4 h-4 text-charcoal-900" />
-                <span>GitHub (Open Source)</span>
+                <span>GitHub</span>
               </div>
-              <ArrowUpRight className="w-3.5 h-3.5 text-charcoal-400" />
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-sandstone-200 text-charcoal-900 font-bold">
+                6.1K
+              </span>
             </a>
             <hr className="border-borderLight my-1" />
             <div className="flex items-center justify-between pt-2">
