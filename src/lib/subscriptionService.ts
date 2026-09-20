@@ -7,7 +7,7 @@ import type { UserSubscription } from '../types/database';
  */
 export const DEFAULT_SUBSCRIPTION: Omit<UserSubscription, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
   plan_id: 'team_scale',
-  plan_name: 'Team Hosted Gateway',
+  plan_name: 'Hosted Gateway',
   price_amount: 49,
   billing_interval: 'mo',
   status: 'active',
@@ -31,17 +31,15 @@ export const getUserSubscription = async (userId: string): Promise<UserSubscript
     }
   } catch {}
 
-  const activePlan = localStorage.getItem('ostraops_active_plan');
-
   try {
     const subRef = doc(db, 'subscriptions', userId);
     const snap = await getDoc(subRef);
     if (snap.exists()) {
       const data = snap.data() as UserSubscription;
-      // If user specifically activated solo locally, prefer that
-      if (activePlan === 'solo_pro' && data.plan_id !== 'solo_pro') {
-        data.plan_id = 'solo_pro';
-        data.plan_name = 'Solo Pro';
+      // All subscribers receive the Hosted Gateway with Solo Guard included
+      if (data.plan_id === 'solo_pro') {
+        data.plan_id = 'team_scale';
+        data.plan_name = 'Hosted Gateway';
       }
       try { localStorage.setItem('ostraops_subscription', JSON.stringify(data)); } catch {}
       return data;
@@ -50,27 +48,21 @@ export const getUserSubscription = async (userId: string): Promise<UserSubscript
     console.warn('Firestore subscription query skipped or restricted, using local cache:', err);
   }
 
-  if (cachedSub) return cachedSub;
-
-  if (activePlan === 'solo_pro') {
-    return {
-      id: userId,
-      user_id: userId,
-      plan_id: 'solo_pro',
-      plan_name: 'Solo Pro',
-      price_amount: 12,
-      billing_interval: 'mo',
-      status: 'active',
-      renewal_date: '18 Oct, 2026',
-      quota_usage_percent: 74,
-      quota_used: 74000,
-      quota_limit: 100000,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+  if (cachedSub) {
+    if (cachedSub.plan_id === 'solo_pro') {
+      cachedSub.plan_id = 'team_scale';
+      cachedSub.plan_name = 'Hosted Gateway';
+    }
+    return cachedSub;
   }
 
-  return null;
+  return {
+    id: userId,
+    user_id: userId,
+    ...DEFAULT_SUBSCRIPTION,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 };
 
 /**
@@ -83,29 +75,7 @@ export const createUserDefaultSubscription = async (
   const subRef = doc(db, 'subscriptions', userId);
   const now = new Date().toISOString();
 
-  let defaultPlan = { ...DEFAULT_SUBSCRIPTION };
-  try {
-    const activePlan = localStorage.getItem('ostraops_active_plan');
-    const raw = sessionStorage.getItem('ostraops_pending_plan') || localStorage.getItem('ostraops_pending_plan');
-    let isSolo = activePlan === 'solo_pro';
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.planId === 'solo_pro' || parsed.type === 'solo') isSolo = true;
-    }
-    if (isSolo) {
-      defaultPlan = {
-        plan_id: 'solo_pro',
-        plan_name: 'Solo Pro',
-        price_amount: 12,
-        billing_interval: 'mo',
-        status: 'active',
-        renewal_date: '18 Oct, 2026',
-        quota_usage_percent: 74,
-        quota_used: 74000,
-        quota_limit: 100000,
-      };
-    }
-  } catch {}
+  const defaultPlan = { ...DEFAULT_SUBSCRIPTION };
 
   const newSub: UserSubscription = {
     id: userId,

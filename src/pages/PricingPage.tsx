@@ -12,8 +12,7 @@ import {
   Zap, 
   ShieldCheck,
   Globe,
-  CheckCircle2,
-  CreditCard
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -210,24 +209,23 @@ export const PricingPage: React.FC<PricingPageProps> = ({
   const isAnnual = billingCycle === 'annual';
 
   // Price calculations based on selected currency and billing cycle
-  const soloDisplayPrice = isAnnual ? currentCfg.soloAnnualMonthly : currentCfg.soloMonthly;
-  const teamDisplayPrice = isAnnual ? currentCfg.teamAnnualMonthly : currentCfg.teamMonthly;
+  const gatewayDisplayPrice = isAnnual ? currentCfg.teamAnnualMonthly : currentCfg.teamMonthly;
 
-  const handleOpenCheckout = (planId: 'solo_pro' | 'team_scale', name: string, monthlyAmount: number) => {
+  const handleOpenCheckout = (name: string, monthlyAmount: number) => {
     const finalAmount = isAnnual ? monthlyAmount * 12 : monthlyAmount;
     
     // Persist user's selected plan for seamless onboarding & signup fulfillment
     const pendingPlan = {
-      planId,
-      name,
-      type: planId === 'team_scale' ? 'hosted' : 'solo',
+      planId: 'team_scale',
+      name: 'Hosted Gateway',
+      type: 'hosted',
       amount: finalAmount,
       billingInterval: isAnnual ? 'yr' : 'mo',
       currency: currentCfg.code,
     };
     try {
-      localStorage.setItem('ostraops_active_plan', planId);
-      localStorage.setItem('ostraops_user_tier', planId === 'team_scale' ? 'team' : 'solo');
+      localStorage.setItem('ostraops_active_plan', 'team_scale');
+      localStorage.setItem('ostraops_user_tier', 'team');
       sessionStorage.setItem('ostraops_pending_plan', JSON.stringify(pendingPlan));
       localStorage.setItem('ostraops_pending_plan', JSON.stringify(pendingPlan));
     } catch {}
@@ -258,33 +256,39 @@ export const PricingPage: React.FC<PricingPageProps> = ({
 
   const comparisonRows = [
     {
-      feature: 'Traffic Route',
-      solo: '127.0.0.1:8080 (Local Loopback)',
-      team: 'gateway.ostraops.com (Cloud Edge)',
+      feature: 'Solo Guard (Local Loopback)',
+      solo: 'Included (Localhost CLI)',
+      team: 'Included (Full Dashboard Console + Local Daemon)',
+      icon: Laptop,
+    },
+    {
+      feature: 'Cloud Edge Gateway',
+      solo: 'None (Local only)',
+      team: 'gateway.ostraops.com/v1',
       icon: Server,
     },
     {
-      feature: 'API Keys Storage',
-      solo: "Developer's own environment / IDE",
-      team: 'Encrypted Cloud Master Vault',
+      feature: 'API Keys Security',
+      solo: "Developer's local environment",
+      team: 'AES-256 Encrypted Cloud Master Vault',
       icon: Key,
     },
     {
       feature: 'Code / Prompt Visibility',
       solo: 'Zero external transit',
-      team: 'Ephemeral stream (No logs saved)',
+      team: 'Zero-retention ephemeral stream (No logs stored)',
       icon: EyeOff,
     },
     {
       feature: 'Spend Enforcement',
-      solo: 'Local kill-switch on session',
-      team: 'Central quota freeze per engineer key',
+      solo: 'Local session kill-switch',
+      team: 'Central quota freeze per engineer virtual key',
       icon: Zap,
     },
     {
       feature: 'Multi-Developer Governance',
-      solo: 'No (Single Developer)',
-      team: 'Yes (Team Admin Dashboard)',
+      solo: 'No (Single machine)',
+      team: 'Yes (5 seats included + Admin Controls)',
       icon: Users,
     },
   ];
@@ -385,9 +389,10 @@ export const PricingPage: React.FC<PricingPageProps> = ({
         </div>
 
         {/* 2 Deployment Models Side-by-Side */}
+        {/* 2 Deployment Options: Free Open Source CLI vs Complete Hosted Gateway Subscription */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch mb-16">
           
-          {/* Card 1: For Solo Developers (Warm Sandstone) */}
+          {/* Card 1: Free Community CLI (Warm Sandstone) */}
           <div className="relative p-7 sm:p-9 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between hover:shadow-md transition-all">
             <div className="space-y-6">
               
@@ -397,77 +402,39 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                   <div className="w-7 h-7 rounded-lg bg-sandstone-200 flex items-center justify-center text-charcoal-800">
                     <Laptop className="w-4 h-4" />
                   </div>
-                  <span>FOR SOLO DEVELOPERS</span>
+                  <span>OPEN SOURCE CLI</span>
                 </div>
 
                 <h2 className="text-2xl sm:text-[26px] font-extrabold text-charcoal-900 tracking-tight leading-snug">
-                  Local-First Telemetry &amp; Guardrails
+                  Community Local Daemon
                 </h2>
 
                 <p className="text-xs sm:text-[13px] text-charcoal-600 leading-relaxed">
-                  Everything runs on your machine. Your code, prompts and API keys never leave your disk.
+                  Standalone zero-telemetry CLI binary for developers. Runs completely on your machine with 0 external network hops.
                 </p>
               </div>
 
-              {/* Dual Price Box */}
-              <div className="p-5 rounded-2xl bg-[#FCFBF9] border border-[#EAE5DC] grid grid-cols-2 gap-4">
-                {/* Community Core */}
-                <div className="space-y-1.5 border-r border-[#EAE5DC] pr-4">
-                  <span className="text-xs font-bold text-charcoal-800 block">Community Core</span>
+              {/* Price Box */}
+              <div className="p-5 rounded-2xl bg-[#FCFBF9] border border-[#EAE5DC] flex items-baseline justify-between">
+                <div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl sm:text-3xl font-extrabold text-charcoal-900">
+                    <span className="text-3xl sm:text-4xl font-extrabold text-charcoal-900">
                       {currentCfg.symbol}0
                     </span>
                     <span className="text-xs text-charcoal-500 font-medium">/ forever</span>
                   </div>
-                  <span className="text-[11px] text-charcoal-500 block">Free open-source binary</span>
-                  <div className="pt-2">
-                    <span className="inline-block px-2.5 py-1 rounded-md bg-[#F2EDE2] text-[10.5px] font-medium text-charcoal-700">
-                      Best for getting started
-                    </span>
-                  </div>
-                </div>
-
-                {/* Solo Pro */}
-                <div className="space-y-1.5 pl-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-charcoal-800 block">Solo Pro</span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-mono">
-                      {currentCfg.flag} {currentCfg.code}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl sm:text-3xl font-extrabold text-charcoal-900">
-                      {currentCfg.symbol}{soloDisplayPrice}
-                    </span>
-                    <span className="text-xs text-charcoal-500 font-medium">
-                      / {isAnnual ? 'mo*' : 'mo'}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-charcoal-500 font-mono block">
-                    {isAnnual 
-                      ? `Billed annually at ${currentCfg.symbol}${soloDisplayPrice * 12}/yr` 
-                      : `Standard monthly billing`}
+                  <span className="text-[11px] text-charcoal-500 block mt-1 font-mono">
+                    Free open-source MIT licensed binary
                   </span>
-                  <div className="pt-2">
-                    <span className="inline-block px-2.5 py-1 rounded-md bg-[#F2EDE2] text-[10.5px] font-medium text-charcoal-700">
-                      Cloud Sync + Telegram alerts
-                    </span>
-                  </div>
                 </div>
-              </div>
-
-              {/* Local Payment Badges */}
-              <div className="p-3 rounded-xl bg-sandstone-50 border border-[#EFE9DF] text-[11px] text-charcoal-600 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="w-3.5 h-3.5 text-charcoal-600" />
-                  <span className="font-medium">{currentCfg.paymentMethods.join(' • ')}</span>
-                </div>
+                <span className="px-2.5 py-1 rounded-md bg-[#F2EDE2] text-[10.5px] font-bold text-charcoal-700 font-mono">
+                  Standalone Local
+                </span>
               </div>
 
               {/* Key Features */}
               <div className="space-y-3 pt-1">
-                <span className="text-xs font-bold text-charcoal-900 block">Key Features</span>
+                <span className="text-xs font-bold text-charcoal-900 block">Features Included</span>
                 
                 <div className="space-y-2.5 text-xs text-charcoal-700">
                   <div className="flex items-start gap-2.5">
@@ -476,7 +443,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-charcoal-700 shrink-0 mt-0.5" />
-                    <span>Real-time token odometer &amp; velocity UI (:4040)</span>
+                    <span>Real-time local terminal telemetry UI (:4040)</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-charcoal-700 shrink-0 mt-0.5" />
@@ -484,15 +451,15 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-charcoal-700 shrink-0 mt-0.5" />
-                    <span>Intra-family model failovers (Sonnet 3.7 → Haiku 3.5)</span>
+                    <span>Supports Cursor, Cline, Roo-Code &amp; OpenAI/Anthropic SDKs</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-charcoal-700 shrink-0 mt-0.5" />
                     <span>100% prompt privacy — logs persist in local SQLite (~/.ostraops)</span>
                   </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-3.5 h-3.5 text-charcoal-700 shrink-0 mt-0.5" />
-                    <span>Pro only: Multi-device sync (max 2 machines) &amp; Telegram burn alerts</span>
+                  <div className="flex items-start gap-2.5 text-charcoal-400">
+                    <span className="text-charcoal-400 shrink-0 mt-0.5">—</span>
+                    <span>No cloud sync, no virtual keys, no team dashboard</span>
                   </div>
                 </div>
               </div>
@@ -504,25 +471,14 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                 {/* Terminal copy pill */}
                 <button
                   onClick={copyGuardCmd}
-                  className="w-full sm:w-[50%] py-3 px-3.5 rounded-xl bg-[#141416] text-white font-mono text-xs flex items-center justify-between hover:bg-black transition-colors"
+                  className="w-full py-3 px-4 rounded-xl bg-[#141416] text-white font-mono text-xs flex items-center justify-between hover:bg-black transition-colors"
                   title="Click to copy"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-zinc-300">$ npx ostraops-guard</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-zinc-300 font-bold">$ npx ostraops-guard</span>
                   </div>
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-zinc-400" />}
-                </button>
-
-                {/* Upgrade Button */}
-                <button
-                  onClick={() => handleOpenCheckout('solo_pro', 'Solo Pro', soloDisplayPrice)}
-                  className="w-full sm:w-[50%] py-3 px-3 rounded-xl bg-[#F0E6D8] hover:bg-[#EADDCB] text-charcoal-900 text-xs font-bold transition-all text-center cursor-pointer shadow-xs"
-                >
-                  <div className="leading-tight">Upgrade to Solo Pro →</div>
-                  <div className="text-[10px] text-charcoal-600 font-normal font-mono mt-0.5">
-                    {currentCfg.symbol}{soloDisplayPrice} / {isAnnual ? 'mo (annual)' : 'mo'} in {currentCfg.code}
-                  </div>
                 </button>
               </div>
 
@@ -530,16 +486,16 @@ export const PricingPage: React.FC<PricingPageProps> = ({
               <div className="flex items-center justify-between text-xs text-charcoal-500 pt-1">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-charcoal-600" />
-                  <span>Your machine. Your data. 100% private.</span>
+                  <span>No account or payment required. Free forever.</span>
                 </div>
-                <span className="text-[11px] font-mono text-charcoal-400">{currentCfg.regionLabel}</span>
+                <span className="text-[11px] font-mono text-charcoal-400">Open Source</span>
               </div>
             </div>
 
           </div>
 
-          {/* Card 2: For Startups & Teams (Deep Charcoal) */}
-          <div className="relative p-7 sm:p-9 rounded-3xl bg-[#141416] text-white border border-[#27272A] shadow-2xl flex flex-col justify-between hover:border-ostraGold-500/40 transition-all overflow-hidden">
+          {/* Card 2: The Only Subscription: Hosted Gateway (Deep Charcoal & Gold) */}
+          <div className="relative p-7 sm:p-9 rounded-3xl bg-[#141416] text-white border-2 border-ostraGold-500/50 shadow-2xl flex flex-col justify-between hover:border-ostraGold-500/80 transition-all overflow-hidden ring-4 ring-ostraGold-500/10">
             
             {/* Generative gold waves in background bottom */}
             <div className="absolute inset-0 opacity-15 pointer-events-none">
@@ -553,19 +509,24 @@ export const PricingPage: React.FC<PricingPageProps> = ({
               
               {/* Card Title & Icon */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-[11px] font-bold tracking-wider text-zinc-400 uppercase font-mono">
-                  <div className="w-7 h-7 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-200">
-                    <Users className="w-4 h-4" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[11px] font-bold tracking-wider text-ostraGold-300 uppercase font-mono">
+                    <div className="w-7 h-7 rounded-lg bg-ostraGold-500/20 flex items-center justify-center text-ostraGold-300">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <span>COMPLETE FINANCIAL GATEWAY</span>
                   </div>
-                  <span>FOR STARTUPS &amp; TEAMS</span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-ostraGold-500 text-charcoal-950 font-bold text-[10px] font-mono tracking-wide uppercase">
+                    Solo Guard Included
+                  </span>
                 </div>
 
                 <h2 className="text-2xl sm:text-[26px] font-extrabold text-white tracking-tight leading-snug">
-                  Central Hosted Gateway &amp; Governance
+                  Hosted Gateway &amp; Governance
                 </h2>
 
-                <p className="text-xs sm:text-[13px] text-zinc-400 leading-relaxed">
-                  Stop sharing raw production API keys. Give your engineers scoped virtual tokens with hard spending ceilings.
+                <p className="text-xs sm:text-[13px] text-zinc-300 leading-relaxed">
+                  The complete production gateway. Central cloud edge routing, scoped virtual keys, spending ceilings, and the full Solo Developer Guard included for free on your dashboard.
                 </p>
               </div>
 
@@ -573,31 +534,30 @@ export const PricingPage: React.FC<PricingPageProps> = ({
               <div className="p-5 rounded-2xl bg-[#1C1C1F] border border-[#2B2B30] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-zinc-300 block">Team Gateway</span>
+                    <span className="text-xs font-bold text-zinc-200 block">Hosted Gateway Subscription</span>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-ostraGold-500/20 text-ostraGold-300 font-mono">
                       {currentCfg.flag} {currentCfg.code}
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl sm:text-4xl font-extrabold text-white">
-                      {currentCfg.symbol}{teamDisplayPrice}
+                    <span className="text-3xl sm:text-4xl font-extrabold text-white font-mono">
+                      {currentCfg.symbol}{gatewayDisplayPrice}
                     </span>
                     <span className="text-xs text-zinc-400">
                       / {isAnnual ? 'month (billed annually)' : 'month'}
                     </span>
                   </div>
-                  <div className="text-[11px] text-zinc-400 pt-1">
-                    Includes 5 developer seats<br />
-                    ({currentCfg.symbol}{currentCfg.teamSeatPrice}/mo per additional seat)
+                  <div className="text-[11px] text-zinc-400 pt-1 font-mono">
+                    Includes 5 developer seats ({currentCfg.symbol}{currentCfg.teamSeatPrice}/mo per additional seat)
                   </div>
                 </div>
 
                 <div className="text-right space-y-1.5 w-full sm:w-auto">
                   <button
-                    onClick={() => handleOpenCheckout('team_scale', 'Team Gateway', teamDisplayPrice)}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#F0E6D8] hover:bg-white text-charcoal-950 font-bold text-xs shadow-md transition-all whitespace-nowrap cursor-pointer"
+                    onClick={() => handleOpenCheckout('Hosted Gateway', gatewayDisplayPrice)}
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-ostraGold-400 hover:bg-ostraGold-300 text-charcoal-950 font-bold text-xs shadow-md transition-all whitespace-nowrap cursor-pointer hover:shadow-ostraGold-500/25"
                   >
-                    Deploy Team Gateway →
+                    Deploy Hosted Gateway →
                   </button>
                   <span className="text-[10px] text-zinc-400 font-medium block text-center sm:text-right">
                     14-Day Free Trial • Cancel anytime
@@ -607,38 +567,38 @@ export const PricingPage: React.FC<PricingPageProps> = ({
 
               {/* Payment Info Callout */}
               <div className="p-3 rounded-xl bg-[#1F1F24] border border-[#2D2D35] text-[11px] text-zinc-300 flex items-center justify-between">
-                <span className="font-mono text-zinc-400">Payment:</span>
-                <span className="font-semibold text-zinc-200">{currentCfg.gatewayNote}</span>
+                <span className="font-mono text-zinc-400">Payment Methods:</span>
+                <span className="font-semibold text-zinc-200">{currentCfg.paymentMethods.join(' • ')}</span>
               </div>
 
               {/* Key Features */}
               <div className="space-y-3 pt-1">
-                <span className="text-xs font-bold text-zinc-200 block">Key Features</span>
+                <span className="text-xs font-bold text-zinc-200 block">Everything Included in One Subscription</span>
                 
                 <div className="space-y-2.5 text-xs text-zinc-300">
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>Endpoint: <strong>gateway.ostraops.com/v1</strong></span>
+                    <span><strong className="text-white">Solo Developer Guard INCLUDED:</strong> Full local daemon (<code>127.0.0.1:8080</code>) visible on your dashboard</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>AES-256 encrypted Central Key Vault (engineers never see master key)</span>
+                    <span>Endpoint: <strong className="text-white">gateway.ostraops.com/v1</strong> (Zero-trust cloud edge proxy)</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>Scoped virtual tokens per developer (<code>ost_live_...</code>)</span>
+                    <span>AES-256 encrypted Central Key Vault (engineers never see master production keys)</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>Enforced monthly spend caps per engineer with auto-kill switch</span>
+                    <span>Scoped virtual tokens per developer (<code>ost_live_...</code>) with model restrictions</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>Unified workspace analytics &amp; CSV audit trails</span>
+                    <span>Enforced monthly spend caps per engineer with automated hard kill-switch</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>Webhooks for Slack, Discord and PagerDuty billing alerts</span>
+                    <span>Unified workspace analytics, CSV audit trails &amp; Slack/Discord webhooks</span>
                   </div>
                 </div>
               </div>
@@ -653,7 +613,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                   </div>
                   <div>
                     <div className="text-xs font-bold text-zinc-100">Enterprise-grade security.</div>
-                    <div className="text-[11px] text-zinc-400">SOC2 compliant data routing.</div>
+                    <div className="text-[11px] text-zinc-400">SOC2 compliant data routing &amp; zero data retention.</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-mono">
@@ -698,12 +658,12 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                   <tr className="border-b border-[#F0ECE4] bg-[#FCFBF9]">
                     <th className="py-4 px-6 font-bold text-charcoal-700 w-[26%]">Feature</th>
                     <th className="py-4 px-6 font-bold text-charcoal-900 w-[37%] bg-sandstone-50/50">
-                      <div>Solo Telemetry (Localhost)</div>
-                      <div className="text-[11px] font-normal text-charcoal-400 font-mono">Developer machine (127.0.0.1:8080)</div>
+                      <div>Community CLI (Free $0)</div>
+                      <div className="text-[11px] font-normal text-charcoal-400 font-mono">Standalone offline binary (127.0.0.1:8080)</div>
                     </th>
                     <th className="py-4 px-6 font-bold text-charcoal-900 w-[37%] bg-[#FAF8F5]">
-                      <div>Team API Gateway (Hosted)</div>
-                      <div className="text-[11px] font-normal text-charcoal-400 font-mono">gateway.ostraops.com</div>
+                      <div>Hosted Gateway Subscription</div>
+                      <div className="text-[11px] font-normal text-charcoal-400 font-mono">gateway.ostraops.com + Included Solo Guard</div>
                     </th>
                   </tr>
                 </thead>

@@ -122,14 +122,14 @@ export const BillingView: React.FC<BillingViewProps> = ({ onNavigateUsage }) => 
             </span>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-black text-charcoal-900 font-mono tracking-tight">
-                SOLO PRO
+                HOSTED GATEWAY
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#C59E5F] text-white">
-                RECOMMENDED
+                SOLO GUARD INCLUDED
               </span>
             </div>
             <p className="text-xs text-charcoal-500 font-sans">
-              Full cloud synchronization, alerts, and multi-device telemetry governance.
+              Central edge proxy, encrypted key vault, spending limits, with Solo Developer Guard included.
             </p>
           </div>
 
@@ -138,7 +138,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ onNavigateUsage }) => 
               Billing Amount
             </span>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-charcoal-900 font-mono">$149.00</span>
+              <span className="text-2xl font-black text-charcoal-900 font-mono">$49.00</span>
               <span className="text-xs text-charcoal-500 font-mono">/ month</span>
             </div>
             <div className="text-[11px] text-charcoal-500 font-mono flex items-center gap-1">
@@ -167,7 +167,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ onNavigateUsage }) => 
           <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-mono flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">Subscription cancellation scheduled.</span> Your Solo Pro features remain fully operational until May 25, 2026. After that date, your organization will revert to the Community tier with 0 ongoing charges.
+              <span className="font-bold">Subscription cancellation scheduled.</span> Your Hosted Gateway features remain fully operational until May 25, 2026. After that date, your organization will revert to the Community tier with 0 ongoing charges.
             </div>
           </div>
         )}
@@ -552,7 +552,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ onNavigateUsage }) => 
                 </button>
               </div>
 
-              {/* Plan 2: Solo Pro (Current) */}
+              {/* Plan 2: Hosted Gateway (Current) */}
               <div className="p-5 rounded-2xl border-2 border-[#18181B] bg-white flex flex-col justify-between space-y-4 relative shadow-md">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#18181B] text-white text-[10px] font-bold font-mono uppercase tracking-wider px-3 py-0.5 rounded-full border border-white/20">
                   Current Plan
@@ -560,18 +560,18 @@ export const BillingView: React.FC<BillingViewProps> = ({ onNavigateUsage }) => 
                 <div className="space-y-3 pt-1">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold font-mono uppercase tracking-wider text-[#C59E5F]">
-                      Solo Pro
+                      Hosted Gateway
                     </span>
                     <span className="text-[10px] font-mono bg-[#F4EFE6] text-[#9C7938] px-2 py-0.5 rounded font-bold border border-[#E5DBCA]">
                       Active
                     </span>
                   </div>
                   <div>
-                    <span className="text-3xl font-black font-mono text-charcoal-900">$149</span>
+                    <span className="text-3xl font-black font-mono text-charcoal-900">$49</span>
                     <span className="text-xs text-charcoal-500 font-mono"> / month</span>
                   </div>
                   <p className="text-xs text-charcoal-600 font-sans">
-                    For serious builders demanding multi-device cloud sync and automated cost alerts.
+                    Complete Hosted Gateway with centralized key vault, governance, and Solo Developer Guard included.
                   </p>
                   <ul className="space-y-2 text-xs font-sans text-charcoal-700 pt-2 border-t border-[#EAE5DC]">
                     <li className="flex items-center gap-2">

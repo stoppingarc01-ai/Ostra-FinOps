@@ -111,11 +111,9 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
       });
       showToast(error.message || 'Registration failed.');
     } else {
-      const isHosted = accountType === 'team' || pendingPlan?.type === 'hosted' || pendingPlan?.planId === 'team_scale';
-      const chosenPlan = isHosted ? 'team_scale' : 'solo_pro';
       try {
-        localStorage.setItem('ostraops_active_plan', chosenPlan);
-        localStorage.setItem('ostraops_user_tier', isHosted ? 'team' : 'solo');
+        localStorage.setItem('ostraops_active_plan', 'team_scale');
+        localStorage.setItem('ostraops_user_tier', 'team');
       } catch {}
 
       showToast('Account created! Taking you to workspace setup & onboarding...');
@@ -130,11 +128,9 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     if (error) {
       showToast(error.message);
     } else {
-      const isHosted = accountType === 'team' || pendingPlan?.type === 'hosted' || pendingPlan?.planId === 'team_scale';
-      const chosenPlan = isHosted ? 'team_scale' : 'solo_pro';
       try {
-        localStorage.setItem('ostraops_active_plan', chosenPlan);
-        localStorage.setItem('ostraops_user_tier', isHosted ? 'team' : 'solo');
+        localStorage.setItem('ostraops_active_plan', 'team_scale');
+        localStorage.setItem('ostraops_user_tier', 'team');
       } catch {}
 
       showToast('Signed in! Taking you to workspace setup & onboarding...');

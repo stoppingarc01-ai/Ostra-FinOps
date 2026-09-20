@@ -106,32 +106,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [orgRole, setOrgRole] = useState<OrgRole | null>(null);
   const [subscription, setSubscription] = useState<UserSubscription | null>(() => {
     try {
-      const active = localStorage.getItem('ostraops_active_plan');
       const raw = localStorage.getItem('ostraops_subscription');
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (active === 'solo_pro' && parsed.plan_id !== 'solo_pro') {
-          parsed.plan_id = 'solo_pro';
-          parsed.plan_name = 'Solo Pro';
+        if (parsed.plan_id === 'solo_pro') {
+          parsed.plan_id = 'team_scale';
+          parsed.plan_name = 'Hosted Gateway';
         }
         return parsed;
-      }
-      if (active === 'solo_pro') {
-        return {
-          id: 'local_solo',
-          user_id: 'local_solo',
-          plan_id: 'solo_pro',
-          plan_name: 'Solo Pro',
-          price_amount: 12,
-          billing_interval: 'mo',
-          status: 'active',
-          renewal_date: '18 Oct, 2026',
-          quota_usage_percent: 74,
-          quota_used: 74000,
-          quota_limit: 100000,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
       }
     } catch {}
     return null;
@@ -211,56 +193,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let userSub = await getUserSubscription(userId);
       if (!userSub) {
         userSub = await createUserDefaultSubscription(userId);
-      } else {
-        try {
-          const raw = sessionStorage.getItem('ostraops_pending_plan');
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            const isSolo = parsed.planId === 'solo_pro' || parsed.type === 'solo';
-            if (isSolo && userSub.plan_id !== 'solo_pro') {
-              const updatedSub = {
-                plan_id: 'solo_pro' as const,
-                plan_name: 'Solo Pro',
-                price_amount: parsed.amount || 12,
-                billing_interval: (parsed.billingInterval as any) || 'mo',
-                status: 'active' as const,
-                quota_limit: 100000,
-                quota_used: 74000,
-                quota_usage_percent: 74,
-                renewal_date: '18 Oct, 2026',
-              };
-              await updateUserSubscription(userId, updatedSub);
-              userSub = { ...userSub, ...updatedSub };
-            }
-          }
-        } catch {}
       }
       setSubscription(userSub);
     } catch (e) {
       console.warn('Could not sync Firestore profile or subscription:', e);
       try {
-        const active = localStorage.getItem('ostraops_active_plan');
         const raw = localStorage.getItem('ostraops_subscription');
         if (raw) {
           setSubscription(JSON.parse(raw));
-        } else if (active === 'solo_pro') {
-          const fallbackSub: UserSubscription = {
-            id: fbUser.uid,
-            user_id: fbUser.uid,
-            plan_id: 'solo_pro',
-            plan_name: 'Solo Pro',
-            price_amount: 12,
-            billing_interval: 'mo',
-            status: 'active',
-            renewal_date: '18 Oct, 2026',
-            quota_usage_percent: 74,
-            quota_used: 74000,
-            quota_limit: 100000,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          setSubscription(fallbackSub);
-          localStorage.setItem('ostraops_subscription', JSON.stringify(fallbackSub));
         }
       } catch {}
     }
@@ -402,7 +342,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (updates.plan_id) {
         localStorage.setItem('ostraops_active_plan', updates.plan_id);
-        localStorage.setItem('ostraops_user_tier', updates.plan_id === 'solo_pro' ? 'solo' : 'team');
+        localStorage.setItem('ostraops_user_tier', 'team');
       }
       const raw = localStorage.getItem('ostraops_subscription');
       const current = raw ? JSON.parse(raw) : {};

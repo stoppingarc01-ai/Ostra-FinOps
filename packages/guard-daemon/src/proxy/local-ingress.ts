@@ -59,8 +59,42 @@ export async function handleLocalIngress(
   const url = (req.url || '/').split('?')[0];
   const method = req.method?.toUpperCase();
 
-  const isOpenAI = url === '/v1/chat/completions' || url === '/chat/completions';
-  const isAnthropic = url === '/v1/messages' || url === '/messages';
+  // 1. Standard Model Discovery (Fixes Cursor / Cline / LibreChat connection tests)
+  const isModelsRoute = url === '/v1/models' || url === '/models';
+  if (isModelsRoute) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    if (method === 'OPTIONS') {
+      res.writeHead(204);
+      res.end();
+      return true;
+    }
+    const standardModels = [
+      { id: 'gpt-4o', object: 'model', created: 1715367049, owned_by: 'openai' },
+      { id: 'gpt-4o-mini', object: 'model', created: 1721260800, owned_by: 'openai' },
+      { id: 'o1', object: 'model', created: 1726000000, owned_by: 'openai' },
+      { id: 'o3-mini', object: 'model', created: 1738000000, owned_by: 'openai' },
+      { id: 'claude-3-7-sonnet-20250219', object: 'model', created: 1739900000, owned_by: 'anthropic' },
+      { id: 'claude-3-5-sonnet-20241022', object: 'model', created: 1729500000, owned_by: 'anthropic' },
+      { id: 'claude-3-5-haiku-20241022', object: 'model', created: 1729500000, owned_by: 'anthropic' },
+      { id: 'gemini-2.5-pro', object: 'model', created: 1735000000, owned_by: 'google' },
+      { id: 'gemini-2.0-flash', object: 'model', created: 1733000000, owned_by: 'google' },
+      { id: 'deepseek-chat', object: 'model', created: 1730000000, owned_by: 'deepseek' },
+      { id: 'deepseek-reasoner', object: 'model', created: 1737000000, owned_by: 'deepseek' },
+    ];
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ object: 'list', data: standardModels }));
+    return true;
+  }
+
+  const isOpenAIChat = url === '/v1/chat/completions' || url === '/chat/completions';
+  const isOpenAIEmbeddings = url === '/v1/embeddings' || url === '/embeddings';
+  const isAnthropicMessages = url === '/v1/messages' || url === '/messages';
+  const isAnthropicCountTokens = url === '/v1/messages/count_tokens' || url === '/messages/count_tokens';
+
+  const isOpenAI = isOpenAIChat || isOpenAIEmbeddings;
+  const isAnthropic = isAnthropicMessages || isAnthropicCountTokens;
 
   if (!isOpenAI && !isAnthropic) {
     return false;
@@ -130,9 +164,21 @@ export async function handleLocalIngress(
     'Content-Type': 'application/json',
   };
 
+// Simple in-memory LRU response cache for deterministic / cached requests (Helicone parity)
+interface CacheEntry {
+  responseBody: string;
+  contentType: string;
+  statusCode: number;
+  inputTokens: number;
+  outputTokens: number;
+  routedModel: string;
+  expiresAt: number;
+}
+const localResponseCache = new Map<string, CacheEntry>();
+
   if (isOpenAI) {
     const base = ctx.config.upstreamGatewayUrl || 'https://api.openai.com';
-    upstreamUrl = base.replace(/\/+$/, '') + '/v1/chat/completions';
+    upstreamUrl = base.replace(/\/+$/, '') + (isOpenAIChat ? '/v1/chat/completions' : '/v1/embeddings');
 
     const clientAuth = req.headers['authorization'];
     if (clientAuth) {
@@ -150,7 +196,7 @@ export async function handleLocalIngress(
   } else {
     // Anthropic
     const base = ctx.config.upstreamGatewayUrl || 'https://api.anthropic.com';
-    upstreamUrl = base.replace(/\/+$/, '') + '/v1/messages';
+    upstreamUrl = base.replace(/\/+$/, '') + (isAnthropicMessages ? '/v1/messages' : '/v1/messages/count_tokens');
 
     const clientKey = req.headers['x-api-key'];
     if (clientKey) {
@@ -164,6 +210,49 @@ export async function handleLocalIngress(
 
     if (req.headers['anthropic-beta']) {
       upstreamHeaders['anthropic-beta'] = req.headers['anthropic-beta'] as string;
+    }
+  }
+
+  // 3.5 Check Response Cache (Helicone Cache Parity)
+  const isCacheRequested = 
+    req.headers['x-ostra-cache'] === 'true' || 
+    req.headers['helicone-cache-enabled'] === 'true' ||
+    (body.temperature === 0 && !isStreaming);
+
+  if (isCacheRequested && !isStreaming) {
+    const cacheKey = crypto
+      .createHash('sha256')
+      .update(`${provider}:${requestedModel}:${JSON.stringify(body)}`)
+      .digest('hex');
+
+    const cached = localResponseCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      res.writeHead(cached.statusCode, {
+        'Content-Type': cached.contentType,
+        'X-Ostra-Cache': 'HIT',
+      });
+      res.end(cached.responseBody);
+
+      // Record zero-cost cached trace
+      recordTrace(ctx, {
+        id: crypto.randomUUID(),
+        requestId,
+        sessionId,
+        provider,
+        requestedModel,
+        routedModel: cached.routedModel,
+        statusCode: cached.statusCode,
+        inputTokens: cached.inputTokens,
+        outputTokens: cached.outputTokens,
+        costUsd: 0,
+        durationMs: 1,
+        ttftMs: 1,
+        stream: false,
+        errorMessage: null,
+        timestamp: startTime,
+        createdAt: new Date(startTime).toISOString(),
+      });
+      return true;
     }
   }
 
@@ -384,6 +473,24 @@ export async function handleLocalIngress(
   }
 
   const costUsd = calculateCost(routedModel, inputTokens, outputTokens);
+
+  // Save to cache if eligible
+  if (isCacheRequested && statusCode === 200) {
+    const cacheKey = crypto
+      .createHash('sha256')
+      .update(`${provider}:${requestedModel}:${JSON.stringify(body)}`)
+      .digest('hex');
+    localResponseCache.set(cacheKey, {
+      responseBody: rawResponseText,
+      contentType: upstreamRes.headers.get('content-type') || 'application/json',
+      statusCode: 200,
+      inputTokens,
+      outputTokens,
+      routedModel,
+      expiresAt: Date.now() + 1000 * 60 * 60, // 1 hour TTL
+    });
+    res.setHeader('X-Ostra-Cache', 'MISS');
+  }
 
   // Send upstream response back to client
   res.writeHead(statusCode, {

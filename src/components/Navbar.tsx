@@ -15,12 +15,8 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
-  const { user, profile, signOut, subscription } = useAuth();
-  const isSoloUser =
-    subscription?.plan_id === 'solo_pro' ||
-    localStorage.getItem('ostraops_active_plan') === 'solo_pro' ||
-    localStorage.getItem('ostraops_user_tier') === 'solo';
-  const consoleRoute = isSoloUser ? 'solo-guard' : 'dashboard';
+  const { user, profile, signOut } = useAuth();
+  const consoleRoute = 'dashboard';
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [starCount, setStarCount] = useState<string>(() => {
@@ -241,7 +237,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
                 onClick={() => onNavigate(consoleRoute)}
                 className="text-[14px] font-medium text-charcoal-600 hover:text-charcoal-900 transition-colors cursor-pointer"
               >
-                {isSoloUser ? 'Solo Guard' : 'API Gateway'}
+                Dashboard
               </button>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-[#18181B] text-white text-xs font-bold flex items-center justify-center font-mono">

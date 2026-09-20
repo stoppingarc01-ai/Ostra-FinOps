@@ -17,7 +17,6 @@ import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { AuthShowcasePage } from './pages/AuthShowcasePage';
 import { OnboardingPage } from './pages/OnboardingPage';
-import { SoloGuardPage } from './pages/SoloGuardPage';
 import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { BuildErrorPage } from './pages/BuildErrorPage';
@@ -36,11 +35,7 @@ export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onb
 const PROTECTED_ROUTES: AppRoute[] = ['solo-guard', 'dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings'];
 
 const AppInner: React.FC = () => {
-  const { user, loading, subscription } = useAuth();
-  const isSoloUser =
-    subscription?.plan_id === 'solo_pro' ||
-    localStorage.getItem('ostraops_active_plan') === 'solo_pro' ||
-    localStorage.getItem('ostraops_user_tier') === 'solo';
+  const { user, loading } = useAuth();
 
   const getInitialRoute = (): AppRoute => {
     const path = window.location.pathname.toLowerCase();
@@ -75,34 +70,13 @@ const AppInner: React.FC = () => {
 
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(getInitialRoute);
 
-  const getPreferredConsole = (): AppRoute => {
-    try {
-      const active = localStorage.getItem('ostraops_active_plan');
-      if (active === 'solo_pro') return 'solo-guard';
-      if (active === 'team_scale') return 'dashboard';
-
-      const raw = sessionStorage.getItem('ostraops_pending_plan') || localStorage.getItem('ostraops_pending_plan');
-      if (raw) {
-        const p = JSON.parse(raw);
-        if (p.planId === 'solo_pro' || p.type === 'solo') return 'solo-guard';
-        if (p.planId === 'team_scale' || p.type === 'hosted') return 'dashboard';
-      }
-    } catch {}
-    return isSoloUser ? 'solo-guard' : 'dashboard';
-  };
+  const getPreferredConsole = (): AppRoute => 'dashboard';
 
   const navigate = (route: AppRoute | string) => {
-    if (route === 'solo-guard') {
-      try {
-        localStorage.setItem('ostraops_active_plan', 'solo_pro');
-        localStorage.setItem('ostraops_user_tier', 'solo');
-      } catch {}
-    } else if (route === 'dashboard') {
-      try {
-        localStorage.setItem('ostraops_active_plan', 'team_scale');
-        localStorage.setItem('ostraops_user_tier', 'team');
-      } catch {}
-    }
+    try {
+      localStorage.setItem('ostraops_active_plan', 'team_scale');
+      localStorage.setItem('ostraops_user_tier', 'team');
+    } catch {}
 
     // If navigating to a protected route without auth, redirect to signup (if pending plan) or login
     if (PROTECTED_ROUTES.includes(route as AppRoute) && !user) {
@@ -148,7 +122,7 @@ const AppInner: React.FC = () => {
       setCurrentRoute(target);
       window.history.replaceState(null, '', `#${target}`);
     }
-  }, [loading, user, currentRoute, isSoloUser]);
+  }, [loading, user, currentRoute]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -267,19 +241,7 @@ const AppInner: React.FC = () => {
     );
   }
 
-  // Solo Developer Local-First Console
-  if (currentRoute === 'solo-guard') {
-    return (
-      <>
-        <SoloGuardPage
-          onNavigateHome={() => navigate('home')}
-          onNavigateDashboard={() => navigate('dashboard')}
-          onNavigatePricing={() => navigate('pricing')}
-        />
-        <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
-      </>
-    );
-  }
+
 
   // Dashboard page provides its own full app shell with sidebar and top header
   if (PROTECTED_ROUTES.includes(currentRoute)) {

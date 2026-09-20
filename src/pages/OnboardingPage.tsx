@@ -49,22 +49,16 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
 
   // Step 3: Plan Selection & Payment State
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const [selectedPlan, setSelectedPlan] = useState<'solo' | 'team' | 'enterprise'>(() => {
+  const [selectedPlan, setSelectedPlan] = useState<'hosted' | 'enterprise'>(() => {
     try {
       const pending = sessionStorage.getItem('ostraops_pending_plan') || localStorage.getItem('ostraops_pending_plan');
       if (pending) {
         const parsed = JSON.parse(pending);
-        if (parsed.type === 'hosted' || parsed.planId === 'team_scale') return 'team';
-        if (parsed.type === 'solo' || parsed.planId === 'solo_pro') return 'solo';
+        if (parsed.planId === 'enterprise') return 'enterprise';
       }
     } catch {}
-    const active = localStorage.getItem('ostraops_active_plan');
-    if (active === 'solo_pro') return 'solo';
-    if (active === 'team_scale') return 'team';
-    if (subscription?.plan_id === 'team_scale') return 'team';
     if (subscription?.plan_id === 'enterprise') return 'enterprise';
-    if (subscription?.plan_id === 'solo_pro') return 'solo';
-    return 'solo';
+    return 'hosted';
   });
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success'>('idle');
@@ -100,16 +94,16 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
 
   const handleProcessPayment = async () => {
     setPaymentStatus('processing');
-    const isHosted = selectedPlan === 'team';
-    const chosenPlanId = isHosted ? 'team_scale' : 'solo_pro';
-    const chosenPlanName = isHosted ? 'Team Scale' : 'Solo Pro';
-    const amount = isHosted
-      ? (billingCycle === 'monthly' ? 49 : 39 * 12)
-      : (billingCycle === 'monthly' ? 12 : 10 * 12);
+    const isEnterprise = selectedPlan === 'enterprise';
+    const chosenPlanId = isEnterprise ? 'enterprise' : 'team_scale';
+    const chosenPlanName = isEnterprise ? 'Enterprise Custom' : 'Hosted Gateway';
+    const amount = isEnterprise
+      ? 299
+      : (billingCycle === 'monthly' ? 49 : 39 * 12);
 
     try {
       localStorage.setItem('ostraops_active_plan', chosenPlanId);
-      localStorage.setItem('ostraops_user_tier', isHosted ? 'team' : 'solo');
+      localStorage.setItem('ostraops_user_tier', 'team');
 
       await updateSubscription({
         plan_id: chosenPlanId,
@@ -117,9 +111,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
         price_amount: amount,
         billing_interval: billingCycle === 'monthly' ? 'mo' : 'yr',
         status: 'active',
-        quota_limit: isHosted ? 500000 : 100000,
-        quota_used: isHosted ? 12000 : 74000,
-        quota_usage_percent: isHosted ? 2.4 : 74,
+        quota_limit: 500000,
+        quota_used: 12000,
+        quota_usage_percent: 2.4,
         renewal_date: billingCycle === 'monthly' ? '18 Oct, 2026' : '18 Sep, 2027',
       }).catch(() => {});
 
@@ -145,22 +139,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
         });
       }
 
-      if (selectedPlan === 'team') {
-        localStorage.setItem('ostraops_active_plan', 'team_scale');
-        localStorage.setItem('ostraops_user_tier', 'team');
-        await updateSubscription({
-          plan_id: 'team_scale',
-          plan_name: 'Team Scale',
-          price_amount: billingCycle === 'monthly' ? 49 : 39,
-          billing_interval: billingCycle === 'monthly' ? 'mo' : 'yr',
-          status: 'active',
-          quota_limit: 500000,
-          quota_used: 12000,
-          quota_usage_percent: 2.4,
-          renewal_date: billingCycle === 'monthly' ? '18 Oct, 2026' : '18 Sep, 2027',
-        }).catch(() => {});
-        onNavigate('dashboard');
-      } else if (selectedPlan === 'enterprise') {
+      if (selectedPlan === 'enterprise') {
         localStorage.setItem('ostraops_active_plan', 'enterprise');
         localStorage.setItem('ostraops_user_tier', 'enterprise');
         await updateSubscription({
@@ -176,21 +155,21 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
         }).catch(() => {});
         onNavigate('dashboard');
       } else {
-        // Solo plan -> Local-First Telemetry & Guard Console
-        localStorage.setItem('ostraops_active_plan', 'solo_pro');
-        localStorage.setItem('ostraops_user_tier', 'solo');
+        // Hosted Gateway plan (includes Solo Guard)
+        localStorage.setItem('ostraops_active_plan', 'team_scale');
+        localStorage.setItem('ostraops_user_tier', 'team');
         await updateSubscription({
-          plan_id: 'solo_pro',
-          plan_name: 'Solo Pro',
-          price_amount: billingCycle === 'monthly' ? 12 : 10,
+          plan_id: 'team_scale',
+          plan_name: 'Hosted Gateway',
+          price_amount: billingCycle === 'monthly' ? 49 : 39 * 12,
           billing_interval: billingCycle === 'monthly' ? 'mo' : 'yr',
           status: 'active',
-          quota_limit: 100000,
-          quota_used: 74000,
-          quota_usage_percent: 74,
+          quota_limit: 500000,
+          quota_used: 12000,
+          quota_usage_percent: 2.4,
           renewal_date: billingCycle === 'monthly' ? '18 Oct, 2026' : '18 Sep, 2027',
         }).catch(() => {});
-        onNavigate('solo-guard');
+        onNavigate('dashboard');
       }
       try {
         sessionStorage.removeItem('ostraops_pending_plan');
@@ -198,11 +177,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
       } catch {}
     } catch (err) {
       console.warn('Failed to update subscription on onboarding finish:', err);
-      if (selectedPlan === 'solo') {
-        onNavigate('solo-guard');
-      } else {
-        onNavigate('dashboard');
-      }
+      onNavigate('dashboard');
     } finally {
       setIsFinishing(false);
     }
@@ -562,13 +537,13 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
               </div>
             </div>
 
-            {/* 3 Pricing Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1: Solo */}
+            {/* Pricing Cards Grid: Hosted Gateway & Enterprise */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Card 1: Hosted Gateway (Includes Solo Guard) */}
               <div
-                onClick={() => setSelectedPlan('solo')}
+                onClick={() => setSelectedPlan('hosted')}
                 className={`rounded-2xl p-6 sm:p-7 flex flex-col justify-between transition-all cursor-pointer relative ${
-                  selectedPlan === 'solo'
+                  selectedPlan === 'hosted'
                     ? 'bg-white border-2 border-[#C59E5F] shadow-xl ring-2 ring-[#C59E5F]/15'
                     : 'bg-white/60 hover:bg-white border border-[#E6DFD5] shadow-xs'
                 }`}
@@ -576,73 +551,14 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl font-bold text-[#16181B]">Solo</h3>
+                      <h3 className="text-xl font-bold text-[#16181B]">Hosted Gateway</h3>
                       <p className="text-xs text-[#8C827A] mt-0.5">
-                        For individual developers
+                        Central proxy &amp; team governance
                       </p>
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#16181B] text-white">
-                      Most Popular
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#C59E5F] text-white">
+                      Solo Guard Included
                     </span>
-                  </div>
-
-                  <div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl sm:text-4xl font-extrabold text-[#16181B]">
-                        {billingCycle === 'monthly' ? '$12' : '$10'}
-                      </span>
-                      <span className="text-xs text-[#8C827A]">/month</span>
-                    </div>
-                    <span className="text-[11px] text-[#8C827A] block mt-0.5">
-                      (global pricing)
-                    </span>
-                  </div>
-
-                  <div className="space-y-2.5 pt-4 border-t border-[#F0EAE1] text-xs text-[#4A433A]">
-                    <div className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
-                      <span>Local-first telemetry</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
-                      <span>Up to 5 model integrations</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
-                      <span>Basic analytics & alerts</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-6">
-                  <button
-                    type="button"
-                    className={`w-full py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      selectedPlan === 'solo'
-                        ? 'bg-[#16181B] text-white shadow-xs'
-                        : 'bg-[#FAF7F2] border border-[#E6DFD5] text-[#16181B]'
-                    }`}
-                  >
-                    {selectedPlan === 'solo' ? 'Selected' : 'Select Plan'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Card 2: Team */}
-              <div
-                onClick={() => setSelectedPlan('team')}
-                className={`rounded-2xl p-6 sm:p-7 flex flex-col justify-between transition-all cursor-pointer relative ${
-                  selectedPlan === 'team'
-                    ? 'bg-white border-2 border-[#C59E5F] shadow-xl ring-2 ring-[#C59E5F]/15'
-                    : 'bg-white/60 hover:bg-white border border-[#E6DFD5] shadow-xs'
-                }`}
-              >
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-[#16181B]">Team</h3>
-                    <p className="text-xs text-[#8C827A] mt-0.5">
-                      For growing teams
-                    </p>
                   </div>
 
                   <div>
@@ -653,26 +569,30 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                       <span className="text-xs text-[#8C827A]">/month</span>
                     </div>
                     <span className="text-[11px] text-[#8C827A] block mt-0.5">
-                      (global pricing)
+                      {billingCycle === 'monthly' ? 'Standard monthly billing' : 'Billed annually ($468/yr)'}
                     </span>
                   </div>
 
                   <div className="space-y-2.5 pt-4 border-t border-[#F0EAE1] text-xs text-[#4A433A]">
                     <div className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
-                      <span>Team collaboration</span>
+                      <span><strong>Solo Developer Guard Included:</strong> Local daemon loopback</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
-                      <span>Up to 20 integrations</span>
+                      <span>Zero-trust cloud edge: <code>gateway.ostraops.com/v1</code></span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
-                      <span>Advanced analytics</span>
+                      <span>Encrypted Central Master Key Vault &amp; Scoped Virtual Keys</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
-                      <span>Role-based access</span>
+                      <span>Automated hard spending caps per engineer key</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
+                      <span>Includes 5 developer seats + Workspace analytics</span>
                     </div>
                   </div>
                 </div>
@@ -681,17 +601,17 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                   <button
                     type="button"
                     className={`w-full py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      selectedPlan === 'team'
+                      selectedPlan === 'hosted'
                         ? 'bg-[#16181B] text-white shadow-xs'
                         : 'bg-[#FAF7F2] border border-[#E6DFD5] text-[#16181B]'
                     }`}
                   >
-                    {selectedPlan === 'team' ? 'Selected' : 'Select Plan'}
+                    {selectedPlan === 'hosted' ? 'Selected' : 'Select Plan'}
                   </button>
                 </div>
               </div>
 
-              {/* Card 3: Enterprise */}
+              {/* Card 2: Enterprise */}
               <div
                 onClick={() => setSelectedPlan('enterprise')}
                 className={`rounded-2xl p-6 sm:p-7 flex flex-col justify-between transition-all cursor-pointer relative ${
@@ -706,7 +626,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                       Enterprise
                     </h3>
                     <p className="text-xs text-[#8C827A] mt-0.5">
-                      For large organizations
+                      For large organizations &amp; custom VPCs
                     </p>
                   </div>
 
@@ -715,26 +635,26 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                       Custom
                     </div>
                     <span className="text-[11px] text-[#8C827A] block mt-0.5">
-                      Tailored volume & SLA
+                      Tailored volume &amp; enterprise SLA
                     </span>
                   </div>
 
                   <div className="space-y-2.5 pt-4 border-t border-[#F0EAE1] text-xs text-[#4A433A]">
                     <div className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
-                      <span>SSO & advanced RBAC</span>
+                      <span>Private VPC Edge Gateway deployment</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
-                      <span>Unlimited integrations</span>
+                      <span>Custom SAML SSO &amp; advanced RBAC</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
-                      <span>Dedicated support</span>
+                      <span>Unlimited seats &amp; custom billing contracts</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
-                      <span>Custom deployment</span>
+                      <span>24/7 dedicated engineering SLA &amp; audit logging</span>
                     </div>
                   </div>
                 </div>
@@ -748,7 +668,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                         : 'bg-[#FAF7F2] border border-[#E6DFD5] text-[#16181B]'
                     }`}
                   >
-                    {selectedPlan === 'enterprise' ? 'Selected' : 'Contact Sales'}
+                    {selectedPlan === 'enterprise' ? 'Selected' : 'Select Enterprise'}
                   </button>
                 </div>
               </div>
@@ -763,7 +683,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                       PAYMENT &amp; ACTIVATION
                     </span>
                     <h3 className="text-xl font-bold text-[#16181B] mt-1">
-                      Activate {selectedPlan === 'solo' ? 'Solo Pro' : 'Team Gateway'}
+                      Activate Hosted Gateway
                     </h3>
                     <p className="text-xs text-[#736A5E] mt-0.5">
                       Select your preferred payment method below to complete activation.
@@ -777,9 +697,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                   ) : (
                     <div className="text-right">
                       <div className="text-2xl font-black text-[#16181B] font-mono">
-                        {selectedPlan === 'solo' 
-                          ? (billingCycle === 'monthly' ? '$12' : '$120')
-                          : (billingCycle === 'monthly' ? '$49' : '$468')}
+                        {billingCycle === 'monthly' ? '$49' : '$468'}
                       </div>
                       <span className="text-[11px] text-[#8C827A] font-mono">
                         {billingCycle === 'monthly' ? '/ month' : '/ year (20% saved)'}
@@ -936,9 +854,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                         ) : (
                           <>
                             <span>
-                              Pay {selectedPlan === 'solo' 
-                                ? (billingCycle === 'monthly' ? '$12' : '$120')
-                                : (billingCycle === 'monthly' ? '$49' : '$468')} &amp; Activate Plan →
+                              Pay {billingCycle === 'monthly' ? '$49' : '$468'} &amp; Activate Plan →
                             </span>
                           </>
                         )}
@@ -949,7 +865,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                   <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 text-xs text-emerald-800 font-semibold">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Payment completed successfully! Your {selectedPlan === 'solo' ? 'Solo Pro' : 'Team Gateway'} plan is active.</span>
+                      <span>Payment completed successfully! Your Hosted Gateway plan is active.</span>
                     </div>
                     <button
                       type="button"
@@ -1193,11 +1109,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                         Plan
                       </span>
                       <span className="font-semibold text-[#16181B]">
-                        {selectedPlan === 'solo'
-                          ? 'Solo · $12/month'
-                          : selectedPlan === 'team'
-                          ? 'Team · $49/month'
-                          : 'Enterprise · Custom'}
+                        {selectedPlan === 'enterprise'
+                          ? 'Enterprise · Custom'
+                          : 'Hosted Gateway · $49/month'}
                       </span>
                     </div>
                   </div>
@@ -1236,12 +1150,10 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                   YOU'RE ALL SET
                 </span>
                 <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold text-[#16181B] tracking-tight leading-[1.15]">
-                  {selectedPlan === 'solo' ? 'Welcome to Solo Guard!' : 'Welcome to Ostra!'}
+                  Welcome to Hosted Gateway!
                 </h1>
                 <p className="text-sm sm:text-base text-[#635B50] leading-relaxed max-w-md">
-                  {selectedPlan === 'solo'
-                    ? 'Your local-first telemetry & guardrail console is ready. Enjoy edge security with zero cloud retention.'
-                    : 'Your hosted gateway workspace is ready. High-velocity routing, intra-family failover, and live analytics are active.'}
+                  Your hosted gateway workspace is ready with Solo Developer Guard included. High-velocity routing, intra-family failover, and live analytics are active.
                 </p>
 
                 {/* Primary CTA */}
@@ -1258,11 +1170,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                       </>
                     ) : (
                       <>
-                        <span>
-                          {selectedPlan === 'solo'
-                            ? 'Open Local-First Console'
-                            : 'Go to Hosted Gateway Dashboard'}
-                        </span>
+                        <span>Go to Hosted Gateway Dashboard</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
@@ -1274,7 +1182,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                       disabled={isFinishing}
                       className="text-xs text-[#8C827A] hover:text-[#16181B] font-medium transition-colors cursor-pointer"
                     >
-                      {selectedPlan === 'solo' ? 'Launch CLI & Local Guard' : 'Explore the full platform'}
+                      Explore the full platform
                     </button>
                   </div>
                 </div>

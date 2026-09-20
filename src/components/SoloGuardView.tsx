@@ -23,7 +23,6 @@ import {
   Hash,
   AlertTriangle
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
 
 interface SoloGuardViewProps {
   onNavigateToTeamGateway?: () => void;
@@ -36,7 +35,6 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
   onNavigateToPricing,
   isHostedGatewayUser = false,
 }) => {
-  const { user } = useAuth();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [activePkgTab, setActivePkgTab] = useState<'npm' | 'npx' | 'pnpm' | 'brew'>('npm');
   const [activeEnvTab, setActiveEnvTab] = useState<'env' | 'bash' | 'powershell' | 'cursor'>('env');
@@ -252,7 +250,7 @@ $env:OSTRAOPS_SECRET_KEY="${daemonSecret}"`,
             <div className="flex items-center gap-2.5">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0C1519] border border-[#3A3534] text-[#CF9D7B] text-xs font-bold font-mono">
                 <Laptop className="w-3.5 h-3.5 text-[#CF9D7B]" />
-                Solo Developer Mode
+                Solo Guard (Local Daemon)
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#724B39]/30 border border-[#724B39] text-[#CF9D7B] text-xs font-semibold">
                 <span className="w-2 h-2 rounded-full bg-[#CF9D7B] animate-pulse" />
@@ -264,7 +262,7 @@ $env:OSTRAOPS_SECRET_KEY="${daemonSecret}"`,
               Local-First Telemetry &amp; Guard Console
             </h1>
             <p className="text-xs sm:text-sm text-[#C7BDAB] leading-relaxed">
-              Everything runs locally on your machine. Your API keys, system prompts, and code never leave your disk. Logs persist strictly to your local SQLite database.
+              Included in your Hosted Gateway subscription. Everything runs locally on your machine for Cursor, Cline, and IDEs with 0 external transit.
             </p>
           </div>
 
@@ -272,10 +270,10 @@ $env:OSTRAOPS_SECRET_KEY="${daemonSecret}"`,
           <div className="p-4 rounded-2xl bg-[#0C1519] border border-[#3A3534] space-y-2.5 shrink-0 lg:w-72">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-[#A69C95] uppercase tracking-wider font-mono">
-                Active Tier
+                Subscription Status
               </span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#724B39]/40 border border-[#724B39] text-[#CF9D7B] font-mono">
-                {isHostedGatewayUser ? 'Included with Team Plan' : 'Solo Pro Active'}
+                Included in Hosted Gateway
               </span>
             </div>
 
@@ -898,15 +896,15 @@ $env:OSTRAOPS_SECRET_KEY="${daemonSecret}"`,
             <div className="flex items-center gap-2">
               <Flame className="w-5 h-5 text-[#CF9D7B]" />
               <h2 className="text-lg font-extrabold text-white">
-                Solo Pro Features &amp; Integrations
+                Solo Guard Daemon Features &amp; Integrations
               </h2>
             </div>
             <p className="text-xs text-[#C7BDAB]">
-              Mobile burn alerts and multi-machine sync configured for {user?.email || 'developer'}.
+              Mobile burn alerts and multi-machine sync included with your Hosted Gateway subscription.
             </p>
           </div>
           <span className="px-2.5 py-1 rounded-full bg-[#724B39]/40 border border-[#724B39] text-[#CF9D7B] text-xs font-bold font-mono">
-            Pro Active
+            Included in Gateway
           </span>
         </div>
 
