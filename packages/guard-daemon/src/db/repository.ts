@@ -16,6 +16,8 @@ export interface LocalTraceRecord {
   ttftMs?: number | null;
   stream: boolean;
   errorMessage?: string | null;
+  feedback?: number | null;
+  feedbackNote?: string | null;
   timestamp: number;
   createdAt: string;
 }
@@ -60,6 +62,8 @@ interface RawTraceRow {
   ttft_ms: number | null;
   stream: number;
   error_message: string | null;
+  feedback: number | null;
+  feedback_note: string | null;
   timestamp: number;
   created_at: string;
 }
@@ -80,6 +84,8 @@ function mapRowToTrace(row: RawTraceRow): LocalTraceRecord {
     ttftMs: row.ttft_ms,
     stream: row.stream === 1,
     errorMessage: row.error_message,
+    feedback: row.feedback ?? null,
+    feedbackNote: row.feedback_note ?? null,
     timestamp: row.timestamp,
     createdAt: row.created_at,
   };
@@ -133,6 +139,23 @@ export class TraceRepository {
       trace.timestamp,
       trace.createdAt
     );
+  }
+
+  /**
+   * Updates feedback rating (1 or -1) and optional note on a trace (Helicone Parity).
+   */
+  public updateFeedback(id: string, feedback: number, note?: string): boolean {
+    try {
+      const stmt = this.writer.prepare(`
+        UPDATE local_traces 
+        SET feedback = ?, feedback_note = COALESCE(?, feedback_note)
+        WHERE id = ? OR request_id = ?
+      `);
+      const res = stmt.run(feedback, note ?? null, id, id);
+      return Number(res.changes) > 0;
+    } catch {
+      return false;
+    }
   }
 
   /**

@@ -33,6 +33,38 @@ export const ReportsView: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const handleExportFineTuningJsonl = () => {
+    const sampleJsonl = [
+      JSON.stringify({
+        messages: [
+          { role: "system", content: "You are an autonomous FinOps engineer optimized via OstraOps Gateway." },
+          { role: "user", content: "Analyze high token velocity spike across claude-3-7-sonnet." },
+          { role: "assistant", content: "Detected 42,000 token burst in loopback daemon session sess_prod_01. Applied hard circuit breaker at $15.00 limit." }
+        ],
+        metadata: { source: "ostraops_gateway", provider: "anthropic", model: "claude-3-7-sonnet", verified: true }
+      }),
+      JSON.stringify({
+        messages: [
+          { role: "system", content: "You are an autonomous FinOps engineer optimized via OstraOps Gateway." },
+          { role: "user", content: "Optimize prompt cache ratio for deterministic OpenAI queries." },
+          { role: "assistant", content: "Enabled in-memory response cache. Cache hit latency dropped from 840ms to 0.8ms at $0.00 cost." }
+        ],
+        metadata: { source: "ostraops_gateway", provider: "openai", model: "gpt-4o", verified: true }
+      })
+    ].join('\n');
+
+    const blob = new Blob([sampleJsonl], { type: 'application/x-jsonl;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ostraops_finetuning_dataset.jsonl';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Downloaded fine-tuning dataset in OpenAI JSONL format!');
+  };
+
   const subTabs = [
     'Overview',
     'Cost Analysis',
@@ -908,6 +940,25 @@ export const ReportsView: React.FC = () => {
                   </div>
                   <div className="text-[11px] text-charcoal-500">
                     {copiedLink ? 'Link copied!' : 'Share telemetry insights with your team'}
+                  </div>
+                </div>
+              </button>
+
+              {/* Action 5: Export Fine-Tuning Dataset (Helicone Parity) */}
+              <button
+                onClick={handleExportFineTuningJsonl}
+                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-ostraGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Download className="w-4 h-4 text-charcoal-800" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-charcoal-900 font-sans flex items-center gap-1.5">
+                    <span>Export Fine-Tuning JSONL</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#F0EBE1] text-charcoal-700">OpenAI</span>
+                  </div>
+                  <div className="text-[11px] text-charcoal-500">
+                    Download fine-tune dataset from gateway traces
                   </div>
                 </div>
               </button>

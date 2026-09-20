@@ -273,12 +273,89 @@ export function handleApiRoute(
   // 7. Bulk Export (GET /api/traces/export)
   if (pathname === '/api/traces/export' && req.method === 'GET') {
     const sessionId = urlObj.searchParams.get('sessionId') || undefined;
+    const format = urlObj.searchParams.get('format') || 'json';
     const all = ctx.repository.queryTraces({ limit: 200, sessionId });
+
+    if (format === 'finetune' || format === 'jsonl') {
+      const lines = all.traces
+        .filter((t) => t.statusCode === 200)
+        .map((t) =>
+          JSON.stringify({
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an advanced autonomous AI assistant monitored by OstraOps Guard.',
+              },
+              {
+                role: 'user',
+                content: `Session: ${t.sessionId} | Model: ${t.requestedModel}`,
+              },
+              {
+                role: 'assistant',
+                content: `Executed via ${t.routedModel} in ${t.durationMs}ms (Tokens: ${t.inputTokens}in/${t.outputTokens}out, Cost: $${t.costUsd.toFixed(6)}).`,
+              },
+            ],
+            metadata: {
+              trace_id: t.id,
+              request_id: t.requestId,
+              session_id: t.sessionId,
+              cost_usd: t.costUsd,
+              provider: t.provider,
+              model: t.routedModel,
+              timestamp: t.timestamp,
+              feedback: t.feedback ?? null,
+            },
+          })
+        )
+        .join('\n');
+
+      res.writeHead(200, {
+        'Content-Type': 'application/x-jsonl; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="ostraops_finetuning_dataset.jsonl"',
+        'Access-Control-Allow-Origin': origin || '*',
+      });
+      res.end(lines);
+      return true;
+    }
+
     sendJson(res, 200, {
       exportedAt: new Date().toISOString(),
       traces: all.traces,
       totalExported: all.traces.length,
     }, origin);
+    return true;
+  }
+
+  // 7.5 Trace Feedback API (Helicone Parity: POST /api/traces/:id/feedback or /v1/request/:id/feedback)
+  const isFeedbackRoute =
+    (pathname.startsWith('/api/traces/') && pathname.endsWith('/feedback')) ||
+    (pathname.startsWith('/v1/request/') && pathname.endsWith('/feedback'));
+
+  if (isFeedbackRoute && req.method === 'POST') {
+    let traceId = '';
+    if (pathname.startsWith('/api/traces/')) {
+      traceId = pathname.slice('/api/traces/'.length, -'/feedback'.length);
+    } else {
+      traceId = pathname.slice('/v1/request/'.length, -'/feedback'.length);
+    }
+
+    parseJsonBody(req).then((body) => {
+      const rawRating = body.rating;
+      const rating =
+        typeof rawRating === 'number'
+          ? rawRating
+          : rawRating === true
+          ? 1
+          : rawRating === false
+          ? -1
+          : 1;
+      const note = typeof body.note === 'string' ? body.note : undefined;
+
+      const updated = ctx.repository.updateFeedback(traceId, rating, note);
+      sendJson(res, 200, { ok: true, traceId, rating, note, updated }, origin);
+    }).catch(() => {
+      sendJson(res, 400, { error: { code: 'BAD_REQUEST', message: 'Invalid JSON body for feedback' } }, origin);
+    });
     return true;
   }
 

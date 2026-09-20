@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS local_traces (
   ttft_ms INTEGER,
   stream INTEGER NOT NULL,
   error_message TEXT,
+  feedback INTEGER,
+  feedback_note TEXT,
   timestamp INTEGER NOT NULL,
   created_at TEXT NOT NULL
 );
@@ -70,6 +72,8 @@ export function initializeDatabase(dbLocation: string): DatabaseConnections {
 
   // Initialize schema
   writer.exec(SCHEMA_SQL);
+  try { writer.exec('ALTER TABLE local_traces ADD COLUMN feedback INTEGER;'); } catch {}
+  try { writer.exec('ALTER TABLE local_traces ADD COLUMN feedback_note TEXT;'); } catch {}
 
   // 2. Read-Only Query Connection (for UI hydration & summaries)
   // For :memory: databases, we reuse the same connection to preserve in-memory state
