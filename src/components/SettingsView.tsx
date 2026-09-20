@@ -24,6 +24,7 @@ import { SecurityConsoleView } from './SecurityConsoleView';
 import { PreferencesView } from './PreferencesView';
 import { BillingView } from './BillingView';
 import { useAuth } from '../contexts/AuthContext';
+import { auth } from '../lib/firebase';
 
 interface SettingsViewProps {
   onNavigateHome?: () => void;
@@ -98,6 +99,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferEmail, setTransferEmail] = useState('');
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
 
@@ -173,7 +175,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
   const handlePermanentDeleteAccount = async () => {
     if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') return;
     setIsDeletingAccount(true);
-    const { error } = await deleteAccount();
+    const { error } = await deleteAccount(deletePassword || undefined);
     setIsDeletingAccount(false);
     if (error) {
       showToast(`Error: ${error.message}`);
@@ -181,9 +183,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
       showToast('Account permanently deleted. Zero data retained.');
       setDangerConfirmOpen(false);
       setDeleteConfirmText('');
+      setDeletePassword('');
       if (onNavigateHome) {
-        setTimeout(() => onNavigateHome(), 600);
+        setTimeout(() => onNavigateHome(), 300);
       } else {
+        window.location.hash = '';
         window.location.reload();
       }
     }
@@ -1034,6 +1038,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
               />
             </div>
 
+            {/* Optional Password Verification for Email/Password Accounts */}
+            {auth.currentUser?.providerData?.some((p) => p.providerId === 'password') && (
+              <div className="space-y-1.5">
+                <label className="block text-xs text-charcoal-700">
+                  Password <span className="text-charcoal-400 font-normal">(optional security confirmation)</span>
+                </label>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Enter current password if applicable"
+                  className="w-full px-3.5 py-2.5 text-xs bg-white border border-[#EAE5DC] rounded-xl text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-rose-500 transition-colors"
+                />
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
@@ -1042,6 +1062,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                 onClick={() => {
                   setDangerConfirmOpen(false);
                   setDeleteConfirmText('');
+                  setDeletePassword('');
                 }}
                 className="px-3.5 py-2 rounded-xl text-xs font-medium text-charcoal-600 hover:bg-sandstone-100 transition-colors cursor-pointer"
               >

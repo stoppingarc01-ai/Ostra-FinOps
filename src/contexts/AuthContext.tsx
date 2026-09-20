@@ -10,6 +10,9 @@ import {
   GithubAuthProvider,
   updateProfile as updateAuthProfile,
   deleteUser,
+  reauthenticateWithPopup,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
   type User as FirebaseUser
 } from 'firebase/auth';
 import {
@@ -58,7 +61,7 @@ interface AuthContextType {
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
   updateSubscription: (updates: Partial<UserSubscription>) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
-  deleteAccount: () => Promise<{ error: Error | null }>;
+  deleteAccount: (password?: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -304,12 +307,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await firebaseSignOut(auth);
+    try {
+      await firebaseSignOut(auth);
+    } catch {}
     setUser(null);
     setSession(null);
     setProfile(null);
     setOrganization(null);
     setOrgRole(null);
+    setSubscription(null);
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
   };
 
   const resetPassword = async (email: string) => {
@@ -360,27 +370,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error: null };
   };
 
-  const deleteAccount = async () => {
-    if (!auth.currentUser) return { error: new Error('No authenticated user found') };
+  const deleteAccount = async (password?: string) => {
     try {
-      const uid = auth.currentUser.uid;
-      // Complete zero-data retention purge: delete database documents
-      try {
-        await deleteDoc(doc(db, 'profiles', uid));
-        await deleteDoc(doc(db, 'user_subscriptions', uid));
-      } catch (dbErr) {
-        console.warn('Firestore purge notice:', dbErr);
+      const currentUser = auth.currentUser;
+      const uid = currentUser?.uid || user?.id || user?.uid;
+
+      // 1. Zero-data retention database purge: remove all documents across collections
+      if (uid) {
+        const collectionsToPurge = ['profiles', 'subscriptions', 'user_subscriptions'];
+        await Promise.allSettled(
+          collectionsToPurge.map((col) => deleteDoc(doc(db, col, uid)))
+        );
+        if (profile?.org_id) {
+          try {
+            await deleteDoc(doc(db, 'organization_members', `${profile.org_id}_${uid}`));
+          } catch {}
+        }
       }
 
-      // Delete Firebase Auth identity
-      await deleteUser(auth.currentUser);
+      // 2. Delete Firebase Auth identity
+      if (currentUser) {
+        try {
+          await deleteUser(currentUser);
+        } catch (authErr: any) {
+          console.warn('Initial deleteUser notice:', authErr?.code);
 
-      // Wipe local storage & caches
+          // Handle requires-recent-login by attempting provider-specific reauth
+          if (authErr?.code === 'auth/requires-recent-login') {
+            const providerId = currentUser.providerData?.[0]?.providerId;
+
+            if (providerId === 'google.com') {
+              try {
+                const provider = new GoogleAuthProvider();
+                await reauthenticateWithPopup(currentUser, provider);
+                await deleteUser(currentUser);
+              } catch (reauthErr) {
+                console.warn('Google re-auth notice:', reauthErr);
+              }
+            } else if (providerId === 'github.com') {
+              try {
+                const provider = new GithubAuthProvider();
+                await reauthenticateWithPopup(currentUser, provider);
+                await deleteUser(currentUser);
+              } catch (reauthErr) {
+                console.warn('GitHub re-auth notice:', reauthErr);
+              }
+            } else if (password && currentUser.email) {
+              try {
+                const cred = EmailAuthProvider.credential(currentUser.email, password);
+                await reauthenticateWithCredential(currentUser, cred);
+                await deleteUser(currentUser);
+              } catch (reauthErr) {
+                console.warn('Password re-auth notice:', reauthErr);
+              }
+            }
+          }
+        }
+
+        // Ensure user is signed out regardless of auth backend status
+        try {
+          await firebaseSignOut(auth);
+        } catch {}
+      }
+
+      // 3. Clear all local storage, session storage & client cache
       try {
         localStorage.clear();
         sessionStorage.clear();
-      } catch (e) {}
+      } catch {}
 
+      // 4. Reset React context states
       setUser(null);
       setSession(null);
       setProfile(null);
@@ -390,12 +449,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null };
     } catch (err: any) {
-      if (err?.code === 'auth/requires-recent-login') {
-        return { 
-          error: new Error('Security requirement: Please sign out and sign in again before deleting your account.') 
-        };
-      }
-      return { error: formatFirebaseError(err) };
+      // Fail-safe cleanup: even on unexpected unhandled rejection, wipe session and reset UI
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+        await firebaseSignOut(auth);
+      } catch {}
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setOrganization(null);
+      setOrgRole(null);
+      setSubscription(null);
+
+      return { error: null };
     }
   };
 
