@@ -32,6 +32,8 @@ packages/*/dist/
 *.db-shm
 .ostraops/
 .osterdops/
+OstraOps/traces.db
+OstraOps/*.db-*
 traces.db
 
 # Logs & Diagnostics

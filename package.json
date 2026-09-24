@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview",
-    "publish:daemon": "npm publish ./packages/guard-daemon --access public"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@dietrichgebert/ponytail": "^4.9.0",

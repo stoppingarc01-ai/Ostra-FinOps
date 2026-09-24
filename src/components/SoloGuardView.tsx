@@ -15,13 +15,7 @@ import {
   ArrowRight,
   Sliders,
   Play,
-  Key,
-  ShieldCheck,
-  Lock,
-  Eye,
-  EyeOff,
-  Hash,
-  AlertTriangle
+  Key
 } from 'lucide-react';
 
 interface SoloGuardViewProps {
@@ -67,29 +61,8 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
     return generated;
   });
 
-  const [daemonSecret, setDaemonSecret] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem('ostraops_solo_secret');
-      if (saved && saved.startsWith('ost_sec_')) return saved;
-    } catch {}
-    const generated = `ost_sec_${generateRandomHex(16)}`;
-    try { localStorage.setItem('ostraops_solo_secret', generated); } catch {}
-    return generated;
-  });
+  const daemonPort = 4041;
 
-  const [daemonPort, setDaemonPort] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('ostraops_solo_port');
-      if (saved) {
-        const p = parseInt(saved, 10);
-        if (p >= 1024 && p <= 65535) return p;
-      }
-    } catch {}
-    return 8080;
-  });
-
-  const [showSecret, setShowSecret] = useState(false);
-  const [isOneTimeRevealed, setIsOneTimeRevealed] = useState<boolean>(true);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   // Sync with dev pairing file on local disk (~/.ostraops/solo_pairing.json)
@@ -99,21 +72,17 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
       .then((res) => res.json())
       .then((data) => {
         if (!isMounted) return;
-        if (data && data.clientId && data.secret) {
+        if (data && data.clientId) {
           setClientId(data.clientId);
-          setDaemonSecret(data.secret);
-          if (data.port) setDaemonPort(data.port);
           try {
             localStorage.setItem('ostraops_solo_client_id', data.clientId);
-            localStorage.setItem('ostraops_solo_secret', data.secret);
-            if (data.port) localStorage.setItem('ostraops_solo_port', String(data.port));
           } catch {}
         } else {
-          // Push initial credentials so daemon CLI can immediately verify them
+          // Push initial credentials
           fetch('/api/dev/pairing', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ clientId, secret: daemonSecret, port: daemonPort }),
+            body: JSON.stringify({ clientId, port: daemonPort }),
           }).catch(() => {});
         }
       })
@@ -131,27 +100,18 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
     const rand = generateRandomHex(8);
     const time = Date.now().toString(36).slice(-4);
     const newId = `ost_client_solo_${rand}_${time}`;
-    const newSec = `ost_sec_${generateRandomHex(16)}`;
     setClientId(newId);
-    setDaemonSecret(newSec);
-    setIsOneTimeRevealed(true);
-    setShowSecret(false);
-    setCopiedField('regenerated');
+    setCopiedField('id');
     try {
       localStorage.setItem('ostraops_solo_client_id', newId);
-      localStorage.setItem('ostraops_solo_secret', newSec);
     } catch {}
     // Update local pairing file immediately
     fetch('/api/dev/pairing', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientId: newId, secret: newSec, port: daemonPort }),
+      body: JSON.stringify({ clientId: newId, port: daemonPort }),
     }).catch(() => {});
     setTimeout(() => setCopiedField(null), 2000);
-  };
-
-  const lockOneTimeView = () => {
-    setIsOneTimeRevealed(false);
   };
 
   const copyToClipboard = (text: string, key: string) => {
@@ -210,27 +170,22 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
 OPENAI_BASE_URL="http://127.0.0.1:${daemonPort}/v1"
 ANTHROPIC_BASE_URL="http://127.0.0.1:${daemonPort}"
 OSTRAOPS_CLIENT_ID="${clientId}"
-OSTRAOPS_SECRET_KEY="${daemonSecret}"
 OSTRAOPS_SESSION_CAP="${sessionCap}"`,
 
     bash: `# ~/.bashrc or ~/.zshrc
 export OPENAI_BASE_URL="http://127.0.0.1:${daemonPort}/v1"
 export ANTHROPIC_BASE_URL="http://127.0.0.1:${daemonPort}"
-export OSTRAOPS_CLIENT_ID="${clientId}"
-export OSTRAOPS_SECRET_KEY="${daemonSecret}"`,
+export OSTRAOPS_CLIENT_ID="${clientId}"`,
 
     powershell: `# PowerShell ($PROFILE)
 $env:OPENAI_BASE_URL="http://127.0.0.1:${daemonPort}/v1"
 $env:ANTHROPIC_BASE_URL="http://127.0.0.1:${daemonPort}"
-$env:OSTRAOPS_CLIENT_ID="${clientId}"
-$env:OSTRAOPS_SECRET_KEY="${daemonSecret}"`,
+$env:OSTRAOPS_CLIENT_ID="${clientId}"`,
 
     cursor: `// .cursor/settings.json or VSCode settings
 {
   "openai.baseURL": "http://127.0.0.1:${daemonPort}/v1",
-  "openai.apiKey": "${daemonSecret}",
-  "anthropic.baseURL": "http://127.0.0.1:${daemonPort}",
-  "anthropic.apiKey": "${daemonSecret}"
+  "anthropic.baseURL": "http://127.0.0.1:${daemonPort}"
 }`,
   };
 
@@ -315,25 +270,18 @@ $env:OSTRAOPS_SECRET_KEY="${daemonSecret}"`,
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#3A3534] pb-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#724B39]/30 border border-[#724B39] flex items-center justify-center text-[#CF9D7B] shrink-0">
-              <ShieldCheck className="w-5 h-5" />
+              <Key className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white tracking-tight">Sentinel Daemon Security Keys</h2>
-                {isOneTimeRevealed ? (
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#724B39]/30 border border-[#724B39] text-[#CF9D7B] text-[10px] font-bold uppercase tracking-wider font-mono flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#CF9D7B] animate-pulse" />
-                    1-Time View Active
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#0C1519] border border-[#3A3534] text-[#C7BDAB] text-[10px] font-bold uppercase tracking-wider font-mono flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-[#CF9D7B]" />
-                    Secured &amp; Masked
-                  </span>
-                )}
+                <h2 className="text-lg font-bold text-white tracking-tight">Solo Client ID</h2>
+                <span className="px-2.5 py-0.5 rounded-full bg-[#724B39]/30 border border-[#724B39] text-[#CF9D7B] text-[10px] font-bold uppercase tracking-wider font-mono flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#CF9D7B] animate-pulse" />
+                  Active
+                </span>
               </div>
               <p className="text-xs text-[#C7BDAB] mt-0.5">
-                Always generates a fresh unique Client ID. Credentials are shown in 1-time view for maximum safety.
+                Your unique client identifier for telemetry tracking and local guard verification.
               </p>
             </div>
           </div>
@@ -341,7 +289,7 @@ $env:OSTRAOPS_SECRET_KEY="${daemonSecret}"`,
             <button
               onClick={generateNewCredentials}
               className="px-3.5 py-1.5 rounded-xl bg-[#0C1519] hover:bg-[#3A3534]/50 text-[#CF9D7B] hover:text-white border border-[#3A3534] text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-              title="Generate a brand new Client ID and passkey"
+              title="Generate a brand new Client ID"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Generate New Client ID</span>
@@ -349,210 +297,27 @@ $env:OSTRAOPS_SECRET_KEY="${daemonSecret}"`,
           </div>
         </div>
 
-        {/* 1-Time View Alert or Locked Banner */}
-        {isOneTimeRevealed ? (
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#724B39]/20 border border-[#724B39]/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#724B39]/40 border border-[#724B39] flex items-center justify-center text-[#CF9D7B] shrink-0 mt-0.5">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-extrabold text-[#CF9D7B] uppercase tracking-wider font-mono">
-                    ⚠️ 1-Time Security View Active
-                  </span>
-                  <span className="px-2 py-0.2 rounded-full bg-[#724B39]/40 text-[#CF9D7B] text-[10px] font-mono font-bold">
-                    Fresh Unique ID
-                  </span>
-                </div>
-                <p className="text-xs text-[#C7BDAB] leading-relaxed">
-                  A fresh, unique Client ID has been created. Copy your Client ID and Secret Passkey now. Once you click &ldquo;Lock View&rdquo; or refresh this tab, credentials will be masked permanently for safety.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5 shrink-0">
-              <button
-                onClick={() => copyCredential(`npx ostraops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd-all')}
-                className="px-3.5 py-2 rounded-xl bg-[#CF9D7B] hover:bg-[#DBB093] text-[#0C1519] text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
-              >
-                {copiedField === 'cmd-all' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedField === 'cmd-all' ? 'Copied Full Command!' : 'Copy Full Command'}</span>
-              </button>
-              <button
-                onClick={lockOneTimeView}
-                className="px-3.5 py-2 rounded-xl bg-[#0C1519] hover:bg-[#3A3534]/50 text-[#CF9D7B] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border border-[#3A3534]"
-                title="Lock and hide credentials"
-              >
-                <Lock className="w-3.5 h-3.5 text-[#CF9D7B]" />
-                <span>Lock View</span>
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#0C1519] border border-[#3A3534] flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#724B39]/30 border border-[#724B39] flex items-center justify-center text-[#CF9D7B] shrink-0 mt-0.5">
-                <Lock className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-extrabold text-white uppercase tracking-wider font-mono">
-                    Credentials Masked &amp; Locked
-                  </span>
-                  <span className="px-2 py-0.2 rounded-full bg-[#724B39]/40 text-[#CF9D7B] text-[10px] font-mono font-bold">
-                    1-Time View Expired
-                  </span>
-                </div>
-                <p className="text-xs text-[#C7BDAB] leading-relaxed">
-                  Your credentials are encrypted &amp; hidden from this screen. Existing Sentinel daemon runs continue smoothly. If you need a new pair, click generate below.
-                </p>
-              </div>
-            </div>
+        {/* Solo Client ID Display Box */}
+        <div className="p-4 rounded-2xl bg-[#0C1519] border border-[#3A3534] space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-mono font-bold text-[#A69C95] uppercase tracking-wider flex items-center gap-1.5">
+              <Key className="w-3.5 h-3.5 text-[#CF9D7B]" />
+              Client ID
+            </span>
             <button
-              onClick={generateNewCredentials}
-              className="px-4 py-2.5 rounded-xl bg-[#CF9D7B] hover:bg-[#DBB093] text-[#0C1519] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md shrink-0"
+              onClick={() => copyCredential(clientId, 'id')}
+              className="px-3.5 py-1.5 rounded-lg bg-[#CF9D7B] hover:bg-[#DBB093] text-[#0C1519] font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Copy Client ID"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Generate New Client ID &amp; Keys</span>
+              {copiedField === 'id' ? <Check className="w-3.5 h-3.5 text-[#0C1519]" /> : <Copy className="w-3.5 h-3.5 text-[#0C1519]" />}
+              <span>{copiedField === 'id' ? 'Copied Client ID!' : 'Copy Client ID'}</span>
             </button>
           </div>
-        )}
-
-        {/* 3 Credential Cards: ID, Secret Passkey, Unique Port */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
-          {/* Card 1: Client ID */}
-          <div className="p-4 rounded-2xl bg-[#0C1519] border border-[#3A3534] space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold text-[#A69C95] uppercase tracking-wider flex items-center gap-1.5">
-                <Key className="w-3.5 h-3.5 text-[#CF9D7B]" />
-                Solo Client ID
-              </span>
-              {isOneTimeRevealed ? (
-                <button
-                  onClick={() => copyCredential(clientId, 'id')}
-                  className="text-xs text-[#CF9D7B] hover:text-[#DBB093] font-mono flex items-center gap-1 transition-colors cursor-pointer"
-                  title="Copy Client ID"
-                >
-                  {copiedField === 'id' ? <Check className="w-3.5 h-3.5 text-[#CF9D7B]" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedField === 'id' ? 'Copied' : 'Copy'}</span>
-                </button>
-              ) : (
-                <span className="text-[10px] text-[#A69C95] font-mono">1-Time Masked</span>
-              )}
-            </div>
-            <div className="p-2.5 rounded-xl bg-[#162127] border border-[#3A3534] font-mono text-xs text-[#CF9D7B] truncate select-all">
-              {isOneTimeRevealed ? clientId : `${clientId.slice(0, 18)}••••••••`}
-            </div>
-            <p className="text-[11px] text-[#A69C95]">
-              {isOneTimeRevealed ? 'Fresh unique client identifier generated for this session.' : 'Masked for security. Generate a new ID if lost.'}
-            </p>
+          <div className="p-3 rounded-xl bg-[#162127] border border-[#3A3534] font-mono text-sm text-[#CF9D7B] select-all break-all">
+            {clientId}
           </div>
-
-          {/* Card 2: Secret Passkey */}
-          <div className="p-4 rounded-2xl bg-[#0C1519] border border-[#3A3534] space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold text-[#A69C95] uppercase tracking-wider flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-[#CF9D7B]" />
-                Secret Passkey
-              </span>
-              {isOneTimeRevealed ? (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowSecret(!showSecret)}
-                    className="text-[#A69C95] hover:text-[#CF9D7B] transition-colors cursor-pointer"
-                    title={showSecret ? 'Hide secret' : 'Show secret'}
-                  >
-                    {showSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </button>
-                  <button
-                    onClick={() => copyCredential(daemonSecret, 'secret')}
-                    className="text-xs text-[#CF9D7B] hover:text-[#DBB093] font-mono flex items-center gap-1 transition-colors cursor-pointer"
-                    title="Copy Secret"
-                  >
-                    {copiedField === 'secret' ? <Check className="w-3.5 h-3.5 text-[#CF9D7B]" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedField === 'secret' ? 'Copied' : 'Copy'}</span>
-                  </button>
-                </div>
-              ) : (
-                <span className="text-[10px] text-[#A69C95] font-mono">1-Time Masked</span>
-              )}
-            </div>
-            <div className="p-2.5 rounded-xl bg-[#162127] border border-[#3A3534] font-mono text-xs text-[#CF9D7B] truncate select-all">
-              {isOneTimeRevealed ? (showSecret ? daemonSecret : '••••••••••••••••••••••••') : '••••••••••••••••••••••••'}
-            </div>
-            <p className="text-[11px] text-[#A69C95]">
-              {isOneTimeRevealed ? 'Cryptographic secret protecting against unauthorized loopback queries.' : 'Hidden permanently for safety.'}
-            </p>
-          </div>
-
-          {/* Card 3: Unique Port */}
-          <div className="p-4 rounded-2xl bg-[#0C1519] border border-[#3A3534] space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold text-[#A69C95] uppercase tracking-wider flex items-center gap-1.5">
-                <Hash className="w-3.5 h-3.5 text-[#CF9D7B]" />
-                Unique Ingress Port
-              </span>
-              <button
-                onClick={() => copyCredential(String(daemonPort), 'port')}
-                className="text-xs text-[#CF9D7B] hover:text-[#DBB093] font-mono flex items-center gap-1 transition-colors cursor-pointer"
-                title="Copy Port"
-              >
-                {copiedField === 'port' ? <Check className="w-3.5 h-3.5 text-[#CF9D7B]" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedField === 'port' ? 'Copied' : 'Copy'}</span>
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="1024"
-                max="65535"
-                value={daemonPort}
-                onChange={(e) => setDaemonPort(Number(e.target.value) || 8080)}
-                className="w-full p-2 rounded-xl bg-[#162127] border border-[#3A3534] font-mono text-xs text-white focus:outline-hidden focus:border-[#CF9D7B] transition-colors"
-              />
-              <span className="text-[11px] text-[#CF9D7B] font-mono shrink-0">TCP</span>
-            </div>
-            <p className="text-[11px] text-[#A69C95]">Change if 8080 is occupied by Docker or another service.</p>
-          </div>
-        </div>
-
-        {/* Quick Launch Command Snippet */}
-        <div className="p-4 rounded-2xl bg-[#0C1519] border border-[#3A3534] space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-[#CF9D7B]" />
-              <span className="text-xs font-mono font-bold text-[#C7BDAB]">
-                {isOneTimeRevealed ? 'Start Command (Ready to Run)' : 'Start Command (Interactive or Saved)'}
-              </span>
-            </div>
-            {isOneTimeRevealed ? (
-              <button
-                onClick={() => copyCredential(`npx ostraops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'cmd')}
-                className="px-3 py-1 rounded-lg bg-[#CF9D7B] hover:bg-[#DBB093] text-[#0C1519] font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-              >
-                {copiedField === 'cmd' ? <Check className="w-3.5 h-3.5 text-[#0C1519]" /> : <Copy className="w-3.5 h-3.5 text-[#0C1519]" />}
-                <span>{copiedField === 'cmd' ? 'Copied Command!' : 'Copy Command'}</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => copyCredential(`npx ostraops-guard --port ${daemonPort}`, 'cmd-interactive')}
-                className="px-3 py-1 rounded-lg bg-[#162127] hover:bg-[#3A3534] text-[#CF9D7B] font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs border border-[#3A3534]"
-              >
-                {copiedField === 'cmd-interactive' ? <Check className="w-3.5 h-3.5 text-[#CF9D7B]" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedField === 'cmd-interactive' ? 'Copied!' : 'Copy Interactive CLI'}</span>
-              </button>
-            )}
-          </div>
-          <div className="p-3 rounded-xl bg-[#162127] font-mono text-xs text-[#CF9D7B] overflow-x-auto whitespace-pre select-all border border-[#3A3534]">
-            {isOneTimeRevealed
-              ? `npx ostraops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`
-              : `npx ostraops-guard --port ${daemonPort}`}
-          </div>
-          <p className="text-[11px] text-[#A69C95]">
-            {isOneTimeRevealed
-              ? 'Tip: Run anywhere via npx ostraops-guard, or with node packages/guard-daemon/bin/cli.js inside local repo.'
-              : 'Tip: Run npx ostraops-guard to enter credentials interactively, or click "Generate New Client ID" above to see new keys.'}
+          <p className="text-xs text-[#A69C95]">
+            Persistent on this machine. Pass with <code className="text-[#CF9D7B]">--id {clientId}</code> or set <code className="text-[#CF9D7B]">OSTRAOPS_CLIENT_ID=&quot;{clientId}&quot;</code> in your workspace.
           </p>
         </div>
       </div>
@@ -588,7 +353,7 @@ $env:OSTRAOPS_SECRET_KEY="${daemonSecret}"`,
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-xl font-extrabold text-white font-mono">:4040 Dashboard</div>
+            <div className="text-xl font-extrabold text-white font-mono">:4041 Dashboard</div>
             <div className="text-[11px] text-[#C7BDAB] font-medium mt-0.5">
               Real-time token velocity &amp; odometer
             </div>
@@ -699,10 +464,10 @@ $env:OSTRAOPS_SECRET_KEY="${daemonSecret}"`,
           </span>
           <div className="relative p-3.5 rounded-xl bg-[#0C1519] text-white border border-[#3A3534] font-mono text-xs flex items-center justify-between gap-3 overflow-hidden">
             <span className="text-[#CF9D7B] overflow-x-auto whitespace-nowrap pr-2">
-              npx ostraops-guard --id {clientId} --secret {daemonSecret} --port {daemonPort}
+              npx ostraops-guard --id {clientId}
             </span>
             <button
-              onClick={() => copyToClipboard(`npx ostraops-guard --id ${clientId} --secret ${daemonSecret} --port ${daemonPort}`, 'start-cmd')}
+              onClick={() => copyToClipboard(`npx ostraops-guard --id ${clientId}`, 'start-cmd')}
               className="p-1.5 rounded-lg bg-[#162127] hover:bg-[#3A3534] text-[#CF9D7B] transition-colors shrink-0 cursor-pointer border border-[#3A3534]"
               title="Copy start command"
             >

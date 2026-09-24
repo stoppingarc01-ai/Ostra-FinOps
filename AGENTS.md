@@ -30,3 +30,12 @@ Rules:
 Not lazy about: understanding the problem (read it fully and trace the real flow before picking a rung, a small diff you don't understand is just laziness dressed up as efficiency), input validation at trust boundaries, error handling that prevents data loss, security, accessibility, the calibration real hardware needs (the platform is never the spec ideal, a clock drifts, a sensor reads off), anything explicitly requested. Lazy code without its check is unfinished: non-trivial logic leaves ONE runnable check behind, the smallest thing that fails if the logic breaks (an assert-based demo/self-check or one small test file; no frameworks, no fixtures). Trivial one-liners need no test.
 
 (Yes, this file also applies to agents working on the ponytail repo itself. Especially to them.)
+
+## OstraOps — LLM Spend Tracking
+
+LLM calls in this repo must use OstraOps:
+- `import { track } from 'ostraops-guard'`
+- or use `OstraOps/models/<model>/snippet.ts`
+Do not log prompts into OstraOps.
+Dashboard: `vss server` (or `npx ostraops`)
+Unwrapped provider calls are not tracked or budget-limited.

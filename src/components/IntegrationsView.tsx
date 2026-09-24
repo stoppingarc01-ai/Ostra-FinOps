@@ -198,6 +198,78 @@ export interface ModelIntegration {
 
 export const CATALOG_MODELS: ModelIntegration[] = [
   // ------------------------------------------------------------
+  // Anthropic Claude (Frontier Coding & Reasoning)
+  // ------------------------------------------------------------
+  {
+    id: 'claude-3-7-sonnet',
+    name: 'Claude 3.7 Sonnet',
+    provider: 'Anthropic',
+    modelId: 'claude-3-7-sonnet-20250219',
+    status: 'Ready',
+    isShowcase: true,
+    isPopular: true,
+    badgeLabel: 'FRONTIER • HYBRID REASONING',
+    description: 'Frontier hybrid reasoning and autonomous coding model with customizable thinking tokens and industry-leading SWE-bench performance.',
+    contextWindow: '200k tokens',
+    tokenCost: '$3.00 / $15.00',
+    tags: ['Hybrid Reasoning', 'Thinking Budget', 'SWE-bench 70.3%', 'Autonomous Agents'],
+    fallback: 'claude-3-5-sonnet',
+  },
+  {
+    id: 'claude-3-5-sonnet',
+    name: 'Claude 3.5 Sonnet',
+    provider: 'Anthropic',
+    modelId: 'claude-3-5-sonnet-20241022',
+    status: 'Ready',
+    isPopular: true,
+    badgeLabel: 'IDE GOLD STANDARD',
+    description: 'The global standard in Cursor, Windsurf, and VS Code for code refactoring, diff generation, and full-stack software development.',
+    contextWindow: '200k tokens',
+    tokenCost: '$3.00 / $15.00',
+    tags: ['IDE Standard', 'HumanEval 93.7%', 'Refactoring', 'Computer Use'],
+    fallback: 'claude-3-5-haiku',
+  },
+  {
+    id: 'claude-3-5-haiku',
+    name: 'Claude 3.5 Haiku',
+    provider: 'Anthropic',
+    modelId: 'claude-3-5-haiku-20241022',
+    status: 'Ready',
+    isFastest: true,
+    badgeLabel: 'SUB-200MS',
+    description: 'Ultra-fast sub-second coding speed and compact intelligence for real-time tab autocompletion and high-throughput workflows.',
+    contextWindow: '200k tokens',
+    tokenCost: '$0.80 / $4.00',
+    tags: ['Sub-150ms', 'Tab Autocomplete', 'Fast Routing', 'Cost-Effective'],
+    fallback: 'claude-3-haiku',
+  },
+  {
+    id: 'claude-3-opus',
+    name: 'Claude 3 Opus',
+    provider: 'Anthropic',
+    modelId: 'claude-3-opus-20240229',
+    status: 'Ready',
+    badgeLabel: 'DEEP SYNTHESIS',
+    description: 'Deep architectural synthesis and high-IQ reasoning for complex software architecture design, mathematical analysis, and research.',
+    contextWindow: '200k tokens',
+    tokenCost: '$15.00 / $75.00',
+    tags: ['Deep Synthesis', 'Architecture Design', 'STEM Reasoning', '200K Context'],
+    fallback: 'claude-3-7-sonnet',
+  },
+  {
+    id: 'claude-3-haiku',
+    name: 'Claude 3 Haiku',
+    provider: 'Anthropic',
+    modelId: 'claude-3-haiku-20240307',
+    status: 'Ready',
+    description: 'Lightweight economy model for fast repository indexing, symbol extraction, and high-throughput background search.',
+    contextWindow: '200k tokens',
+    tokenCost: '$0.25 / $1.25',
+    tags: ['Economy Tier', 'Repo Indexing', 'Fast QA'],
+    fallback: 'claude-3-5-haiku',
+  },
+
+  // ------------------------------------------------------------
   // Google Gemini (8 Models) - Gemini 3.8 Flash is Showcase
   // ------------------------------------------------------------
   {
