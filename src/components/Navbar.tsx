@@ -145,40 +145,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
             Pricing
           </button>
 
-          {/* Console Links */}
-          {user ? (
-            <>
-              <button
-                onClick={() => onNavigate('solo-guard')}
-                className={`relative py-1 transition-all ${
-                  currentRoute === 'solo-guard'
-                    ? 'text-charcoal-900 font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#B58E50] after:rounded-full'
-                    : 'hover:text-charcoal-900'
-                }`}
-              >
-                Solo Guard
-              </button>
-              <button
-                onClick={() => onNavigate('dashboard')}
-                className={`relative py-1 transition-all ${
-                  currentRoute === 'dashboard'
-                    ? 'text-charcoal-900 font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#B58E50] after:rounded-full'
-                    : 'hover:text-charcoal-900'
-                }`}
-              >
-                API Gateway
-              </button>
-            </>
-          ) : (
+          {/* Dashboard Link */}
+          {user && (
             <button
-              onClick={() => onNavigate('solo-guard')}
+              onClick={() => onNavigate('dashboard')}
               className={`relative py-1 transition-all ${
-                currentRoute === 'solo-guard'
+                currentRoute === 'dashboard'
                   ? 'text-charcoal-900 font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#B58E50] after:rounded-full'
                   : 'hover:text-charcoal-900'
               }`}
             >
-              Solo Guard
+              Dashboard
             </button>
           )}
 
@@ -321,27 +298,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
             >
               About Us
             </button>
-            {user ? (
-              <>
-                <button
-                  onClick={() => { onNavigate('solo-guard'); setMobileMenuOpen(false); }}
-                  className={`text-left py-1 ${currentRoute === 'solo-guard' ? 'text-charcoal-900 font-bold' : ''}`}
-                >
-                  Solo Guard (Local)
-                </button>
-                <button
-                  onClick={() => { onNavigate('dashboard'); setMobileMenuOpen(false); }}
-                  className={`text-left py-1 ${currentRoute === 'dashboard' ? 'text-charcoal-900 font-bold' : ''}`}
-                >
-                  API Gateway (Cloud)
-                </button>
-              </>
-            ) : (
+            {user && (
               <button
-                onClick={() => { onNavigate('solo-guard'); setMobileMenuOpen(false); }}
-                className={`text-left py-1 ${currentRoute === 'solo-guard' ? 'text-charcoal-900 font-bold' : ''}`}
+                onClick={() => { onNavigate('dashboard'); setMobileMenuOpen(false); }}
+                className={`text-left py-1 ${currentRoute === 'dashboard' ? 'text-charcoal-900 font-bold' : ''}`}
               >
-                Solo Guard
+                Dashboard
               </button>
             )}
             <button

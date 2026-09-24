@@ -12,16 +12,15 @@ export const EnterpriseTrustSection: React.FC<EnterpriseTrustProps> = ({ onNavig
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-200 border border-sandstone-300/80 text-[11px] font-bold tracking-[0.16em] text-charcoal-700 uppercase font-mono mb-3">
-            <span className="w-2 h-2 rounded-full bg-emerald-600" />
-            <span>ENTERPRISE SECURITY & COMPLIANCE</span>
-          </div>
+          <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-2 font-mono">
+            Security &amp; Data Privacy
+          </p>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
             Built On Zero Data Retention.{' '}
             <span className="gold-gradient-text block">By Design, Not By Promise.</span>
           </h2>
           <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
-            Your proprietary codebase, prompt trajectories, and system instructions never leave your machine.
+            Your proprietary codebase, prompt trajectories, and system instructions never get stored on our servers.
           </p>
         </div>
 

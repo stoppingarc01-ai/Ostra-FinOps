@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   ChevronDown, 
-  Search, 
-  HelpCircle 
+  Search 
 } from 'lucide-react';
 
 interface FAQItem {
@@ -128,16 +127,15 @@ export const FAQSection: React.FC = () => {
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-200 border border-sandstone-300/80 text-[11px] font-bold tracking-[0.16em] text-charcoal-700 uppercase font-mono mb-3">
-            <HelpCircle className="w-3.5 h-3.5 text-ostraGold-600" />
-            <span>FREQUENTLY ASKED QUESTIONS</span>
-          </div>
+          <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider mb-2 font-mono">
+            Frequently Asked Questions
+          </p>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
-            Everything You Need To Know.{' '}
-            <span className="gold-gradient-text block">Zero Hype. Full Engineering Details.</span>
+            Clear Answers.{' '}
+            <span className="gold-gradient-text block">Zero Jargon. Honest Facts.</span>
           </h2>
           <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
-            Got questions about latency, tool schemas, privacy, or setup? Here are the technical facts.
+            Got questions about token tracking, budget limits, data privacy, or getting started? Here are straightforward answers.
           </p>
         </div>
 

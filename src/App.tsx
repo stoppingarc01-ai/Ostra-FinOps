@@ -23,7 +23,6 @@ import { BuildErrorPage } from './pages/BuildErrorPage';
 import { ServerErrorPage } from './pages/ServerErrorPage';
 import { RateLimitPage } from './pages/RateLimitPage';
 import { AboutUsPage } from './pages/AboutUsPage';
-import { SoloGuardPage } from './pages/SoloGuardPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CookieBanner } from './components/CookieBanner';
 import { Footer } from './components/Footer';
@@ -31,10 +30,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { OstraIcon } from './components/OstraBrand';
 
-export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'auth-showcase' | 'forgot-password' | 'solo-guard' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'about' | '404' | '500' | 'build-error' | '429';
+export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'about' | '404' | '500' | 'build-error' | '429';
 
 // Routes that require authentication
-const PROTECTED_ROUTES: AppRoute[] = ['solo-guard', 'dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings'];
+const PROTECTED_ROUTES: AppRoute[] = ['dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings'];
 const HOMEPAGE_SECTIONS = ['#features', '#architecture', '#agents', '#developers', '#docs', '#quickstart', '#security', '#faq', '#ui-showcase', '#hero', '#about-sec'];
 
 const AppInner: React.FC = () => {
@@ -56,7 +55,6 @@ const AppInner: React.FC = () => {
     if (path.includes('optimization') || hash.includes('optimization')) return 'optimization';
     if (path.includes('models') || hash.includes('models')) return 'models';
     if (path.includes('projects') || hash.includes('projects')) return 'projects';
-    if (path.includes('solo-guard') || hash.includes('solo-guard')) return 'solo-guard';
     if (path.includes('dashboard') || hash.includes('dashboard')) return 'dashboard';
     if (path.includes('privacy') || hash.includes('privacy')) return 'privacy';
     if (path.includes('terms') || hash.includes('terms')) return 'terms';
@@ -151,7 +149,6 @@ const AppInner: React.FC = () => {
       else if (path.includes('optimization') || hash.includes('optimization')) route = 'optimization';
       else if (path.includes('models') || hash.includes('models')) route = 'models';
       else if (path.includes('projects') || hash.includes('projects')) route = 'projects';
-      else if (path.includes('solo-guard') || hash.includes('solo-guard')) route = 'solo-guard';
       else if (path.includes('dashboard') || hash.includes('dashboard')) route = 'dashboard';
       else if (path.includes('privacy') || hash.includes('privacy')) route = 'privacy';
       else if (path.includes('terms') || hash.includes('terms')) route = 'terms';
@@ -279,23 +276,6 @@ const AppInner: React.FC = () => {
     );
   }
 
-  // Dedicated Solo Guard Terminal & Loopback Console Page
-  if (currentRoute === 'solo-guard') {
-    return (
-      <>
-        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
-        <div key={currentRoute} className="page-transition-enter">
-          <SoloGuardPage
-            onNavigateHome={() => navigate('home')}
-            onNavigateDashboard={() => navigate('dashboard')}
-            onNavigatePricing={() => navigate('pricing')}
-          />
-        </div>
-        <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
-      </>
-    );
-  }
-
   // Dashboard page provides its own full app shell with sidebar and top header
   if (PROTECTED_ROUTES.includes(currentRoute)) {
     return (
@@ -305,7 +285,6 @@ const AppInner: React.FC = () => {
           <DashboardPage
             onNavigateHome={() => navigate('home')}
             onNavigatePricing={() => navigate('pricing')}
-            onNavigateSoloGuard={() => navigate('solo-guard')}
             initialTab={currentRoute === 'dashboard' ? 'dashboard' : currentRoute}
           />
         </div>
@@ -422,7 +401,6 @@ const AppInner: React.FC = () => {
             onNavigateHome={() => navigate('home')}
             onNavigatePricing={() => navigate('pricing')}
             onNavigateModels={() => navigate('models')}
-            onNavigateSoloGuard={() => navigate('solo-guard')}
           />
         ) : currentRoute === 'pricing' ? (
           /* Separate Dedicated Pricing Page */

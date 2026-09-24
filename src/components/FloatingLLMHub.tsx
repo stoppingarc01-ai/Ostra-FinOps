@@ -204,16 +204,15 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-200 border border-sandstone-300/80 text-[11px] font-bold tracking-[0.16em] text-charcoal-700 uppercase font-mono mb-3">
-            <span className="w-2 h-2 rounded-full bg-ostraGold-500 animate-ping" />
-            <span>UNIFIED 3D MODEL ECOSYSTEM</span>
-          </div>
+          <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider mb-2 font-mono">
+            Supported Models &amp; Providers
+          </p>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
-            Floating Multi-Model Mesh.{' '}
-            <span className="gold-gradient-text block">One High-Throughput Local Gateway.</span>
+            Compare AI Models.{' '}
+            <span className="gold-gradient-text block">Track Spend Down to the Cent.</span>
           </h2>
           <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
-            Autonomous coding agents hit disparate providers every minute. OstraOps wraps every LLM provider in an intelligent financial gateway and local loopback layer.
+            Switch smoothly between Claude, GPT, Gemini, and open-source models without locking into a single vendor. OstraOps tracks your tokens and calculates exact costs in real time.
           </p>
         </div>
 
@@ -291,7 +290,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
                     </span>
                   </div>
                   <p className="text-xs text-charcoal-500 font-mono">
-                    {selected.provider} • Flagship: {selected.flagship}
+                    Provider: {selected.provider} • Current Flagship: {selected.flagship}
                   </p>
                 </div>
               </div>
@@ -324,80 +323,81 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
                 </div>
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-charcoal-400 block font-mono">
-                    Proxy Overhead
+                    Avg Response Time
                   </span>
                   <span className="text-sm font-extrabold text-emerald-600 font-mono mt-0.5 block">
-                    +0.42 ms
+                    {selected.avgLatency}
                   </span>
                 </div>
               </div>
 
-              {/* Tool Call & Governance Details */}
+              {/* Practical benefits in human language */}
               <div className="space-y-2.5">
                 <div className="flex items-start gap-2.5 text-xs text-charcoal-700">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-charcoal-900">Deterministic Tool Calling: </span>
-                    <span>{selected.toolCallFidelity}</span>
+                    <span className="font-bold text-charcoal-900">Real-Time Cost Tracking: </span>
+                    <span>Tokens are tracked per request so you always know your exact spend as calls finish.</span>
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5 text-xs text-charcoal-700">
                   <ShieldCheck className="w-4 h-4 text-ostraGold-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-charcoal-900">Circuit Breaker Strategy: </span>
-                    <span>Instant velocity throttle when prompt repetition exceeds 3 cycles.</span>
+                    <span className="font-bold text-charcoal-900">Custom Budget Limits: </span>
+                    <span>Set daily or monthly limits to stop runaway scripts before they drain your account balance.</span>
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5 text-xs text-charcoal-700">
                   <Lock className="w-4 h-4 text-charcoal-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-charcoal-900">Zero Cloud Retention: </span>
-                    <span>Prompts, system instructions, and completion tokens stay in local SQLite cache.</span>
+                    <span className="font-bold text-charcoal-900">Zero Prompt Logging: </span>
+                    <span>Your source code, prompts, and sensitive answers stay 100% private. We never store them.</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right: Real-time Upstream Connection Box (5 cols) */}
-            <div className="lg:col-span-5 p-5 rounded-2xl bg-charcoal-950 text-white border border-charcoal-800 shadow-2xl font-mono text-xs space-y-4">
+            {/* Right: Clean Practical Profile Box (5 cols) */}
+            <div className="lg:col-span-5 p-6 rounded-2xl bg-charcoal-950 text-white border border-charcoal-800 shadow-2xl text-xs space-y-4">
               <div className="flex items-center justify-between border-b border-charcoal-800 pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="text-zinc-300 font-bold">DAEMON LOOPBACK GATEWAY</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                  <span className="text-zinc-200 font-bold font-sans">Model Practical Profile</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-charcoal-800 text-ostraGold-400 border border-charcoal-700">
-                  127.0.0.1:8080
+                <span className="text-[11px] px-2.5 py-0.5 rounded bg-charcoal-800 text-ostraGold-400 border border-charcoal-700 font-mono">
+                  {selected.tag}
                 </span>
               </div>
 
-              <div className="space-y-2 text-[11px] leading-relaxed">
-                <div className="flex justify-between text-zinc-400">
-                  <span>Target Provider:</span>
-                  <span className="text-zinc-200">{selected.name} API</span>
+              <div className="space-y-3 text-xs leading-relaxed text-zinc-300">
+                <div className="flex justify-between pb-2 border-b border-charcoal-800/60">
+                  <span className="text-zinc-400">Model Name:</span>
+                  <span className="text-white font-semibold">{selected.flagship}</span>
                 </div>
-                <div className="flex justify-between text-zinc-400">
-                  <span>Target Model:</span>
-                  <span className="text-ostraGold-300">{selected.flagship}</span>
+                <div className="flex justify-between pb-2 border-b border-charcoal-800/60">
+                  <span className="text-zinc-400">Best Used For:</span>
+                  <span className="text-ostraGold-300 font-medium text-right max-w-[200px] truncate">{selected.toolCallFidelity}</span>
                 </div>
-                <div className="flex justify-between text-zinc-400">
-                  <span>Interception Mode:</span>
-                  <span className="text-emerald-400">Stream Passthrough (~0.8ms Overhead)</span>
+                <div className="flex justify-between pb-2 border-b border-charcoal-800/60">
+                  <span className="text-zinc-400">Estimated 100k Tokens Cost:</span>
+                  <span className="text-emerald-400 font-mono font-bold">
+                    ~${((parseFloat(selected.inputCost.replace('$', '').split('/')[0] || '1') * 0.08) + (parseFloat(selected.outputCost.replace('$', '').split('/')[0] || '2') * 0.02)).toFixed(3)}
+                  </span>
                 </div>
-                <div className="flex justify-between text-zinc-400">
-                  <span>Intra-Family Failover:</span>
-                  <span className="text-zinc-200">{selected.tag}</span>
-                </div>
-                <div className="flex justify-between text-zinc-400">
-                  <span>Encryption at Rest:</span>
-                  <span className="text-zinc-200">AES-256 (Local Machine)</span>
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Privacy &amp; Data:</span>
+                  <span className="text-emerald-400">Direct Vendor Connection</span>
                 </div>
               </div>
 
-              {/* Live cURL / Config snippet */}
-              <div className="p-3 rounded-xl bg-charcoal-900/90 border border-charcoal-800 text-[11px] text-zinc-300 space-y-1">
-                <p className="text-zinc-500"># Point Cursor / Cline / Antigravity to OstraOps</p>
-                <p className="text-emerald-400">OPENAI_BASE_URL="http://127.0.0.1:8080/v1"</p>
-                <p className="text-ostraGold-300">ANTHROPIC_BASE_URL="http://127.0.0.1:8080/v1"</p>
+              <div className="p-3.5 rounded-xl bg-charcoal-900 border border-charcoal-800 text-xs text-zinc-300 space-y-1.5">
+                <p className="text-zinc-400 text-[11px]">How OstraOps protects your calls to this model:</p>
+                <p className="text-zinc-200 flex items-center gap-1.5">
+                  <span className="text-emerald-400 font-bold">✓</span> Real-time budget limit check before each call
+                </p>
+                <p className="text-zinc-200 flex items-center gap-1.5">
+                  <span className="text-emerald-400 font-bold">✓</span> Accurate token counting from official API response
+                </p>
               </div>
             </div>
           </div>
@@ -415,7 +415,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
             }}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-charcoal-900 hover:bg-black text-white text-xs sm:text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer group"
           >
-            <span>Explore All 40+ Models &amp; Technical Specifications</span>
+            <span>Explore Complete Model Directory &amp; Pricing</span>
             <ArrowRight className="w-4 h-4 text-ostraGold-400 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>

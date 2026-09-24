@@ -23,8 +23,7 @@ import {
   ExternalLink,
   Menu,
   X,
-  LogOut,
-  Terminal
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { ProjectsView } from '../components/ProjectsView';
@@ -41,19 +40,16 @@ import { BudgetsView } from '../components/BudgetsView';
 import { DashboardHomeView } from '../components/DashboardHomeView';
 import { SpendVelocityChart } from '../components/SpendVelocityChart';
 import { OstraLogo } from '../components/OstraBrand';
-import { SoloGuardView } from '../components/SoloGuardView';
 
 interface DashboardPageProps {
   onNavigateHome: () => void;
   onNavigatePricing: () => void;
-  onNavigateSoloGuard?: () => void;
   initialTab?: string;
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   onNavigateHome,
   onNavigatePricing,
-  onNavigateSoloGuard,
   initialTab,
 }) => {
   const { user, profile, subscription, signOut } = useAuth();
@@ -103,7 +99,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const sidebarNavItems = [
     { id: 'dashboard', label: 'Gateway Overview', icon: LayoutDashboard },
-    { id: 'solo-guard', label: 'Solo Guard (Local)', icon: Terminal, badge: 'Daemon' },
     { id: 'projects', label: 'API Keys & Projects', icon: FolderKanban },
     { id: 'integrations', label: 'API Key Vault', icon: Cable },
     { id: 'models', label: 'Models & Routing', icon: Cpu },
@@ -400,17 +395,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <Bell className="w-4 h-4" />
               <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white" />
             </button>
-            {/* Quick Switch to Solo Guard Console */}
-            {onNavigateSoloGuard && (
-              <button
-                onClick={onNavigateSoloGuard}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200/80 text-amber-900 text-xs font-bold transition-all shadow-xs cursor-pointer"
-                title="Switch to Solo Developer Local Console"
-              >
-                <Terminal className="w-3.5 h-3.5 text-amber-700" />
-                <span>Solo Guard</span>
-              </button>
-            )}
             {/* Quick exit to website */}
             <button
               onClick={onNavigateHome}
@@ -427,36 +411,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {/* Dashboard / Content Container */}
         <div key={activeTab} className="tab-transition-enter px-6 lg:px-8 pt-6 space-y-6 max-w-[1600px] mx-auto w-full">
-          {activeTab === 'solo-guard' ? (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between bg-white border border-[#EAE5DC] p-4 rounded-2xl shadow-subtle">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700">
-                    <Terminal className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-charcoal-900 flex items-center gap-2">
-                      <span>Solo Developer Local Guard</span>
-                    </h2>
-                    <p className="text-xs text-charcoal-500">Sub-millisecond loopback financial gateway and on-device telemetry proxy for Cursor, Cline, and Roo-Code.</p>
-                  </div>
-                </div>
-                {onNavigateSoloGuard && (
-                  <button
-                    onClick={onNavigateSoloGuard}
-                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-900 text-white text-xs font-semibold hover:bg-black transition-colors cursor-pointer"
-                  >
-                    <span>Full Screen Console</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-[#B58E50]" />
-                  </button>
-                )}
-              </div>
-              <SoloGuardView
-                onNavigateToPricing={onNavigatePricing}
-                isHostedGatewayUser={true}
-              />
-            </div>
-          ) : activeTab === 'alerts' ? (
+          {activeTab === 'alerts' ? (
             <AlertsView />
           ) : activeTab === 'budgets' ? (
             <BudgetsView />

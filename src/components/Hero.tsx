@@ -52,7 +52,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
   ];
 
   const copyCommand = () => {
-    navigator.clipboard.writeText('npx ostraops-guard');
+    navigator.clipboard.writeText('npx ostraops');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -82,30 +82,27 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
       <div className="hero-particle top-[45%] left-[8%]" style={{ animationDelay: '4s' }} />
       <div className="hero-particle top-[70%] left-[35%]" style={{ animationDelay: '1s', width: 6, height: 6, opacity: 0.25 }} />
 
-
-
       <div className="max-w-[1540px] mx-auto px-6 sm:px-8 lg:px-12">
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 xl:gap-12 items-center">
           
           {/* Left Column: Typography & Conversion Core */}
           <div className="xl:col-span-5 space-y-6 z-10">
-            {/* Eyebrow badge — animated pop-in */}
-            <div className="animate-badge-pop inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-200/90 border border-sandstone-300/90 text-[11px] font-bold tracking-[0.15em] text-charcoal-700 uppercase font-mono shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-ostraGold-500 animate-ping" />
-              <span>THE FINANCIAL GATEWAY FOR AI AGENTS</span>
-            </div>
+            {/* Eyebrow subtitle — clean, no clunky pill bar */}
+            <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider font-mono">
+              AI Cost &amp; Budget Management
+            </p>
 
             {/* Main 3D Headline — staggered reveal */}
             <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-extrabold text-charcoal-900 leading-[1.08] tracking-[-0.035em] font-display">
               <span className="animate-text-reveal block">Control Your AI Spend.</span>
               <span className="gold-gradient-text block font-extrabold animate-text-reveal-delay-1">
-                Understand Every Agent.
+                Before The Bill Arrives.
               </span>
             </h1>
 
-            {/* Sub-headline description — delayed reveal */}
+            {/* Sub-headline description — human language */}
             <p className="animate-text-reveal-delay-2 text-base sm:text-[17px] text-charcoal-600 leading-relaxed max-w-xl font-normal">
-              OstraOps gives engineering teams and solo builders microsecond-level financial circuit breakers, agentic loop velocity caps, and deterministic intra-family failovers — without a single cloud proxy hop.
+              OstraOps tracks every token, calculates exact costs in real time, and lets you set hard budget caps so runaway scripts or autonomous loops never drain your credit card.
             </p>
 
             {/* Primary Action Buttons — with glow + glass effects */}
@@ -114,7 +111,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                 onClick={onNavigateToPricing}
                 className="btn-primary-glow group inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-charcoal-900 text-white text-[15px] font-semibold shadow-md cursor-pointer"
               >
-                <span>Deploy Free</span>
+                <span>View Plans &amp; Pricing</span>
                 <ArrowRight className="w-4 h-4 text-ostraGold-400 group-hover:translate-x-1 transition-transform" />
               </button>
 
@@ -123,7 +120,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                 className="btn-secondary-glass inline-flex items-center gap-2 px-5 py-3.5 rounded-full bg-white border border-[#EAE5DB] text-charcoal-800 text-[15px] font-semibold shadow-subtle cursor-pointer"
               >
                 <Activity className="w-4 h-4 text-ostraGold-600" />
-                <span>Inspect Live UI Console</span>
+                <span>Watch Demo Walkthrough</span>
               </button>
             </div>
 
@@ -135,7 +132,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                 title="Click to copy"
               >
                 <Terminal className="w-3.5 h-3.5 text-ostraGold-600" />
-                <span className="font-semibold">npx ostraops-guard</span>
+                <span className="font-semibold">npx ostraops</span>
                 {copied ? (
                   <Check className="w-3.5 h-3.5 text-emerald-600 ml-1" />
                 ) : (
@@ -143,7 +140,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                 )}
               </div>
               <span className="text-[11px] text-charcoal-500 font-mono">
-                Runs via npx • Local loopback proxy (127.0.0.1:8080)
+                Run via npx • Zero complex setup
               </span>
             </div>
 

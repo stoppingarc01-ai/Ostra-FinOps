@@ -109,16 +109,15 @@ client = OpenAI(
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-200 border border-sandstone-300/80 text-[11px] font-bold tracking-[0.16em] text-charcoal-700 uppercase font-mono mb-3">
-            <span className="w-2 h-2 rounded-full bg-ostraGold-500" />
-            <span>UNIVERSAL AGENT COMPATIBILITY</span>
-          </div>
+          <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider mb-2 font-mono">
+            Ecosystem Compatibility
+          </p>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
-            Plug Into Any Agent in 30 Seconds.{' '}
-            <span className="gold-gradient-text block">Zero Code Rewrites.</span>
+            Works With Your Favorite Coding Tools.{' '}
+            <span className="gold-gradient-text block">Zero Code Changes.</span>
           </h2>
           <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
-            OstraOps speaks fluent OpenAI and Anthropic HTTP protocol. Just point your agent's Base URL to <code className="bg-sandstone-200 px-1.5 py-0.5 rounded text-charcoal-900 font-mono text-xs">127.0.0.1:8080</code>.
+            Compatible with Cursor, Windsurf, Cline, Aider, and custom Python or TypeScript backends. Keep your workflow identical while adding spend protection.
           </p>
         </div>
 

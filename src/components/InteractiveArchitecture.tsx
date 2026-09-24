@@ -19,16 +19,15 @@ export const InteractiveArchitecture: React.FC = () => {
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-300/80 border border-sandstone-400/60 text-[11px] font-bold tracking-[0.16em] text-charcoal-700 uppercase font-mono mb-3">
-            <span className="w-2 h-2 rounded-full bg-ostraGold-600" />
-            <span>DETERMINISTIC ARCHITECTURE SPECIFICATION</span>
-          </div>
+          <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider mb-2 font-mono">
+            Architecture &amp; Reliability
+          </p>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
-            Under The Hood:{' '}
-            <span className="gold-gradient-text block">Local Loopback & Intra-Family Failover.</span>
+            Designed for High Reliability.{' '}
+            <span className="gold-gradient-text block">Zero Compromise on Code Quality.</span>
           </h2>
           <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
-            Traditional AI proxies fail autonomous agents because they swap vendors mid-turn and corrupt JSON tool schemas. OstraOps isolates provider families and validates payloads locally before charges accrue.
+            OstraOps intercepts API calls smoothly, verifies budget limits before dispatch, and prevents accidental overspending without changing your prompt formats or tool schemas.
           </p>
         </div>
 
@@ -36,10 +35,10 @@ export const InteractiveArchitecture: React.FC = () => {
         <div className="mb-14">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-charcoal-700">
-              Local Loopback Interception Pipeline
+              Request Processing Lifecycle
             </h3>
-            <span className="text-[11px] font-mono text-charcoal-700 font-bold bg-sandstone-200/80 px-2.5 py-0.5 rounded-full border border-sandstone-300">
-              Measured Proxy Overhead: ~0.8ms – 1.8ms
+            <span className="text-[11px] font-mono text-charcoal-700 font-bold bg-sandstone-200/80 px-2.5 py-0.5 rounded-md border border-sandstone-300">
+              Negligible Overhead: ~1ms
             </span>
           </div>
 
@@ -47,22 +46,22 @@ export const InteractiveArchitecture: React.FC = () => {
             {[
               {
                 step: '01',
-                title: 'Agent Dispatch',
-                desc: 'Cursor, Cline, or Aider sends prompt to 127.0.0.1:8080.',
-                badge: 'OpenAI Spec',
+                title: 'Request Dispatch',
+                desc: 'Your application, agent, or editor triggers an LLM completion.',
+                badge: 'Input',
                 icon: FileCode,
               },
               {
                 step: '02',
-                title: 'Pre-Flight Gate',
-                desc: 'Evaluates cumulative daily spend and sliding window velocity.',
-                badge: 'Circuit Breaker',
+                title: 'Budget Limit Check',
+                desc: 'Verifies cumulative spend against your active daily and monthly caps.',
+                badge: 'Budget Guard',
                 icon: ShieldCheck,
               },
               {
                 step: '03',
-                title: 'Secret Redaction',
-                desc: 'Scans for API keys, bearer tokens & internal IPs before egress.',
+                title: 'Secret Protection',
+                desc: 'Safeguards local credentials so private keys are never exposed.',
                 badge: '~0.4ms Scan',
                 icon: Lock,
               },

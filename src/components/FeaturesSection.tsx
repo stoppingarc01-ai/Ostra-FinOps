@@ -62,16 +62,15 @@ export const FeaturesSection: React.FC = () => {
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-200 border border-sandstone-300/80 text-[11px] font-bold tracking-[0.16em] text-charcoal-700 uppercase font-mono mb-3">
-            <span className="w-2 h-2 rounded-full bg-ostraGold-500" />
-            <span>CORE ARCHITECTURE CAPABILITIES</span>
-          </div>
+          <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider mb-2 font-mono">
+            Core Platform Capabilities
+          </p>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
-            Engineered For The Era of{' '}
-            <span className="gold-gradient-text block">Autonomous Coding Agents.</span>
+            Built For Developers Who{' '}
+            <span className="gold-gradient-text block">Demand Real Budget Control.</span>
           </h2>
           <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
-            Traditional AI cost monitors only alert you after the invoice arrives. OstraOps enforces deterministic physical boundaries in real time.
+            Traditional AI cost tools only alert you after the money is already gone. OstraOps protects your account in real time as requests are processed.
           </p>
         </div>
 

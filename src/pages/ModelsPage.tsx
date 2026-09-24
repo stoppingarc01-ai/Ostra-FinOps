@@ -57,22 +57,22 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
         <div className="space-y-1 text-center sm:text-left">
           <div className="inline-flex items-center gap-2 text-xs font-mono font-bold text-ostraGold-400 uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Ready to route these models locally?</span>
+            <span>Ready to track your model spend?</span>
           </div>
           <h3 className="text-lg sm:text-xl font-bold font-display text-zinc-100">
-            Intercept every model call in Cursor, Cline, and Windsurf with 0.42ms overhead.
+            Track token usage, set hard spend limits, and keep your AI bills under control.
           </h3>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
           <div className="px-4 py-2 rounded-xl bg-charcoal-900 border border-charcoal-800 font-mono text-xs text-zinc-300">
-            <span className="text-zinc-500">$</span> npx ostraops-guard
+            <span className="text-zinc-500">$</span> npx ostraops
           </div>
           <button
             onClick={onNavigatePricing}
             className="px-5 py-2.5 rounded-full bg-ostraGold-500 hover:bg-ostraGold-400 text-charcoal-950 font-bold text-xs shadow-md transition-all cursor-pointer"
           >
-            Get Started Free
+            View Pricing
           </button>
         </div>
       </div>
