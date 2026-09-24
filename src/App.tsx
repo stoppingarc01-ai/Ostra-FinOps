@@ -16,7 +16,6 @@ import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { AuthShowcasePage } from './pages/AuthShowcasePage';
-import { OnboardingPage } from './pages/OnboardingPage';
 import { LegalPage } from './pages/LegalPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { BuildErrorPage } from './pages/BuildErrorPage';
@@ -30,7 +29,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { OstraIcon } from './components/OstraBrand';
 
-export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'about' | '404' | '500' | 'build-error' | '429';
+export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'about' | '404' | '500' | 'build-error' | '429';
 
 // Routes that require authentication
 const PROTECTED_ROUTES: AppRoute[] = ['dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings'];
@@ -42,7 +41,6 @@ const AppInner: React.FC = () => {
   const getInitialRoute = (): AppRoute => {
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
-    if (path.includes('onboarding') || hash.includes('onboarding')) return 'onboarding';
     if (path.includes('auth-showcase') || hash.includes('auth-showcase') || hash.includes('auth')) return 'auth-showcase';
     if (path.includes('login') || hash.includes('login')) return 'login';
     if (path.includes('signup') || hash.includes('signup')) return 'signup';
@@ -136,8 +134,7 @@ const AppInner: React.FC = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
       let route: AppRoute = 'home';
-      if (hash.includes('onboarding') || path.includes('onboarding')) route = 'onboarding';
-      else if (hash.includes('auth-showcase') || hash.includes('auth')) route = 'auth-showcase';
+      if (hash.includes('auth-showcase') || hash.includes('auth')) route = 'auth-showcase';
       else if (hash.includes('login')) route = 'login';
       else if (hash.includes('signup')) route = 'signup';
       else if (hash.includes('forgot-password')) route = 'forgot-password';
@@ -209,19 +206,6 @@ const AppInner: React.FC = () => {
             onNavigateHome={() => navigate('home')}
             onNavigatePricing={() => navigate('pricing')}
           />
-        </div>
-        <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
-      </>
-    );
-  }
-
-  // Onboarding 5-step interactive flow
-  if (currentRoute === 'onboarding') {
-    return (
-      <>
-        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
-        <div key={currentRoute} className="page-transition-enter">
-          <OnboardingPage onNavigate={navigate} />
         </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
       </>
@@ -407,7 +391,6 @@ const AppInner: React.FC = () => {
           <PricingPage
             onNavigateHome={() => navigate('home')}
             onNavigateLogin={() => navigate('login')}
-            onNavigateOnboarding={() => navigate('onboarding')}
           />
         ) : (
           <NotFoundPage

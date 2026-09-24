@@ -116,8 +116,8 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
         localStorage.setItem('ostraops_user_tier', 'team');
       } catch {}
 
-      showToast('Account created! Taking you to workspace setup & onboarding...');
-      setTimeout(() => onNavigate('onboarding'), 400);
+      showToast('Account created! Taking you to your dashboard...');
+      setTimeout(() => onNavigate('dashboard'), 400);
     }
   };
 
@@ -133,8 +133,8 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
         localStorage.setItem('ostraops_user_tier', 'team');
       } catch {}
 
-      showToast('Signed in! Taking you to workspace setup & onboarding...');
-      setTimeout(() => onNavigate('onboarding'), 400);
+      showToast('Signed in! Taking you to your dashboard...');
+      setTimeout(() => onNavigate('dashboard'), 400);
     }
   };
 

@@ -19,7 +19,6 @@ import { useAuth } from '../contexts/AuthContext';
 interface PricingPageProps {
   onNavigateHome?: () => void;
   onNavigateLogin?: () => void;
-  onNavigateOnboarding?: () => void;
 }
 
 export type SupportedCurrency = 'INR' | 'USD' | 'EUR' | 'GBP';
@@ -106,7 +105,6 @@ const CURRENCY_CONFIGS: Record<SupportedCurrency, CurrencyConfig> = {
 export const PricingPage: React.FC<PricingPageProps> = ({ 
   onNavigateHome, 
   onNavigateLogin,
-  onNavigateOnboarding,
 }) => {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
@@ -214,7 +212,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
   const handleOpenCheckout = (name: string, monthlyAmount: number) => {
     const finalAmount = isAnnual ? monthlyAmount * 12 : monthlyAmount;
     
-    // Persist user's selected plan for seamless onboarding & signup fulfillment
+    // Persist user's selected plan for seamless signup fulfillment
     const pendingPlan = {
       planId: 'team_scale',
       name: 'Hosted Gateway',
@@ -230,7 +228,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
       localStorage.setItem('ostraops_pending_plan', JSON.stringify(pendingPlan));
     } catch {}
 
-    // Pricing page redirects to login page (if not logged in) or directly to onboarding step 3 (if already logged in)
+    // Pricing page redirects to login page (if not logged in) or directly to dashboard (if already logged in)
     if (!user) {
       showToast(`Selected ${name}. Please log in to complete your setup & payment.`);
       setTimeout(() => {
@@ -243,14 +241,10 @@ export const PricingPage: React.FC<PricingPageProps> = ({
       return;
     }
 
-    // User is already logged in: route to onboarding step 3 to complete payment there
-    showToast(`Loading ${name} checkout on your onboarding console...`);
+    // User is already logged in: route to dashboard to complete payment there
+    showToast(`Loading ${name} checkout on your dashboard...`);
     setTimeout(() => {
-      if (onNavigateOnboarding) {
-        onNavigateOnboarding();
-      } else {
-        window.location.hash = '#onboarding?step=3';
-      }
+      window.location.hash = '#dashboard';
     }, 400);
   };
 
