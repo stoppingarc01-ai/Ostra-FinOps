@@ -284,7 +284,7 @@ async function runLiveChecks() {
     console.log('    [7.7] Initiating graceful shutdown...');
     await gracefulShutdown(server, 2000);
     promptCache.destroy();
-    virtualKeyCache.destroy();
+    virtualKeyCache.destroy?.();
     console.log('  -> PASS: Health, readiness, virtual key ingress, prompt cache hit, and graceful shutdown passed.\n');
   } finally {
     try {

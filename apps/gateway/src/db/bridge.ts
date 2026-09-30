@@ -1,3 +1,4 @@
+try { process.loadEnvFile('.env.local'); } catch {}
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { appendFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -16,15 +17,25 @@ export class SupabaseBridge {
   private deadLetterLogPath: string;
 
   constructor(options?: SupabaseBridgeOptions) {
-    const url = options?.supabaseUrl || process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const url =
+      options?.supabaseUrl ||
+      process.env.SUPABASE_URL ||
+      process.env.VITE_SUPABASE_URL ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key =
       options?.supabaseServiceRoleKey ||
       process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      process.env.SUPABASE_SERVICE_KEY;
+      process.env.SUPABASE_SERVICE_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.VITE_SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+    const isRealUrl = Boolean(url && !url.includes('YOUR-PROJECT') && !url.includes('placeholder'));
+    const isRealKey = Boolean(key && !key.includes('your-') && !key.includes('placeholder'));
 
     if (options?.client) {
       this.client = options.client;
-    } else if (url && key) {
+    } else if (isRealUrl && isRealKey && url && key) {
       this.client = createClient(url, key, {
         auth: {
           persistSession: false,
@@ -92,6 +103,7 @@ export class SupabaseBridge {
         error_type: r.errorType,
         error_code: r.errorCode,
         created_at: r.createdAt,
+        completed_at: r.completedAt || null,
       }));
 
       const { error } = await this.client.from('gateway_logs').insert(payload);
@@ -131,12 +143,11 @@ export class SupabaseBridge {
         throw new Error(error.message);
       }
 
-      // data format: { current_spend: number, monthly_limit: number, is_frozen: boolean }
-      const res = data as { current_spend: number; monthly_limit: number; is_frozen: boolean } | null;
+      const res = data as { current_spend_usd: number; monthly_limit_usd: number; is_frozen: boolean } | null;
       return {
         success: true,
-        currentSpendUsd: res?.current_spend ?? 0,
-        monthlyLimitUsd: res?.monthly_limit ?? 0,
+        currentSpendUsd: res?.current_spend_usd ?? 0,
+        monthlyLimitUsd: res?.monthly_limit_usd ?? 0,
         isFrozen: res?.is_frozen ?? false,
       };
     } catch (err: unknown) {
@@ -160,13 +171,13 @@ export class SupabaseBridge {
     try {
       const { data, error } = await this.client
         .from('provider_connections')
-        .select('api_key')
+        .select('secret_reference')
         .eq('organization_id', orgId)
         .eq('provider', provider.toLowerCase())
         .maybeSingle();
 
       if (error || !data) return null;
-      return (data as { api_key: string }).api_key || null;
+      return (data as { secret_reference: string }).secret_reference || null;
     } catch {
       return null;
     }
@@ -192,7 +203,9 @@ export class SupabaseBridge {
           monthly_limit_usd,
           current_spend_usd,
           status,
-          rate_limits
+          rpm_limit,
+          tpm_limit,
+          max_concurrency
         `)
         .eq('key_hash', keyHash)
         .maybeSingle();
@@ -210,7 +223,9 @@ export class SupabaseBridge {
         monthly_limit_usd: number;
         current_spend_usd: number;
         status: 'active' | 'frozen' | 'revoked';
-        rate_limits?: { rpm?: number; tpm?: number; max_concurrency?: number };
+        rpm_limit?: number;
+        tpm_limit?: number;
+        max_concurrency?: number;
       };
 
       const now = Date.now();
@@ -226,9 +241,9 @@ export class SupabaseBridge {
         currentSpendUsd: Number(row.current_spend_usd),
         status: row.status,
         rateLimits: {
-          rpm: row.rate_limits?.rpm ?? 600,
-          tpm: row.rate_limits?.tpm ?? 100_000,
-          maxConcurrency: row.rate_limits?.max_concurrency ?? 10,
+          rpm: row.rpm_limit ?? 60,
+          tpm: row.tpm_limit ?? 100_000,
+          maxConcurrency: row.max_concurrency ?? 10,
         },
         cachedAt: now,
         expiresAt: now + 60_000,

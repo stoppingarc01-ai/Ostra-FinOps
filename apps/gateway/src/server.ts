@@ -1,3 +1,4 @@
+try { process.loadEnvFile('.env.local'); } catch {}
 import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'node:http';
 import { handleGatewayIngress, type IngressContext, sendOpenAiError } from './proxy/ingress';
 import { executeStreamingPipeline } from './streaming/pipeline';
@@ -53,16 +54,26 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
     const url = req.url || '';
 
     // Liveness Probe
-    if (req.method === 'GET' && url === '/healthz') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', uptime: process.uptime(), activeRequests }));
+    if (req.method === 'GET' && (url === '/healthz' || url === '/health' || url === '/v1/health')) {
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': '*',
+      });
+      res.end(JSON.stringify({ status: 'ok', uptime: process.uptime(), activeRequests, version: '2.4.1' }));
       return;
     }
 
     // Readiness Probe
     if (req.method === 'GET' && url === '/ready') {
       const ready = !isShuttingDown;
-      res.writeHead(ready ? 200 : 503, { 'Content-Type': 'application/json' });
+      res.writeHead(ready ? 200 : 503, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': '*',
+      });
       res.end(
         JSON.stringify({
           status: ready ? 'ready' : 'shutting_down',

@@ -70,4 +70,17 @@ function soloPairingPlugin(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), soloPairingPlugin()],
+  server: {
+    proxy: {
+      '/gateway': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/gateway/, ''),
+      },
+      '/v1': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true,
+      },
+    },
+  },
 })

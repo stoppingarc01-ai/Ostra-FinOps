@@ -65,6 +65,7 @@ export interface IVirtualKeyCache {
   invalidate(keyHash: string): Promise<void> | void;
   clear(): Promise<void> | void;
   size(): Promise<number> | number;
+  destroy?(): Promise<void> | void;
 }
 
 /**
