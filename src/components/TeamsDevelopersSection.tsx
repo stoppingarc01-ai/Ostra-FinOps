@@ -27,6 +27,7 @@ import {
   MessageSquare,
   SlidersHorizontal
 } from 'lucide-react';
+import { OstraIcon } from './OstraBrand';
 
 interface TeamMember {
   id: string;
@@ -437,15 +438,12 @@ export const TeamsDevelopersSection: React.FC<TeamsDevelopersSectionProps> = ({
                 {/* Logo & Brand */}
                 <div className="px-2 pt-1 flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#C59E5F] to-[#E5C38D] p-[1.5px] shadow-sm">
-                    <div className="w-full h-full bg-[#07090C] rounded-[10px] flex items-center justify-center">
-                      <svg className="w-4 h-4 text-[#E5C38D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeDasharray="3 3" />
-                        <circle cx="12" cy="12" r="4" fill="currentColor" />
-                      </svg>
+                    <div className="w-full h-full bg-[#07090C] rounded-[10px] flex items-center justify-center p-1">
+                      <OstraIcon className="w-full h-full" variant="gold" />
                     </div>
                   </div>
                   <span className="text-lg font-bold tracking-tight text-white font-display">
-                    OsterdOps
+                    OstraOps
                   </span>
                 </div>
 
@@ -472,14 +470,12 @@ export const TeamsDevelopersSection: React.FC<TeamsDevelopersSectionProps> = ({
                 </nav>
               </div>
 
-              {/* Bottom OsterdOps Brand Badge */}
+              {/* Bottom OstraOps Brand Badge */}
               <div className="pt-4 border-t border-white/[0.08] space-y-2">
                 <div className="p-3 rounded-2xl bg-[#0D1016] border border-white/[0.08] space-y-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-[#C59E5F]/20 flex items-center justify-center text-[#E5C38D] text-[9px] font-bold">
-                      ⊚
-                    </div>
-                    <span className="text-xs font-bold text-white">OsterdOps</span>
+                    <OstraIcon className="w-4 h-4" variant="gold" />
+                    <span className="text-xs font-bold text-white">OstraOps</span>
                   </div>
                   <div className="text-[10px] text-zinc-500 leading-tight">
                     AI Cost Governance &amp; Operations Platform

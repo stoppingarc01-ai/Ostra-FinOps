@@ -9,7 +9,6 @@ import {
   Sliders,
   Mail,
   Building2,
-  Cpu,
   Users,
   CreditCard,
   Sparkles,
@@ -23,32 +22,20 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { createUserDefaultSubscription } from '../lib/subscriptionService';
-import { OstraIcon } from '../components/OstraBrand';
+import { OstraLogo, OstraIcon } from '../components/OstraBrand';
 
 interface OnboardingPageProps {
   onNavigate: (route: string) => void;
 }
 
-// 7 Comprehensive Onboarding Steps
+// 6 Streamlined Onboarding Steps
 const STEPS = [
   { id: 1, title: 'Welcome' },
   { id: 2, title: 'Organization' },
-  { id: 3, title: 'Connect Data' },
-  { id: 4, title: 'Preferences' },
-  { id: 5, title: 'Subscription' },
-  { id: 6, title: 'Team Members' },
-  { id: 7, title: 'Review & Finish' },
-];
-
-const AI_PROVIDERS = [
-  { id: 'gemini', name: 'Google Gemini', models: 'Gemini 2.0 Flash, 1.5 Pro, 1.5 Flash', prefix: 'AIzaSy...', icon: '✦', badge: 'Zero-Retention Proxy' },
-  { id: 'openai', name: 'OpenAI', models: 'GPT-4o, o3-mini, GPT-4 Turbo', prefix: 'sk-proj-...', icon: '🌀', badge: 'Direct Telemetry' },
-  { id: 'anthropic', name: 'Anthropic', models: 'Claude 3.7 Sonnet, 3.5 Haiku', prefix: 'sk-ant-...', icon: 'AI', badge: 'Streaming Proxy' },
-  { id: 'deepseek', name: 'DeepSeek', models: 'DeepSeek-V3, DeepSeek-R1', prefix: 'sk-...', icon: 'DS', badge: 'Ultra-Low Cost' },
-  { id: 'groq', name: 'Groq (LPU)', models: 'Llama 3.3 70B, Mixtral 8x7B', prefix: 'gsk_...', icon: 'G', badge: 'Sub-50ms Routing' },
-  { id: 'mistral', name: 'Mistral AI', models: 'Mistral Large 2, Codestral', prefix: 'mistral_...', icon: 'M', badge: 'EU Compliant' },
-  { id: 'azure', name: 'Azure OpenAI', models: 'Private VNet, Managed Keys', prefix: 'az-...', icon: '▲', badge: 'Enterprise VNet' },
-  { id: 'bedrock', name: 'AWS Bedrock', models: 'Claude 3.5, Titan, Llama 3', prefix: 'AKIA...', icon: 'aws', badge: 'IAM Auth' },
+  { id: 3, title: 'Preferences' },
+  { id: 4, title: 'Subscription' },
+  { id: 5, title: 'Team Members' },
+  { id: 6, title: 'Review & Finish' },
 ];
 
 interface LocalizedPricing {
@@ -246,20 +233,14 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
   const [companySize, setCompanySize] = useState('11 - 50 employees');
   const [country, setCountry] = useState('United States');
 
-  // Step 3: Provider Handshake State
-  const [selectedProvider, setSelectedProvider] = useState(AI_PROVIDERS[0]);
-  const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
-  const [handshakeStatus, setHandshakeStatus] = useState<Record<string, 'idle' | 'testing' | 'verified'>>({});
-  const [showKey, setShowKey] = useState(false);
-
-  // Step 4: Preferences State
+  // Step 3: Preferences State
   const [optimizationMode, setOptimizationMode] = useState<'conservative' | 'balanced' | 'aggressive'>('balanced');
   const [notifications, setNotifications] = useState<'email' | 'slack' | 'both'>('email');
 
-  // Step 5: Subscription (Mandatory Choice - Gatekeeper)
+  // Step 4: Subscription (Mandatory Choice - Gatekeeper)
   const [selectedPlan, setSelectedPlan] = useState<'trial' | 'telemetry' | 'starter' | 'pro' | null>(null);
 
-  // Step 6: Team Members
+  // Step 5: Team Members
   const [teamEmails, setTeamEmails] = useState<string[]>(['']);
   const [teamRole, setTeamRole] = useState<'admin' | 'engineer' | 'viewer'>('engineer');
 
@@ -269,14 +250,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
-  };
-
-  const handleTestHandshake = (providerId: string) => {
-    setHandshakeStatus(prev => ({ ...prev, [providerId]: 'testing' }));
-    setTimeout(() => {
-      setHandshakeStatus(prev => ({ ...prev, [providerId]: 'verified' }));
-      showToast(`Handshake verified with ${selectedProvider.name} (38ms latency). AES-256 encrypted.`);
-    }, 900);
   };
 
   const handleAddTeamEmail = () => {
@@ -295,7 +268,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
   const handleCompleteOnboarding = async () => {
     if (!selectedPlan) {
       showToast('Please select a subscription plan to continue.');
-      setCurrentStep(5);
+      setCurrentStep(4);
       return;
     }
 
@@ -352,7 +325,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
         localStorage.setItem('ostraops_user_tier', tierKey);
       } catch {}
 
-      showToast('Workspace activated! Welcome to OsterdOps.');
+      showToast('Workspace activated! Welcome to OstraOps.');
       setTimeout(() => {
         setIsSubmitting(false);
         onNavigate('dashboard');
@@ -400,9 +373,12 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
           <div>
             {/* Header Brand */}
             <div className="flex items-center gap-2.5 mb-1 cursor-pointer" onClick={() => onNavigate('home')}>
-              <span className="text-xl font-black tracking-wider text-white flex items-center gap-1.5 font-sans">
-                OSTERDOPS <span className="text-[#C59E5F] text-xs">✦</span>
-              </span>
+              <OstraLogo
+                variant="gold"
+                iconClassName="w-8 h-8"
+                textClassName="text-white text-xl font-bold tracking-tight"
+                brandName="OstraOps"
+              />
             </div>
             <p className="text-[11px] text-zinc-400 font-medium tracking-wide mb-10">
               AI Cost Governance & Operations
@@ -497,7 +473,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                 {/* Left Text Column */}
                 <div className="lg:col-span-7 space-y-6">
                   <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-[1.15]">
-                    Welcome to OsterdOps.<span className="text-[#C59E5F]">✦</span>
+                    Welcome to OstraOps.<span className="text-[#C59E5F]">✦</span>
                   </h1>
                   <p className="text-base text-zinc-400 leading-relaxed font-normal">
                     Let's get your AI cost governance workspace configured in a few simple steps.
@@ -645,7 +621,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                       Tell us about your organization.
                     </h1>
                     <p className="text-sm text-zinc-400 mt-2 font-normal">
-                      This helps us configure OsterdOps for your team.
+                      This helps us configure OstraOps for your team.
                     </p>
                   </div>
 
@@ -738,7 +714,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                       <Shield className="w-4 h-4" />
                     </div>
                     <div className="text-xs text-zinc-400">
-                      <span className="font-semibold text-zinc-200">Your data stays protected.</span> OsterdOps uses secure infrastructure designed for enterprise environments.
+                      <span className="font-semibold text-zinc-200">Your data stays protected.</span> OstraOps uses secure infrastructure designed for enterprise environments.
                     </div>
                   </div>
                 </div>
@@ -791,166 +767,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
           )}
 
           {/* ======================================================== */}
-          {/* STEP 3: CONNECT AI PROVIDERS (LIVE HANDSHAKE)             */}
+          {/* STEP 3: PREFERENCES                                      */}
           {/* ======================================================== */}
           {currentStep === 3 && (
-            <div className="flex-1 flex flex-col justify-center max-w-4xl py-4 animate-in fade-in duration-300">
-              <div className="space-y-6">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-mono font-semibold mb-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Live Gateway Handshake Testing
-                  </div>
-                  <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-                    Connect your AI providers.
-                  </h1>
-                  <p className="text-sm text-zinc-400 mt-2 font-normal">
-                    Test real API keys against upstream endpoints with millisecond latency verification.
-                  </p>
-                </div>
-
-                {/* 8-Provider Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {AI_PROVIDERS.map((prov) => {
-                    const isSelected = selectedProvider.id === prov.id;
-                    const isVerified = handshakeStatus[prov.id] === 'verified';
-
-                    return (
-                      <button
-                        key={prov.id}
-                        onClick={() => setSelectedProvider(prov)}
-                        className={`p-3.5 rounded-xl text-left border transition-all cursor-pointer relative ${
-                          isSelected
-                            ? 'bg-[#18150F] border-[#C59E5F] shadow-[0_0_20px_rgba(197,158,95,0.15)]'
-                            : 'bg-[#0B0E14] border-white/[0.06] hover:border-white/[0.15]'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-base font-bold text-[#E5C38D]">{prov.icon}</span>
-                          <span
-                            className={`w-2 h-2 rounded-full ${
-                              isVerified ? 'bg-emerald-400 shadow-[0_0_6px_#34D399]' : 'bg-zinc-600'
-                            }`}
-                          />
-                        </div>
-                        <div className="text-xs font-bold text-white truncate">{prov.name}</div>
-                        <div className="text-[10px] text-zinc-400 font-mono mt-0.5">
-                          {isVerified ? 'Verified' : 'Ready'}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Selected Provider Config Card */}
-                <div className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-lg text-[#E5C38D]">{selectedProvider.icon}</span>
-                      <div>
-                        <div className="text-sm font-bold text-white flex items-center gap-2">
-                          {selectedProvider.name}
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-400 font-mono">
-                            {selectedProvider.badge}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-zinc-400">{selectedProvider.models}</div>
-                      </div>
-                    </div>
-
-                    <span className="text-[11px] font-mono text-zinc-400">
-                      Starts with '{selectedProvider.prefix.slice(0, 7)}'
-                    </span>
-                  </div>
-
-                  {/* Input with Handshake test button */}
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-300 mb-1.5 flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-[#C59E5F]" />
-                      {selectedProvider.name} API Key
-                    </label>
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                      <div className="relative flex-1">
-                        <input
-                          type={showKey ? 'text' : 'password'}
-                          value={apiKeys[selectedProvider.id] || ''}
-                          onChange={(e) =>
-                            setApiKeys((prev) => ({ ...prev, [selectedProvider.id]: e.target.value }))
-                          }
-                          placeholder={selectedProvider.prefix}
-                          className="w-full px-4 py-2.5 rounded-xl bg-[#07090C] border border-white/[0.08] text-white text-xs font-mono focus:outline-none focus:border-[#C59E5F] pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowKey(!showKey)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-xs cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      <button
-                        onClick={() => handleTestHandshake(selectedProvider.id)}
-                        disabled={handshakeStatus[selectedProvider.id] === 'testing'}
-                        className="px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] hover:border-[#C59E5F]/50 text-xs font-semibold text-zinc-200 hover:text-white transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
-                      >
-                        {handshakeStatus[selectedProvider.id] === 'testing' ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C59E5F]" />
-                            <span>Verifying...</span>
-                          </>
-                        ) : handshakeStatus[selectedProvider.id] === 'verified' ? (
-                          <>
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                            <span className="text-emerald-400">Verified</span>
-                          </>
-                        ) : (
-                          <>
-                            <Zap className="w-3.5 h-3.5 text-[#C59E5F]" />
-                            <span>Test Handshake</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="text-[11px] text-zinc-400 pt-1 flex items-center justify-between">
-                    <span>
-                      Connected in this wizard:{' '}
-                      <strong className="text-zinc-300">
-                        {Object.values(handshakeStatus).filter(s => s === 'verified').length > 0
-                          ? `${Object.values(handshakeStatus).filter(s => s === 'verified').length} verified`
-                          : 'None yet (Demo / Trial mode enabled)'}
-                      </strong>
-                    </span>
-                    <span className="text-zinc-400 font-mono">AES-256-GCM encrypted</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation Actions */}
-              <div className="flex items-center gap-3 pt-8 border-t border-white/[0.06] mt-8">
-                <button
-                  onClick={() => setCurrentStep(2)}
-                  className="px-5 py-2.5 rounded-xl border border-white/[0.1] text-zinc-300 hover:text-white hover:bg-white/[0.04] text-xs font-semibold transition-colors cursor-pointer"
-                >
-                  ← Back
-                </button>
-                <button
-                  onClick={() => setCurrentStep(4)}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E5C38D] to-[#C59E5F] text-black font-bold text-xs tracking-wide shadow-[0_0_20px_rgba(229,195,141,0.3)] hover:brightness-110 transition-all cursor-pointer flex items-center gap-1.5"
-                >
-                  <span>Continue (Skip for Now)</span>
-                  <span>→</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ======================================================== */}
-          {/* STEP 4: PREFERENCES                                      */}
-          {/* ======================================================== */}
-          {currentStep === 4 && (
             <div className="flex-1 flex flex-col justify-center max-w-4xl py-4 animate-in fade-in duration-300">
               <div className="space-y-6">
                 <div>
@@ -958,7 +777,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                     Configure your preferences.
                   </h1>
                   <p className="text-sm text-zinc-400 mt-2 font-normal">
-                    Tell OsterdOps how you want your workspace to behave.
+                    Tell OstraOps how you want your workspace to behave.
                   </p>
                 </div>
 
@@ -1140,13 +959,13 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
               {/* Navigation Actions */}
               <div className="flex items-center gap-3 pt-8 border-t border-white/[0.06] mt-8">
                 <button
-                  onClick={() => setCurrentStep(3)}
+                  onClick={() => setCurrentStep(2)}
                   className="px-5 py-2.5 rounded-xl border border-white/[0.1] text-zinc-300 hover:text-white hover:bg-white/[0.04] text-xs font-semibold transition-colors cursor-pointer"
                 >
                   ← Back
                 </button>
                 <button
-                  onClick={() => setCurrentStep(5)}
+                  onClick={() => setCurrentStep(4)}
                   className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E5C38D] to-[#C59E5F] text-black font-bold text-xs tracking-wide shadow-[0_0_20px_rgba(229,195,141,0.3)] hover:brightness-110 transition-all cursor-pointer flex items-center gap-1.5"
                 >
                   <span>Continue</span>
@@ -1157,9 +976,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
           )}
 
           {/* ======================================================== */}
-          {/* STEP 5: SUBSCRIPTION & HOSTED GATEWAY (MANDATORY)         */}
+          {/* STEP 4: SUBSCRIPTION & HOSTED GATEWAY (MANDATORY)         */}
           {/* ======================================================== */}
-          {currentStep === 5 && (
+          {currentStep === 4 && (
             <div className="flex-1 flex flex-col justify-center max-w-6xl py-4 animate-in fade-in duration-300">
               <div className="space-y-6">
                 <div>
@@ -1496,7 +1315,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
               {/* Navigation Actions */}
               <div className="flex items-center gap-3 pt-8 border-t border-white/[0.06] mt-8">
                 <button
-                  onClick={() => setCurrentStep(4)}
+                  onClick={() => setCurrentStep(3)}
                   className="px-5 py-2.5 rounded-xl border border-white/[0.1] text-zinc-300 hover:text-white hover:bg-white/[0.04] text-xs font-semibold transition-colors cursor-pointer"
                 >
                   ← Back
@@ -1507,7 +1326,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                       showToast('Please select a subscription plan to continue.');
                       return;
                     }
-                    setCurrentStep(6);
+                    setCurrentStep(5);
                   }}
                   disabled={!selectedPlan}
                   className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E5C38D] to-[#C59E5F] text-black font-bold text-xs tracking-wide shadow-[0_0_20px_rgba(229,195,141,0.3)] hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center gap-1.5"
@@ -1520,9 +1339,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
           )}
 
           {/* ======================================================== */}
-          {/* STEP 6: TEAM MEMBERS                                     */}
+          {/* STEP 5: TEAM MEMBERS                                     */}
           {/* ======================================================== */}
-          {currentStep === 6 && (
+          {currentStep === 5 && (
             <div className="flex-1 flex flex-col justify-center max-w-4xl py-4 animate-in fade-in duration-300">
               <div className="space-y-6">
                 <div>
@@ -1582,13 +1401,13 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
               {/* Navigation Actions */}
               <div className="flex items-center gap-3 pt-8 border-t border-white/[0.06] mt-8">
                 <button
-                  onClick={() => setCurrentStep(5)}
+                  onClick={() => setCurrentStep(4)}
                   className="px-5 py-2.5 rounded-xl border border-white/[0.1] text-zinc-300 hover:text-white hover:bg-white/[0.04] text-xs font-semibold transition-colors cursor-pointer"
                 >
                   ← Back
                 </button>
                 <button
-                  onClick={() => setCurrentStep(7)}
+                  onClick={() => setCurrentStep(6)}
                   className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E5C38D] to-[#C59E5F] text-black font-bold text-xs tracking-wide shadow-[0_0_20px_rgba(229,195,141,0.3)] hover:brightness-110 transition-all cursor-pointer flex items-center gap-1.5"
                 >
                   <span>Continue</span>
@@ -1599,9 +1418,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
           )}
 
           {/* ======================================================== */}
-          {/* STEP 7: REVIEW & FINISH                                   */}
+          {/* STEP 6: REVIEW & FINISH                                   */}
           {/* ======================================================== */}
-          {currentStep === 7 && (
+          {currentStep === 6 && (
             <div className="flex-1 flex flex-col justify-center max-w-4xl py-4 animate-in fade-in duration-300">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 
@@ -1616,7 +1435,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                       Your workspace is ready.
                     </h1>
                     <p className="text-sm text-zinc-400 mt-2 font-normal">
-                      Review your configuration before entering OsterdOps.
+                      Review your configuration before entering OstraOps.
                     </p>
                   </div>
 
@@ -1635,23 +1454,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                         <div className="text-xs font-bold text-white truncate">{orgName}</div>
                         <div className="text-[11px] text-zinc-400">
                           {industry} · {companySize} · {country}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* AI Providers Summary */}
-                    <div className="p-4 rounded-xl bg-[#0B0E14] border border-white/[0.06] flex items-center gap-3.5">
-                      <div className="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-[#E5C38D] shrink-0">
-                        <Cpu className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold">
-                          AI PROVIDERS
-                        </div>
-                        <div className="text-xs font-bold text-white">
-                          {Object.values(handshakeStatus).filter(s => s === 'verified').length > 0
-                            ? `${Object.values(handshakeStatus).filter(s => s === 'verified').length} verified integrations`
-                            : 'No integrations connected yet (Demo mode enabled)'}
                         </div>
                       </div>
                     </div>
@@ -1756,7 +1558,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                     </>
                   ) : (
                     <>
-                      <span>Enter OsterdOps</span>
+                      <span>Enter OstraOps</span>
                       <span>→</span>
                     </>
                   )}
@@ -1782,7 +1584,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
             <div className="flex items-center justify-between">
               <div className="text-base font-bold text-white flex items-center gap-2">
                 <Headphones className="w-4 h-4 text-[#E5C38D]" />
-                OsterdOps Support Concierge
+                OstraOps Support Concierge
               </div>
               <button
                 onClick={() => setSupportModalOpen(false)}
@@ -1795,7 +1597,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
               Need assistance configuring your proxy, upstream API keys, or custom enterprise SLAs? Our team is available 24/7.
             </p>
             <div className="p-3.5 rounded-xl bg-[#080B10] border border-white/[0.06] text-xs font-mono text-[#E5C38D]">
-              support@osterdops.com
+              support@ostraops.com
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <button
@@ -1805,7 +1607,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                 Close
               </button>
               <a
-                href="mailto:support@osterdops.com"
+                href="mailto:support@ostraops.com"
                 className="px-4 py-2 rounded-xl bg-[#C59E5F] text-black text-xs font-bold hover:brightness-110"
               >
                 Send Email

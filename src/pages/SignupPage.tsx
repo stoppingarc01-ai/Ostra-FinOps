@@ -224,7 +224,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
               Create your account <span className="text-[#E5C38D] text-2xl sm:text-3xl inline-block animate-pulse">✦</span>
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400 font-sans max-w-md">
-              Join thousands of teams already optimizing with OsterdOps.
+              Join thousands of teams already optimizing with OstraOps.
             </p>
           </div>
 
