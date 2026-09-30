@@ -17,7 +17,8 @@
 - [Authentication & Access Control](#-authentication--access-control)
 - [Data Storage & Privacy](#-data-storage--privacy)
 - [Subscription Plans & Pricing](#-subscription-plans--pricing)
-- [Quickstart Guide](#-quickstart-guide)
+- [Developer Integration](#-developer-integration)
+- [Contributing (For Open-Source Contributors)](#-contributing-for-open-source-contributors)
 - [Supported Model Families](#-supported-model-families)
 - [License](#-license)
 
@@ -128,65 +129,83 @@ Need your whole team on the dashboard?
 
 ---
 
-## 🚀 Quickstart Guide
+## 🚀 Developer Integration
 
-### Option 1: Run the Community CLI
-Track spend locally without installing anything:
+Connecting your application or AI agents to OstraOps takes under 60 seconds. You do not need to rewrite your application logic:
+
+### 1. Instant Terminal Tracking (Community CLI)
+Calculate spend and compare model pricing instantly:
 ```bash
 npx ostraops
 ```
 
-### Option 2: Run Full Platform (Web Dashboard + Gateway)
+### 2. Route Through OstraOps Gateway
+Point your existing OpenAI, LangChain, Vercel AI SDK, or Cursor configuration to your OstraOps gateway endpoint:
 
-1. **Clone the repository:**
+```typescript
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: 'https://gateway.ostraops.com/v1', // Or your assigned team gateway endpoint
+  defaultHeaders: {
+    'x-ostraops-key': process.env.OSTRAOPS_API_KEY, // Scoped team or agent token
+  },
+});
+
+// Requests are automatically budget-checked and token-counted in real time
+const response = await openai.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: 'Process customer query' }],
+});
+```
+
+---
+
+## 🤝 Contributing (For Open-Source Contributors)
+
+We welcome community contributions, model rate card updates, and bug fixes! If you want to help make AI spend tracking faster, safer, and more accessible, here is how you can contribute:
+
+### 🎯 What You Can Contribute
+- **Model Rate Cards:** Add new foundation models, pricing updates, or context capacity updates in `models/`.
+- **SDK Integrations:** Help write adapters or snippets for LangChain, LlamaIndex, AutoGen, CrewAI, and Vercel AI SDK.
+- **Documentation:** Improve developer tutorials, API references, or translations.
+- **Bug Fixes:** Fix UI rendering bugs, edge-case token calculation drifts, or gateway proxy headers.
+
+### 🛠️ Contributor Workflow
+
+1. **Fork the Repository:**  
+   Click the **Fork** button at the top right of this repository to create your personal copy.
+
+2. **Clone your fork locally:**
    ```bash
-   git clone https://github.com/stoppingarc01-ai/Ostra-FinOps.git
+   git clone https://github.com/<your-username>/Ostra-FinOps.git
    cd Ostra-FinOps
    ```
 
-2. **Install dependencies:**
+3. **Create a Feature Branch:**
+   ```bash
+   git checkout -b fix/model-rate-card-deepseek-r1
+   ```
+
+4. **Install Dependencies & Test:**
    ```bash
    npm install
+   npm run build # Ensure TypeScript and bundle pass cleanly
    ```
 
-3. **Configure Environment Variables:**
-   Copy `.env.example` to `.env.local`:
+5. **Commit with Conventional Messages:**
    ```bash
-   cp .env.example .env.local
-   ```
-   Add your Supabase credentials to `.env.local`:
-   ```env
-   VITE_SUPABASE_URL=https://your-project.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-anon-key
-   PORT=8080
+   git commit -m "fix(models): update DeepSeek R1 output token pricing"
    ```
 
-4. **Start the Gateway & Web Dashboard:**
-   ```bash
-   # Terminal 1: Run OstraOps Gateway proxy
-   npm run gateway
+6. **Submit a Pull Request (PR):**
+   - Push your branch to your GitHub fork: `git push origin <your-branch-name>`
+   - Open a PR against `stoppingarc01-ai/Ostra-FinOps:main` with a clear description of your changes and before/after verification.
 
-   # Terminal 2: Run Web Dashboard
-   npm run dev
-   ```
-   - Dashboard: `http://localhost:5173`
-   - Gateway: `http://localhost:8080/v1`
-
-5. **Route Your AI Calls Through OstraOps:**
-   Simply change your `baseURL` in OpenAI SDK, LangChain, or Cursor:
-   ```typescript
-   import OpenAI from 'openai';
-
-   const openai = new OpenAI({
-     apiKey: process.env.OPENAI_API_KEY,
-     baseURL: 'http://localhost:8080/v1', // Routes through OstraOps guardrails!
-   });
-
-   const response = await openai.chat.completions.create({
-     model: 'gpt-4o',
-     messages: [{ role: 'user', content: 'Analyze this log file' }],
-   });
-   ```
+> [!NOTE]  
+> **Notice for Commercial & Production Use:**  
+> The core schemas, CLI, and integration adapters are open for community enhancement under MIT. The hosted multi-tenant management backend, enterprise telemetry cluster, and managed billing infrastructure are proprietary services of OstraOps. Self-hosting production enterprise features without an authorized enterprise license is strictly prohibited.
 
 ---
 
