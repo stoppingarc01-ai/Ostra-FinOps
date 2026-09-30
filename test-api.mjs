@@ -85,7 +85,43 @@ const run = async () => {
     console.log('\n\x1b[33m--- Model Response ---\x1b[0m');
     console.log(`\x1b[37m${reply}\x1b[0m`);
     console.log('\x1b[33m----------------------\x1b[0m\n');
-    console.log('\x1b[32m✔ Your API Key is 100% verified and operational!\x1b[0m\n');
+    console.log('\x1b[32m✔ Your API Key is 100% verified and operational!\x1b[0m');
+
+    // Sync Telemetry to OstraOps Dashboard Overview
+    try {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const telemetryPath = path.resolve('public', 'live-telemetry.json');
+      let currentLogs = [];
+      if (fs.existsSync(telemetryPath)) {
+        try {
+          currentLogs = JSON.parse(fs.readFileSync(telemetryPath, 'utf8'));
+        } catch {}
+      }
+      const inTokens = usage?.promptTokenCount || 20;
+      const outTokens = usage?.candidatesTokenCount || 19;
+      const cost = Number((inTokens * 0.000000075 + outTokens * 0.00000030).toFixed(6));
+      const newRecord = {
+        id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        request_id: `ost_req_${Date.now()}`,
+        provider: 'Google',
+        requested_model: modelToTest,
+        routed_model: modelToTest,
+        fallback_used: false,
+        input_tokens: inTokens,
+        output_tokens: outTokens,
+        cost_usd: cost,
+        latency_ms: latency,
+        status_code: 200,
+        created_at: new Date().toISOString()
+      };
+      currentLogs.unshift(newRecord);
+      if (currentLogs.length > 100) currentLogs = currentLogs.slice(0, 100);
+      fs.writeFileSync(telemetryPath, JSON.stringify(currentLogs, null, 2), 'utf8');
+      console.log('\x1b[36m✔ Action Logged to OstraOps Overview Dashboard!\x1b[0m\n');
+    } catch (e) {
+      // Telemetry log error silently ignored
+    }
 
   } catch (err) {
     console.error('\x1b[31mNetwork Error:\x1b[0m', err.message);

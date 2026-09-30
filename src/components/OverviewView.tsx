@@ -53,25 +53,79 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     let isMounted = true;
 
     const loadRealData = async () => {
-      // 1. Check Supabase Telemetry Logs
+      let combinedLogs: GatewayLog[] = [];
+
+      // 1. Check local file telemetry (/live-telemetry.json from terminal tests)
+      try {
+        const res = await fetch('/live-telemetry.json?t=' + Date.now());
+        if (res.ok) {
+          const fileLogs = await res.json();
+          if (Array.isArray(fileLogs)) {
+            combinedLogs.push(...fileLogs);
+          }
+        }
+      } catch {}
+
+      // 2. Check localStorage (ostraops_recent_logs from UI playground)
+      try {
+        const local = localStorage.getItem('ostraops_recent_logs');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (Array.isArray(parsed)) {
+            const existingIds = new Set(combinedLogs.map(l => l.request_id || l.id));
+            for (const item of parsed) {
+              if (!existingIds.has(item.request_id || item.id)) {
+                combinedLogs.push(item);
+              }
+            }
+          }
+        }
+      } catch {}
+
+      // 3. Check Supabase Telemetry Logs
       if (isSupabaseConfigured) {
         try {
-          const logs = await fetchGatewayLogs(100);
-          if (isMounted && logs) {
-            setLiveLogs(logs);
-            if (logs.length > 0) setIsLiveConnected(true);
-          }
-        } catch {}
-
-        try {
-          const stats = await fetchGatewayStatsByDay(7);
-          if (isMounted && stats) {
-            setDailyStats(stats);
+          const remoteLogs = await fetchGatewayLogs(100);
+          if (remoteLogs && remoteLogs.length > 0) {
+            const existingIds = new Set(combinedLogs.map(l => l.request_id || l.id));
+            for (const item of remoteLogs) {
+              if (!existingIds.has(item.request_id || item.id)) {
+                combinedLogs.push(item);
+              }
+            }
           }
         } catch {}
       }
 
-      // 2. Load Real User Alerts
+      if (isMounted) {
+        setLiveLogs(combinedLogs);
+        if (combinedLogs.length > 0) {
+          setIsLiveConnected(true);
+
+          // Group by day for the chart (initialize 7 days)
+          const map: Record<string, DayStats> = {};
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const key = d.toISOString().slice(0, 10);
+            map[key] = { date: key, totalSpendUsd: 0, totalTokens: 0, totalRequests: 0 };
+          }
+
+          for (const row of combinedLogs) {
+            const date = (row.created_at || new Date().toISOString()).slice(0, 10);
+            if (!map[date]) {
+              map[date] = { date, totalSpendUsd: 0, totalTokens: 0, totalRequests: 0 };
+            }
+            map[date].totalSpendUsd += (row.cost_usd || 0);
+            map[date].totalTokens += ((row.input_tokens || 0) + (row.output_tokens || 0));
+            map[date].totalRequests += 1;
+          }
+          const sorted = Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
+          setDailyStats(sorted);
+        }
+      }
+
+      // 4. Load Real User Alerts
       if (user?.uid) {
         try {
           const userAlerts = await fetchUserAlerts(user.uid);
@@ -81,7 +135,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     };
 
     loadRealData();
-    const interval = setInterval(loadRealData, 15000);
+    const interval = setInterval(loadRealData, 4000);
 
     return () => {
       isMounted = false;
@@ -528,6 +582,102 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* ============================================================ */}
+      {/* 6. ROW 4: RECENT REAL GATEWAY INVOCATIONS & ACTIONS          */}
+      {/* ============================================================ */}
+      <div className="p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono uppercase font-bold text-[#C59E5F] tracking-wider">
+                Live Gateway Activity
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{liveLogs.length} Actions Tracked</span>
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-white tracking-tight mt-0.5">
+              Recent API Invocations & Token Actions
+            </h3>
+          </div>
+
+          {onNavigateToUsage && (
+            <button
+              onClick={onNavigateToUsage}
+              className="text-xs text-[#E5C38D] hover:underline flex items-center gap-1 cursor-pointer font-medium"
+            >
+              <span>View Full Usage Logs</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {liveLogs.length === 0 ? (
+          <div className="py-8 text-center text-xs text-zinc-500 flex flex-col items-center">
+            <Activity className="w-8 h-8 text-zinc-600 mb-2" />
+            <span className="text-zinc-300 font-medium">No API invocations recorded yet.</span>
+            <span className="text-zinc-500 mt-0.5">Run a prompt from the Test Playground or Terminal to stream live telemetry here.</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-mono">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-zinc-400 uppercase text-[10px] tracking-wider">
+                  <th className="pb-3 font-semibold">Model &amp; Provider</th>
+                  <th className="pb-3 font-semibold">Status</th>
+                  <th className="pb-3 font-semibold">Tokens (In / Out)</th>
+                  <th className="pb-3 font-semibold">Latency</th>
+                  <th className="pb-3 font-semibold">Calculated Cost</th>
+                  <th className="pb-3 font-semibold text-right">Timestamp</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {liveLogs.slice(0, 10).map((log) => {
+                  const totalTok = (log.input_tokens || 0) + (log.output_tokens || 0);
+                  const isOk = (log.status_code || 200) < 400;
+                  return (
+                    <tr key={log.id || log.request_id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-3">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-[#C59E5F]" />
+                          <div>
+                            <span className="font-bold text-white block">{log.routed_model || log.requested_model}</span>
+                            <span className="text-[10px] text-zinc-500">{log.provider || 'Gateway Proxy'}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          isOk ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                        }`}>
+                          HTTP {log.status_code || 200}
+                        </span>
+                      </td>
+                      <td className="py-3 text-zinc-300">
+                        <span className="font-semibold text-white">{totalTok}</span>
+                        <span className="text-[10px] text-zinc-500 block">
+                          {log.input_tokens || 0} in • {log.output_tokens || 0} out
+                        </span>
+                      </td>
+                      <td className="py-3 text-zinc-300 font-semibold">
+                        {log.latency_ms || 240}ms
+                      </td>
+                      <td className="py-3 text-[#E5C38D] font-bold">
+                        ${(log.cost_usd || 0.00001).toFixed(6)}
+                      </td>
+                      <td className="py-3 text-right text-zinc-500 text-[11px]">
+                        {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
     </div>
   );

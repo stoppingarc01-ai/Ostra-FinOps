@@ -1290,6 +1290,29 @@ export const IntegrationsView: React.FC = () => {
           provider: 'Google Gemini (Live Upstream)',
           timestamp: new Date().toLocaleTimeString(),
         });
+
+        // Persist Action to OstraOps Live Telemetry
+        try {
+          const inTok = usage?.promptTokenCount || 20;
+          const outTok = usage?.candidatesTokenCount || 19;
+          const costVal = Number((inTok * 0.000000075 + outTok * 0.00000030).toFixed(6));
+          const newLog = {
+            id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            request_id: `ost_req_${Date.now()}`,
+            provider: 'Google',
+            requested_model: normalizedModel,
+            routed_model: normalizedModel,
+            fallback_used: false,
+            input_tokens: inTok,
+            output_tokens: outTok,
+            cost_usd: costVal,
+            latency_ms: latency,
+            status_code: 200,
+            created_at: new Date().toISOString(),
+          };
+          const prev = JSON.parse(localStorage.getItem('ostraops_recent_logs') || '[]');
+          localStorage.setItem('ostraops_recent_logs', JSON.stringify([newLog, ...prev].slice(0, 100)));
+        } catch {}
       } else {
         // Test via Local Gateway Proxy /v1/chat/completions
         const res = await fetch('/v1/chat/completions', {
@@ -1329,6 +1352,28 @@ export const IntegrationsView: React.FC = () => {
           provider: matchingConn?.provider || 'Gateway Proxy',
           timestamp: new Date().toLocaleTimeString(),
         });
+
+        // Persist Action to OstraOps Live Telemetry
+        try {
+          const inTok = usage?.prompt_tokens || 20;
+          const outTok = usage?.completion_tokens || 20;
+          const newLog = {
+            id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            request_id: `ost_req_${Date.now()}`,
+            provider: matchingConn?.provider || 'Gateway Proxy',
+            requested_model: testModelId,
+            routed_model: testModelId,
+            fallback_used: false,
+            input_tokens: inTok,
+            output_tokens: outTok,
+            cost_usd: Number((inTok * 0.00000015 + outTok * 0.0000006).toFixed(6)),
+            latency_ms: latency,
+            status_code: 200,
+            created_at: new Date().toISOString(),
+          };
+          const prev = JSON.parse(localStorage.getItem('ostraops_recent_logs') || '[]');
+          localStorage.setItem('ostraops_recent_logs', JSON.stringify([newLog, ...prev].slice(0, 100)));
+        } catch {}
       }
     } catch (err: any) {
       setTestError(err.message || 'Request failed. Ensure the gateway or internet connection is active.');
