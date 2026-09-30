@@ -11,7 +11,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { ProviderLogo } from './IntegrationsView';
-import { useSubscription } from '../lib/subscriptionService';
+import { useAuth } from '../contexts/AuthContext';
 import { FeatureGate } from '../lib/entitlements';
 
 interface OptimizationOpportunity {
@@ -39,7 +39,7 @@ interface HeuristicRule {
 }
 
 export const OptimizationView: React.FC = () => {
-  const { subscription } = useSubscription();
+  const { subscription } = useAuth();
   // Toast state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);

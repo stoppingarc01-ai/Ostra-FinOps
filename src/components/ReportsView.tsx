@@ -15,13 +15,13 @@ import {
   Info,
   MoreVertical
 } from 'lucide-react';
-import { useSubscription } from '../lib/subscriptionService';
+import { useAuth } from '../contexts/AuthContext';
 import { FeatureGate } from '../lib/entitlements';
 import { fetchGatewayLogs } from '../lib/supabase';
 import type { GatewayLog } from '../types/database';
 
 export const ReportsView: React.FC = () => {
-  const { subscription } = useSubscription();
+  const { subscription } = useAuth();
   const [logs, setLogs] = useState<GatewayLog[]>([]);
 
   useEffect(() => {

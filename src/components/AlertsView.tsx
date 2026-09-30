@@ -22,7 +22,6 @@ import {
   Play
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useSubscription } from '../lib/subscriptionService';
 import { FeatureGate } from '../lib/entitlements';
 import {
   subscribeToUserAlerts,
@@ -49,8 +48,7 @@ const getRelativeTime = (isoString: string): string => {
 };
 
 export const AlertsView: React.FC = () => {
-  const { user } = useAuth();
-  const { subscription } = useSubscription();
+  const { user, subscription } = useAuth();
   const userId = user?.id || 'guest_user';
 
   // Sub-tab view: 'feed' (Incidents list) or 'rules' (Guardrail configurations)

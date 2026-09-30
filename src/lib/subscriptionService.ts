@@ -2,12 +2,6 @@ import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 import { supabase, isSupabaseConfigured } from './supabase';
 import type { UserSubscription } from '../types/database';
-import { useAuth } from '../contexts/AuthContext';
-
-export function useSubscription() {
-  const { subscription } = useAuth();
-  return { subscription };
-}
 
 /**
  * Default subscription preset for newly signed-up users (Community Free)
