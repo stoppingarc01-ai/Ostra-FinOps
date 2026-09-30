@@ -89,7 +89,7 @@ export const fetchUserBudgets = async (userId: string): Promise<BudgetLimit[]> =
     const items = snap.docs.map((d) => d.data() as BudgetLimit);
     try { localStorage.setItem(`ostraops_budgets_${userId}`, JSON.stringify(items)); } catch {}
     return items;
-  } catch (err) {
+  } catch {
     try {
       const cached = localStorage.getItem(`ostraops_budgets_${userId}`);
       return cached ? JSON.parse(cached) : [];

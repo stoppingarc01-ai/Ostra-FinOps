@@ -25,6 +25,7 @@ export const RefundPolicyPage: React.FC<RefundPolicyPageProps> = ({ onNavigate }
   const [activeScenario, setActiveScenario] = useState<number>(0);
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [ticketSubmitted, setTicketSubmitted] = useState(false);
+  const [generatedTicketId, setGeneratedTicketId] = useState('REV-104921');
   const [invoiceId, setInvoiceId] = useState('');
   const [refundReason, setRefundReason] = useState('dissatisfied_platform');
 
@@ -659,7 +660,7 @@ export const RefundPolicyPage: React.FC<RefundPolicyPageProps> = ({ onNavigate }
                 </div>
                 <h3 className="text-lg font-bold text-white">Review Request Received</h3>
                 <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
-                  Your ticket has been logged with ticket ID <span className="font-mono text-[#E5C38D]">#REV-{Math.floor(100000 + Math.random() * 900000)}</span>. Our finance team will reply within 24 business hours.
+                  Your ticket has been logged with ticket ID <span className="font-mono text-[#E5C38D]">#{generatedTicketId}</span>. Our finance team will reply within 24 business hours.
                 </p>
                 <button
                   onClick={() => {
@@ -686,6 +687,7 @@ export const RefundPolicyPage: React.FC<RefundPolicyPageProps> = ({ onNavigate }
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
+                    setGeneratedTicketId(`REV-${Math.floor(100000 + Math.random() * 900000)}`);
                     setTicketSubmitted(true);
                   }}
                   className="space-y-4"

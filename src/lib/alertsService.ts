@@ -79,7 +79,7 @@ export const fetchUserAlerts = async (userId: string): Promise<SystemAlert[]> =>
     items.sort((a, b) => new Date(b.created_at || b.timestamp).getTime() - new Date(a.created_at || a.timestamp).getTime());
     try { localStorage.setItem(`ostraops_alerts_${userId}`, JSON.stringify(items)); } catch {}
     return items;
-  } catch (err) {
+  } catch {
     try {
       const raw = localStorage.getItem(`ostraops_alerts_${userId}`);
       return raw ? JSON.parse(raw) : [];

@@ -7,7 +7,7 @@
     "dev": "vite",
     "gateway": "npx tsx --env-file=.env.local apps/gateway/src/server.ts",
     "build": "tsc -b && vite build",
-    "test": "npx tsx apps/gateway/src/test/self-check.ts && npx tsx apps/gateway/src/test/phase3-check.ts && npx tsx apps/gateway/src/test/phase4-check.ts && npx tsx apps/gateway/src/test/phase5-check.ts",
+    "test": "npx tsx apps/gateway/src/test/self-check.ts && npx tsx apps/gateway/src/test/phase3-check.ts && npx tsx apps/gateway/src/test/phase4-check.ts && npx tsx apps/gateway/src/test/phase5-check.ts && npx tsx apps/gateway/src/test/concurrency-check.ts",
     "lint": "oxlint",
     "preview": "vite preview"
   },

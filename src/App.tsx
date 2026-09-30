@@ -10,29 +10,40 @@ import { DeveloperQuickstartSection } from './components/DeveloperQuickstartSect
 import { FAQSection } from './components/FAQSection';
 import { EnterpriseTrustSection } from './components/EnterpriseTrustSection';
 import { TeamsDevelopersSection } from './components/TeamsDevelopersSection';
-import { PricingPage } from './pages/PricingPage';
-import { ModelsPage } from './pages/ModelsPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { LoginPage } from './pages/LoginPage';
-import { SignupPage } from './pages/SignupPage';
-import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
-import { AuthShowcasePage } from './pages/AuthShowcasePage';
-import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
-import { TermsOfServicePage } from './pages/TermsOfServicePage';
-import { CookiePolicyPage } from './pages/CookiePolicyPage';
-import { RefundPolicyPage } from './pages/RefundPolicyPage';
-import { NotFoundPage } from './pages/NotFoundPage';
-import { BuildErrorPage } from './pages/BuildErrorPage';
-import { ServerErrorPage } from './pages/ServerErrorPage';
-import { RateLimitPage } from './pages/RateLimitPage';
-import { AboutUsPage } from './pages/AboutUsPage';
-import { OnboardingPage } from './pages/OnboardingPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CookieBanner } from './components/CookieBanner';
 import { Footer } from './components/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { OstraIcon } from './components/OstraBrand';
+
+// Lazy-loaded pages to optimize bundle splitting and improve initial load performance
+const PricingPage = React.lazy(() => import('./pages/PricingPage').then((m) => ({ default: m.PricingPage })));
+const ModelsPage = React.lazy(() => import('./pages/ModelsPage').then((m) => ({ default: m.ModelsPage })));
+const DashboardPage = React.lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const LoginPage = React.lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
+const SignupPage = React.lazy(() => import('./pages/SignupPage').then((m) => ({ default: m.SignupPage })));
+const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
+const AuthShowcasePage = React.lazy(() => import('./pages/AuthShowcasePage').then((m) => ({ default: m.AuthShowcasePage })));
+const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })));
+const TermsOfServicePage = React.lazy(() => import('./pages/TermsOfServicePage').then((m) => ({ default: m.TermsOfServicePage })));
+const CookiePolicyPage = React.lazy(() => import('./pages/CookiePolicyPage').then((m) => ({ default: m.CookiePolicyPage })));
+const RefundPolicyPage = React.lazy(() => import('./pages/RefundPolicyPage').then((m) => ({ default: m.RefundPolicyPage })));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
+import { BuildErrorPage } from './pages/BuildErrorPage';
+const ServerErrorPage = React.lazy(() => import('./pages/ServerErrorPage').then((m) => ({ default: m.ServerErrorPage })));
+const RateLimitPage = React.lazy(() => import('./pages/RateLimitPage').then((m) => ({ default: m.RateLimitPage })));
+const AboutUsPage = React.lazy(() => import('./pages/AboutUsPage').then((m) => ({ default: m.AboutUsPage })));
+const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage').then((m) => ({ default: m.OnboardingPage })));
+
+const PageLoader: React.FC = () => (
+  <div className="min-h-screen bg-[#07090C] text-white flex items-center justify-center">
+    <div className="flex flex-col items-center gap-4">
+      <OstraIcon className="w-12 h-12 animate-pulse" variant="gold" />
+      <Loader2 className="w-5 h-5 animate-spin text-[#C59E5F]" />
+    </div>
+  </div>
+);
 
 export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'refund' | 'about' | '404' | '500' | 'build-error' | '429';
 
@@ -529,7 +540,9 @@ export const App: React.FC = () => (
     onNavigateDashboard={() => { window.location.hash = '#dashboard'; }}
   >
     <AuthProvider>
-      <AppInner />
+      <React.Suspense fallback={<PageLoader />}>
+        <AppInner />
+      </React.Suspense>
     </AuthProvider>
   </ErrorBoundary>
 );

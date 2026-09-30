@@ -13,6 +13,7 @@ export interface GatekeeperResult {
   allowed: boolean;
   status?: number;
   errorPayload?: OpenAIErrorResponse;
+  reservedAmountUsd?: number;
 }
 
 /**
@@ -34,6 +35,12 @@ const BASELINE_INPUT_RATES: Record<string, number> = {
   // DeepSeek family
   'deepseek-r1': 0.55 / 1_000_000,
   'deepseek-v3': 0.14 / 1_000_000,
+  // Kimi / Moonshot family
+  'kimi-k1.5': 1.0 / 1_000_000,
+  'moonshot-v1-128k': 0.84 / 1_000_000,
+  'moonshot-v1-32k': 0.34 / 1_000_000,
+  'moonshot-v1-8k': 0.17 / 1_000_000,
+  'kimi-latest': 1.0 / 1_000_000,
 };
 
 /**
@@ -59,6 +66,58 @@ export interface IRateLimitStore {
   releaseSlot(keyId: string): Promise<void> | void;
   getActiveConcurrency(keyId: string): Promise<number> | number;
   reset(): Promise<void> | void;
+}
+
+/**
+ * Abstract interface for in-flight budget lease reservations.
+ * Tracks concurrent spend across simultaneous requests before final post-stream accounting.
+ */
+export interface IBudgetReservationStore {
+  reserve(keyId: string, amountUsd: number, monthlyLimitUsd: number, currentSpendUsd: number): boolean;
+  release(keyId: string, amountUsd: number): void;
+  getReserved(keyId: string): number;
+  reset(): void;
+}
+
+/**
+ * In-Memory driver for in-flight budget lease reservations.
+ * Guarantees zero race-condition overspending under concurrent traffic.
+ */
+export class InMemoryBudgetReservationStore implements IBudgetReservationStore {
+  private reservedSpend = new Map<string, number>();
+
+  public reserve(
+    keyId: string,
+    amountUsd: number,
+    monthlyLimitUsd: number,
+    currentSpendUsd: number
+  ): boolean {
+    const currentReserved = this.reservedSpend.get(keyId) || 0;
+    // Strict atomic check: committed spend + currently reserved in-flight + this estimate
+    if (currentSpendUsd + currentReserved + amountUsd > monthlyLimitUsd) {
+      return false;
+    }
+    this.reservedSpend.set(keyId, currentReserved + amountUsd);
+    return true;
+  }
+
+  public release(keyId: string, amountUsd: number): void {
+    const currentReserved = this.reservedSpend.get(keyId) || 0;
+    const remaining = Math.max(0, currentReserved - amountUsd);
+    if (remaining <= 0.000000001) {
+      this.reservedSpend.delete(keyId);
+    } else {
+      this.reservedSpend.set(keyId, remaining);
+    }
+  }
+
+  public getReserved(keyId: string): number {
+    return this.reservedSpend.get(keyId) || 0;
+  }
+
+  public reset(): void {
+    this.reservedSpend.clear();
+  }
 }
 
 /**
@@ -141,10 +200,17 @@ export class InMemoryRateLimitStore implements IRateLimitStore {
 }
 
 /**
- * Layer 2 Gatekeeper: Pre-Flight Safety Budget Check.
+ * Layer 2 Gatekeeper: Pre-Flight Safety Budget Check & Atomic In-Flight Lease Reservation.
  * Computes conservative upper-bound cost = ceil(Byte Length / 3) * rate * 1.35x.
+ * Atomically acquires a budget lease to prevent concurrent race-condition overspending.
  */
 export class BudgetGatekeeper {
+  private reservationStore: IBudgetReservationStore;
+
+  constructor(store?: IBudgetReservationStore) {
+    this.reservationStore = store ?? budgetReservationStore;
+  }
+
   public checkBudget(
     key: CachedVirtualKey,
     payloadByteLength: number,
@@ -199,8 +265,15 @@ export class BudgetGatekeeper {
     // 4. Calculate Upper-Bound Cost with 1.35x Safety Buffer
     const estimatedCostUsd = estimatedTokens * ratePerToken * SAFETY_BUFFER_MULTIPLIER;
 
-    // 5. Evaluate Spend Headroom
-    if (key.currentSpendUsd + estimatedCostUsd > key.monthlyLimitUsd) {
+    // 5. Atomic In-Flight Lease Reservation Check
+    const reserved = this.reservationStore.reserve(
+      key.id,
+      estimatedCostUsd,
+      key.monthlyLimitUsd,
+      key.currentSpendUsd
+    );
+
+    if (!reserved) {
       return {
         allowed: false,
         status: 402,
@@ -215,10 +288,26 @@ export class BudgetGatekeeper {
       };
     }
 
-    return { allowed: true };
+    return { allowed: true, reservedAmountUsd: estimatedCostUsd };
+  }
+
+  /**
+   * Releases an in-flight budget lease when a request completes, fails, or aborts.
+   */
+  public releaseReservation(keyId: string, amountUsd: number): void {
+    this.reservationStore.release(keyId, amountUsd);
+  }
+
+  /**
+   * Retrieves currently active in-flight reserved spend for a key.
+   */
+  public getActiveReservation(keyId: string): number {
+    return this.reservationStore.getReserved(keyId);
   }
 }
 
 // Singleton instances for gateway pipeline
 export const rateLimitStore: IRateLimitStore = new InMemoryRateLimitStore();
-export const budgetGatekeeper = new BudgetGatekeeper();
+export const budgetReservationStore: IBudgetReservationStore = new InMemoryBudgetReservationStore();
+export const budgetGatekeeper = new BudgetGatekeeper(budgetReservationStore);
+

@@ -167,7 +167,7 @@ export const CalendarView: React.FC = () => {
       }
       return prevMonth - 1;
     });
-  }, []);
+  }, [setCurrentMonth, setCurrentYear]);
 
   const handleNextMonth = React.useCallback(() => {
     setCurrentMonth((prevMonth) => {
@@ -177,7 +177,7 @@ export const CalendarView: React.FC = () => {
       }
       return prevMonth + 1;
     });
-  }, []);
+  }, [setCurrentMonth, setCurrentYear]);
 
   const handleGoToday = () => {
     const now = new Date();

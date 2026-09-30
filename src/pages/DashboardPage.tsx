@@ -19,23 +19,26 @@ import {
   ExternalLink,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { ProjectsView } from '../components/ProjectsView';
-import { UsageCostsView } from '../components/UsageCostsView';
-import { ReportsView } from '../components/ReportsView';
-import { IntegrationsView } from '../components/IntegrationsView';
-import { TeamView } from '../components/TeamView';
-import { SettingsView } from '../components/SettingsView';
-import { ModelsView } from '../components/ModelsView';
-import { OptimizationView } from '../components/OptimizationView';
-import { CalendarView } from '../components/CalendarView';
-import { AlertsView } from '../components/AlertsView';
-import { BudgetsView } from '../components/BudgetsView';
-import { DashboardHomeView } from '../components/DashboardHomeView';
 import { OverviewView } from '../components/OverviewView';
 import { OstraLogo } from '../components/OstraBrand';
+
+// Code-split sub-tabs so initial console load is fast and responsive
+const ProjectsView = React.lazy(() => import('../components/ProjectsView').then((m) => ({ default: m.ProjectsView })));
+const UsageCostsView = React.lazy(() => import('../components/UsageCostsView').then((m) => ({ default: m.UsageCostsView })));
+const ReportsView = React.lazy(() => import('../components/ReportsView').then((m) => ({ default: m.ReportsView })));
+const IntegrationsView = React.lazy(() => import('../components/IntegrationsView').then((m) => ({ default: m.IntegrationsView })));
+const TeamView = React.lazy(() => import('../components/TeamView').then((m) => ({ default: m.TeamView })));
+const SettingsView = React.lazy(() => import('../components/SettingsView').then((m) => ({ default: m.SettingsView })));
+const ModelsView = React.lazy(() => import('../components/ModelsView').then((m) => ({ default: m.ModelsView })));
+const OptimizationView = React.lazy(() => import('../components/OptimizationView').then((m) => ({ default: m.OptimizationView })));
+const CalendarView = React.lazy(() => import('../components/CalendarView').then((m) => ({ default: m.CalendarView })));
+const AlertsView = React.lazy(() => import('../components/AlertsView').then((m) => ({ default: m.AlertsView })));
+const BudgetsView = React.lazy(() => import('../components/BudgetsView').then((m) => ({ default: m.BudgetsView })));
+const DashboardHomeView = React.lazy(() => import('../components/DashboardHomeView').then((m) => ({ default: m.DashboardHomeView })));
 
 interface DashboardPageProps {
   onNavigateHome: () => void;
@@ -423,43 +426,52 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {/* Dashboard / Content Container */}
         <div key={activeTab} className="tab-transition-enter px-6 lg:px-8 pt-6 space-y-6 max-w-[1600px] mx-auto w-full">
-          {activeTab === 'alerts' ? (
-            <AlertsView />
-          ) : activeTab === 'budgets' ? (
-            <BudgetsView />
-          ) : activeTab === 'calendar' ? (
-            <CalendarView />
-          ) : activeTab === 'projects' ? (
-            <ProjectsView />
-          ) : activeTab === 'models' ? (
-            <ModelsView />
-          ) : activeTab === 'optimization' ? (
-            <OptimizationView />
-          ) : activeTab === 'usage' ? (
-            <UsageCostsView />
-          ) : activeTab === 'reports' ? (
-            <ReportsView />
-          ) : activeTab === 'integrations' ? (
-            <IntegrationsView />
-          ) : activeTab === 'team' ? (
-            <TeamView />
-          ) : activeTab === 'settings' ? (
-            <SettingsView onNavigateHome={onNavigateHome} />
-          ) : activeTab === 'guide' ? (
-            <DashboardHomeView
-              onGetStarted={() => setActiveTab('dashboard')}
-              onViewIntegrations={() => setActiveTab('integrations')}
-              onViewOverview={() => setActiveTab('dashboard')}
-            />
-          ) : (
-            <OverviewView
-              onNavigateToUsage={() => setActiveTab('usage')}
-              onNavigateToModels={() => setActiveTab('models')}
-              onNavigateToAlerts={() => setActiveTab('alerts')}
-              onNavigateToBudgets={() => setActiveTab('budgets')}
-              onNavigateToBilling={onNavigatePricing}
-            />
-          )}
+          <React.Suspense
+            fallback={
+              <div className="min-h-[400px] flex flex-col items-center justify-center gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-[#C59E5F]" />
+                <span className="text-xs text-zinc-500 font-mono">Loading console module...</span>
+              </div>
+            }
+          >
+            {activeTab === 'alerts' ? (
+              <AlertsView />
+            ) : activeTab === 'budgets' ? (
+              <BudgetsView />
+            ) : activeTab === 'calendar' ? (
+              <CalendarView />
+            ) : activeTab === 'projects' ? (
+              <ProjectsView />
+            ) : activeTab === 'models' ? (
+              <ModelsView />
+            ) : activeTab === 'optimization' ? (
+              <OptimizationView />
+            ) : activeTab === 'usage' ? (
+              <UsageCostsView />
+            ) : activeTab === 'reports' ? (
+              <ReportsView />
+            ) : activeTab === 'integrations' ? (
+              <IntegrationsView />
+            ) : activeTab === 'team' ? (
+              <TeamView />
+            ) : activeTab === 'settings' ? (
+              <SettingsView onNavigateHome={onNavigateHome} />
+            ) : activeTab === 'guide' ? (
+              <DashboardHomeView
+                onGetStarted={() => setActiveTab('dashboard')}
+                onViewIntegrations={() => setActiveTab('integrations')}
+                onViewOverview={() => setActiveTab('dashboard')}
+              />
+            ) : (
+              <OverviewView
+                onNavigateToUsage={() => setActiveTab('usage')}
+                onNavigateToModels={() => setActiveTab('models')}
+                onNavigateToAlerts={() => setActiveTab('alerts')}
+                onNavigateToBudgets={() => setActiveTab('budgets')}
+                onNavigateToBilling={onNavigatePricing}
+              />
+            )}
+          </React.Suspense>
         </div>
       </main>
     </div>

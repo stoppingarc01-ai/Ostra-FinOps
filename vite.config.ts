@@ -70,6 +70,22 @@ function soloPairingPlugin(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), soloPairingPlugin()],
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('lucide-react')) return 'vendor-lucide';
+            if (id.includes('framer-motion')) return 'vendor-framer';
+            if (id.includes('@supabase')) return 'vendor-supabase';
+            if (id.includes('firebase')) return 'vendor-firebase';
+            if (id.includes('@tanstack')) return 'vendor-tanstack';
+          }
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       '/gateway': {

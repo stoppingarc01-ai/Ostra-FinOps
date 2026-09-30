@@ -14,13 +14,17 @@ import { supabaseBridge } from './db/bridge';
 import { promptCache } from './cache/prompt-cache';
 import { idempotencyStore } from './middleware/idempotency';
 import { dispatchSignedWebhook } from './webhooks/dispatcher';
+import { budgetGatekeeper } from './middleware/gatekeeper';
 import type { TelemetryLogRecord } from './accounting/types';
+
+export type GatewayFailPolicy = 'fail_closed' | 'fail_open';
 
 export interface GatewayServerOptions {
   port?: number;
   host?: string;
   webhookSecret?: string;
   webhookUrl?: string;
+  failPolicy?: GatewayFailPolicy;
 }
 
 // Wire up Supabase persistence and spend synchronizer
@@ -35,6 +39,9 @@ const spendSync = new AtomicSpendSync(async (keyId, delta) => {
 export function createGatewayServer(options?: GatewayServerOptions): Server {
   const webhookSecret = options?.webhookSecret || process.env.OSTRAOPS_WEBHOOK_SECRET || 'whsec_local_development';
   const webhookUrl = options?.webhookUrl || process.env.OSTRAOPS_WEBHOOK_URL;
+  const failPolicy: GatewayFailPolicy =
+    options?.failPolicy ||
+    (process.env.OSTRAOPS_FAIL_POLICY === 'fail_open' ? 'fail_open' : 'fail_closed');
 
   const governance = new GovernanceEngine(async (payload) => {
     if (webhookUrl) {
@@ -121,6 +128,9 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
             if (!lockResult.acquired && lockResult.existingRecord) {
               const rec = lockResult.existingRecord;
               if (rec.status === 'COMPLETED' && !isStreaming && rec.body && rec.statusCode) {
+                if (ctx.reservedAmountUsd > 0) {
+                  budgetGatekeeper.releaseReservation(ctx.virtualKey.id, ctx.reservedAmountUsd);
+                }
                 forwardRes.writeHead(rec.statusCode, {
                   ...rec.headers,
                   'X-OstraOps-Idempotency-Replayed': 'true',
@@ -128,6 +138,10 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
                 });
                 forwardRes.end(rec.body);
                 return;
+              }
+
+              if (ctx.reservedAmountUsd > 0) {
+                budgetGatekeeper.releaseReservation(ctx.virtualKey.id, ctx.reservedAmountUsd);
               }
 
               sendOpenAiError(
@@ -139,6 +153,34 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
                 ctx.requestId
               );
               return;
+            }
+          }
+
+          // ------------------------------------------------------------------
+          // 1b. Fail Policy Server-Side Enforcement (Client overrides strictly ignored)
+          // ------------------------------------------------------------------
+          if (failPolicy === 'fail_closed' && !supabaseBridge.isConfigured()) {
+            if (ctx.reservedAmountUsd > 0) {
+              budgetGatekeeper.releaseReservation(ctx.virtualKey.id, ctx.reservedAmountUsd);
+            }
+            sendOpenAiError(
+              forwardRes,
+              503,
+              'OSTRAOPS_ACCOUNTING_UNAVAILABLE',
+              'service_unavailable',
+              'Accounting ledger is currently unreachable and gateway is configured in strict fail-closed mode. Request blocked to prevent financial overspending.',
+              ctx.requestId
+            );
+            return;
+          }
+
+          if (failPolicy === 'fail_open') {
+            forwardRes.setHeader('X-OstraOps-Fail-Mode', 'FAIL_OPEN');
+            if (!supabaseBridge.isConfigured()) {
+              forwardRes.setHeader(
+                'X-OstraOps-Warning',
+                'Ledger unreachable: request allowed under server fail-open policy; spending limits may be exceeded.'
+              );
             }
           }
 
@@ -163,6 +205,11 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
 
             const cached = await promptCache.get(promptCacheKey);
             if (cached) {
+              // Cache hit has zero cost: release the in-flight budget reservation immediately
+              if (ctx.reservedAmountUsd > 0) {
+                budgetGatekeeper.releaseReservation(ctx.virtualKey.id, ctx.reservedAmountUsd);
+              }
+
               if (isStreaming) {
                 // Emit simulated SSE stream for streaming clients
                 forwardRes.writeHead(200, {
@@ -235,107 +282,121 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
           // ------------------------------------------------------------------
           // 4. Run Resilient Two-State Streaming Pipeline
           // ------------------------------------------------------------------
-          const pipelineResult = await executeStreamingPipeline(forwardRes, {
-            identity: {
-              requestId: ctx.requestId,
+          let reservationReleased = false;
+          try {
+            const pipelineResult = await executeStreamingPipeline(forwardRes, {
+              identity: {
+                requestId: ctx.requestId,
+                organizationId: ctx.virtualKey.organizationId,
+                virtualKeyId: ctx.virtualKey.id,
+              },
+              initialModel: modelSpec,
+              payload: ctx.parsedPayload || {},
+              isStreaming,
+              clientSignal: ctx.abortController.signal,
+              upstreamDispatcher: dispatcher,
+              onChunk: (chunk) => {
+                accumulator.ingestChunk(chunk);
+              },
+              onResponseCompleted: (resInfo) => {
+                if (resInfo.body) {
+                  nonStreamingBody = resInfo.body;
+                }
+              },
+            });
+
+            // ------------------------------------------------------------------
+            // 5. Post-Stream Accounting & Automated Governance
+            // ------------------------------------------------------------------
+            const finalModelSpec = getModelSpec(pipelineResult.routedModelId) || modelSpec;
+            let usage = accumulator.finalize();
+
+            if (!isStreaming && nonStreamingBody) {
+              try {
+                const parsedJson = JSON.parse(nonStreamingBody);
+                usage = extractUsageFromNonStreamingJson(parsedJson, ctx.body.length);
+              } catch {
+                // fallback to accumulator finalize
+              }
+            }
+
+            const cost = calculateModelCost(finalModelSpec.id, usage);
+
+            // Atomic Spend Synchronization
+            const spendResult = await spendSync.commitSpend(
+              ctx.virtualKey.id,
+              ctx.virtualKey.keyHash,
+              cost.totalCostUsd
+            );
+
+            // In-flight reservation now accounted for in actual spend, release hold safely
+            if (ctx.reservedAmountUsd > 0) {
+              budgetGatekeeper.releaseReservation(ctx.virtualKey.id, ctx.reservedAmountUsd);
+              reservationReleased = true;
+            }
+
+            // Automated Financial Governance Check
+            await governance.checkMilestones({
               organizationId: ctx.virtualKey.organizationId,
               virtualKeyId: ctx.virtualKey.id,
-            },
-            initialModel: modelSpec,
-            payload: ctx.parsedPayload || {},
-            isStreaming,
-            clientSignal: ctx.abortController.signal,
-            upstreamDispatcher: dispatcher,
-            onChunk: (chunk) => {
-              accumulator.ingestChunk(chunk);
-            },
-            onResponseCompleted: (resInfo) => {
-              if (resInfo.body) {
-                nonStreamingBody = resInfo.body;
-              }
-            },
-          });
-
-          // ------------------------------------------------------------------
-          // 5. Post-Stream Accounting & Automated Governance
-          // ------------------------------------------------------------------
-          const finalModelSpec = getModelSpec(pipelineResult.routedModelId) || modelSpec;
-          let usage = accumulator.finalize();
-
-          if (!isStreaming && nonStreamingBody) {
-            try {
-              const parsedJson = JSON.parse(nonStreamingBody);
-              usage = extractUsageFromNonStreamingJson(parsedJson, ctx.body.length);
-            } catch {
-              // fallback to accumulator finalize
-            }
-          }
-
-          const cost = calculateModelCost(finalModelSpec.id, usage);
-
-          // Atomic Spend Synchronization
-          const spendResult = await spendSync.commitSpend(
-            ctx.virtualKey.id,
-            ctx.virtualKey.keyHash,
-            cost.totalCostUsd
-          );
-
-          // Automated Financial Governance Check
-          await governance.checkMilestones({
-            organizationId: ctx.virtualKey.organizationId,
-            virtualKeyId: ctx.virtualKey.id,
-            keyHash: ctx.virtualKey.keyHash,
-            keyPrefix: ctx.virtualKey.keyPrefix,
-            currentSpendUsd: spendResult.currentSpendUsd,
-            monthlyLimitUsd: ctx.virtualKey.monthlyLimitUsd,
-          });
-
-          // Enqueue Telemetry Log
-          const logRecord: TelemetryLogRecord = {
-            requestId: ctx.requestId,
-            organizationId: ctx.virtualKey.organizationId,
-            projectId: ctx.virtualKey.projectId,
-            environmentId: ctx.virtualKey.environmentId,
-            virtualKeyId: ctx.virtualKey.id,
-            provider: finalModelSpec.provider,
-            requestedModel: requestedModelId,
-            routedModel: finalModelSpec.id,
-            fallbackUsed: finalModelSpec.id !== requestedModelId,
-            fallbackFromModel: finalModelSpec.id !== requestedModelId ? requestedModelId : null,
-            inputTokens: usage.inputTokens,
-            outputTokens: usage.outputTokens,
-            costUsd: cost.totalCostUsd,
-            latencyMs: Date.now() - start,
-            statusCode: pipelineResult.finalState === 'COMPLETED' ? 200 : 500,
-            errorType: pipelineResult.error?.name || null,
-            errorCode: (pipelineResult.error as { code?: string })?.code || null,
-            createdAt: new Date(start).toISOString(),
-            completedAt: new Date().toISOString(),
-          };
-          telemetryQueue.enqueue(logRecord);
-
-          // Populate Prompt Cache
-          if (isCacheEligible && promptCacheKey && pipelineResult.finalState === 'COMPLETED') {
-            await promptCache.set({
-              cacheKey: promptCacheKey,
-              statusCode: 200,
-              headers: { 'Content-Type': 'application/json' },
-              rawResponse: nonStreamingBody,
-              parsedResponse: nonStreamingBody ? JSON.parse(nonStreamingBody) : undefined,
-              usage,
-              createdAt: Date.now(),
-              expiresAt: Date.now() + 300_000, // 5 min default TTL
+              keyHash: ctx.virtualKey.keyHash,
+              keyPrefix: ctx.virtualKey.keyPrefix,
+              currentSpendUsd: spendResult.currentSpendUsd,
+              monthlyLimitUsd: ctx.virtualKey.monthlyLimitUsd,
             });
-          }
 
-          // Complete Idempotency Record
-          if (rawIdempotencyKey && pipelineResult.finalState === 'COMPLETED') {
-            await idempotencyStore.complete(
-              rawIdempotencyKey,
-              200,
-              { 'Content-Type': 'application/json' },
-              nonStreamingBody
-            );
+            // Enqueue Telemetry Log
+            const logRecord: TelemetryLogRecord = {
+              requestId: ctx.requestId,
+              organizationId: ctx.virtualKey.organizationId,
+              projectId: ctx.virtualKey.projectId,
+              environmentId: ctx.virtualKey.environmentId,
+              virtualKeyId: ctx.virtualKey.id,
+              provider: finalModelSpec.provider,
+              requestedModel: requestedModelId,
+              routedModel: finalModelSpec.id,
+              fallbackUsed: finalModelSpec.id !== requestedModelId,
+              fallbackFromModel: finalModelSpec.id !== requestedModelId ? requestedModelId : null,
+              inputTokens: usage.inputTokens,
+              outputTokens: usage.outputTokens,
+              costUsd: cost.totalCostUsd,
+              latencyMs: Date.now() - start,
+              statusCode: pipelineResult.finalState === 'COMPLETED' ? 200 : 500,
+              errorType: pipelineResult.error?.name || null,
+              errorCode: (pipelineResult.error as { code?: string })?.code || null,
+              createdAt: new Date(start).toISOString(),
+              completedAt: new Date().toISOString(),
+            };
+            telemetryQueue.enqueue(logRecord);
+
+            // Populate Prompt Cache
+            if (isCacheEligible && promptCacheKey && pipelineResult.finalState === 'COMPLETED') {
+              await promptCache.set({
+                cacheKey: promptCacheKey,
+                statusCode: 200,
+                headers: { 'Content-Type': 'application/json' },
+                rawResponse: nonStreamingBody,
+                parsedResponse: nonStreamingBody ? JSON.parse(nonStreamingBody) : undefined,
+                usage,
+                createdAt: Date.now(),
+                expiresAt: Date.now() + 300_000, // 5 min default TTL
+              });
+            }
+
+            // Complete Idempotency Record
+            if (rawIdempotencyKey && pipelineResult.finalState === 'COMPLETED') {
+              await idempotencyStore.complete(
+                rawIdempotencyKey,
+                200,
+                { 'Content-Type': 'application/json' },
+                nonStreamingBody
+              );
+            }
+          } finally {
+            if (!reservationReleased && ctx.reservedAmountUsd > 0) {
+              budgetGatekeeper.releaseReservation(ctx.virtualKey.id, ctx.reservedAmountUsd);
+              reservationReleased = true;
+            }
           }
         },
       });

@@ -9,6 +9,7 @@ export interface IngressContext {
   abortController: AbortController;
   body: string;
   parsedPayload?: Record<string, unknown>;
+  reservedAmountUsd: number;
 }
 
 export type VirtualKeyResolver = (keyHash: string) => Promise<CachedVirtualKey | null>;
@@ -252,8 +253,13 @@ export async function handleGatewayIngress(
       return;
     }
 
+    const reservedAmountUsd = budgetCheck.reservedAmountUsd || 0;
+
     // 9. Forward to Upstream Provider Router
     if (abortController.signal.aborted) {
+      if (reservedAmountUsd > 0) {
+        budgetGatekeeper.releaseReservation(cachedKey.id, reservedAmountUsd);
+      }
       return;
     }
 
@@ -263,12 +269,16 @@ export async function handleGatewayIngress(
       abortController,
       body: rawBody,
       parsedPayload,
+      reservedAmountUsd,
     };
 
     if (onForwardToRouter) {
       await onForwardToRouter(ctx, res);
     } else {
       // Default Phase 2 Ingress Handshake Response
+      if (reservedAmountUsd > 0) {
+        budgetGatekeeper.releaseReservation(cachedKey.id, reservedAmountUsd);
+      }
       const ackPayload = JSON.stringify({
         id: requestId,
         status: 'ingested',
