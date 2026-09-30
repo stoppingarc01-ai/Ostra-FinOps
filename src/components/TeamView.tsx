@@ -18,6 +18,8 @@ import {
   Building2,
   RefreshCw
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { FeatureGate } from '../lib/entitlements';
 
 interface TeamMember {
   id: string;
@@ -49,164 +51,59 @@ interface TeamGroup {
   color: string;
 }
 
-const INITIAL_TEAMS: TeamGroup[] = [
-  {
-    id: 'platform',
-    name: 'Platform Team',
-    isDefault: true,
-    description: 'Core team managing platform infrastructure and gateway integrations.',
-    membersCount: 8,
-    projectsCount: 12,
-    apiKeysCount: 15,
-    spend30d: '$4,328.64',
-    budgetUsedPercent: 80,
-    color: '#C59E5F',
-  },
-  {
-    id: 'product',
-    name: 'Product Team',
-    description: 'Building and optimizing consumer-facing AI-powered products.',
-    membersCount: 6,
-    projectsCount: 8,
-    apiKeysCount: 7,
-    spend30d: '$2,104.32',
-    budgetUsedPercent: 62,
-    color: '#18181B',
-  },
-  {
-    id: 'data-science',
-    name: 'Data Science',
-    description: 'ML models, evaluations, and telemetry data analysis pipelines.',
-    membersCount: 5,
-    projectsCount: 6,
-    apiKeysCount: 4,
-    spend30d: '$1,784.21',
-    budgetUsedPercent: 71,
-    color: '#9C7938',
-  },
-  {
-    id: 'support',
-    name: 'Support Team',
-    description: 'Customer support, automated triage bots, and success operations.',
-    membersCount: 3,
-    projectsCount: 4,
-    apiKeysCount: 3,
-    spend30d: '$632.12',
-    budgetUsedPercent: 45,
-    color: '#E06D53',
-  },
-  {
-    id: 'security',
-    name: 'Security Team',
-    description: 'Security, compliance auditing, and hardware vault risk management.',
-    membersCount: 2,
-    projectsCount: 3,
-    apiKeysCount: 2,
-    spend30d: '$234.18',
-    budgetUsedPercent: 30,
-    color: '#2E7D32',
-  },
-  {
-    id: 'rnd',
-    name: 'R&D Team',
-    description: 'Autonomous research and frontier reasoning experimentation.',
-    membersCount: 3,
-    projectsCount: 5,
-    apiKeysCount: 1,
-    spend30d: '$512.09',
-    budgetUsedPercent: 30,
-    color: '#6366F1',
-  },
-];
-
-const INITIAL_MEMBERS: TeamMember[] = [
-  {
-    id: 'm1',
-    userId: 'usr_jane_doe_88',
-    name: 'Jane Doe',
-    email: 'jane.doe@acmecorp.com',
-    password: 'TempPassword!2026',
-    team: 'Platform Team',
-    role: 'Admin',
-    apiKeysCount: 5,
-    requests30d: '128,456',
-    spend30d: '$1,234.56',
-    lastActive: '2h ago',
-    avatarColor: '#18181B',
-    monthlyLimit: 2000,
-    currentSpend: 1234.56,
-  },
-  {
-    id: 'm2',
-    userId: 'usr_robert_kumar_42',
-    name: 'Robert Kumar',
-    email: 'robert.k@acmecorp.com',
-    password: 'SecurePass#9901',
-    team: 'Product Team',
-    role: 'Developer',
-    apiKeysCount: 3,
-    requests30d: '96,732',
-    spend30d: '$876.45',
-    lastActive: '1h ago',
-    avatarColor: '#C59E5F',
-    monthlyLimit: 1500,
-    currentSpend: 876.45,
-  },
-  {
-    id: 'm3',
-    userId: 'usr_sarah_mitchell_19',
-    name: 'Sarah Mitchell',
-    email: 'sarah.m@acmecorp.com',
-    password: 'AlphaBeta*2026',
-    team: 'Data Science',
-    role: 'Developer',
-    apiKeysCount: 2,
-    requests30d: '87,221',
-    spend30d: '$654.32',
-    lastActive: '3h ago',
-    avatarColor: '#9C7938',
-    monthlyLimit: 1000,
-    currentSpend: 654.32,
-  },
-  {
-    id: 'm4',
-    userId: 'usr_alex_turner_55',
-    name: 'Alex Turner',
-    email: 'alex.t@acmecorp.com',
-    password: 'VaultGuard$778',
-    team: 'Security Team',
-    role: 'Admin',
-    apiKeysCount: 4,
-    requests30d: '45,890',
-    spend30d: '$345.21',
-    lastActive: '5h ago',
-    avatarColor: '#18181B',
-    monthlyLimit: 1200,
-    currentSpend: 345.21,
-  },
-  {
-    id: 'm5',
-    userId: 'usr_nikhil_patel_07',
-    name: 'Nikhil Patel',
-    email: 'nikhil.p@acmecorp.com',
-    password: 'QuantumPass!2026',
-    team: 'R&D Team',
-    role: 'Developer',
-    apiKeysCount: 1,
-    requests30d: '34,567',
-    spend30d: '$210.98',
-    lastActive: '1d ago',
-    avatarColor: '#6366F1',
-    monthlyLimit: 800,
-    currentSpend: 210.98,
-  },
-];
+const defaultTeam: TeamGroup = {
+  id: 'platform',
+  name: 'Platform Engineering',
+  isDefault: true,
+  description: 'Core workspace engineering team managing AI models and proxy keys.',
+  membersCount: 1,
+  projectsCount: 1,
+  apiKeysCount: 1,
+  spend30d: '$0.00',
+  budgetUsedPercent: 0,
+  color: '#C59E5F',
+};
 
 export const TeamView: React.FC = () => {
+  const { user, profile, subscription } = useAuth();
+
+  const defaultOwner: TeamMember = {
+    id: user?.id || 'owner_1',
+    userId: user?.id || 'usr_owner',
+    name: profile?.full_name || user?.displayName || 'Workspace Owner',
+    email: user?.email || 'owner@workspace',
+    team: 'Platform Engineering',
+    role: 'Owner',
+    apiKeysCount: 1,
+    requests30d: '0',
+    spend30d: '$0.00',
+    lastActive: 'Active Now',
+    avatarColor: '#C59E5F',
+    monthlyLimit: 500,
+    currentSpend: 0,
+  };
+
   const [activeTab, setActiveTab] = useState<'teams' | 'developers' | 'apikeys' | 'roles' | 'activity'>('teams');
   const [searchQuery, setSearchQuery] = useState('');
-  const [teams, setTeams] = useState<TeamGroup[]>(INITIAL_TEAMS);
-  const [members, setMembers] = useState<TeamMember[]>(INITIAL_MEMBERS);
+
+  const [teams, setTeams] = useState<TeamGroup[]>(() => {
+    try {
+      const raw = localStorage.getItem(`ostraops_teams_${user?.id}`);
+      return raw ? JSON.parse(raw) : [defaultTeam];
+    } catch {
+      return [defaultTeam];
+    }
+  });
+
+  const [members, setMembers] = useState<TeamMember[]>(() => {
+    try {
+      const raw = localStorage.getItem(`ostraops_team_members_${user?.id}`);
+      return raw ? JSON.parse(raw) : [defaultOwner];
+    } catch {
+      return [defaultOwner];
+    }
+  });
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -326,7 +223,8 @@ export const TeamView: React.FC = () => {
   }, [members, searchQuery]);
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto pb-16">
+    <FeatureGate subscription={subscription} feature="team_seats">
+      <div className="space-y-6 max-w-[1600px] mx-auto pb-16">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#18181B] text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-mono flex items-center gap-2 border border-[#3F3F46] animate-in fade-in slide-in-from-bottom-2 duration-200">
@@ -392,14 +290,13 @@ export const TeamView: React.FC = () => {
               </div>
             </div>
             <div className="text-3xl font-extrabold text-white font-mono tracking-tight">
-              {members.length + 19}
+              {members.length}
             </div>
             <div className="flex items-center gap-1 text-[11px] text-[#E5C38D] font-mono font-medium mt-1">
               <TrendingUp className="w-3 h-3 text-[#C59E5F]" />
-              <span>↗ 4 new this month</span>
+              <span>{members.length === 1 ? 'Personal Workspace' : `${members.length} team members`}</span>
             </div>
           </div>
-          {/* Mini Sparkline */}
           <div className="pt-2">
             <svg className="w-full h-7 overflow-visible" viewBox="0 0 100 20" preserveAspectRatio="none">
               <path d="M0,16 Q25,18 45,10 T75,6 T100,2" fill="none" stroke="#C59E5F" strokeWidth="2" strokeLinecap="round" />
@@ -414,21 +311,21 @@ export const TeamView: React.FC = () => {
               <span className="text-xs font-semibold text-zinc-400 uppercase font-mono tracking-wide">
                 Active Developers
               </span>
-              <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                <Code className="w-4 h-4 text-emerald-600" />
+              <div className="w-7 h-7 rounded-xl bg-white/[0.06] text-emerald-400 flex items-center justify-center">
+                <Code className="w-4 h-4 text-emerald-400" />
               </div>
             </div>
             <div className="text-3xl font-extrabold text-white font-mono tracking-tight">
-              18
+              {members.filter(m => m.role === 'Developer' || m.role === 'Owner' || m.role === 'Admin').length}
             </div>
-            <div className="flex items-center gap-1 text-[11px] text-emerald-700 font-mono font-medium mt-1">
-              <TrendingUp className="w-3 h-3 text-emerald-600" />
-              <span>↗ 3 active today</span>
+            <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-mono font-medium mt-1">
+              <TrendingUp className="w-3 h-3 text-emerald-400" />
+              <span>Full API access enabled</span>
             </div>
           </div>
           <div className="pt-2">
             <svg className="w-full h-7 overflow-visible" viewBox="0 0 100 20" preserveAspectRatio="none">
-              <path d="M0,15 Q20,12 40,16 T70,8 T100,3" fill="none" stroke="#2E7D32" strokeWidth="2" strokeLinecap="round" />
+              <path d="M0,15 Q20,12 40,16 T70,8 T100,3" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
         </div>
@@ -441,45 +338,44 @@ export const TeamView: React.FC = () => {
                 Active API Keys
               </span>
               <div className="w-7 h-7 rounded-xl bg-white/[0.06] text-zinc-300 flex items-center justify-center">
-                <Key className="w-4 h-4 text-[#18181B]" />
+                <Key className="w-4 h-4 text-[#C59E5F]" />
               </div>
             </div>
             <div className="text-3xl font-extrabold text-white font-mono tracking-tight">
-              32
+              {members.reduce((acc, m) => acc + (m.apiKeysCount || 0), 0) || 1}
             </div>
             <div className="flex items-center gap-1 text-[11px] text-zinc-400 font-mono font-medium mt-1">
-              <TrendingUp className="w-3 h-3 text-zinc-300" />
-              <span>↗ 5 provisioned this month</span>
+              <span>Scoped developer keys</span>
             </div>
           </div>
           <div className="pt-2">
             <svg className="w-full h-7 overflow-visible" viewBox="0 0 100 20" preserveAspectRatio="none">
-              <path d="M0,18 Q30,15 50,12 T80,5 T100,1" fill="none" stroke="#18181B" strokeWidth="2" strokeLinecap="round" />
+              <path d="M0,18 Q30,15 50,12 T80,5 T100,1" fill="none" stroke="#C59E5F" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
         </div>
 
-        {/* Card 4: Roles */}
+        {/* Card 4: Teams Count */}
         <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-zinc-400 uppercase font-mono tracking-wide">
-                Configured Roles
+                Configured Teams
               </span>
               <div className="w-7 h-7 rounded-xl bg-white/[0.06] text-zinc-300 flex items-center justify-center">
                 <Shield className="w-4 h-4 text-[#C59E5F]" />
               </div>
             </div>
             <div className="text-3xl font-extrabold text-white font-mono tracking-tight">
-              6
+              {teams.length}
             </div>
-            <div className="text-[11px] text-zinc-400 font-mono mt-1">
-              Fine-grained RBAC permissions
+            <div className="flex items-center gap-1 text-[11px] text-zinc-400 font-mono font-medium mt-1">
+              <span>RBAC groups active</span>
             </div>
           </div>
           <div className="pt-2">
             <svg className="w-full h-7 overflow-visible" viewBox="0 0 100 20" preserveAspectRatio="none">
-              <path d="M0,14 Q35,8 60,12 T85,6 T100,3" fill="none" stroke="#C59E5F" strokeWidth="2" strokeLinecap="round" />
+              <path d="M0,14 Q30,16 60,11 T100,4" fill="none" stroke="#C59E5F" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
         </div>
@@ -1424,6 +1320,7 @@ export const TeamView: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </FeatureGate>
   );
 };

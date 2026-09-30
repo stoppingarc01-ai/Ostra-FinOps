@@ -11,6 +11,8 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { ProviderLogo } from './IntegrationsView';
+import { useSubscription } from '../lib/subscriptionService';
+import { FeatureGate } from '../lib/entitlements';
 
 interface OptimizationOpportunity {
   id: string;
@@ -37,6 +39,7 @@ interface HeuristicRule {
 }
 
 export const OptimizationView: React.FC = () => {
+  const { subscription } = useSubscription();
   // Toast state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -224,7 +227,8 @@ export const OptimizationView: React.FC = () => {
   }, [opportunities, searchQuery, selectedCategory]);
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto pb-16 animate-in fade-in duration-150">
+    <FeatureGate feature="semantic_cache" subscription={subscription}>
+      <div className="space-y-6 max-w-[1600px] mx-auto pb-16 animate-in fade-in duration-150">
       
       {/* Toast Notification */}
       {toastMessage && (
@@ -766,6 +770,7 @@ export const OptimizationView: React.FC = () => {
         </div>
       </div>
 
-    </div>
+      </div>
+    </FeatureGate>
   );
 };

@@ -22,12 +22,13 @@ import {
   Play
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSubscription } from '../lib/subscriptionService';
+import { FeatureGate } from '../lib/entitlements';
 import {
   subscribeToUserAlerts,
   updateAlertStatus,
   createAlert,
   createAlertRule,
-  DEFAULT_INITIAL_ALERTS,
   DEFAULT_ALERT_RULES,
   type SystemAlert,
   type AlertRule,
@@ -49,21 +50,14 @@ const getRelativeTime = (isoString: string): string => {
 
 export const AlertsView: React.FC = () => {
   const { user } = useAuth();
+  const { subscription } = useSubscription();
   const userId = user?.id || 'guest_user';
 
   // Sub-tab view: 'feed' (Incidents list) or 'rules' (Guardrail configurations)
   const [viewTab, setViewTab] = useState<'feed' | 'rules'>('feed');
 
-  // Initialized with comprehensive production mock data immediately
-  const [alerts, setAlerts] = useState<SystemAlert[]>(() =>
-    DEFAULT_INITIAL_ALERTS.map((a, idx) => ({
-      ...a,
-      id: `ALT-${8840 - idx}`,
-      user_id: userId,
-      created_at: a.timestamp,
-      updated_at: a.timestamp,
-    }))
-  );
+  // Real alerts initialized to empty array (no mock incidents)
+  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
 
   const [rules, setRules] = useState<AlertRule[]>(() =>
     DEFAULT_ALERT_RULES.map((r, idx) => ({
@@ -98,7 +92,7 @@ export const AlertsView: React.FC = () => {
 
   // Real-time Firestore Sync
   useEffect(() => {
-    const unsubscribe = subscribeToUserAlerts(userId, (liveAlerts) => {
+    const unsubscribe = subscribeToUserAlerts(userId, (liveAlerts: SystemAlert[]) => {
       if (liveAlerts && liveAlerts.length > 0) {
         setAlerts(liveAlerts);
       }
@@ -249,7 +243,8 @@ export const AlertsView: React.FC = () => {
   const resolvedCount = alerts.filter((a) => a.status === 'resolved').length;
 
   return (
-    <div className="space-y-6 pb-14 font-sans selection:bg-[#C59E5F]/30 selection:text-white">
+    <FeatureGate feature="telemetry" subscription={subscription}>
+      <div className="space-y-6 pb-14 font-sans selection:bg-[#C59E5F]/30 selection:text-white">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-[#0B0E14] text-white px-4 py-3 rounded-2xl shadow-2xl border border-[#C59E5F]/40 text-xs font-semibold flex items-center gap-2.5 animate-in slide-in-from-top-2">
@@ -960,6 +955,7 @@ export const AlertsView: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </FeatureGate>
   );
 };

@@ -79,22 +79,13 @@ export const ProjectsView: React.FC = () => {
     e.preventDefault();
     if (!newName.trim() || !user?.uid) return;
 
-    const slug = newName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-
     try {
       const newProj = await createProject(user.uid, {
         name: newName.trim(),
-        slug,
         env: newEnv,
-        spend: 0,
-        budgetLimit: parseFloat(newBudget) || 500,
-        tokens: '0.0M',
-        requests: 0,
-        avgLatency: '0ms',
         primaryModel: newPrimaryModel,
         failoverModel: newFailoverModel,
-        paused: false,
-        lastActive: 'Just created',
+        budgetLimit: parseFloat(newBudget) || 500,
       });
       setProjects(prev => [newProj, ...prev]);
       showToast(`Created project: ${newProj.name}`);

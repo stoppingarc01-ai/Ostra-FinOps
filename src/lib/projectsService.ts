@@ -1,7 +1,6 @@
 import {
   collection,
   doc,
-  getDocs,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -32,148 +31,174 @@ export interface UserProject {
   updated_at: string;
 }
 
-const DEMO_PROJECTS: Omit<UserProject, 'id' | 'user_id' | 'created_at' | 'updated_at'>[] = [
-  {
-    name: 'Main Web Platform',
-    slug: 'web-platform',
-    env: 'Production',
-    spend: 2450.21,
-    budgetLimit: 3500,
-    tokens: '142.8M',
-    requests: 48920,
-    avgLatency: '320ms',
-    primaryModel: 'GPT-4o',
-    failoverModel: 'Claude 3.5 Sonnet',
-    paused: false,
-    lastActive: 'Just now',
-  },
-  {
-    name: 'Customer Support Copilot',
-    slug: 'support-copilot',
-    env: 'Production',
-    spend: 1210.43,
-    budgetLimit: 1500,
-    tokens: '94.2M',
-    requests: 26410,
-    avgLatency: '410ms',
-    primaryModel: 'Claude 3.5 Sonnet',
-    failoverModel: 'Claude 3.5 Haiku',
-    paused: false,
-    lastActive: '2m ago',
-  },
-  {
-    name: 'Analytics SQL Generator',
-    slug: 'sql-generator',
-    env: 'Staging',
-    spend: 54.12,
-    budgetLimit: 300,
-    tokens: '6.2M',
-    requests: 840,
-    avgLatency: '390ms',
-    primaryModel: 'GPT-4o-mini',
-    failoverModel: 'Gemini 1.5 Flash',
-    paused: false,
-    lastActive: '1h ago',
-  },
-  {
-    name: 'R&D Synthetic Data Lab',
-    slug: 'rnd-synthetic',
-    env: 'Development',
-    spend: 6.0,
-    budgetLimit: 100,
-    tokens: '0.9M',
-    requests: 70,
-    avgLatency: '620ms',
-    primaryModel: 'DeepSeek-V3',
-    failoverModel: 'GPT-4o-mini',
-    paused: true,
-    lastActive: '3d ago',
-  },
-];
-
 const COL = 'projects';
 const docId = (userId: string, id: string) =>
   id.startsWith(userId) ? id : `${userId}_${id}`;
 
-/** Seed demo projects once and return them */
-async function seedProjects(userId: string): Promise<UserProject[]> {
+/** Seed a single real starter project for a fresh user */
+async function seedInitialStarterProject(userId: string): Promise<UserProject[]> {
   const now = new Date().toISOString();
-  const seeded: UserProject[] = [];
-  for (let i = 0; i < DEMO_PROJECTS.length; i++) {
-    const id = `proj_${100 + i}`;
-    const p: UserProject = { ...DEMO_PROJECTS[i], id, user_id: userId, created_at: now, updated_at: now };
-    try {
-      await setDoc(doc(db, COL, docId(userId, id)), p, { merge: true });
-    } catch { /* graceful */ }
-    seeded.push(p);
-  }
-  return seeded;
+  const id = `proj_${Date.now()}`;
+  const initialProject: UserProject = {
+    id,
+    user_id: userId,
+    name: 'Production Gateway',
+    slug: 'production-gateway',
+    endpoint: `https://gateway.ostraops.com/v1/projects/${id}`,
+    env: 'Production',
+    spend: 0,
+    budgetLimit: 100,
+    tokens: '0',
+    requests: 0,
+    avgLatency: '<5ms',
+    primaryModel: 'GPT-4o',
+    failoverModel: 'Claude 3.7 Sonnet',
+    paused: false,
+    lastActive: 'Just now',
+    created_at: now,
+    updated_at: now,
+  };
+
+  try {
+    await setDoc(doc(db, COL, docId(userId, id)), initialProject, { merge: true });
+  } catch {}
+
+  try {
+    localStorage.setItem(`ostraops_projects_${userId}`, JSON.stringify([initialProject]));
+  } catch {}
+
+  return [initialProject];
 }
 
-/** Real-time listener for user projects */
+/** Subscribe in real-time to the current user's projects */
 export function subscribeToUserProjects(
   userId: string,
   onUpdate: (projects: UserProject[]) => void
 ): () => void {
   const q = query(collection(db, COL), where('user_id', '==', userId));
-  return onSnapshot(q, async (snap) => {
-    if (snap.empty) {
-      onUpdate(await seedProjects(userId));
-    } else {
-      onUpdate(snap.docs.map((d) => d.data() as UserProject));
+
+  return onSnapshot(
+    q,
+    async (snap) => {
+      if (snap.empty) {
+        // Check local cache
+        const cached = localStorage.getItem(`ostraops_projects_${userId}`);
+        if (cached) {
+          try {
+            onUpdate(JSON.parse(cached));
+            return;
+          } catch {}
+        }
+        const created = await seedInitialStarterProject(userId);
+        onUpdate(created);
+        return;
+      }
+
+      const list: UserProject[] = [];
+      snap.forEach((d) => {
+        list.push(d.data() as UserProject);
+      });
+      list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      try {
+        localStorage.setItem(`ostraops_projects_${userId}`, JSON.stringify(list));
+      } catch {}
+      onUpdate(list);
+    },
+    async (err) => {
+      console.warn('Projects listener note (using local cache):', err);
+      const cached = localStorage.getItem(`ostraops_projects_${userId}`);
+      if (cached) {
+        try {
+          onUpdate(JSON.parse(cached));
+          return;
+        } catch {}
+      }
+      const starter = await seedInitialStarterProject(userId);
+      onUpdate(starter);
     }
-  }, async (err) => {
-    console.warn('Projects snapshot error:', err);
-    onUpdate(await seedProjects(userId).catch(() =>
-      DEMO_PROJECTS.map((p, i) => ({
-        ...p,
-        id: `proj_${100 + i}`,
-        user_id: userId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }))
-    ));
-  });
+  );
 }
 
-/** One-time fetch */
-export async function fetchUserProjects(userId: string): Promise<UserProject[]> {
-  try {
-    const snap = await getDocs(query(collection(db, COL), where('user_id', '==', userId)));
-    if (snap.empty) return seedProjects(userId);
-    return snap.docs.map((d) => d.data() as UserProject);
-  } catch {
-    return DEMO_PROJECTS.map((p, i) => ({
-      ...p,
-      id: `proj_${100 + i}`,
-      user_id: userId,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }));
-  }
-}
-
-/** Create new project */
+/** Create a new project endpoint */
 export async function createProject(
   userId: string,
-  project: Omit<UserProject, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  data: {
+    name: string;
+    env: 'Production' | 'Staging' | 'Development';
+    primaryModel: string;
+    failoverModel: string;
+    budgetLimit: number;
+  }
 ): Promise<UserProject> {
-  const id = `proj_${Math.floor(1000 + Math.random() * 9000)}`;
+  const id = `proj_${Date.now()}`;
+  const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const now = new Date().toISOString();
-  const p: UserProject = { ...project, id, user_id: userId, created_at: now, updated_at: now };
-  await setDoc(doc(db, COL, docId(userId, id)), p);
-  return p;
+
+  const project: UserProject = {
+    id,
+    user_id: userId,
+    name: data.name,
+    slug,
+    endpoint: `https://gateway.ostraops.com/v1/projects/${slug}`,
+    env: data.env,
+    spend: 0,
+    budgetLimit: data.budgetLimit,
+    tokens: '0',
+    requests: 0,
+    avgLatency: '<5ms',
+    primaryModel: data.primaryModel,
+    failoverModel: data.failoverModel,
+    paused: false,
+    lastActive: 'Just now',
+    created_at: now,
+    updated_at: now,
+  };
+
+  try {
+    await setDoc(doc(db, COL, docId(userId, id)), project);
+  } catch {}
+
+  try {
+    const raw = localStorage.getItem(`ostraops_projects_${userId}`);
+    const list = raw ? JSON.parse(raw) : [];
+    list.unshift(project);
+    localStorage.setItem(`ostraops_projects_${userId}`, JSON.stringify(list));
+  } catch {}
+
+  return project;
 }
 
-/** Toggle paused state */
-export async function toggleProjectPause(userId: string, projectId: string, paused: boolean): Promise<void> {
-  await updateDoc(doc(db, COL, docId(userId, projectId)), {
-    paused,
-    updated_at: new Date().toISOString(),
-  });
+/** Toggle pause / active state */
+export async function toggleProjectPause(userId: string, projectId: string, currentPaused: boolean): Promise<void> {
+  try {
+    await updateDoc(doc(db, COL, docId(userId, projectId)), {
+      paused: !currentPaused,
+      updated_at: new Date().toISOString(),
+    });
+  } catch {}
+
+  try {
+    const raw = localStorage.getItem(`ostraops_projects_${userId}`);
+    if (raw) {
+      const list = JSON.parse(raw) as UserProject[];
+      const updated = list.map((p) => (p.id === projectId ? { ...p, paused: !currentPaused } : p));
+      localStorage.setItem(`ostraops_projects_${userId}`, JSON.stringify(updated));
+    }
+  } catch {}
 }
 
 /** Delete a project */
 export async function deleteProject(userId: string, projectId: string): Promise<void> {
-  await deleteDoc(doc(db, COL, docId(userId, projectId)));
+  try {
+    await deleteDoc(doc(db, COL, docId(userId, projectId)));
+  } catch {}
+
+  try {
+    const raw = localStorage.getItem(`ostraops_projects_${userId}`);
+    if (raw) {
+      const list = JSON.parse(raw) as UserProject[];
+      const filtered = list.filter((p) => p.id !== projectId);
+      localStorage.setItem(`ostraops_projects_${userId}`, JSON.stringify(filtered));
+    }
+  } catch {}
 }

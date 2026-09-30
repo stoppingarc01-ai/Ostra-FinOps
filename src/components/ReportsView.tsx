@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileText,
   Download,
@@ -6,8 +6,6 @@ import {
   ChevronDown,
   Filter,
   RefreshCw,
-  TrendingUp,
-  TrendingDown,
   Share2,
   Clock,
   SlidersHorizontal,
@@ -17,8 +15,26 @@ import {
   Info,
   MoreVertical
 } from 'lucide-react';
+import { useSubscription } from '../lib/subscriptionService';
+import { FeatureGate } from '../lib/entitlements';
+import { fetchGatewayLogs } from '../lib/supabase';
+import type { GatewayLog } from '../types/database';
 
 export const ReportsView: React.FC = () => {
+  const { subscription } = useSubscription();
+  const [logs, setLogs] = useState<GatewayLog[]>([]);
+
+  useEffect(() => {
+    fetchGatewayLogs(100)
+      .then((data) => setLogs(data || []))
+      .catch(() => setLogs([]));
+  }, []);
+
+  const totalSpend = logs.reduce((acc, l) => acc + (l.cost_usd || 0), 0);
+  const totalTokens = logs.reduce((acc, l) => acc + (l.input_tokens || 0) + (l.output_tokens || 0), 0);
+  const totalRequests = logs.length;
+  const avgCostPer1K = totalTokens > 0 ? (totalSpend / (totalTokens / 1000)) : 0;
+
   const [activeSubTab, setActiveSubTab] = useState('Overview');
   const [timeFilter, setTimeFilter] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(3); // Default May 13 selected
@@ -211,7 +227,8 @@ export const ReportsView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <FeatureGate feature="telemetry" subscription={subscription}>
+      <div className="space-y-6">
       
       {/* Toast Notification */}
       {toastMessage && (
@@ -315,7 +332,7 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* ============================================================ */}
-      {/* ROW 1: TOP 4 METRIC CARDS (OstraOps Palette)                */}
+      {/* ROW 1: TOP 4 METRIC CARDS (Real Telemetry Data)              */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
@@ -327,11 +344,11 @@ export const ReportsView: React.FC = () => {
           </div>
           <div className="pt-2">
             <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
-              $4,328.64
+              ${totalSpend.toFixed(2)}
             </div>
             <div className="flex items-center gap-1 text-[11px] font-mono text-zinc-400 mt-1">
-              <TrendingUp className="w-3 h-3 text-[#E5C38D]" />
-              <span>↑ 28.6% vs May 3 - May 9</span>
+              <span className="text-[#E5C38D]">●</span>
+              <span>{totalRequests > 0 ? `${totalRequests} routed requests` : '0 requests tracked'}</span>
             </div>
           </div>
           {/* Sparkline */}
@@ -350,11 +367,15 @@ export const ReportsView: React.FC = () => {
           </div>
           <div className="pt-2">
             <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
-              312.6M
+              {totalTokens > 1_000_000
+                ? `${(totalTokens / 1_000_000).toFixed(1)}M`
+                : totalTokens > 1_000
+                ? `${(totalTokens / 1_000).toFixed(1)}K`
+                : totalTokens.toLocaleString()}
             </div>
             <div className="flex items-center gap-1 text-[11px] font-mono text-zinc-400 mt-1">
-              <TrendingUp className="w-3 h-3 text-[#E5C38D]" />
-              <span>↑ 18.2% vs May 3 - May 9</span>
+              <span className="text-emerald-400">●</span>
+              <span>Streaming prompt &amp; completion</span>
             </div>
           </div>
           {/* Sparkline */}
@@ -373,11 +394,11 @@ export const ReportsView: React.FC = () => {
           </div>
           <div className="pt-2">
             <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
-              89,732
+              {totalRequests.toLocaleString()}
             </div>
             <div className="flex items-center gap-1 text-[11px] font-mono text-zinc-400 mt-1">
-              <TrendingUp className="w-3 h-3 text-[#E5C38D]" />
-              <span>↑ 24.1% vs May 3 - May 9</span>
+              <span className="text-blue-400">●</span>
+              <span>Zero-downtime routed</span>
             </div>
           </div>
           {/* Sparkline */}
@@ -396,11 +417,10 @@ export const ReportsView: React.FC = () => {
           </div>
           <div className="pt-2">
             <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
-              $0.0028
+              ${avgCostPer1K.toFixed(4)}
             </div>
-            <div className="flex items-center gap-1 text-[11px] font-mono text-emerald-700 mt-1">
-              <TrendingDown className="w-3 h-3 text-emerald-700" />
-              <span>↓ 12.5% vs May 3 - May 9</span>
+            <div className="flex items-center gap-1 text-[11px] font-mono text-emerald-400 mt-1">
+              <span>Optimized gateway unit rate</span>
             </div>
           </div>
           {/* Sparkline */}
@@ -410,7 +430,6 @@ export const ReportsView: React.FC = () => {
             </svg>
           </div>
         </div>
-
       </div>
 
       {/* ============================================================ */}
@@ -728,7 +747,7 @@ export const ReportsView: React.FC = () => {
                     <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#D4CABE" strokeWidth="3.8" strokeDasharray="2.6 100" strokeDashoffset="-97.4" />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                    <span className="text-sm font-extrabold text-white font-mono tracking-tight">$4,328.64</span>
+                    <span className="text-sm font-extrabold text-white font-mono tracking-tight">${totalSpend.toFixed(2)}</span>
                     <span className="text-[10px] text-zinc-500 font-medium font-mono mt-0.5">Total Spend</span>
                   </div>
                 </div>
@@ -767,7 +786,7 @@ export const ReportsView: React.FC = () => {
                     <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#D4CABE" strokeWidth="3.8" strokeDasharray="4.5 100" strokeDashoffset="-95.5" />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                    <span className="text-sm font-extrabold text-white font-mono tracking-tight">$4,328.64</span>
+                    <span className="text-sm font-extrabold text-white font-mono tracking-tight">${totalSpend.toFixed(2)}</span>
                     <span className="text-[10px] text-zinc-500 font-medium font-mono mt-0.5">Total Spend</span>
                   </div>
                 </div>
@@ -1301,7 +1320,7 @@ export const ReportsView: React.FC = () => {
                 {breakdownModal === 'status' ? 'Total Analyzed Requests:' : 'Total Realized Spend:'}
               </span>
               <span className="text-base font-extrabold text-white">
-                {breakdownModal === 'status' ? '89,732 requests' : '$4,328.64 USD'}
+                {breakdownModal === 'status' ? `${totalRequests.toLocaleString()} requests` : `$${totalSpend.toFixed(2)} USD`}
               </span>
             </div>
 
@@ -1375,6 +1394,7 @@ export const ReportsView: React.FC = () => {
         </div>
       )}
 
-    </div>
+      </div>
+    </FeatureGate>
   );
 };
