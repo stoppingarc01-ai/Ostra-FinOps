@@ -830,7 +830,7 @@ export const CATALOG_MODELS: ModelIntegration[] = [
 // Provider-specific secret formats, placeholders, and validation rules
 interface ProviderRule {
   placeholder: string;
-  expectedPrefix: string;
+  expectedPrefix?: string;
   minLen: number;
   guideUrl?: string;
   formatDescription: string;
@@ -838,58 +838,49 @@ interface ProviderRule {
 
 const PROVIDER_RULES: Record<string, ProviderRule> = {
   Anthropic: {
-    placeholder: 'sk-ant-api03-xxxx...',
-    expectedPrefix: 'sk-ant-',
-    minLen: 24,
-    formatDescription: 'Must start with "sk-ant-" and be at least 24 characters',
+    placeholder: 'sk-ant-api03-xxxx... or custom key',
+    minLen: 10,
+    formatDescription: 'Enter valid Anthropic API key or token',
   },
   OpenAI: {
     placeholder: 'sk-proj-xxxx... or sk-xxxx...',
-    expectedPrefix: 'sk-',
-    minLen: 20,
-    formatDescription: 'Must start with "sk-" and be at least 20 characters',
+    minLen: 10,
+    formatDescription: 'Enter valid OpenAI API key or token',
   },
   Google: {
-    placeholder: 'AIzaSyxxxx...',
-    expectedPrefix: 'AIza',
-    minLen: 20,
-    formatDescription: 'Google Gemini API key must start with "AIza"',
+    placeholder: 'AIzaSy... or AQ....',
+    minLen: 10,
+    formatDescription: 'Enter valid Google Gemini API key or Vertex token',
   },
   Mistral: {
-    placeholder: 'mis_xxxx...',
-    expectedPrefix: 'mis_',
-    minLen: 16,
-    formatDescription: 'Must start with "mis_" and have at least 16 characters',
+    placeholder: 'mis_xxxx... or custom key',
+    minLen: 10,
+    formatDescription: 'Enter valid Mistral API key or token',
   },
   xAI: {
-    placeholder: 'xai-xxxx...',
-    expectedPrefix: 'xai-',
-    minLen: 16,
-    formatDescription: 'Must start with "xai-" and have at least 16 characters',
+    placeholder: 'xai-xxxx... or custom key',
+    minLen: 10,
+    formatDescription: 'Enter valid xAI API key or token',
   },
   DeepSeek: {
-    placeholder: 'sk-xxxx...',
-    expectedPrefix: 'sk-',
-    minLen: 16,
-    formatDescription: 'Must start with "sk-" and have at least 16 characters',
+    placeholder: 'sk-xxxx... or custom key',
+    minLen: 10,
+    formatDescription: 'Enter valid DeepSeek API key or token',
   },
   Qwen: {
     placeholder: 'sk-qwen-xxxx... or sk-xxxx...',
-    expectedPrefix: 'sk-',
-    minLen: 16,
-    formatDescription: 'Must start with "sk-" and have at least 16 characters',
+    minLen: 10,
+    formatDescription: 'Enter valid Qwen API key or token',
   },
   Meta: {
-    placeholder: 'meta-xxxx...',
-    expectedPrefix: 'meta-',
-    minLen: 16,
-    formatDescription: 'Must be at least 16 characters',
+    placeholder: 'meta-xxxx... or custom key',
+    minLen: 10,
+    formatDescription: 'Enter valid Meta API key or token',
   },
   Cohere: {
-    placeholder: 'coh-xxxx... or key-xxxx...',
-    expectedPrefix: 'coh-',
-    minLen: 16,
-    formatDescription: 'Must have at least 16 characters',
+    placeholder: 'coh-xxxx... or custom key',
+    minLen: 10,
+    formatDescription: 'Enter valid Cohere API key or token',
   },
 };
 
@@ -981,7 +972,7 @@ export const IntegrationsView: React.FC = () => {
     setWizardOpen(true);
   };
 
-  // STRICT VALIDATION ENGINE
+  // UPSTREAM KEY VALIDATION ENGINE
   const validateKey = (keyString: string, providerName: string) => {
     const trimmed = keyString.trim();
     if (!trimmed) {
@@ -989,17 +980,9 @@ export const IntegrationsView: React.FC = () => {
     }
 
     const rule = PROVIDER_RULES[providerName] || {
-      expectedPrefix: '',
-      minLen: 12,
-      formatDescription: 'Must be at least 12 characters',
+      minLen: 8,
+      formatDescription: 'Must be at least 8 characters',
     };
-
-    if (rule.expectedPrefix && !trimmed.startsWith(rule.expectedPrefix)) {
-      return {
-        valid: false,
-        message: `Invalid format: ${providerName} keys must start with "${rule.expectedPrefix}".`,
-      };
-    }
 
     if (trimmed.length < rule.minLen) {
       return {
