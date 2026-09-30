@@ -104,19 +104,19 @@ client = OpenAI(
   };
 
   return (
-    <section id="agents" className="relative py-24 bg-[#FAF8F5] border-t border-[#EAE5DB] overflow-hidden">
+    <section id="agents" className="relative py-24 bg-[#07090C] border-t border-white/[0.08] overflow-hidden">
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider mb-2 font-mono">
+          <p className="text-xs font-semibold text-[#E5C38D] uppercase tracking-wider mb-2 font-mono">
             Ecosystem Compatibility
           </p>
-          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
+          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-[-0.02em] font-display">
             Works With Your Favorite Coding Tools.{' '}
             <span className="gold-gradient-text block">Zero Code Changes.</span>
           </h2>
-          <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
+          <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-2xl mx-auto">
             Compatible with Cursor, Windsurf, Cline, Aider, and custom Python or TypeScript backends. Keep your workflow identical while adding spend protection.
           </p>
         </div>
@@ -131,22 +131,22 @@ client = OpenAI(
                 onClick={() => setSelectedAgent(a.id)}
                 className={`p-4 rounded-2xl text-left border transition-all duration-200 cursor-pointer ${
                   isSelected
-                    ? 'bg-white border-ostraGold-500 shadow-card-3d -translate-y-1'
-                    : 'bg-[#FAF8F5] border-[#EAE5DB] hover:bg-white hover:border-sandstone-400'
+                    ? 'bg-[#0B0E14] border-[#C59E5F] shadow-[0_0_20px_rgba(197,158,95,0.2)] -translate-y-1'
+                    : 'bg-[#0B0E14]/60 border-white/[0.08] hover:bg-[#0B0E14] hover:border-white/[0.18]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-charcoal-900 font-display">
+                  <span className={`text-xs font-bold font-display ${isSelected ? 'text-white' : 'text-zinc-200'}`}>
                     {a.name}
                   </span>
                   {isSelected && (
-                    <span className="w-2 h-2 rounded-full bg-ostraGold-500 shadow-[0_0_8px_#D4AF7C]" />
+                    <span className="w-2 h-2 rounded-full bg-[#C59E5F] shadow-[0_0_8px_#C59E5F]" />
                   )}
                 </div>
-                <span className="text-[10px] text-charcoal-500 font-mono block truncate">
+                <span className="text-[10px] text-zinc-400 font-mono block truncate">
                   {a.category}
                 </span>
-                <div className="mt-3 pt-2 border-t border-[#EFEBE3] text-[9px] font-mono text-emerald-700 font-semibold">
+                <div className="mt-3 pt-2 border-t border-white/[0.06] text-[9px] font-mono text-emerald-400 font-semibold">
                   {a.stat}
                 </div>
               </button>
@@ -155,40 +155,40 @@ client = OpenAI(
         </div>
 
         {/* Selected Agent Configuration Card */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#EAE5DB] shadow-dashboard-3d">
+        <div className="p-6 sm:p-8 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-2xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
             {/* Left Details (6 cols) */}
             <div className="lg:col-span-6 space-y-5">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-3">
-                  <h3 className="text-2xl font-bold text-charcoal-900 font-display">
+                  <h3 className="text-2xl font-bold text-white font-display">
                     {current.name} Integration
                   </h3>
-                  <span className="px-2.5 py-0.5 rounded-full bg-sandstone-200 text-charcoal-700 font-mono text-[10px] font-bold">
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#C59E5F]/15 text-[#E5C38D] border border-[#C59E5F]/30 font-mono text-[10px] font-bold">
                     {current.category}
                   </span>
                 </div>
-                <p className="text-sm text-charcoal-600 leading-relaxed">
+                <p className="text-sm text-zinc-400 leading-relaxed">
                   {current.description}
                 </p>
               </div>
 
               <div className="space-y-3 text-xs">
-                <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DB] space-y-1">
-                  <span className="text-[10px] font-bold font-mono uppercase text-charcoal-400">
+                <div className="p-3.5 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1">
+                  <span className="text-[10px] font-bold font-mono uppercase text-zinc-500">
                     Configuration Location
                   </span>
-                  <p className="font-mono text-charcoal-900 font-medium">
+                  <p className="font-mono text-zinc-100 font-medium">
                     {current.configType}
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DB] space-y-1">
-                  <span className="text-[10px] font-bold font-mono uppercase text-charcoal-400">
+                <div className="p-3.5 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1">
+                  <span className="text-[10px] font-bold font-mono uppercase text-zinc-500">
                     Tested Frontier Models
                   </span>
-                  <p className="font-mono text-charcoal-900 font-medium">
+                  <p className="font-mono text-zinc-100 font-medium">
                     {current.supportedModels}
                   </p>
                 </div>
@@ -197,7 +197,7 @@ client = OpenAI(
 
             {/* Right: Code Block (6 cols) */}
             <div className="lg:col-span-6">
-              <div className="rounded-2xl bg-charcoal-950 text-white border border-charcoal-800 shadow-2xl overflow-hidden font-mono text-xs">
+              <div className="rounded-2xl bg-[#07090C] text-white border border-white/[0.08] shadow-2xl overflow-hidden font-mono text-xs">
                 <div className="flex items-center justify-between px-4 py-3 bg-charcoal-900 border-b border-charcoal-800">
                   <div className="flex items-center gap-2 text-zinc-400 text-[11px]">
                     <Terminal className="w-3.5 h-3.5 text-ostraGold-400" />

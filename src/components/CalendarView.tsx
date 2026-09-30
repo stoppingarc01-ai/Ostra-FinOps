@@ -159,23 +159,25 @@ export const CalendarView: React.FC = () => {
   const [taskToEdit, setTaskToEdit] = useState<CalendarTask | null>(null);
 
   // Month navigation
-  const handlePrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear((y) => y - 1);
-    } else {
-      setCurrentMonth((m) => m - 1);
-    }
-  };
+  const handlePrevMonth = React.useCallback(() => {
+    setCurrentMonth((prevMonth) => {
+      if (prevMonth === 0) {
+        setCurrentYear((y) => y - 1);
+        return 11;
+      }
+      return prevMonth - 1;
+    });
+  }, []);
 
-  const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((y) => y + 1);
-    } else {
-      setCurrentMonth((m) => m + 1);
-    }
-  };
+  const handleNextMonth = React.useCallback(() => {
+    setCurrentMonth((prevMonth) => {
+      if (prevMonth === 11) {
+        setCurrentYear((y) => y + 1);
+        return 0;
+      }
+      return prevMonth + 1;
+    });
+  }, []);
 
   const handleGoToday = () => {
     const now = new Date();
@@ -203,7 +205,7 @@ export const CalendarView: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedDate, currentMonth]);
+  }, [selectedDate, handlePrevMonth, handleNextMonth]);
 
   // Filtered tasks
   const filteredTasks = useMemo(() => {
@@ -367,14 +369,14 @@ export const CalendarView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-charcoal-900">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               Calendar & Task Management
             </h1>
             <span className="text-[10px] font-mono uppercase bg-[#E5F2EB] text-[#0C2419] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">
               Solo & Team Engine
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-charcoal-500 mt-1">
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1">
             Plan scheduled Cursor refactors, AI agent jobs, token budget limits, and sprint deadlines.
           </p>
         </div>
@@ -382,13 +384,13 @@ export const CalendarView: React.FC = () => {
         {/* Action Controls */}
         <div className="flex items-center gap-3 shrink-0">
           {/* Month / Week View Toggle */}
-          <div className="flex items-center bg-white border border-[#EAE4D8] rounded-xl p-0.5 shadow-2xs">
+          <div className="flex items-center bg-[#0B0E14] border border-[#EAE4D8] rounded-xl p-0.5 shadow-xs">
             <button
               onClick={() => setViewMode('month')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 viewMode === 'month'
-                  ? 'bg-[#0C2419] text-white shadow-2xs'
-                  : 'text-charcoal-600 hover:text-charcoal-900'
+                  ? 'bg-[#0C2419] text-white shadow-xs'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Month
@@ -397,8 +399,8 @@ export const CalendarView: React.FC = () => {
               onClick={() => setViewMode('week')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 viewMode === 'week'
-                  ? 'bg-[#0C2419] text-white shadow-2xs'
-                  : 'text-charcoal-600 hover:text-charcoal-900'
+                  ? 'bg-[#0C2419] text-white shadow-xs'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Week
@@ -412,7 +414,7 @@ export const CalendarView: React.FC = () => {
           >
             <Plus className="w-3.5 h-3.5 text-emerald-400" />
             <span>New Task</span>
-            <kbd className="hidden sm:inline-block px-1.5 py-0.2 bg-white/20 rounded text-[10px] font-mono">
+            <kbd className="hidden sm:inline-block px-1.5 py-0.2 bg-[#0B0E14]/20 rounded text-[10px] font-mono">
               T
             </kbd>
           </button>
@@ -422,24 +424,24 @@ export const CalendarView: React.FC = () => {
       {/* 2. Top Summary Stat Cards (4 Cards) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Month Tasks */}
-        <div className="bg-white border border-[#EAE4D8] rounded-2xl p-4 shadow-subtle flex items-center justify-between">
+        <div className="bg-[#0B0E14] border border-[#EAE4D8] rounded-2xl p-4 shadow-xs flex items-center justify-between">
           <div>
-            <div className="text-[11px] font-semibold text-charcoal-500 uppercase tracking-wider">
+            <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
               {MONTH_NAMES[currentMonth]} Tasks
             </div>
-            <div className="text-2xl font-extrabold text-charcoal-900 mt-1">
+            <div className="text-2xl font-extrabold text-white mt-1">
               {monthTasks.length}
             </div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE4D8] flex items-center justify-center text-charcoal-700">
+          <div className="w-10 h-10 rounded-xl bg-[#07090C] border border-[#EAE4D8] flex items-center justify-center text-zinc-300">
             <Layers className="w-5 h-5 text-emerald-800" />
           </div>
         </div>
 
         {/* Completed */}
-        <div className="bg-white border border-[#EAE4D8] rounded-2xl p-4 shadow-subtle flex items-center justify-between">
+        <div className="bg-[#0B0E14] border border-[#EAE4D8] rounded-2xl p-4 shadow-xs flex items-center justify-between">
           <div>
-            <div className="text-[11px] font-semibold text-charcoal-500 uppercase tracking-wider">
+            <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
               Completed
             </div>
             <div className="text-2xl font-extrabold text-emerald-800 mt-1">
@@ -452,9 +454,9 @@ export const CalendarView: React.FC = () => {
         </div>
 
         {/* In Progress */}
-        <div className="bg-white border border-[#EAE4D8] rounded-2xl p-4 shadow-subtle flex items-center justify-between">
+        <div className="bg-[#0B0E14] border border-[#EAE4D8] rounded-2xl p-4 shadow-xs flex items-center justify-between">
           <div>
-            <div className="text-[11px] font-semibold text-charcoal-500 uppercase tracking-wider">
+            <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
               In Progress
             </div>
             <div className="text-2xl font-extrabold text-amber-700 mt-1">
@@ -467,48 +469,48 @@ export const CalendarView: React.FC = () => {
         </div>
 
         {/* Token Budget Cap */}
-        <div className="bg-white border border-[#EAE4D8] rounded-2xl p-4 shadow-subtle flex items-center justify-between">
+        <div className="bg-[#0B0E14] border border-[#EAE4D8] rounded-2xl p-4 shadow-xs flex items-center justify-between">
           <div>
-            <div className="text-[11px] font-semibold text-charcoal-500 uppercase tracking-wider">
+            <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
               Total Budget Cap
             </div>
-            <div className="text-2xl font-extrabold text-charcoal-900 font-mono mt-1">
+            <div className="text-2xl font-extrabold text-white font-mono mt-1">
               ${totalMonthBudget.toFixed(2)}
             </div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE4D8] flex items-center justify-center text-charcoal-700">
+          <div className="w-10 h-10 rounded-xl bg-[#07090C] border border-[#EAE4D8] flex items-center justify-center text-zinc-300">
             <DollarSign className="w-5 h-5 text-emerald-700" />
           </div>
         </div>
       </div>
 
       {/* 3. Filter Bar & Month Navigation */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-[#EAE4D8] rounded-2xl p-3 sm:px-5 shadow-subtle">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0B0E14] border border-[#EAE4D8] rounded-2xl p-3 sm:px-5 shadow-xs">
         {/* Month Navigator */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#EAE4D8] flex items-center justify-center text-[#0C2419]">
+          <div className="w-8 h-8 rounded-xl bg-[#07090C] border border-[#EAE4D8] flex items-center justify-center text-[#0C2419]">
             <CalendarIcon className="w-4 h-4 text-emerald-800" />
           </div>
-          <h2 className="text-base sm:text-lg font-bold text-charcoal-900">
+          <h2 className="text-base sm:text-lg font-bold text-white">
             {MONTH_NAMES[currentMonth]} {currentYear}
           </h2>
           <div className="flex items-center gap-1.5 ml-2">
             <button
               onClick={handlePrevMonth}
-              className="w-8 h-8 rounded-xl border border-[#EAE4D8] bg-[#FAF8F5] hover:bg-white text-charcoal-700 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
+              className="w-8 h-8 rounded-xl border border-[#EAE4D8] bg-[#07090C] hover:bg-[#0B0E14] text-zinc-300 flex items-center justify-center transition-colors cursor-pointer shadow-xs"
               title="Previous month (← key)"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={handleGoToday}
-              className="px-3 py-1.5 rounded-xl border border-[#EAE4D8] bg-white hover:bg-[#FAF8F5] text-xs font-semibold text-charcoal-700 transition-colors cursor-pointer shadow-2xs"
+              className="px-3 py-1.5 rounded-xl border border-[#EAE4D8] bg-[#0B0E14] hover:bg-[#07090C] text-xs font-semibold text-zinc-300 transition-colors cursor-pointer shadow-xs"
             >
               Today
             </button>
             <button
               onClick={handleNextMonth}
-              className="w-8 h-8 rounded-xl border border-[#EAE4D8] bg-[#FAF8F5] hover:bg-white text-charcoal-700 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
+              className="w-8 h-8 rounded-xl border border-[#EAE4D8] bg-[#07090C] hover:bg-[#0B0E14] text-zinc-300 flex items-center justify-center transition-colors cursor-pointer shadow-xs"
               title="Next month (→ key)"
             >
               <ChevronRight className="w-4 h-4" />
@@ -519,20 +521,20 @@ export const CalendarView: React.FC = () => {
         {/* Search & Filters */}
         <div className="flex flex-wrap items-center gap-2.5 flex-1 max-w-lg justify-end">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-3.5 h-3.5 text-charcoal-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search tasks, models..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl pl-9 pr-3 py-1.5 text-xs text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-[#0C2419] focus:bg-white shadow-2xs transition-all"
+              className="w-full bg-[#07090C] border border-[#EAE4D8] rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#0C2419] focus:bg-[#0B0E14] shadow-xs transition-all"
             />
           </div>
 
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl px-2.5 py-1.5 text-xs font-semibold text-charcoal-700 focus:outline-none focus:border-[#0C2419] shadow-2xs cursor-pointer"
+            className="bg-[#07090C] border border-[#EAE4D8] rounded-xl px-2.5 py-1.5 text-xs font-semibold text-zinc-300 focus:outline-none focus:border-[#0C2419] shadow-xs cursor-pointer"
           >
             <option value="all">All Status</option>
             <option value="todo">Todo</option>
@@ -543,7 +545,7 @@ export const CalendarView: React.FC = () => {
           <select
             value={filterPriority}
             onChange={(e) => setFilterPriority(e.target.value)}
-            className="bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl px-2.5 py-1.5 text-xs font-semibold text-charcoal-700 focus:outline-none focus:border-[#0C2419] shadow-2xs cursor-pointer"
+            className="bg-[#07090C] border border-[#EAE4D8] rounded-xl px-2.5 py-1.5 text-xs font-semibold text-zinc-300 focus:outline-none focus:border-[#0C2419] shadow-xs cursor-pointer"
           >
             <option value="all">All Priority</option>
             <option value="urgent">Urgent</option>
@@ -558,14 +560,14 @@ export const CalendarView: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         {/* Left: 7-Column Calendar Grid (8 cols) */}
         <div className="xl:col-span-8">
-          <div className="bg-white border border-[#EAE4D8] rounded-2xl shadow-subtle overflow-hidden">
+          <div className="bg-[#0B0E14] border border-[#EAE4D8] rounded-2xl shadow-xs overflow-hidden">
             {/* Weekdays Header */}
-            <div className="grid grid-cols-7 border-b border-[#EAE4D8] bg-[#FAF8F5] text-center select-none">
+            <div className="grid grid-cols-7 border-b border-[#EAE4D8] bg-[#07090C] text-center select-none">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((w, idx) => (
                 <div
                   key={w}
                   className={`py-3 text-[11px] font-bold tracking-wider uppercase ${
-                    idx === 0 || idx === 6 ? 'text-charcoal-400' : 'text-charcoal-600'
+                    idx === 0 || idx === 6 ? 'text-zinc-500' : 'text-zinc-400'
                   }`}
                 >
                   {w}
@@ -574,7 +576,7 @@ export const CalendarView: React.FC = () => {
             </div>
 
             {/* Grid Cells */}
-            <div className="grid grid-cols-7 divide-x divide-y divide-[#F2EDE4] bg-[#FAF8F5]/20">
+            <div className="grid grid-cols-7 divide-x divide-y divide-[#F2EDE4] bg-[#07090C]/20">
               {calendarCells.map((cell) => {
                 const visibleTasks = cell.tasks.slice(0, 2);
                 const overflowCount = cell.tasks.length - visibleTasks.length;
@@ -585,11 +587,11 @@ export const CalendarView: React.FC = () => {
                     onClick={() => setSelectedDate(cell.dateKey)}
                     onDoubleClick={() => handleOpenNewTask(cell.dateKey)}
                     className={`min-h-[110px] sm:min-h-[125px] p-2 flex flex-col justify-between transition-all cursor-pointer group relative ${
-                      cell.isCurrentMonth ? 'bg-white' : 'bg-[#FAF8F5]/60 text-charcoal-400'
+                      cell.isCurrentMonth ? 'bg-[#0B0E14]' : 'bg-[#07090C]/60 text-zinc-500'
                     } ${
                       cell.isSelected
                         ? 'ring-2 ring-[#0C2419] ring-inset bg-emerald-50/20'
-                        : 'hover:bg-[#FAF8F5]'
+                        : 'hover:bg-[#07090C]'
                     }`}
                   >
                     {/* Header: Day number + Quick add */}
@@ -597,12 +599,12 @@ export const CalendarView: React.FC = () => {
                       <span
                         className={`w-6 h-6 flex items-center justify-center rounded-lg text-xs font-semibold ${
                           cell.isToday
-                            ? 'bg-[#0C2419] text-white font-bold shadow-2xs'
+                            ? 'bg-[#0C2419] text-white font-bold shadow-xs'
                             : cell.isSelected
                             ? 'text-emerald-900 font-bold bg-emerald-100/60'
                             : cell.isCurrentMonth
-                            ? 'text-charcoal-800'
-                            : 'text-charcoal-400'
+                            ? 'text-zinc-200'
+                            : 'text-zinc-500'
                         }`}
                       >
                         {cell.dayNumber}
@@ -613,7 +615,7 @@ export const CalendarView: React.FC = () => {
                           e.stopPropagation();
                           handleOpenNewTask(cell.dateKey);
                         }}
-                        className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-md flex items-center justify-center bg-[#E5F2EB] hover:bg-[#D4E8DC] text-[#0C2419] transition-opacity shadow-2xs"
+                        className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-md flex items-center justify-center bg-[#E5F2EB] hover:bg-[#D4E8DC] text-[#0C2419] transition-opacity shadow-xs"
                         title="Add task on this date"
                       >
                         <Plus className="w-3 h-3" />
@@ -636,7 +638,7 @@ export const CalendarView: React.FC = () => {
                                 ? 'bg-amber-50 border-amber-200 text-amber-900'
                                 : t.priority === 'urgent'
                                 ? 'bg-rose-50 border-rose-200 text-rose-900 font-bold'
-                                : 'bg-[#FAF8F5] border-[#EAE4D8] text-charcoal-800'
+                                : 'bg-[#07090C] border-[#EAE4D8] text-zinc-200'
                             }`}
                             title={`${t.title} (${t.priority} priority, ${t.status})`}
                           >
@@ -657,7 +659,7 @@ export const CalendarView: React.FC = () => {
                             )}
                             <span className="truncate">{t.title}</span>
                             {t.tokenBudgetUsd > 0 && (
-                              <span className="text-[9px] font-mono text-charcoal-500 shrink-0">
+                              <span className="text-[9px] font-mono text-zinc-400 shrink-0">
                                 ${t.tokenBudgetUsd.toFixed(1)}
                               </span>
                             )}
@@ -674,7 +676,7 @@ export const CalendarView: React.FC = () => {
 
                     {/* Bottom Spend Cap Summary */}
                     {cell.tasks.length > 0 && (
-                      <div className="flex items-center justify-between text-[9px] font-mono text-charcoal-400 pt-0.5 border-t border-[#F5F2EB]">
+                      <div className="flex items-center justify-between text-[9px] font-mono text-zinc-500 pt-0.5 border-t border-[#F5F2EB]">
                         <span>{cell.tasks.length} task{cell.tasks.length > 1 ? 's' : ''}</span>
                         {cell.tasks.reduce((sum, t) => sum + (t.tokenBudgetUsd || 0), 0) > 0 && (
                           <span className="text-emerald-800 font-semibold flex items-center">
@@ -693,7 +695,7 @@ export const CalendarView: React.FC = () => {
 
         {/* Right: Daily Agenda & Task Drawer (4 cols) */}
         <div className="xl:col-span-4">
-          <div className="bg-white border border-[#EAE4D8] rounded-2xl shadow-subtle p-5 space-y-5">
+          <div className="bg-[#0B0E14] border border-[#EAE4D8] rounded-2xl shadow-xs p-5 space-y-5">
             {/* Header */}
             <div className="flex items-start justify-between gap-3 border-b border-[#F2EDE4] pb-4">
               <div>
@@ -701,7 +703,7 @@ export const CalendarView: React.FC = () => {
                   <CalendarIcon className="w-3.5 h-3.5" />
                   <span>Daily Agenda</span>
                 </div>
-                <h3 className="text-base font-bold text-charcoal-900 mt-0.5">
+                <h3 className="text-base font-bold text-white mt-0.5">
                   {formattedSelectedDate}
                 </h3>
               </div>
@@ -717,19 +719,19 @@ export const CalendarView: React.FC = () => {
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-3 gap-2">
-              <div className="bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl p-2.5 text-center">
-                <div className="text-[10px] font-mono text-charcoal-500 uppercase">Tasks</div>
-                <div className="text-sm font-bold text-charcoal-900">{selectedDateTasks.length}</div>
+              <div className="bg-[#07090C] border border-[#EAE4D8] rounded-xl p-2.5 text-center">
+                <div className="text-[10px] font-mono text-zinc-400 uppercase">Tasks</div>
+                <div className="text-sm font-bold text-white">{selectedDateTasks.length}</div>
               </div>
-              <div className="bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl p-2.5 text-center">
-                <div className="text-[10px] font-mono text-charcoal-500 uppercase">Done</div>
+              <div className="bg-[#07090C] border border-[#EAE4D8] rounded-xl p-2.5 text-center">
+                <div className="text-[10px] font-mono text-zinc-400 uppercase">Done</div>
                 <div className="text-sm font-bold text-emerald-800">
                   {selectedDateCompleted}/{selectedDateTasks.length}
                 </div>
               </div>
-              <div className="bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl p-2.5 text-center">
-                <div className="text-[10px] font-mono text-charcoal-500 uppercase">Budget Cap</div>
-                <div className="text-sm font-bold text-charcoal-900 font-mono">
+              <div className="bg-[#07090C] border border-[#EAE4D8] rounded-xl p-2.5 text-center">
+                <div className="text-[10px] font-mono text-zinc-400 uppercase">Budget Cap</div>
+                <div className="text-sm font-bold text-white font-mono">
                   ${selectedDateBudget.toFixed(2)}
                 </div>
               </div>
@@ -737,19 +739,19 @@ export const CalendarView: React.FC = () => {
 
             {/* Tasks list */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-[11px] font-bold text-charcoal-500 uppercase tracking-wider">
+              <div className="flex items-center justify-between text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
                 <span>Scheduled Items</span>
                 <span>{selectedDateTasks.length} Total</span>
               </div>
 
               {selectedDateTasks.length === 0 ? (
-                <div className="py-8 px-4 text-center border-2 border-dashed border-[#EAE4D8] rounded-xl space-y-2 bg-[#FAF8F5]/50">
-                  <CheckSquare className="w-8 h-8 text-charcoal-300 mx-auto" />
-                  <p className="text-xs font-semibold text-charcoal-700">
+                <div className="py-8 px-4 text-center border-2 border-dashed border-[#EAE4D8] rounded-xl space-y-2 bg-[#07090C]/50">
+                  <CheckSquare className="w-8 h-8 text-zinc-600 mx-auto" />
+                  <p className="text-xs font-semibold text-zinc-300">
                     No tasks scheduled for this day
                   </p>
-                  <p className="text-[11px] text-charcoal-400">
-                    Click "+ New Task" or press <kbd className="px-1.5 py-0.5 bg-white border border-[#E8E2D5] rounded text-[10px] font-mono">T</kbd> to schedule.
+                  <p className="text-[11px] text-zinc-500">
+                    Click "+ New Task" or press <kbd className="px-1.5 py-0.5 bg-[#0B0E14] border border-[#E8E2D5] rounded text-[10px] font-mono">T</kbd> to schedule.
                   </p>
                 </div>
               ) : (
@@ -763,10 +765,10 @@ export const CalendarView: React.FC = () => {
                         key={task.id}
                         className={`p-3.5 rounded-xl border transition-all space-y-2.5 ${
                           isCompleted
-                            ? 'bg-[#FAF8F5]/60 border-[#EAE4D8] opacity-75'
+                            ? 'bg-[#07090C]/60 border-[#EAE4D8] opacity-75'
                             : isInProgress
-                            ? 'bg-amber-50/40 border-amber-200 shadow-2xs'
-                            : 'bg-white border-[#EAE4D8] shadow-2xs hover:border-[#0C2419]/30'
+                            ? 'bg-amber-50/40 border-amber-200 shadow-xs'
+                            : 'bg-[#0B0E14] border-[#EAE4D8] shadow-xs hover:border-[#0C2419]/30'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2.5">
@@ -774,25 +776,25 @@ export const CalendarView: React.FC = () => {
                           <div className="flex items-start gap-2.5 flex-1 min-w-0">
                             <button
                               onClick={() => handleToggleStatus(task)}
-                              className="mt-0.5 text-charcoal-400 hover:text-emerald-700 transition-colors cursor-pointer shrink-0"
+                              className="mt-0.5 text-zinc-500 hover:text-emerald-700 transition-colors cursor-pointer shrink-0"
                               title={isCompleted ? 'Mark as todo' : 'Mark as completed'}
                             >
                               {isCompleted ? (
                                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                               ) : (
-                                <Circle className="w-4 h-4 text-charcoal-300" />
+                                <Circle className="w-4 h-4 text-zinc-600" />
                               )}
                             </button>
                             <div className="min-w-0 flex-1">
                               <div
-                                className={`text-xs font-bold text-charcoal-900 leading-snug ${
-                                  isCompleted ? 'line-through text-charcoal-500' : ''
+                                className={`text-xs font-bold text-white leading-snug ${
+                                  isCompleted ? 'line-through text-zinc-400' : ''
                                 }`}
                               >
                                 {task.title}
                               </div>
                               {task.description && (
-                                <p className="text-[11px] text-charcoal-500 mt-1 line-clamp-2">
+                                <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2">
                                   {task.description}
                                 </p>
                               )}
@@ -803,14 +805,14 @@ export const CalendarView: React.FC = () => {
                           <div className="flex items-center gap-1 shrink-0">
                             <button
                               onClick={() => handleEditTask(task)}
-                              className="w-6 h-6 rounded-lg flex items-center justify-center text-charcoal-400 hover:text-charcoal-700 hover:bg-[#FAF8F5] transition-colors cursor-pointer"
+                              className="w-6 h-6 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-[#07090C] transition-colors cursor-pointer"
                               title="Edit task"
                             >
                               <Edit2 className="w-3 h-3" />
                             </button>
                             <button
                               onClick={() => handleDeleteTask(task.id)}
-                              className="w-6 h-6 rounded-lg flex items-center justify-center text-charcoal-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              className="w-6 h-6 rounded-lg flex items-center justify-center text-zinc-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                               title="Delete task"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -821,8 +823,8 @@ export const CalendarView: React.FC = () => {
                         {/* Metadata Tags */}
                         <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-[#F2EDE4]/60 text-[10.5px]">
                           {task.targetTime && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FAF8F5] border border-[#EAE4D8] text-charcoal-600 font-mono">
-                              <Clock className="w-3 h-3 text-charcoal-400" />
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#07090C] border border-[#EAE4D8] text-zinc-400 font-mono">
+                              <Clock className="w-3 h-3 text-zinc-500" />
                               <span>{task.targetTime}</span>
                             </span>
                           )}
@@ -842,8 +844,8 @@ export const CalendarView: React.FC = () => {
                           </span>
 
                           {task.model && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-[#EAE4D8] text-charcoal-600 font-sans">
-                              <Cpu className="w-3 h-3 text-charcoal-400" />
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#0B0E14] border border-[#EAE4D8] text-zinc-400 font-sans">
+                              <Cpu className="w-3 h-3 text-zinc-500" />
                               <span>{task.model}</span>
                             </span>
                           )}
@@ -863,13 +865,13 @@ export const CalendarView: React.FC = () => {
             </div>
 
             {/* Quick Pro Tip */}
-            <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#EAE4D8] space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-charcoal-900">
+            <div className="p-3.5 rounded-xl bg-[#07090C] border border-[#EAE4D8] space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-white">
                 <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                 <span>Developer Shortcuts</span>
               </div>
-              <p className="text-[11px] text-charcoal-500 leading-relaxed">
-                Press <kbd className="px-1 py-0.5 bg-white border border-[#E8E2D5] rounded text-[9.5px] font-mono">T</kbd> for instant new task, <kbd className="px-1 py-0.5 bg-white border border-[#E8E2D5] rounded text-[9.5px] font-mono">←</kbd>/<kbd className="px-1 py-0.5 bg-white border border-[#E8E2D5] rounded text-[9.5px] font-mono">→</kbd> for month flipping.
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                Press <kbd className="px-1 py-0.5 bg-[#0B0E14] border border-[#E8E2D5] rounded text-[9.5px] font-mono">T</kbd> for instant new task, <kbd className="px-1 py-0.5 bg-[#0B0E14] border border-[#E8E2D5] rounded text-[9.5px] font-mono">←</kbd>/<kbd className="px-1 py-0.5 bg-[#0B0E14] border border-[#E8E2D5] rounded text-[9.5px] font-mono">→</kbd> for month flipping.
               </p>
             </div>
           </div>
@@ -880,27 +882,27 @@ export const CalendarView: React.FC = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
           <div
-            className="w-full max-w-lg bg-white border border-[#EAE4D8] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            className="w-full max-w-lg bg-[#0B0E14] border border-[#EAE4D8] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-[#EAE4D8] bg-[#FAF8F5] flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-[#EAE4D8] bg-[#07090C] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-[#E5F2EB] text-[#0C2419] flex items-center justify-center font-bold">
                   <CalendarIcon className="w-4 h-4 text-emerald-800" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-charcoal-900">
+                  <h3 className="text-sm font-bold text-white">
                     {taskToEdit ? 'Edit Scheduled Task' : 'New Coding / Agent Task'}
                   </h3>
-                  <p className="text-[11px] text-charcoal-500">
+                  <p className="text-[11px] text-zinc-400">
                     Schedule Cursor sessions, benchmarks, and token spending caps
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-charcoal-400 hover:text-charcoal-700 hover:bg-[#F2EDE4] transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-[#F2EDE4] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -967,7 +969,7 @@ const TaskModalForm: React.FC<TaskModalFormProps> = ({
     <form onSubmit={handleSubmit} className="p-6 space-y-4">
       {/* Title */}
       <div>
-        <label className="block text-xs font-semibold text-charcoal-800 mb-1.5">
+        <label className="block text-xs font-semibold text-zinc-200 mb-1.5">
           Task Title <span className="text-rose-500">*</span>
         </label>
         <input
@@ -976,14 +978,14 @@ const TaskModalForm: React.FC<TaskModalFormProps> = ({
           placeholder="e.g. Refactor auth middleware with Cursor (Claude 3.7 Sonnet)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl px-3.5 py-2 text-xs text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-[#0C2419] focus:bg-white transition-all shadow-2xs font-sans"
+          className="w-full bg-[#07090C] border border-[#EAE4D8] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#0C2419] focus:bg-[#0B0E14] transition-all shadow-xs font-sans"
           autoFocus
         />
       </div>
 
       {/* Description */}
       <div>
-        <label className="block text-xs font-semibold text-charcoal-800 mb-1.5">
+        <label className="block text-xs font-semibold text-zinc-200 mb-1.5">
           Description / Instructions
         </label>
         <textarea
@@ -991,15 +993,15 @@ const TaskModalForm: React.FC<TaskModalFormProps> = ({
           placeholder="Optional notes, prompt strategy, or agent command..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl px-3.5 py-2 text-xs text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-[#0C2419] focus:bg-white transition-all shadow-2xs resize-none font-sans"
+          className="w-full bg-[#07090C] border border-[#EAE4D8] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#0C2419] focus:bg-[#0B0E14] transition-all shadow-xs resize-none font-sans"
         />
       </div>
 
       {/* Date & Time Row */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-charcoal-800 mb-1.5 flex items-center gap-1.5">
-            <CalendarIcon className="w-3.5 h-3.5 text-charcoal-500" />
+          <label className="block text-xs font-semibold text-zinc-200 mb-1.5 flex items-center gap-1.5">
+            <CalendarIcon className="w-3.5 h-3.5 text-zinc-400" />
             <span>Target Date <span className="text-rose-500">*</span></span>
           </label>
           <input
@@ -1007,19 +1009,19 @@ const TaskModalForm: React.FC<TaskModalFormProps> = ({
             required
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
-            className="w-full bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl px-3 py-2 text-xs text-charcoal-900 focus:outline-none focus:border-[#0C2419] focus:bg-white shadow-2xs font-sans"
+            className="w-full bg-[#07090C] border border-[#EAE4D8] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#0C2419] focus:bg-[#0B0E14] shadow-xs font-sans"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-charcoal-800 mb-1.5 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-charcoal-500" />
+          <label className="block text-xs font-semibold text-zinc-200 mb-1.5 flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-zinc-400" />
             <span>Slot / Time</span>
           </label>
           <input
             type="time"
             value={targetTime}
             onChange={(e) => setTargetTime(e.target.value)}
-            className="w-full bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl px-3 py-2 text-xs text-charcoal-900 focus:outline-none focus:border-[#0C2419] focus:bg-white shadow-2xs font-sans"
+            className="w-full bg-[#07090C] border border-[#EAE4D8] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#0C2419] focus:bg-[#0B0E14] shadow-xs font-sans"
           />
         </div>
       </div>
@@ -1027,14 +1029,14 @@ const TaskModalForm: React.FC<TaskModalFormProps> = ({
       {/* Model & Token Budget Cap */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-charcoal-800 mb-1.5 flex items-center gap-1.5">
-            <Cpu className="w-3.5 h-3.5 text-charcoal-500" />
+          <label className="block text-xs font-semibold text-zinc-200 mb-1.5 flex items-center gap-1.5">
+            <Cpu className="w-3.5 h-3.5 text-zinc-400" />
             <span>Target AI Model</span>
           </label>
           <select
             value={model}
             onChange={(e) => setModel(e.target.value)}
-            className="w-full bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl px-3 py-2 text-xs font-semibold text-charcoal-800 focus:outline-none focus:border-[#0C2419] focus:bg-white shadow-2xs font-sans cursor-pointer"
+            className="w-full bg-[#07090C] border border-[#EAE4D8] rounded-xl px-3 py-2 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-[#0C2419] focus:bg-[#0B0E14] shadow-xs font-sans cursor-pointer"
           >
             <option value="Claude 3.7 Sonnet">Claude 3.7 Sonnet</option>
             <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
@@ -1048,12 +1050,12 @@ const TaskModalForm: React.FC<TaskModalFormProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-charcoal-800 mb-1.5 flex items-center gap-1.5">
+          <label className="block text-xs font-semibold text-zinc-200 mb-1.5 flex items-center gap-1.5">
             <DollarSign className="w-3.5 h-3.5 text-emerald-700" />
             <span>Token Budget Cap ($)</span>
           </label>
           <div className="relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-charcoal-400">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-500">
               $
             </span>
             <input
@@ -1063,7 +1065,7 @@ const TaskModalForm: React.FC<TaskModalFormProps> = ({
               placeholder="1.00"
               value={tokenBudgetUsd}
               onChange={(e) => setTokenBudgetUsd(e.target.value)}
-              className="w-full bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl pl-8 pr-3.5 py-2 text-xs text-charcoal-900 focus:outline-none focus:border-[#0C2419] focus:bg-white shadow-2xs font-sans"
+              className="w-full bg-[#07090C] border border-[#EAE4D8] rounded-xl pl-8 pr-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#0C2419] focus:bg-[#0B0E14] shadow-xs font-sans"
             />
           </div>
         </div>
@@ -1072,8 +1074,8 @@ const TaskModalForm: React.FC<TaskModalFormProps> = ({
       {/* Priority & Status */}
       <div className="grid grid-cols-2 gap-3 pt-1">
         <div>
-          <label className="block text-xs font-semibold text-charcoal-800 mb-1.5 flex items-center gap-1.5">
-            <Flag className="w-3.5 h-3.5 text-charcoal-500" />
+          <label className="block text-xs font-semibold text-zinc-200 mb-1.5 flex items-center gap-1.5">
+            <Flag className="w-3.5 h-3.5 text-zinc-400" />
             <span>Priority</span>
           </label>
           <div className="grid grid-cols-4 gap-1">
@@ -1087,13 +1089,13 @@ const TaskModalForm: React.FC<TaskModalFormProps> = ({
                   className={`py-1.5 px-1 rounded-xl text-[10px] font-semibold capitalize border transition-all cursor-pointer text-center ${
                     isSelected
                       ? p === 'urgent'
-                        ? 'bg-rose-50 border-rose-300 text-rose-800 font-bold shadow-2xs'
+                        ? 'bg-rose-50 border-rose-300 text-rose-800 font-bold shadow-xs'
                         : p === 'high'
-                        ? 'bg-amber-50 border-amber-300 text-amber-800 shadow-2xs'
+                        ? 'bg-amber-50 border-amber-300 text-amber-800 shadow-xs'
                         : p === 'medium'
-                        ? 'bg-sky-50 border-sky-300 text-sky-800 shadow-2xs'
-                        : 'bg-[#E5F2EB] border-emerald-300 text-emerald-800 shadow-2xs'
-                      : 'bg-white border-[#EAE4D8] text-charcoal-600 hover:bg-[#FAF8F5]'
+                        ? 'bg-sky-50 border-sky-300 text-sky-800 shadow-xs'
+                        : 'bg-[#E5F2EB] border-emerald-300 text-emerald-800 shadow-xs'
+                      : 'bg-[#0B0E14] border-[#EAE4D8] text-zinc-400 hover:bg-[#07090C]'
                   }`}
                 >
                   {p}
@@ -1104,14 +1106,14 @@ const TaskModalForm: React.FC<TaskModalFormProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-charcoal-800 mb-1.5 flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-charcoal-500" />
+          <label className="block text-xs font-semibold text-zinc-200 mb-1.5 flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
             <span>Status</span>
           </label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as TaskStatus)}
-            className="w-full bg-[#FAF8F5] border border-[#EAE4D8] rounded-xl px-3 py-2 text-xs font-semibold text-charcoal-800 focus:outline-none focus:border-[#0C2419] focus:bg-white shadow-2xs font-sans cursor-pointer"
+            className="w-full bg-[#07090C] border border-[#EAE4D8] rounded-xl px-3 py-2 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-[#0C2419] focus:bg-[#0B0E14] shadow-xs font-sans cursor-pointer"
           >
             <option value="todo">Todo</option>
             <option value="in_progress">In Progress</option>
@@ -1125,7 +1127,7 @@ const TaskModalForm: React.FC<TaskModalFormProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2 rounded-xl border border-[#EAE4D8] text-xs font-semibold text-charcoal-700 hover:bg-[#FAF8F5] transition-colors cursor-pointer"
+          className="px-4 py-2 rounded-xl border border-[#EAE4D8] text-xs font-semibold text-zinc-300 hover:bg-[#07090C] transition-colors cursor-pointer"
         >
           Cancel
         </button>

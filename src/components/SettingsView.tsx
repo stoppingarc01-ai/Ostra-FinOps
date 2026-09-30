@@ -150,7 +150,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  const [profileSaving, setProfileSaving] = useState(false);
 
   const userInitials = (fullName || profile?.full_name || '')
     .trim()
@@ -249,21 +248,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const handleProfileSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setProfileSaving(true);
-    const { error } = await updateProfile({
-      full_name: fullName,
-      phone: phoneNumber,
-      job_title: jobTitle,
-      company_name: companyName,
-      company_website: companyWebsite,
-      avatar_url: avatarUrl || undefined,
-    });
-    setProfileSaving(false);
-    showToast(error ? `Error: ${error.message}` : 'Profile information successfully updated in Firestore.');
-  };
-
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-16">
       {/* Toast Notification */}
@@ -277,24 +261,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
       {/* ============================================================ */}
       {/* TOP HEADER: SETTINGS & ACCOUNT                               */}
       {/* ============================================================ */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EAE5DC] pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded-md bg-[#F4EFE6] text-[#9C7938] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#E5DBCA]">
+            <span className="px-2 py-0.5 rounded-md bg-[#0B0E14]/[0.06] text-[#E5C38D] text-[10px] font-bold font-mono tracking-wider uppercase border border-white/[0.08]">
               Organization & Identity
             </span>
-            <span className="text-[11px] font-mono text-charcoal-400">Owner Access</span>
+            <span className="text-[11px] font-mono text-zinc-500">Owner Access</span>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-extrabold text-charcoal-900 tracking-tight font-sans">
+          <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight font-sans">
             Account & Settings
           </h1>
-          <p className="text-xs sm:text-sm text-charcoal-500 mt-1 max-w-2xl">
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl">
             Manage your personal profile, organization preferences, API tokens, security sessions, and billing subscriptions.
           </p>
         </div>
 
         {/* 4 Required Main Sections: General, Billing, Account, Security */}
-        <div className="flex items-center gap-1.5 bg-[#F5F2EB] p-1.5 rounded-2xl border border-[#EAE5DC]">
+        <div className="flex items-center gap-1.5 bg-[#0B0E14] p-1.5 rounded-2xl border border-white/[0.08]">
           {[
             { id: 'general', label: 'General', icon: Settings },
             { id: 'billing', label: 'Billing', icon: CreditCard },
@@ -314,11 +298,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                 }}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer ${
                   isSelected
-                    ? 'bg-[#18181B] text-white shadow-xs font-bold'
-                    : 'text-charcoal-600 hover:text-charcoal-900 hover:bg-white/60'
+                    ? 'bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] shadow-xs font-bold'
+                    : 'text-zinc-400 hover:text-white hover:bg-[#0B0E14]/[0.06]'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#C59E5F]' : 'text-charcoal-500'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#07090C]' : 'text-zinc-500'}`} />
                 <span>{sec.label}</span>
               </button>
             );
@@ -329,7 +313,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
       {/* ============================================================ */}
       {/* SUB-TABS NAVIGATION (Profile / Security / Preferences / API Keys / Sessions / Danger Zone) */}
       {/* ============================================================ */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-[#EAE5DC]">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-white/[0.08]">
         {[
           { id: 'profile', label: 'Profile', icon: User },
           { id: 'security', label: 'Security Console', icon: Shield },
@@ -360,11 +344,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
               }}
               className={`px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
                 isActive
-                  ? 'bg-[#F4EFE6] text-[#9C7938] font-bold border border-[#E5DBCA]'
-                  : 'text-charcoal-600 hover:text-charcoal-900 hover:bg-sandstone-100'
+                  ? 'bg-[#C59E5F]/15 text-[#E5C38D] font-bold border border-[#C59E5F]/30'
+                  : 'text-zinc-400 hover:text-white hover:bg-[#0B0E14]/[0.05]'
               }`}
             >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#C59E5F]' : 'text-charcoal-400'}`} />
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#E5C38D]' : 'text-zinc-500'}`} />
               <span>{tab.label}</span>
             </button>
           );
@@ -395,17 +379,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
             <div className="space-y-6">
               
               {/* Card 1: Profile Information */}
-              <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 shadow-subtle space-y-6">
-                <div>
-                  <h2 className="text-base font-bold text-charcoal-900 font-sans">
-                    Profile Information
-                  </h2>
-                  <p className="text-xs text-charcoal-500">
-                    Update your personal identity, company details, and contact information.
-                  </p>
+              <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.08] pb-4">
+                  <div>
+                    <h2 className="text-base font-bold text-white font-sans flex items-center gap-2">
+                      <span>Profile Information</span>
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-mono font-bold flex items-center gap-1">
+                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                        Verified & Locked
+                      </span>
+                    </h2>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      Identity credentials verified during onboarding. Protected against unauthorized modifications.
+                    </p>
+                  </div>
                 </div>
 
-                <form onSubmit={handleProfileSave} className="space-y-5">
+                <div className="space-y-5">
                   {/* Avatar row with working file upload & dynamic initials */}
                   <div className="flex items-center gap-4">
                     <div className="relative">
@@ -423,7 +413,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-6 h-6 rounded-full bg-[#FAF8F5] border border-[#EAE5DC] absolute bottom-0 right-0 flex items-center justify-center text-charcoal-700 text-xs shadow-xs hover:bg-sandstone-200 transition-colors cursor-pointer"
+                        className="w-6 h-6 rounded-full bg-[#07090C] border border-white/[0.08] absolute bottom-0 right-0 flex items-center justify-center text-zinc-300 text-xs shadow-xs hover:bg-white/[0.06] transition-colors cursor-pointer"
                         title="Change Photo"
                       >
                         ✎
@@ -441,7 +431,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="px-3.5 py-1.5 rounded-xl bg-white border border-[#EAE5DC] hover:border-[#C59E5F] text-charcoal-800 text-xs font-semibold transition-all cursor-pointer shadow-2xs hover:bg-sandstone-100"
+                          className="px-3.5 py-1.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F] text-zinc-200 text-xs font-semibold transition-all cursor-pointer shadow-xs hover:bg-white/[0.04]"
                         >
                           Change Photo
                         </button>
@@ -463,29 +453,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                           </button>
                         )}
                       </div>
-                      <span className="text-[11px] text-charcoal-400 font-mono block mt-1">
-                        JPG, PNG or WebP. Auto-compressed & synced to Firestore.
+                      <span className="text-[11px] text-zinc-500 font-mono block mt-1">
+                        Photo update enabled. Auto-compressed & synced to Firestore.
                       </span>
                     </div>
                   </div>
 
-                  {/* 2-Columns: Full Name & Email Address */}
+                  {/* 2-Columns: Full Name & Email Address (Uneditable & Locked) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-sans text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
-                      />
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-bold text-zinc-300 font-mono uppercase">
+                          Full Name
+                        </label>
+                        <span className="text-[10px] font-mono text-zinc-500 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5" />
+                          <span>Locked</span>
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          readOnly
+                          value={fullName || 'Verified Member'}
+                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-sans text-zinc-300 cursor-not-allowed select-none"
+                        />
+                        <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-bold text-charcoal-700 font-mono uppercase">
+                        <label className="text-xs font-bold text-zinc-300 font-mono uppercase">
                           Email Address
                         </label>
                         <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-md text-[10px] font-mono font-bold flex items-center gap-1 border border-emerald-200">
@@ -493,88 +492,132 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                           <span>Verified</span>
                         </span>
                       </div>
-                      <input
-                        type="email"
-                        value={emailAddress}
-                        onChange={(e) => setEmailAddress(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
-                      />
+                      <div className="relative">
+                        <input
+                          type="email"
+                          readOnly
+                          value={emailAddress}
+                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-mono text-zinc-300 cursor-not-allowed select-none"
+                        />
+                        <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* 2-Columns: Phone Number & Job Title */}
+                  {/* 2-Columns: Phone Number & Job Title (Uneditable & Locked) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
-                        Phone Number
-                      </label>
-                      <input
-                        type="text"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
-                      />
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-bold text-zinc-300 font-mono uppercase">
+                          Phone Number
+                        </label>
+                        <span className="text-[10px] font-mono text-zinc-500 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5" />
+                          <span>Locked</span>
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          readOnly
+                          value={phoneNumber || 'Not specified'}
+                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-mono text-zinc-300 cursor-not-allowed select-none"
+                        />
+                        <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
-                        Job Title
-                      </label>
-                      <input
-                        type="text"
-                        value={jobTitle}
-                        onChange={(e) => setJobTitle(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-sans text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
-                      />
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-bold text-zinc-300 font-mono uppercase">
+                          Job Title / Role
+                        </label>
+                        <span className="text-[10px] font-mono text-zinc-500 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5" />
+                          <span>Locked</span>
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          readOnly
+                          value={jobTitle || profile?.role || 'Developer'}
+                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-sans text-zinc-300 cursor-not-allowed select-none"
+                        />
+                        <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Company Name */}
+                  {/* Company Name (Uneditable & Locked) */}
                   <div>
-                    <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
-                      Company Name
-                    </label>
-                    <input
-                      type="text"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-sans text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
-                    />
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-zinc-300 font-mono uppercase">
+                        Company Name
+                      </label>
+                      <span className="text-[10px] font-mono text-zinc-500 flex items-center gap-1">
+                        <Lock className="w-2.5 h-2.5" />
+                        <span>Locked</span>
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        readOnly
+                        value={companyName || 'Registered Organization'}
+                        className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-sans text-zinc-300 cursor-not-allowed select-none"
+                      />
+                      <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
                   </div>
 
-                  {/* Company Website */}
+                  {/* Company Website (Uneditable & Locked) */}
                   <div>
-                    <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
-                      Company Website
-                    </label>
-                    <input
-                      type="text"
-                      value={companyWebsite}
-                      onChange={(e) => setCompanyWebsite(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
-                    />
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-zinc-300 font-mono uppercase">
+                        Company Website
+                      </label>
+                      <span className="text-[10px] font-mono text-zinc-500 flex items-center gap-1">
+                        <Lock className="w-2.5 h-2.5" />
+                        <span>Locked</span>
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        readOnly
+                        value={companyWebsite || 'None specified'}
+                        className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-mono text-zinc-300 cursor-not-allowed select-none"
+                      />
+                      <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
                   </div>
 
-                  <div className="flex justify-end pt-2">
-                    <button
-                      type="submit"
-                      disabled={profileSaving}
-                      className="px-5 py-2.5 rounded-xl bg-[#C59E5F] hover:bg-[#B38D4F] text-white text-xs font-bold transition-all shadow-subtle hover:shadow-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  {/* Locked Notice & Re-verify button */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-white/[0.08]">
+                    <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
+                      <Lock className="w-3.5 h-3.5 text-[#C59E5F]" />
+                      <span>Identity details locked. Contact workspace admin to request changes.</span>
+                    </div>
+                    <a
+                      href="#onboarding"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#07090C] hover:bg-white/[0.06] text-zinc-200 text-xs font-semibold font-mono transition-all border border-white/[0.08]"
                     >
-                      {profileSaving ? 'Saving...' : 'Save Changes'}
-                    </button>
+                      <span>Review Onboarding Flow</span>
+                      <ExternalLink className="w-3 h-3 text-zinc-400" />
+                    </a>
                   </div>
-                </form>
+                </div>
               </div>
 
               {/* Card 2: Connected Accounts (From User Image) */}
-              <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 shadow-subtle space-y-4">
+              <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-charcoal-900 font-sans">
+                    <h3 className="text-base font-bold text-white font-sans">
                       Connected Accounts
                     </h3>
-                    <p className="text-xs text-charcoal-500">
+                    <p className="text-xs text-zinc-400">
                       Manage third-party SSO accounts and OAuth integrations linked to your profile.
                     </p>
                   </div>
@@ -585,14 +628,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
                   {/* Google */}
-                  <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-white border border-[#EAE5DC] flex items-center justify-center text-xs font-bold font-mono">
+                      <div className="w-7 h-7 rounded-lg bg-[#0B0E14] border border-white/[0.08] flex items-center justify-center text-xs font-bold font-mono">
                         G
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-charcoal-900 block leading-tight">Google Workspace</span>
-                        <span className="text-[10px] text-charcoal-500 font-mono">{emailAddress || user?.email || 'user@example.com'}</span>
+                        <span className="text-xs font-bold text-white block leading-tight">Google Workspace</span>
+                        <span className="text-[10px] text-zinc-400 font-mono">{emailAddress || user?.email || 'user@example.com'}</span>
                       </div>
                     </div>
                     <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border border-emerald-200">
@@ -601,14 +644,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                   </div>
 
                   {/* Slack */}
-                  <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-white border border-[#EAE5DC] flex items-center justify-center text-xs font-bold font-mono text-[#E01E5A]">
+                      <div className="w-7 h-7 rounded-lg bg-[#0B0E14] border border-white/[0.08] flex items-center justify-center text-xs font-bold font-mono text-[#E01E5A]">
                         #
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-charcoal-900 block leading-tight">Slack Alerts</span>
-                        <span className="text-[10px] text-charcoal-500 font-mono">{companyName ? `${companyName.toLowerCase().replace(/[^a-z0-9]/g, '')}.slack.com` : 'workspace.slack.com'}</span>
+                        <span className="text-xs font-bold text-white block leading-tight">Slack Alerts</span>
+                        <span className="text-[10px] text-zinc-400 font-mono">{companyName ? `${companyName.toLowerCase().replace(/[^a-z0-9]/g, '')}.slack.com` : 'workspace.slack.com'}</span>
                       </div>
                     </div>
                     <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border border-emerald-200">
@@ -617,14 +660,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                   </div>
 
                   {/* GitHub */}
-                  <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-white border border-[#EAE5DC] flex items-center justify-center text-xs font-bold font-mono text-[#18181B]">
+                      <div className="w-7 h-7 rounded-lg bg-[#0B0E14] border border-white/[0.08] flex items-center justify-center text-xs font-bold font-mono text-[#18181B]">
                         GH
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-charcoal-900 block leading-tight">GitHub OAuth</span>
-                        <span className="text-[10px] text-charcoal-500 font-mono">{(emailAddress || user?.email || 'developer').split('@')[0]}</span>
+                        <span className="text-xs font-bold text-white block leading-tight">GitHub OAuth</span>
+                        <span className="text-[10px] text-zinc-400 font-mono">{(emailAddress || user?.email || 'developer').split('@')[0]}</span>
                       </div>
                     </div>
                     <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border border-emerald-200">
@@ -633,19 +676,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                   </div>
 
                   {/* Microsoft */}
-                  <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-white border border-[#EAE5DC] flex items-center justify-center text-xs font-bold font-mono text-[#00A4EF]">
+                      <div className="w-7 h-7 rounded-lg bg-[#0B0E14] border border-white/[0.08] flex items-center justify-center text-xs font-bold font-mono text-[#00A4EF]">
                         MS
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-charcoal-900 block leading-tight">Microsoft SSO</span>
-                        <span className="text-[10px] text-charcoal-500 font-mono">{emailAddress || user?.email || 'user@example.com'}</span>
+                        <span className="text-xs font-bold text-white block leading-tight">Microsoft SSO</span>
+                        <span className="text-[10px] text-zinc-400 font-mono">{emailAddress || user?.email || 'user@example.com'}</span>
                       </div>
                     </div>
                     <button
                       onClick={() => showToast('Microsoft SSO authorization window opened')}
-                      className="text-xs font-bold text-charcoal-700 hover:text-black font-mono cursor-pointer px-2 py-0.5 rounded-md hover:bg-sandstone-200"
+                      className="text-xs font-bold text-zinc-300 hover:text-black font-mono cursor-pointer px-2 py-0.5 rounded-md hover:bg-white/[0.06]"
                     >
                       Connect
                     </button>
@@ -662,13 +705,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
           {/* ========================================================== */}
           {activeSubTab === 'apikeys' && (
             <div className="space-y-4">
-              <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 shadow-subtle space-y-4">
+              <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-charcoal-900 font-sans">
+                    <h3 className="text-base font-bold text-white font-sans">
                       Personal Gateway Tokens & CLI Keys
                     </h3>
-                    <p className="text-xs text-charcoal-500">
+                    <p className="text-xs text-zinc-400">
                       Use these credentials to authenticate your local developer terminal or CI/CD pipelines.
                     </p>
                   </div>
@@ -681,15 +724,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                 </div>
 
                 <div className="space-y-3 pt-2 font-mono text-xs">
-                  <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
                     <div>
-                      <span className="font-bold text-charcoal-900 block">Antigravity IDE & CLI Token</span>
-                      <span className="text-charcoal-500 text-[11px]">ost_live_usr_77291a8c4f92...</span>
+                      <span className="font-bold text-white block">Antigravity IDE & CLI Token</span>
+                      <span className="text-zinc-400 text-[11px]">ost_live_usr_77291a8c4f92...</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => copyToClipboard('ost_live_usr_77291a8c4f92bc3e', 'CLI Token')}
-                        className="px-2.5 py-1 rounded-lg bg-white border border-[#EAE5DC] text-charcoal-800 text-xs hover:bg-sandstone-100 cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-[#0B0E14] border border-white/[0.08] text-zinc-200 text-xs hover:bg-white/[0.04] cursor-pointer"
                       >
                         {copiedField === 'CLI Token' ? 'Copied' : 'Copy'}
                       </button>
@@ -711,35 +754,35 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
           {/* ========================================================== */}
           {activeSubTab === 'sessions' && (
             <div className="space-y-4">
-              <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 shadow-subtle space-y-4">
+              <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-charcoal-900 font-sans">
+                    <h3 className="text-base font-bold text-white font-sans">
                       Active Browser & Agent Sessions
                     </h3>
-                    <p className="text-xs text-charcoal-500">
+                    <p className="text-xs text-zinc-400">
                       Devices currently signed into your OstraOps account.
                     </p>
                   </div>
                   <button
                     onClick={() => showToast('Revoked all other active sessions')}
-                    className="px-3.5 py-1.5 rounded-xl bg-white border border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold transition-all cursor-pointer font-mono"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#0B0E14] border border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold transition-all cursor-pointer font-mono"
                   >
                     Revoke All Other Sessions
                   </button>
                 </div>
 
-                <div className="divide-y divide-[#EAE5DC] text-xs font-mono">
+                <div className="divide-y divide-white/[0.08] text-xs font-mono">
                   <div className="py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
                         <Laptop className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="font-bold text-charcoal-900 block">
+                        <span className="font-bold text-white block">
                           Windows 11 • Edge Browser (Current Session)
                         </span>
-                        <span className="text-charcoal-500 text-[11px]">
+                        <span className="text-zinc-400 text-[11px]">
                           IP: 192.168.1.1 • Bengaluru, India • Active Now
                         </span>
                       </div>
@@ -751,21 +794,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
 
                   <div className="py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-700 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-xl bg-white/[0.06] text-zinc-300 flex items-center justify-center">
                         <Laptop className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="font-bold text-charcoal-900 block">
+                        <span className="font-bold text-white block">
                           Antigravity IDE Agent Runner
                         </span>
-                        <span className="text-charcoal-500 text-[11px]">
+                        <span className="text-zinc-400 text-[11px]">
                           IP: 192.168.1.1 • CLI Sub-process • Active 2h ago
                         </span>
                       </div>
                     </div>
                     <button
                       onClick={() => showToast('Terminated agent runner session')}
-                      className="text-charcoal-500 hover:text-rose-600 text-[11px] cursor-pointer"
+                      className="text-zinc-400 hover:text-rose-600 text-[11px] cursor-pointer"
                     >
                       Terminate
                     </button>
@@ -780,7 +823,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
           {/* ========================================================== */}
           {activeSubTab === 'danger' && (
             <div className="space-y-4">
-              <div className="rounded-2xl bg-rose-50/40 border border-rose-200 p-6 shadow-subtle space-y-4">
+              <div className="rounded-2xl bg-rose-50/40 border border-rose-200 p-6 shadow-xs space-y-4">
                 <div>
                   <h3 className="text-base font-bold text-rose-900 font-sans flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-rose-600" />
@@ -792,23 +835,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                 </div>
 
                 <div className="space-y-3 font-mono text-xs">
-                  <div className="p-3.5 rounded-xl bg-white border border-rose-200 flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-[#0B0E14] border border-rose-200 flex items-center justify-between">
                     <div>
-                      <span className="font-bold text-charcoal-900 block font-sans">Transfer Organization Ownership</span>
-                      <span className="text-charcoal-500 text-[11px]">Transfer primary owner role and billing to another administrator.</span>
+                      <span className="font-bold text-white block font-sans">Transfer Organization Ownership</span>
+                      <span className="text-zinc-400 text-[11px]">Transfer primary owner role and billing to another administrator.</span>
                     </div>
                     <button
                       onClick={() => setTransferModalOpen(true)}
-                      className="px-3 py-1.5 rounded-xl bg-white border border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[#0B0E14] border border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold cursor-pointer"
                     >
                       Transfer
                     </button>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-white border border-rose-200 flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-[#0B0E14] border border-rose-200 flex items-center justify-between">
                     <div>
                       <span className="font-bold text-rose-900 block font-sans">Delete Account & Purge Telemetry</span>
-                      <span className="text-charcoal-500 text-[11px]">Permanently erase master credentials, API keys, and cached models.</span>
+                      <span className="text-zinc-400 text-[11px]">Permanently erase master credentials, API keys, and cached models.</span>
                     </div>
                     <button
                       onClick={() => setDangerConfirmOpen(true)}
@@ -898,8 +941,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
           </div>
 
           {/* Widget 2: Quick Actions (From Image) */}
-          <div className="rounded-2xl bg-white border border-[#EAE5DC] p-5 shadow-subtle space-y-3">
-            <h3 className="text-sm font-bold text-charcoal-900 font-sans">
+          <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-5 shadow-xs space-y-3">
+            <h3 className="text-sm font-bold text-white font-sans">
               Quick Actions
             </h3>
 
@@ -909,11 +952,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                   setActiveSection('security');
                   setActiveSubTab('security');
                 }}
-                className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] hover:border-[#C59E5F] text-left transition-all hover:bg-sandstone-100 cursor-pointer"
+                className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] hover:border-[#C59E5F] text-left transition-all hover:bg-white/[0.04] cursor-pointer"
               >
                 <Lock className="w-4 h-4 text-[#C59E5F] mb-1.5" />
-                <span className="text-xs font-bold text-charcoal-900 block leading-tight">Change Password</span>
-                <span className="text-[10px] text-charcoal-500 font-mono">Update security</span>
+                <span className="text-xs font-bold text-white block leading-tight">Change Password</span>
+                <span className="text-[10px] text-zinc-400 font-mono">Update security</span>
               </button>
 
               <button
@@ -921,25 +964,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                   setActiveSection('security');
                   setActiveSubTab('security');
                 }}
-                className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] hover:border-[#C59E5F] text-left transition-all hover:bg-sandstone-100 cursor-pointer"
+                className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] hover:border-[#C59E5F] text-left transition-all hover:bg-white/[0.04] cursor-pointer"
               >
-                <Key className="w-4 h-4 text-charcoal-800 mb-1.5" />
-                <span className="text-xs font-bold text-charcoal-900 block leading-tight">Manage API Keys</span>
-                <span className="text-[10px] text-charcoal-500 font-mono">CLI & proxy</span>
+                <Key className="w-4 h-4 text-zinc-200 mb-1.5" />
+                <span className="text-xs font-bold text-white block leading-tight">Manage API Keys</span>
+                <span className="text-[10px] text-zinc-400 font-mono">CLI & proxy</span>
               </button>
 
               <button
                 onClick={handleDownloadAccountData}
-                className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] hover:border-[#C59E5F] text-left transition-all hover:bg-sandstone-100 cursor-pointer"
+                className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] hover:border-[#C59E5F] text-left transition-all hover:bg-white/[0.04] cursor-pointer"
               >
                 <Download className="w-4 h-4 text-emerald-700 mb-1.5" />
-                <span className="text-xs font-bold text-charcoal-900 block leading-tight">Download Data</span>
-                <span className="text-[10px] text-charcoal-500 font-mono">JSON export</span>
+                <span className="text-xs font-bold text-white block leading-tight">Download Data</span>
+                <span className="text-[10px] text-zinc-400 font-mono">JSON export</span>
               </button>
 
               <button
                 onClick={() => setActiveSubTab('danger')}
-                className="p-3 rounded-xl bg-[#FAF8F5] border border-rose-200 hover:border-rose-400 text-left transition-all hover:bg-rose-50/50 cursor-pointer"
+                className="p-3 rounded-xl bg-[#07090C] border border-rose-200 hover:border-rose-400 text-left transition-all hover:bg-rose-50/50 cursor-pointer"
               >
                 <Trash2 className="w-4 h-4 text-rose-600 mb-1.5" />
                 <span className="text-xs font-bold text-rose-900 block leading-tight">Close Account</span>
@@ -949,9 +992,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
           </div>
 
           {/* Widget 3: Recent Account Activity (From Image) */}
-          <div className="rounded-2xl bg-white border border-[#EAE5DC] p-5 shadow-subtle space-y-3.5">
+          <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-5 shadow-xs space-y-3.5">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-charcoal-900 font-sans">
+              <h3 className="text-sm font-bold text-white font-sans">
                 Recent Account Activity
               </h3>
               <span
@@ -971,21 +1014,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
               ].map((act, idx) => {
                 const Icon = act.icon;
                 return (
-                  <div key={idx} className="flex items-center justify-between group cursor-pointer hover:bg-sandstone-100 p-1.5 rounded-xl transition-colors">
+                  <div key={idx} className="flex items-center justify-between group cursor-pointer hover:bg-white/[0.04] p-1.5 rounded-xl transition-colors">
                     <div className="flex items-center gap-2.5">
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${act.iconColor}`}>
                         <Icon className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <span className="font-bold text-charcoal-900 block leading-tight">
+                        <span className="font-bold text-white block leading-tight">
                           {act.title}
                         </span>
-                        <span className="text-[10px] text-charcoal-500 font-mono">
+                        <span className="text-[10px] text-zinc-400 font-mono">
                           {act.time}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono text-charcoal-400 group-hover:text-charcoal-700">
+                    <span className="text-[10px] font-mono text-zinc-500 group-hover:text-zinc-300">
                       {act.ip} ›
                     </span>
                   </div>
@@ -1003,16 +1046,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
       {/* ============================================================ */}
       {transferModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white border border-[#EAE5DC] w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-150 font-sans">
+          <div className="bg-[#0B0E14] border border-white/[0.08] w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-150 font-sans">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-200">
                 <Shield className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-charcoal-900">
+                <h3 className="text-base font-bold text-white">
                   Transfer Organization Ownership
                 </h3>
-                <p className="text-xs text-charcoal-500">
+                <p className="text-xs text-zinc-400">
                   Assign the primary administrator role to another verified email.
                 </p>
               </div>
@@ -1020,7 +1063,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
 
             <form onSubmit={handleTransferOwnership} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-charcoal-700 font-mono uppercase">
+                <label className="block text-xs font-bold text-zinc-300 font-mono uppercase">
                   New Owner Email Address
                 </label>
                 <input
@@ -1029,11 +1072,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                   value={transferEmail}
                   onChange={(e) => setTransferEmail(e.target.value)}
                   placeholder="admin@company.com"
-                  className="w-full px-3.5 py-2.5 text-xs font-sans bg-white border border-[#EAE5DC] rounded-xl text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-[#C59E5F] transition-colors"
+                  className="w-full px-3.5 py-2.5 text-xs font-sans bg-[#0B0E14] border border-white/[0.08] rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] transition-colors"
                 />
               </div>
 
-              <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-[11.5px] text-charcoal-600 leading-relaxed">
+              <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] text-[11.5px] text-zinc-400 leading-relaxed">
                 The new owner will receive a secure confirmation link. Once accepted, your role will revert to Organization Member.
               </div>
 
@@ -1044,7 +1087,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                     setTransferModalOpen(false);
                     setTransferEmail('');
                   }}
-                  className="px-3.5 py-2 rounded-xl text-xs font-medium text-charcoal-600 hover:bg-sandstone-100 transition-colors cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-white/[0.04] transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1065,7 +1108,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
       {/* ============================================================ */}
       {dangerConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white border border-[#EAE5DC] w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-150 font-sans">
+          <div className="bg-[#0B0E14] border border-white/[0.08] w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-150 font-sans">
             
             {/* Header */}
             <div className="flex items-center gap-3">
@@ -1073,10 +1116,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-charcoal-900">
+                <h3 className="text-base font-bold text-white">
                   Delete Account
                 </h3>
-                <p className="text-xs text-charcoal-500">
+                <p className="text-xs text-zinc-400">
                   This action is permanent and cannot be undone.
                 </p>
               </div>
@@ -1088,14 +1131,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                 <ShieldCheck className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>Zero-Data Retention Commitment</span>
               </p>
-              <p className="text-charcoal-600 text-[11.5px]">
+              <p className="text-zinc-400 text-[11.5px]">
                 We do not store or retain any of your data. All your account credentials, API keys, proxy tokens, and telemetry logs will be permanently erased from our systems immediately.
               </p>
             </div>
 
             {/* Type DELETE to confirm */}
             <div className="space-y-1.5">
-              <label className="block text-xs text-charcoal-700">
+              <label className="block text-xs text-zinc-300">
                 To confirm, type <strong className="font-mono text-rose-600">DELETE</strong> below:
               </label>
               <input
@@ -1104,22 +1147,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
                 placeholder="DELETE"
                 autoFocus
-                className="w-full px-3.5 py-2.5 text-xs font-mono uppercase bg-white border border-[#EAE5DC] rounded-xl text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-rose-500 transition-colors"
+                className="w-full px-3.5 py-2.5 text-xs font-mono uppercase bg-[#0B0E14] border border-white/[0.08] rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:border-rose-500 transition-colors"
               />
             </div>
 
             {/* Optional Password Verification for Email/Password Accounts */}
             {auth.currentUser?.providerData?.some((p) => p.providerId === 'password') && (
               <div className="space-y-1.5">
-                <label className="block text-xs text-charcoal-700">
-                  Password <span className="text-charcoal-400 font-normal">(optional security confirmation)</span>
+                <label className="block text-xs text-zinc-300">
+                  Password <span className="text-zinc-500 font-normal">(optional security confirmation)</span>
                 </label>
                 <input
                   type="password"
                   value={deletePassword}
                   onChange={(e) => setDeletePassword(e.target.value)}
                   placeholder="Enter current password if applicable"
-                  className="w-full px-3.5 py-2.5 text-xs bg-white border border-[#EAE5DC] rounded-xl text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-rose-500 transition-colors"
+                  className="w-full px-3.5 py-2.5 text-xs bg-[#0B0E14] border border-white/[0.08] rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:border-rose-500 transition-colors"
                 />
               </div>
             )}
@@ -1134,7 +1177,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                   setDeleteConfirmText('');
                   setDeletePassword('');
                 }}
-                className="px-3.5 py-2 rounded-xl text-xs font-medium text-charcoal-600 hover:bg-sandstone-100 transition-colors cursor-pointer"
+                className="px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-white/[0.04] transition-colors cursor-pointer"
               >
                 Cancel
               </button>

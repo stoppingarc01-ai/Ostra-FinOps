@@ -119,22 +119,22 @@ export const FAQSection: React.FC = () => {
   };
 
   return (
-    <section id="faq" className="relative py-24 bg-[#FAF8F5] border-t border-[#EAE5DB] overflow-hidden">
+    <section id="faq" className="relative py-24 bg-[#07090C] border-t border-white/[0.08] overflow-hidden">
       {/* Subtle 3D Ambient Light Aura */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-gradient-to-b from-ostraGold-400/10 via-sandstone-300/15 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-gradient-to-b from-[#C59E5F]/10 via-[#C59E5F]/5 to-transparent blur-[140px] pointer-events-none -z-10" />
 
       <div className="max-w-[1280px] mx-auto px-6 sm:px-8 lg:px-12">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
-          <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider mb-2 font-mono">
+          <p className="text-xs font-semibold text-[#E5C38D] uppercase tracking-wider mb-2 font-mono">
             Frequently Asked Questions
           </p>
-          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
+          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-[-0.02em] font-display">
             Clear Answers.{' '}
             <span className="gold-gradient-text block">Zero Jargon. Honest Facts.</span>
           </h2>
-          <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
+          <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-2xl mx-auto">
             Got questions about token tracking, budget limits, data privacy, or getting started? Here are straightforward answers.
           </p>
         </div>
@@ -143,18 +143,18 @@ export const FAQSection: React.FC = () => {
         <div className="max-w-3xl mx-auto mb-10 space-y-4">
           {/* Search Input Box */}
           <div className="relative">
-            <Search className="w-4 h-4 text-charcoal-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search topics (e.g. latency, Cursor, tool calling, SQLite, circuit breaker)..."
-              className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white border border-[#EAE5DB] text-sm text-charcoal-900 placeholder:text-charcoal-400 shadow-subtle focus:outline-none focus:border-ostraGold-500 transition-colors font-sans"
+              className="w-full pl-11 pr-14 py-3.5 rounded-2xl bg-[#0B0E14] border border-white/[0.1] text-sm text-zinc-100 placeholder:text-zinc-500 shadow-xl focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F] transition-all font-sans"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-charcoal-400 hover:text-charcoal-800"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-400 hover:text-white cursor-pointer px-2 py-1 rounded bg-white/[0.06]"
               >
                 Clear
               </button>
@@ -170,8 +170,8 @@ export const FAQSection: React.FC = () => {
                   onClick={() => setActiveCategory(c.id)}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     activeCategory === c.id
-                      ? 'bg-charcoal-900 text-white shadow-xs'
-                      : 'bg-white text-charcoal-600 hover:text-charcoal-900 hover:bg-sandstone-100 border border-[#EAE5DB]'
+                      ? 'bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] font-bold shadow-md scale-100'
+                      : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08] border border-white/[0.08]'
                   }`}
                 >
                   {c.label}
@@ -179,12 +179,12 @@ export const FAQSection: React.FC = () => {
               ))}
             </div>
 
-            <div className="flex items-center gap-2 text-[11px] font-mono text-charcoal-500">
-              <button onClick={expandAll} className="hover:text-charcoal-900 cursor-pointer">
+            <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400">
+              <button onClick={expandAll} className="hover:text-[#E5C38D] transition-colors cursor-pointer">
                 Expand all
               </button>
-              <span>•</span>
-              <button onClick={collapseAll} className="hover:text-charcoal-900 cursor-pointer">
+              <span className="text-zinc-600">•</span>
+              <button onClick={collapseAll} className="hover:text-[#E5C38D] transition-colors cursor-pointer">
                 Collapse all
               </button>
             </div>
@@ -194,14 +194,14 @@ export const FAQSection: React.FC = () => {
         {/* FAQ Accordion List */}
         <div className="max-w-3xl mx-auto space-y-3.5">
           {filteredItems.length === 0 ? (
-            <div className="p-8 rounded-3xl bg-white border border-[#EAE5DB] text-center space-y-2">
-              <p className="text-sm font-bold text-charcoal-900">No matching questions found</p>
-              <p className="text-xs text-charcoal-500 font-mono">
+            <div className="p-8 rounded-3xl bg-[#0B0E14] border border-white/[0.08] text-center space-y-2">
+              <p className="text-sm font-bold text-zinc-100">No matching questions found</p>
+              <p className="text-xs text-zinc-500 font-mono">
                 Try searching for keywords like "latency", "Cursor", "cost", or "failover".
               </p>
               <button
                 onClick={() => { setSearchQuery(''); setActiveCategory('all'); }}
-                className="mt-3 px-4 py-2 rounded-xl bg-sandstone-200 text-xs font-bold text-charcoal-800 hover:bg-sandstone-300 transition-colors"
+                className="mt-3 px-4 py-2 rounded-xl bg-white/[0.08] border border-white/[0.1] text-xs font-bold text-zinc-200 hover:text-white hover:bg-white/[0.12] transition-colors cursor-pointer"
               >
                 Reset Filters
               </button>
@@ -214,8 +214,8 @@ export const FAQSection: React.FC = () => {
                   key={item.id}
                   className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
                     isOpen
-                      ? 'bg-white border-ostraGold-500/60 shadow-card-3d'
-                      : 'bg-white/80 hover:bg-white border-[#EAE5DB] shadow-2xs hover:shadow-subtle'
+                      ? 'bg-[#0B0E14] border-[#C59E5F]/50 shadow-[0_0_25px_rgba(197,158,95,0.08)]'
+                      : 'bg-[#0B0E14]/80 hover:bg-[#0B0E14] border-white/[0.08] hover:border-white/[0.16]'
                   }`}
                 >
                   {/* Question Accordion Button */}
@@ -223,14 +223,16 @@ export const FAQSection: React.FC = () => {
                     onClick={() => toggleItem(item.id)}
                     className="w-full px-6 py-4 sm:py-5 flex items-center justify-between gap-4 text-left cursor-pointer transition-colors"
                   >
-                    <span className="text-sm sm:text-base font-bold text-charcoal-900 font-display leading-snug">
+                    <span className={`text-sm sm:text-base font-bold font-display leading-snug transition-colors ${
+                      isOpen ? 'text-white' : 'text-zinc-200 hover:text-white'
+                    }`}>
                       {item.question}
                     </span>
                     <div
                       className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 ${
                         isOpen
-                          ? 'bg-charcoal-900 text-white rotate-180'
-                          : 'bg-sandstone-200 text-charcoal-700'
+                          ? 'bg-[#C59E5F]/20 text-[#E5C38D] border border-[#C59E5F]/30 rotate-180'
+                          : 'bg-white/[0.06] border border-white/[0.1] text-zinc-400'
                       }`}
                     >
                       <ChevronDown className="w-4 h-4" />
@@ -239,8 +241,8 @@ export const FAQSection: React.FC = () => {
 
                   {/* Expanded Answer Content */}
                   {isOpen && (
-                    <div className="px-6 pb-5 pt-1 border-t border-[#EFEBE3]/80 space-y-3">
-                      <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed">
+                    <div className="px-6 pb-5 pt-1 border-t border-white/[0.06] space-y-3">
+                      <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
                         {item.answer}
                       </p>
 
@@ -249,7 +251,7 @@ export const FAQSection: React.FC = () => {
                         {item.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="px-2 py-0.5 rounded-md bg-sandstone-100 text-charcoal-500 text-[10px] font-mono border border-sandstone-200"
+                            className="px-2 py-0.5 rounded-md bg-white/[0.04] text-zinc-400 text-[10px] font-mono border border-white/[0.06]"
                           >
                             #{tag}
                           </span>
@@ -264,18 +266,18 @@ export const FAQSection: React.FC = () => {
         </div>
 
         {/* Bottom Helper Strip */}
-        <div className="max-w-3xl mx-auto mt-12 p-6 rounded-2xl bg-white border border-[#EAE5DB] shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-3xl mx-auto mt-12 p-6 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-0.5 text-center sm:text-left">
-            <h4 className="text-sm font-bold text-charcoal-900 font-display">
+            <h4 className="text-sm font-bold text-zinc-100 font-display">
               Have a specific architecture question?
             </h4>
-            <p className="text-xs text-charcoal-500">
+            <p className="text-xs text-zinc-400">
               Check our technical documentation or test the loopback daemon directly.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="px-3 py-1.5 rounded-lg bg-sandstone-200 font-mono text-xs text-charcoal-800 border border-sandstone-300">
+            <div className="px-3.5 py-2 rounded-xl bg-[#07090C] font-mono text-xs text-[#E5C38D] border border-white/[0.1] shadow-inner">
               npx ostraops-guard
             </div>
           </div>

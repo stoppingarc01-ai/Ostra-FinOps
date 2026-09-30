@@ -29,15 +29,15 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onNaviga
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#07090C] text-white flex items-center justify-center px-4 font-sans selection:bg-[#C59E5F]/20 selection:text-[#FFF4D6]">
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="text-center">
           <button onClick={() => onNavigate('home')} className="inline-flex items-center justify-center gap-2.5 group cursor-pointer">
             <OstraLogo
               iconClassName="w-9 h-9 group-hover:scale-105 transition-transform duration-200"
-              textClassName="text-2xl font-bold tracking-tight text-[#0B0F0F] font-sans"
-              variant="charcoal"
+              textClassName="text-2xl font-bold tracking-tight text-white font-sans"
+              variant="gold"
               showTagline={true}
               taglineType="control"
             />
@@ -45,19 +45,19 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onNaviga
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-2xl border border-[#EAE5DC] p-8 shadow-sm">
+        <div className="bg-[#0B0E14] rounded-3xl border border-white/[0.08] p-8 shadow-2xl">
           {sent ? (
             <div className="text-center space-y-4">
-              <div className="w-12 h-12 mx-auto rounded-full bg-[#F4EFE6] border border-[#E5DBCA] flex items-center justify-center">
-                <Mail className="w-6 h-6 text-[#C59E5F]" />
+              <div className="w-12 h-12 mx-auto rounded-full bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center">
+                <Mail className="w-6 h-6 text-[#E5C38D]" />
               </div>
-              <h2 className="text-lg font-bold text-[#18181B]">Check your email</h2>
-              <p className="text-sm text-[#71717A]">
-                We sent a password reset link to <span className="font-medium text-[#18181B]">{email}</span>
+              <h2 className="text-lg font-bold text-white">Check your email</h2>
+              <p className="text-sm text-zinc-400">
+                We sent a password reset link to <span className="font-medium text-white">{email}</span>
               </p>
               <button
                 onClick={() => onNavigate('login')}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-[#18181B] hover:text-[#C59E5F] transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-[#E5C38D] hover:underline transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to sign in</span>
@@ -66,14 +66,14 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onNaviga
           ) : (
             <>
               <div className="mb-6">
-                <h2 className="text-lg font-bold text-[#18181B]">Reset your password</h2>
-                <p className="text-sm text-[#71717A] mt-1">
+                <h2 className="text-lg font-bold text-white">Reset your password</h2>
+                <p className="text-sm text-zinc-400 mt-1">
                   Enter your email and we'll send you a reset link.
                 </p>
               </div>
 
               {error && (
-                <div className="mb-5 flex items-start gap-2.5 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+                <div className="mb-5 flex items-start gap-2.5 p-3 rounded-xl bg-red-950/30 border border-red-500/20 text-red-400 text-xs">
                   <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -81,7 +81,7 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onNaviga
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-[#18181B]">Email address</label>
+                  <label className="text-xs font-semibold text-zinc-300">Email address</label>
                   <input
                     type="email"
                     value={email}
@@ -89,21 +89,21 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onNaviga
                     required
                     autoComplete="email"
                     placeholder="you@company.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE5DC] bg-[#FAF8F5] text-sm text-[#18181B] placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]/30 transition-colors"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/[0.08] bg-[#07090C] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]/30 transition-colors"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-2.5 rounded-xl bg-[#18181B] text-white text-sm font-semibold hover:bg-black transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] hover:opacity-95 text-[#07090C] text-sm font-bold transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {submitting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[#07090C]" />
                   ) : (
                     <>
                       <span>Send reset link</span>
-                      <ArrowRight className="w-4 h-4 text-[#C59E5F]" />
+                      <ArrowRight className="w-4 h-4 text-[#07090C]" />
                     </>
                   )}
                 </button>
@@ -114,11 +114,11 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onNaviga
 
         {/* Footer */}
         {!sent && (
-          <p className="text-center text-xs text-[#A1A1AA]">
+          <p className="text-center text-xs text-zinc-400">
             Remember your password?{' '}
             <button
               onClick={() => onNavigate('login')}
-              className="font-semibold text-[#18181B] hover:text-[#C59E5F] transition-colors"
+              className="font-semibold text-[#E5C38D] hover:underline transition-colors cursor-pointer"
             >
               Sign in
             </button>

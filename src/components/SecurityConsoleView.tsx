@@ -415,31 +415,31 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       {/* ============================================================ */}
       {/* TOP AI SECURITY POSTURE SCORECARD                            */}
       {/* ============================================================ */}
-      <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 shadow-subtle relative overflow-hidden">
+      <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs relative overflow-hidden">
         {/* Subtle decorative glow */}
         <div className="absolute -top-16 -right-16 w-52 h-52 bg-gradient-to-bl from-[#C59E5F]/15 via-transparent to-transparent rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wider uppercase bg-[#F4EFE6] text-[#9C7938] border border-[#E5DBCA]">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wider uppercase bg-[#C59E5F]/15 text-[#E5C38D] border border-[#C59E5F]/30">
                 AI Infrastructure Security Console
               </span>
             </div>
-            <h1 className="text-2xl lg:text-3xl font-extrabold text-charcoal-900 tracking-tight font-sans">
+            <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight font-sans">
               Enterprise Access & Model Key Vault
             </h1>
-            <p className="text-xs sm:text-sm text-charcoal-500 mt-1 max-w-3xl font-sans">
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-3xl font-sans">
               Dynamic master key swapping, virtual token isolation, active session monitoring, and real-time cryptographic audit telemetry.
             </p>
           </div>
 
-          <div className="flex items-center gap-4 bg-[#FAF8F5] p-3 rounded-xl border border-[#EAE5DC]">
+          <div className="flex items-center gap-4 bg-[#07090C] p-3 rounded-xl border border-white/[0.08]">
             <div className="text-right">
-              <div className="text-[11px] font-mono uppercase text-charcoal-400 font-bold">Posture Score</div>
-              <div className="text-xl font-extrabold text-charcoal-900 font-mono flex items-center justify-end gap-1">
+              <div className="text-[11px] font-mono uppercase text-zinc-500 font-bold">Posture Score</div>
+              <div className="text-xl font-extrabold text-white font-mono flex items-center justify-end gap-1">
                 <span className="text-emerald-600">96</span>
-                <span className="text-xs text-charcoal-400 font-normal">/ 100</span>
+                <span className="text-xs text-zinc-500 font-normal">/ 100</span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-xl bg-[#18181B] flex items-center justify-center text-[#C59E5F]">
@@ -449,31 +449,31 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
         </div>
 
         {/* 4 Security Metric Chips */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 pt-5 border-t border-[#EAE5DC]">
-          <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC]">
-            <span className="text-[10px] font-mono text-charcoal-500 uppercase block">Provider Vault</span>
-            <span className="text-xs font-bold text-charcoal-900 font-mono flex items-center gap-1.5 mt-0.5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 pt-5 border-t border-white/[0.08]">
+          <div className="p-2.5 rounded-xl bg-[#07090C] border border-white/[0.08]">
+            <span className="text-[10px] font-mono text-zinc-400 uppercase block">Provider Vault</span>
+            <span className="text-xs font-bold text-white font-mono flex items-center gap-1.5 mt-0.5">
               <KeyRound className="w-3.5 h-3.5 text-[#C59E5F]" />
               5 Keys Encrypted (AES-256)
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC]">
-            <span className="text-[10px] font-mono text-charcoal-500 uppercase block">Virtual Tokens</span>
-            <span className="text-xs font-bold text-charcoal-900 font-mono flex items-center gap-1.5 mt-0.5">
+          <div className="p-2.5 rounded-xl bg-[#07090C] border border-white/[0.08]">
+            <span className="text-[10px] font-mono text-zinc-400 uppercase block">Virtual Tokens</span>
+            <span className="text-xs font-bold text-white font-mono flex items-center gap-1.5 mt-0.5">
               <Terminal className="w-3.5 h-3.5 text-blue-600" />
               {virtualTokens.length} Active (Zero Exposed)
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC]">
-            <span className="text-[10px] font-mono text-charcoal-500 uppercase block">2FA Enforcement</span>
+          <div className="p-2.5 rounded-xl bg-[#07090C] border border-white/[0.08]">
+            <span className="text-[10px] font-mono text-zinc-400 uppercase block">2FA Enforcement</span>
             <span className="text-xs font-bold text-emerald-700 font-mono flex items-center gap-1.5 mt-0.5">
               <Lock className="w-3.5 h-3.5 text-emerald-600" />
               Required for All Members
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC]">
-            <span className="text-[10px] font-mono text-charcoal-500 uppercase block">Privacy Mode</span>
-            <span className="text-xs font-bold text-charcoal-900 font-mono flex items-center gap-1.5 mt-0.5">
+          <div className="p-2.5 rounded-xl bg-[#07090C] border border-white/[0.08]">
+            <span className="text-[10px] font-mono text-zinc-400 uppercase block">Privacy Mode</span>
+            <span className="text-xs font-bold text-white font-mono flex items-center gap-1.5 mt-0.5">
               <Database className="w-3.5 h-3.5 text-purple-600" />
               Metadata Only (Redacted)
             </span>
@@ -484,7 +484,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       {/* ============================================================ */}
       {/* FILTER PILLS / QUICK SECTION SELECTOR                        */}
       {/* ============================================================ */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-[#EAE5DC]">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-white/[0.08]">
         {[
           { id: 'all', label: 'All Security Console' },
           { id: 'auth', label: '1. Authentication & 2FA' },
@@ -505,7 +505,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? 'bg-[#18181B] text-white font-bold shadow-xs'
-                  : 'bg-white border border-[#EAE5DC] text-charcoal-600 hover:text-charcoal-900 hover:bg-[#FAF8F5]'
+                  : 'bg-[#0B0E14] border border-white/[0.08] text-zinc-400 hover:text-white hover:bg-[#07090C]'
               }`}
             >
               {tab.label}
@@ -521,11 +521,11 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-charcoal-900 font-sans flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white font-sans flex items-center gap-2">
                 <Lock className="w-4 h-4 text-[#C59E5F]" />
                 1. Authentication & Identity Protection
               </h2>
-              <p className="text-xs text-charcoal-500 font-sans">
+              <p className="text-xs text-zinc-400 font-sans">
                 Manage passwords, session lifetimes, re-authentication policies, and two-factor authentication.
               </p>
             </div>
@@ -533,9 +533,9 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Password Form (7 Cols) */}
-            <div className="lg:col-span-7 rounded-2xl bg-white border border-[#EAE5DC] p-6 shadow-subtle space-y-4">
+            <div className="lg:col-span-7 rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-charcoal-900 font-sans">
+                <h3 className="text-sm font-bold text-white font-sans">
                   Change Master Password
                 </h3>
                 <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 font-bold">
@@ -545,7 +545,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
 
               <form onSubmit={handlePasswordSubmit} className="space-y-4 pt-1">
                 <div>
-                  <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
+                  <label className="text-xs font-bold text-zinc-300 block mb-1 font-mono uppercase">
                     Current Password
                   </label>
                   <input
@@ -553,13 +553,13 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="••••••••••••••••"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F]"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
+                    <label className="text-xs font-bold text-zinc-300 block mb-1 font-mono uppercase">
                       New Password
                     </label>
                     <input
@@ -567,12 +567,12 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="At least 8 characters"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F]"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
+                    <label className="text-xs font-bold text-zinc-300 block mb-1 font-mono uppercase">
                       Confirm New Password
                     </label>
                     <input
@@ -580,16 +580,16 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-enter password"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F]"
                     />
                   </div>
                 </div>
 
                 {/* Password Strength Indicator */}
                 {newPassword && (
-                  <div className="space-y-2 p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs">
+                  <div className="space-y-2 p-3 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs">
                     <div className="flex items-center justify-between font-mono text-[11px]">
-                      <span className="text-charcoal-600">Password Strength:</span>
+                      <span className="text-zinc-400">Password Strength:</span>
                       <span className={`font-bold ${strengthScore <= 2 ? 'text-amber-600' : 'text-emerald-600'}`}>
                         {strengthScore <= 1 ? 'Very Weak' : strengthScore === 2 ? 'Medium' : strengthScore === 3 ? 'Strong' : 'Very Strong'}
                       </span>
@@ -601,7 +601,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                         }`}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-1 text-[11px] font-mono text-charcoal-500 pt-1">
+                    <div className="grid grid-cols-2 gap-1 text-[11px] font-mono text-zinc-400 pt-1">
                       <span className={hasMinLength ? 'text-emerald-700 font-bold' : ''}>• 8+ characters</span>
                       <span className={hasNumber ? 'text-emerald-700 font-bold' : ''}>• At least 1 number</span>
                       <span className={hasUpper ? 'text-emerald-700 font-bold' : ''}>• 1 uppercase letter</span>
@@ -614,7 +614,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   <button
                     type="button"
                     onClick={() => setShowPasswords(!showPasswords)}
-                    className="text-xs font-mono text-charcoal-500 hover:text-charcoal-800 flex items-center gap-1.5 cursor-pointer"
+                    className="text-xs font-mono text-zinc-400 hover:text-zinc-200 flex items-center gap-1.5 cursor-pointer"
                   >
                     {showPasswords ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     <span>{showPasswords ? 'Hide' : 'Show'} Passwords</span>
@@ -630,11 +630,11 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               </form>
 
               {/* Session Policies & Re-auth */}
-              <div className="pt-4 border-t border-[#EAE5DC] space-y-3">
+              <div className="pt-4 border-t border-white/[0.08] space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-charcoal-900 block">Session Timeout</span>
-                    <span className="text-[11px] text-charcoal-500">Automatically logout inactive dashboard sessions.</span>
+                    <span className="text-xs font-bold text-white block">Session Timeout</span>
+                    <span className="text-[11px] text-zinc-400">Automatically logout inactive dashboard sessions.</span>
                   </div>
                   <select
                     value={sessionTimeout}
@@ -642,7 +642,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                       setSessionTimeout(e.target.value);
                       showToast(`Session timeout set to ${e.target.value}`);
                     }}
-                    className="px-2.5 py-1.5 rounded-lg bg-[#FAF8F5] border border-[#EAE5DC] text-xs font-mono text-charcoal-800 focus:outline-none"
+                    className="px-2.5 py-1.5 rounded-lg bg-[#07090C] border border-white/[0.08] text-xs font-mono text-zinc-200 focus:outline-none"
                   >
                     <option>15 minutes</option>
                     <option>1 hour</option>
@@ -654,8 +654,8 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-charcoal-900 block">Require Re-authentication</span>
-                    <span className="text-[11px] text-charcoal-500">Prompt for password before rotating master provider keys or deleting tokens.</span>
+                    <span className="text-xs font-bold text-white block">Require Re-authentication</span>
+                    <span className="text-[11px] text-zinc-400">Prompt for password before rotating master provider keys or deleting tokens.</span>
                   </div>
                   <input
                     type="checkbox"
@@ -670,8 +670,8 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-charcoal-900 block">Login Notifications</span>
-                    <span className="text-[11px] text-charcoal-500">Alert via email when a login occurs from an unrecognized device or IP.</span>
+                    <span className="text-xs font-bold text-white block">Login Notifications</span>
+                    <span className="text-[11px] text-zinc-400">Alert via email when a login occurs from an unrecognized device or IP.</span>
                   </div>
                   <input
                     type="checkbox"
@@ -691,7 +691,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               {/* Prominent 2FA Card */}
               <div className="rounded-2xl bg-gradient-to-br from-[#18181B] to-[#27272A] text-white p-6 shadow-md space-y-4">
                 <div className="flex items-start justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-[#FAF8F5]/10 border border-white/10 flex items-center justify-center text-[#C59E5F]">
+                  <div className="w-10 h-10 rounded-xl bg-[#07090C]/10 border border-white/10 flex items-center justify-center text-[#C59E5F]">
                     <Shield className="w-5 h-5" />
                   </div>
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -701,26 +701,26 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
 
                 <div>
                   <h3 className="text-base font-bold font-sans">Two-factor authentication</h3>
-                  <p className="text-xs text-charcoal-300 mt-1 leading-relaxed">
+                  <p className="text-xs text-zinc-600 mt-1 leading-relaxed">
                     Add an extra layer of protection to your OstraOps account. Prevents unauthorized model access even if credentials leak.
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-2 text-xs font-mono">
+                <div className="p-3 rounded-xl bg-[#0B0E14]/5 border border-white/10 space-y-2 text-xs font-mono">
                   <div className="flex items-center justify-between text-charcoal-200">
                     <span>Authenticator App</span>
                     <span className="text-emerald-400 font-bold">● Configured (TOTP)</span>
                   </div>
                   <div className="flex items-center justify-between text-charcoal-200">
                     <span>Backup Codes</span>
-                    <span className="text-charcoal-300">8 Remaining</span>
+                    <span className="text-zinc-600">8 Remaining</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     onClick={() => setBackupCodesModalOpen(true)}
-                    className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-bold font-mono transition-all border border-white/10 cursor-pointer text-center"
+                    className="flex-1 py-2 rounded-xl bg-[#0B0E14]/10 hover:bg-[#0B0E14]/15 text-xs font-bold font-mono transition-all border border-white/10 cursor-pointer text-center"
                   >
                     View Backup Codes
                   </button>
@@ -742,7 +742,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                       <Lock className="w-3.5 h-3.5 text-[#C59E5F]" />
                       Require 2FA for all members
                     </span>
-                    <span className="text-[10px] text-charcoal-400">All developers must authenticate with TOTP to access gateway.</span>
+                    <span className="text-[10px] text-zinc-500">All developers must authenticate with TOTP to access gateway.</span>
                   </div>
                   <input
                     type="checkbox"
@@ -757,38 +757,38 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               </div>
 
               {/* Connected OAuth Providers */}
-              <div className="rounded-2xl bg-white border border-[#EAE5DC] p-5 shadow-subtle space-y-3">
-                <h4 className="text-xs font-bold text-charcoal-900 uppercase font-mono tracking-wider">
+              <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-5 shadow-xs space-y-3">
+                <h4 className="text-xs font-bold text-white uppercase font-mono tracking-wider">
                   Connected SSO Providers
                 </h4>
                 
                 <div className="space-y-2">
-                  <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-white border border-[#EAE5DC] flex items-center justify-center font-bold text-xs">
+                      <div className="w-7 h-7 rounded-lg bg-[#0B0E14] border border-white/[0.08] flex items-center justify-center font-bold text-xs">
                         G
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-charcoal-900 block">Google Workspace</span>
-                        <span className="text-[10px] font-mono text-charcoal-500">lead-admin@acmecorp.com</span>
+                        <span className="text-xs font-bold text-white block">Google Workspace</span>
+                        <span className="text-[10px] font-mono text-zinc-400">lead-admin@acmecorp.com</span>
                       </div>
                     </div>
-                    <span className="text-[11px] font-mono text-charcoal-500 hover:text-rose-600 font-bold cursor-pointer" onClick={() => showToast('Google SSO verified')}>
+                    <span className="text-[11px] font-mono text-zinc-400 hover:text-rose-600 font-bold cursor-pointer" onClick={() => showToast('Google SSO verified')}>
                       Connected
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-white border border-[#EAE5DC] flex items-center justify-center font-bold text-xs">
+                      <div className="w-7 h-7 rounded-lg bg-[#0B0E14] border border-white/[0.08] flex items-center justify-center font-bold text-xs">
                         GH
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-charcoal-900 block">GitHub Enterprise</span>
-                        <span className="text-[10px] font-mono text-charcoal-500">@lead-architect</span>
+                        <span className="text-xs font-bold text-white block">GitHub Enterprise</span>
+                        <span className="text-[10px] font-mono text-zinc-400">@lead-architect</span>
                       </div>
                     </div>
-                    <span className="text-[11px] font-mono text-charcoal-500 hover:text-rose-600 font-bold cursor-pointer" onClick={() => showToast('GitHub SSO verified')}>
+                    <span className="text-[11px] font-mono text-zinc-400 hover:text-rose-600 font-bold cursor-pointer" onClick={() => showToast('GitHub SSO verified')}>
                       Connected
                     </span>
                   </div>
@@ -806,18 +806,18 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-charcoal-900 font-sans flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white font-sans flex items-center gap-2">
                 <Laptop className="w-4 h-4 text-[#C59E5F]" />
                 2. Active Sessions & Hardware Logins
               </h2>
-              <p className="text-xs text-charcoal-500 font-sans">
+              <p className="text-xs text-zinc-400 font-sans">
                 Review devices currently authenticated into your OstraOps dashboard and revoke stale sessions.
               </p>
             </div>
             {otherSessions.length > 0 && (
               <button
                 onClick={handleSignOutOtherSessions}
-                className="px-3 py-1.5 rounded-xl bg-white hover:bg-sandstone-100 border border-[#EAE5DC] text-rose-700 text-xs font-bold font-mono transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-xl bg-[#0B0E14] hover:bg-white/[0.04] border border-white/[0.08] text-rose-700 text-xs font-bold font-mono transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Sign out all other sessions</span>
@@ -825,21 +825,21 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             )}
           </div>
 
-          <div className="rounded-2xl bg-white border border-[#EAE5DC] divide-y divide-[#EAE5DC] shadow-subtle overflow-hidden">
+          <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] divide-y divide-white/[0.08] shadow-xs overflow-hidden">
             {/* Current Session */}
-            <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#FAF8F5]/60">
+            <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#07090C]/60">
               <div className="flex items-center gap-3.5">
                 <div className="w-10 h-10 rounded-xl bg-[#18181B] text-white flex items-center justify-center">
                   <Laptop className="w-5 h-5 text-[#C59E5F]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-charcoal-900">Chrome 124 · Windows 11</span>
+                    <span className="text-xs font-bold text-white">Chrome 124 · Windows 11</span>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
                       ● Current session
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-[11px] font-mono text-charcoal-500 mt-0.5">
+                  <div className="flex items-center gap-3 text-[11px] font-mono text-zinc-400 mt-0.5">
                     <span>Mumbai, India</span>
                     <span>•</span>
                     <span>IP: 103.21.244.18</span>
@@ -848,19 +848,19 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   </div>
                 </div>
               </div>
-              <span className="text-xs font-mono text-charcoal-400 font-medium">This Computer</span>
+              <span className="text-xs font-mono text-zinc-500 font-medium">This Computer</span>
             </div>
 
             {/* Other Sessions */}
             {otherSessions.map((sess) => (
               <div key={sess.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-charcoal-700 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-[#07090C] border border-white/[0.08] text-zinc-300 flex items-center justify-center">
                     {sess.type === 'mobile' ? <Smartphone className="w-5 h-5" /> : <Laptop className="w-5 h-5" />}
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-charcoal-900 block">{sess.device}</span>
-                    <div className="flex items-center gap-3 text-[11px] font-mono text-charcoal-500 mt-0.5">
+                    <span className="text-xs font-bold text-white block">{sess.device}</span>
+                    <div className="flex items-center gap-3 text-[11px] font-mono text-zinc-400 mt-0.5">
                       <span>{sess.location}</span>
                       <span>•</span>
                       <span>IP: {sess.ip}</span>
@@ -882,7 +882,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             ))}
 
             {otherSessions.length === 0 && (
-              <div className="p-4 text-center text-xs font-mono text-charcoal-500">
+              <div className="p-4 text-center text-xs font-mono text-zinc-400">
                 No other active sessions. Your account is only signed in on this current browser.
               </div>
             )}
@@ -898,15 +898,15 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-charcoal-900 font-sans flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white font-sans flex items-center gap-2">
                   <Terminal className="w-4 h-4 text-[#C59E5F]" />
                   3. Virtual Tokens (Client & Framework Access)
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#FAF3E0] text-[#9C7938] border border-[#E5DBCA]">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#FAF3E0] text-[#E5C38D] border border-[#C59E5F]/30">
                   CORE SECURITY PILLAR
                 </span>
               </div>
-              <p className="text-xs text-charcoal-500 font-sans mt-0.5">
+              <p className="text-xs text-zinc-400 font-sans mt-0.5">
                 Manage tokens used by your applications, Next.js servers, and autonomous agents without exposing root provider credentials.
               </p>
             </div>
@@ -918,37 +918,37 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             </button>
           </div>
 
-          <div className="rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle overflow-hidden">
-            <div className="p-4 bg-[#FAF8F5] border-b border-[#EAE5DC] flex items-center justify-between text-xs font-mono text-charcoal-600">
+          <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs overflow-hidden">
+            <div className="p-4 bg-[#07090C] border-b border-white/[0.08] flex items-center justify-between text-xs font-mono text-zinc-400">
               <span className="font-bold uppercase tracking-wider text-[11px]">Active Virtual Tokens ({virtualTokens.length})</span>
-              <span className="text-charcoal-400 text-[11px]">Tokens are cryptographically hashed via SHA-256</span>
+              <span className="text-zinc-500 text-[11px]">Tokens are cryptographically hashed via SHA-256</span>
             </div>
 
-            <div className="divide-y divide-[#EAE5DC]">
+            <div className="divide-y divide-white/[0.08]">
               {virtualTokens.map((tok) => (
-                <div key={tok.id} className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-sandstone-50/50 transition-colors">
+                <div key={tok.id} className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-[#07090C]/50 transition-colors">
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-sm font-bold text-charcoal-900 font-sans">{tok.name}</span>
+                      <span className="text-sm font-bold text-white font-sans">{tok.name}</span>
                       <span
                         className={`px-2 py-0.5 rounded-md text-[10px] font-bold font-mono uppercase ${
                           tok.env === 'Production'
                             ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                             : tok.env === 'Staging'
                             ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                            : 'bg-charcoal-100 text-charcoal-800 border border-charcoal-200'
+                            : 'bg-charcoal-100 text-zinc-200 border border-charcoal-200'
                         }`}
                       >
                         {tok.env}
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-charcoal-500">
-                      <span className="font-bold text-charcoal-800 bg-[#FAF8F5] px-2 py-0.5 rounded border border-[#EAE5DC]">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-zinc-400">
+                      <span className="font-bold text-zinc-200 bg-[#07090C] px-2 py-0.5 rounded border border-white/[0.08]">
                         {tok.tokenMasked}
                       </span>
-                      <span>Scope: <strong className="text-charcoal-700">{tok.scope}</strong></span>
-                      <span>Expires: <strong className="text-charcoal-700">{tok.expiration}</strong></span>
+                      <span>Scope: <strong className="text-zinc-300">{tok.scope}</strong></span>
+                      <span>Expires: <strong className="text-zinc-300">{tok.expiration}</strong></span>
                       <span>Last used: <strong className="text-emerald-700 font-bold">{tok.lastUsed}</strong></span>
                       <span>By: {tok.createdBy}</span>
                     </div>
@@ -957,13 +957,13 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   <div className="flex items-center gap-2 self-start lg:self-auto font-mono text-xs">
                     <button
                       onClick={() => handleRotateToken(tok.name)}
-                      className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-sandstone-100 border border-[#EAE5DC] text-charcoal-800 font-bold cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-[#07090C] hover:bg-white/[0.04] border border-white/[0.08] text-zinc-200 font-bold cursor-pointer"
                     >
                       Rotate
                     </button>
                     <button
                       onClick={() => handleRevokeToken(tok.id, tok.name)}
-                      className="px-3 py-1.5 rounded-lg bg-white hover:bg-rose-50 border border-rose-200 text-rose-700 font-bold cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-[#0B0E14] hover:bg-rose-50 border border-rose-200 text-rose-700 font-bold cursor-pointer"
                     >
                       Revoke
                     </button>
@@ -972,7 +972,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               ))}
             </div>
 
-            <div className="p-4 bg-[#FAF8F5]/80 border-t border-[#EAE5DC] flex items-center gap-2 text-xs font-sans text-charcoal-600">
+            <div className="p-4 bg-[#07090C]/80 border-t border-white/[0.08] flex items-center gap-2 text-xs font-sans text-zinc-400">
               <Info className="w-4 h-4 text-[#C59E5F] shrink-0" />
               <span>
                 <strong>Security Guarantee:</strong> Full virtual tokens are displayed exactly once at creation time and never stored in plaintext. If lost, generate a new token or trigger a zero-downtime rotation.
@@ -990,7 +990,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-charcoal-900 font-sans flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white font-sans flex items-center gap-2">
                   <KeyRound className="w-4 h-4 text-[#C59E5F]" />
                   4. Provider Key Vault (Encrypted Upstream Credentials)
                 </h2>
@@ -998,7 +998,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   AES-256-GCM HSM PROTECTED
                 </span>
               </div>
-              <p className="text-xs text-charcoal-500 font-sans mt-0.5">
+              <p className="text-xs text-zinc-400 font-sans mt-0.5">
                 Upstream LLM credentials are encrypted in hardware security modules and <strong>never exposed to developers or client applications</strong>.
               </p>
             </div>
@@ -1010,32 +1010,32 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             </button>
           </div>
 
-          <div className="rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle overflow-hidden">
-            <div className="divide-y divide-[#EAE5DC]">
+          <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs overflow-hidden">
+            <div className="divide-y divide-white/[0.08]">
               {providerVault.map((pv) => (
-                <div key={pv.id} className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-sandstone-50/50 transition-colors">
+                <div key={pv.id} className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-[#07090C]/50 transition-colors">
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center font-bold text-xs text-charcoal-800 font-mono">
+                      <div className="w-8 h-8 rounded-lg bg-[#07090C] border border-white/[0.08] flex items-center justify-center font-bold text-xs text-zinc-200 font-mono">
                         {pv.provider.includes('Google') ? 'G' : pv.provider.includes('OpenAI') ? 'OA' : pv.provider.includes('Anthropic') ? 'AN' : pv.provider.includes('Mistral') ? 'M' : 'GQ'}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-charcoal-900 font-sans">{pv.provider}</span>
+                          <span className="text-sm font-bold text-white font-sans">{pv.provider}</span>
                           <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             Connected
                           </span>
                         </div>
-                        <span className="text-[11px] font-mono text-charcoal-400 block">{pv.alias}</span>
+                        <span className="text-[11px] font-mono text-zinc-500 block">{pv.alias}</span>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-charcoal-500 pt-1">
-                      <span className="font-bold text-charcoal-800 bg-[#FAF8F5] px-2 py-0.5 rounded border border-[#EAE5DC]">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-zinc-400 pt-1">
+                      <span className="font-bold text-zinc-200 bg-[#07090C] px-2 py-0.5 rounded border border-white/[0.08]">
                         {pv.maskedKey}
                       </span>
-                      <span>Models: <strong className="text-charcoal-700">{pv.models}</strong></span>
+                      <span>Models: <strong className="text-zinc-300">{pv.models}</strong></span>
                       <span>Storage: <strong className="text-purple-700">{pv.storage}</strong></span>
                       <span>Last used: <strong className="text-emerald-700 font-bold">{pv.lastUsed}</strong></span>
                       <span>Added by: {pv.createdBy}</span>
@@ -1045,7 +1045,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   <div className="flex items-center gap-2 self-start lg:self-auto font-mono text-xs">
                     <button
                       onClick={() => handleTestLatency(pv.provider, pv.latency)}
-                      className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-sandstone-100 border border-[#EAE5DC] text-charcoal-800 font-bold cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-[#07090C] hover:bg-white/[0.04] border border-white/[0.08] text-zinc-200 font-bold cursor-pointer"
                     >
                       Ping ({pv.latency})
                     </button>
@@ -1060,7 +1060,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                         setProviderVault(providerVault.filter((p) => p.id !== pv.id));
                         showToast(`Revoked provider vault key for ${pv.provider}`);
                       }}
-                      className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-rose-50 border border-rose-200 text-rose-700 font-bold cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg bg-[#0B0E14] hover:bg-rose-50 border border-rose-200 text-rose-700 font-bold cursor-pointer"
                     >
                       Revoke
                     </button>
@@ -1069,13 +1069,13 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               ))}
             </div>
 
-            <div className="p-4 bg-[#FAF8F5] border-t border-[#EAE5DC] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
-              <span className="text-charcoal-600">
+            <div className="p-4 bg-[#07090C] border-t border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
+              <span className="text-zinc-400">
                 All provider keys are isolated in memory and stripped before HTTP response delivery.
               </span>
               <button
                 onClick={() => showToast('Master key vault audit verified with zero leaks')}
-                className="text-[#C59E5F] hover:text-[#9C7938] font-bold cursor-pointer flex items-center gap-1 self-start sm:self-auto"
+                className="text-[#C59E5F] hover:text-[#E5C38D] font-bold cursor-pointer flex items-center gap-1 self-start sm:self-auto"
               >
                 <span>Verify HSM Cryptographic Attestation</span>
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -1092,11 +1092,11 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-charcoal-900 font-sans flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white font-sans flex items-center gap-2">
                 <Users className="w-4 h-4 text-[#C59E5F]" />
                 5. Role-Based Access Control (RBAC)
               </h2>
-              <p className="text-xs text-charcoal-500 font-sans">
+              <p className="text-xs text-zinc-400 font-sans">
                 Fine-grained privileges controlling who can access billing, manage virtual tokens, and swap provider keys.
               </p>
             </div>
@@ -1108,7 +1108,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   onNavigateTeam();
                 }
               }}
-              className="px-4 py-2 rounded-xl bg-white hover:bg-sandstone-100 border border-[#EAE5DC] text-charcoal-900 text-xs font-bold font-mono transition-all shadow-xs cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+              className="px-4 py-2 rounded-xl bg-[#0B0E14] hover:bg-white/[0.04] border border-white/[0.08] text-white text-xs font-bold font-mono transition-all shadow-xs cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
             >
               <span>Manage Roles in Teams →</span>
             </a>
@@ -1138,22 +1138,22 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                 role: 'Viewer',
                 desc: 'Read-only access to spend dashboards, performance latency charts, and CSV report downloads.',
                 privilege: 'Read-only Telemetry',
-                color: 'bg-charcoal-100 text-charcoal-800 border-charcoal-200'
+                color: 'bg-charcoal-100 text-zinc-200 border-charcoal-200'
               }
             ].map((r) => (
-              <div key={r.role} className="p-5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle space-y-2 flex flex-col justify-between">
+              <div key={r.role} className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs space-y-2 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-bold text-charcoal-900 font-sans">{r.role}</span>
+                    <span className="text-sm font-bold text-white font-sans">{r.role}</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${r.color}`}>
                       {r.privilege}
                     </span>
                   </div>
-                  <p className="text-xs text-charcoal-500 font-sans leading-relaxed">
+                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
                     {r.desc}
                   </p>
                 </div>
-                <div className="pt-2 border-t border-[#EAE5DC] text-[10px] font-mono text-charcoal-400">
+                <div className="pt-2 border-t border-white/[0.08] text-[10px] font-mono text-zinc-500">
                   Default Policy Active
                 </div>
               </div>
@@ -1161,16 +1161,16 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
           </div>
 
           {/* Enterprise Custom Roles Banner */}
-          <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-sans">
+          <div className="p-4 rounded-xl bg-[#07090C] border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-sans">
             <div className="flex items-center gap-2.5">
               <Sparkles className="w-4 h-4 text-[#C59E5F] shrink-0" />
-              <span className="text-charcoal-700">
+              <span className="text-zinc-300">
                 <strong>Enterprise Feature:</strong> Granular model-level policies (e.g. restrict <code>Claude Opus 4.8</code> to specific engineering squads) can be created via custom policies.
               </span>
             </div>
             <button
               onClick={() => showToast('Enterprise custom RBAC preview requested')}
-              className="text-[#C59E5F] hover:text-[#9C7938] font-bold font-mono cursor-pointer whitespace-nowrap self-start sm:self-auto"
+              className="text-[#C59E5F] hover:text-[#E5C38D] font-bold font-mono cursor-pointer whitespace-nowrap self-start sm:self-auto"
             >
               Request Custom RBAC →
             </button>
@@ -1185,11 +1185,11 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-charcoal-900 font-sans flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white font-sans flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#C59E5F]" />
                 6. Security Activity & Audit Ledger
               </h2>
-              <p className="text-xs text-charcoal-500 font-sans">
+              <p className="text-xs text-zinc-400 font-sans">
                 Tamper-evident chronological record of all administrative actions, key rotations, and authentication attempts.
               </p>
             </div>
@@ -1202,9 +1202,9 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             </button>
           </div>
 
-          <div className="rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle overflow-hidden">
+          <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs overflow-hidden">
             {/* Filter and Search Bar */}
-            <div className="p-4 bg-[#FAF8F5] border-b border-[#EAE5DC] flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="p-4 bg-[#07090C] border-b border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1 md:pb-0">
                 {(['All', 'Authentication', 'API', 'Members', 'Tokens', 'Settings'] as const).map((cat) => (
                   <button
@@ -1213,7 +1213,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                     className={`px-3 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
                       auditFilter === cat
                         ? 'bg-[#18181B] text-white font-bold'
-                        : 'bg-white border border-[#EAE5DC] text-charcoal-600 hover:text-charcoal-900'
+                        : 'bg-[#0B0E14] border border-white/[0.08] text-zinc-400 hover:text-white'
                     }`}
                   >
                     {cat}
@@ -1222,21 +1222,21 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               </div>
 
               <div className="relative w-full md:w-64">
-                <Search className="w-3.5 h-3.5 text-charcoal-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={auditSearch}
                   onChange={(e) => setAuditSearch(e.target.value)}
                   placeholder="Search actor, action, or IP..."
-                  className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                  className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F]"
                 />
               </div>
             </div>
 
             {/* Event List */}
-            <div className="divide-y divide-[#EAE5DC]">
+            <div className="divide-y divide-white/[0.08]">
               {filteredAuditEvents.map((evt) => (
-                <div key={evt.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-sandstone-50/50 transition-colors">
+                <div key={evt.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#07090C]/50 transition-colors">
                   <div className="flex items-start gap-3">
                     <div
                       className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
@@ -1246,34 +1246,34 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                           ? 'bg-purple-50 text-purple-600 border border-purple-200'
                           : evt.type === 'token'
                           ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                          : 'bg-[#FAF8F5] text-[#C59E5F] border border-[#EAE5DC]'
+                          : 'bg-[#07090C] text-[#C59E5F] border border-white/[0.08]'
                       }`}
                     >
                       {evt.type === 'security_alert' ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-charcoal-900 font-sans">{evt.title}</span>
-                        <span className="text-[10px] font-mono text-charcoal-400 uppercase bg-[#FAF8F5] px-1.5 py-0.5 rounded border border-[#EAE5DC]">
+                        <span className="text-xs font-bold text-white font-sans">{evt.title}</span>
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase bg-[#07090C] px-1.5 py-0.5 rounded border border-white/[0.08]">
                           {evt.category}
                         </span>
                       </div>
-                      <p className="text-xs text-charcoal-600 font-sans mt-0.5">{evt.detail}</p>
+                      <p className="text-xs text-zinc-400 font-sans mt-0.5">{evt.detail}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 text-[11px] font-mono text-charcoal-500 shrink-0 self-start sm:self-auto">
+                  <div className="flex items-center gap-3 text-[11px] font-mono text-zinc-400 shrink-0 self-start sm:self-auto">
                     <span>{evt.actor}</span>
                     <span>•</span>
                     <span>{evt.ip}</span>
                     <span>•</span>
-                    <span className="text-charcoal-700 font-bold">{evt.time}</span>
+                    <span className="text-zinc-300 font-bold">{evt.time}</span>
                   </div>
                 </div>
               ))}
 
               {filteredAuditEvents.length === 0 && (
-                <div className="p-6 text-center text-xs font-mono text-charcoal-400">
+                <div className="p-6 text-center text-xs font-mono text-zinc-500">
                   No security events match the current filter query.
                 </div>
               )}
@@ -1289,36 +1289,36 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-charcoal-900 font-sans flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white font-sans flex items-center gap-2">
                 <Code className="w-4 h-4 text-[#C59E5F]" />
                 7. Webhook Security & HMAC Verification
               </h2>
-              <p className="text-xs text-charcoal-500 font-sans">
+              <p className="text-xs text-zinc-400 font-sans">
                 Sign outgoing events with HMAC-SHA256 signatures to verify payloads originate from OstraOps.
               </p>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 shadow-subtle space-y-4">
+          <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <span className="text-xs font-bold text-charcoal-900 block font-mono uppercase">
+                <span className="text-xs font-bold text-white block font-mono uppercase">
                   Signing Secret
                 </span>
-                <span className="text-xs font-mono text-charcoal-500">
+                <span className="text-xs font-mono text-zinc-400">
                   {revealedWebhookSecret ? 'whsec_99a81bc4f20e8832a764d9' : webhookSecretMasked}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setRevealedWebhookSecret(!revealedWebhookSecret)}
-                  className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-sandstone-100 border border-[#EAE5DC] text-xs font-mono text-charcoal-800 cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-[#07090C] hover:bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-zinc-200 cursor-pointer"
                 >
                   {revealedWebhookSecret ? 'Hide' : 'Reveal'}
                 </button>
                 <button
                   onClick={() => copyToClipboard('whsec_99a81bc4f20e8832a764d9', 'Webhook Secret')}
-                  className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-sandstone-100 border border-[#EAE5DC] text-xs font-mono text-charcoal-800 cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-[#07090C] hover:bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-zinc-200 cursor-pointer"
                 >
                   {copiedField === 'Webhook Secret' ? 'Copied' : 'Copy'}
                 </button>
@@ -1334,10 +1334,10 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               </div>
             </div>
 
-            <div className="pt-4 border-t border-[#EAE5DC] flex items-center justify-between">
+            <div className="pt-4 border-t border-white/[0.08] flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-charcoal-900 block">Sign outgoing webhooks</span>
-                <span className="text-[11px] text-charcoal-500">
+                <span className="text-xs font-bold text-white block">Sign outgoing webhooks</span>
+                <span className="text-[11px] text-zinc-400">
                   Computes <code>X-OstraOps-Signature</code> header using HMAC-SHA256 on every dispatched alert.
                 </span>
               </div>
@@ -1362,28 +1362,28 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-charcoal-900 font-sans flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white font-sans flex items-center gap-2">
                 <Network className="w-4 h-4 text-[#C59E5F]" />
                 8. Network Security & IP Access Control
               </h2>
-              <p className="text-xs text-charcoal-500 font-sans">
+              <p className="text-xs text-zinc-400 font-sans">
                 Restrict access to dashboard consoles and virtual API gateways to trusted IP CIDRs.
               </p>
             </div>
             <button
               onClick={() => setAddIpModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-white hover:bg-sandstone-100 border border-[#EAE5DC] text-charcoal-900 text-xs font-bold font-mono transition-all shadow-xs cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+              className="px-4 py-2 rounded-xl bg-[#0B0E14] hover:bg-white/[0.04] border border-white/[0.08] text-white text-xs font-bold font-mono transition-all shadow-xs cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
             >
               <span>+ Add Trusted IP / CIDR</span>
             </button>
           </div>
 
-          <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 shadow-subtle space-y-5">
+          <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-charcoal-900 block">Restrict Dashboard Access</span>
-                  <span className="text-[11px] text-charcoal-500">Only whitelisted IPs can open this console.</span>
+                  <span className="text-xs font-bold text-white block">Restrict Dashboard Access</span>
+                  <span className="text-[11px] text-zinc-400">Only whitelisted IPs can open this console.</span>
                 </div>
                 <input
                   type="checkbox"
@@ -1396,10 +1396,10 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                 />
               </div>
 
-              <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-charcoal-900 block">Restrict Virtual API Access</span>
-                  <span className="text-[11px] text-charcoal-500">Blocks API tokens invoked outside trusted networks.</span>
+                  <span className="text-xs font-bold text-white block">Restrict Virtual API Access</span>
+                  <span className="text-[11px] text-zinc-400">Blocks API tokens invoked outside trusted networks.</span>
                 </div>
                 <input
                   type="checkbox"
@@ -1414,16 +1414,16 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             </div>
 
             {/* Trusted IPs Table */}
-            <div className="border border-[#EAE5DC] rounded-xl overflow-hidden divide-y divide-[#EAE5DC] font-mono text-xs">
-              <div className="p-3 bg-[#FAF8F5] font-bold text-charcoal-700 uppercase tracking-wider text-[10px] flex items-center justify-between">
+            <div className="border border-white/[0.08] rounded-xl overflow-hidden divide-y divide-white/[0.08] font-mono text-xs">
+              <div className="p-3 bg-[#07090C] font-bold text-zinc-300 uppercase tracking-wider text-[10px] flex items-center justify-between">
                 <span>Configured Trusted CIDRs ({ipAllowlist.length})</span>
                 <span>Enforcement: Active</span>
               </div>
               {ipAllowlist.map((ip) => (
                 <div key={ip.id} className="p-3.5 flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-charcoal-900 font-sans block">{ip.label}</span>
-                    <span className="text-charcoal-500 text-[11px]">{ip.cidr}</span>
+                    <span className="font-bold text-white font-sans block">{ip.label}</span>
+                    <span className="text-zinc-400 text-[11px]">{ip.cidr}</span>
                   </div>
                   <button
                     onClick={() => {
@@ -1439,21 +1439,21 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             </div>
 
             {/* Enterprise PrivateLink Card */}
-            <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-sans">
+            <div className="p-4 rounded-xl bg-[#07090C] border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-sans">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-charcoal-900">AWS PrivateLink & Azure ExpressRoute</span>
+                  <span className="font-bold text-white">AWS PrivateLink & Azure ExpressRoute</span>
                   <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#18181B] text-white">
                     ENTERPRISE
                   </span>
                 </div>
-                <p className="text-[11px] text-charcoal-500 mt-0.5">
+                <p className="text-[11px] text-zinc-400 mt-0.5">
                   Route LLM model inferences entirely across dedicated private VPC endpoints without traversing the public internet.
                 </p>
               </div>
               <button
                 onClick={() => showToast('Enterprise VPC peering guide requested')}
-                className="text-[#C59E5F] hover:text-[#9C7938] font-bold font-mono cursor-pointer whitespace-nowrap self-start sm:self-auto"
+                className="text-[#C59E5F] hover:text-[#E5C38D] font-bold font-mono cursor-pointer whitespace-nowrap self-start sm:self-auto"
               >
                 Contact Solutions Architect →
               </button>
@@ -1470,7 +1470,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-charcoal-900 font-sans flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white font-sans flex items-center gap-2">
                   <Database className="w-4 h-4 text-[#C59E5F]" />
                   9. Data & Prompt Privacy (AI Governance)
                 </h2>
@@ -1478,16 +1478,16 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   ZERO-RETENTION COMPLIANT
                 </span>
               </div>
-              <p className="text-xs text-charcoal-500 font-sans mt-0.5">
+              <p className="text-xs text-zinc-400 font-sans mt-0.5">
                 Protect sensitive intellectual property, customer PII, and company secrets passed into AI models.
               </p>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 shadow-subtle space-y-6">
+          <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs space-y-6">
             {/* Prompt / Response Logging Radio */}
             <div>
-              <span className="text-xs font-bold text-charcoal-900 block uppercase font-mono tracking-wider mb-2">
+              <span className="text-xs font-bold text-white block uppercase font-mono tracking-wider mb-2">
                 Prompt / Response Telemetry Logging
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1519,8 +1519,8 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                     }}
                     className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
                       loggingMode === opt.id
-                        ? 'bg-[#F4EFE6] border-[#E5DBCA] text-charcoal-900 shadow-xs'
-                        : 'bg-[#FAF8F5] border-[#EAE5DC] text-charcoal-600 hover:bg-white'
+                        ? 'bg-[#C59E5F]/15 border-[#C59E5F]/30 text-white shadow-xs'
+                        : 'bg-[#07090C] border-white/[0.08] text-zinc-400 hover:bg-[#0B0E14]'
                     }`}
                   >
                     <div>
@@ -1531,7 +1531,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                               loggingMode === opt.id ? 'border-[#C59E5F] bg-[#C59E5F]' : 'border-charcoal-300'
                             }`}
                           >
-                            {loggingMode === opt.id && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            {loggingMode === opt.id && <span className="w-1.5 h-1.5 rounded-full bg-[#0B0E14]" />}
                           </span>
                           {opt.title}
                         </span>
@@ -1541,7 +1541,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-charcoal-500 leading-relaxed font-sans">
+                      <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
                         {opt.desc}
                       </p>
                     </div>
@@ -1551,10 +1551,10 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             </div>
 
             {/* Trace Retention Dropdown */}
-            <div className="pt-4 border-t border-[#EAE5DC] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="pt-4 border-t border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <span className="text-xs font-bold text-charcoal-900 block">Trace Retention Period</span>
-                <span className="text-[11px] text-charcoal-500">
+                <span className="text-xs font-bold text-white block">Trace Retention Period</span>
+                <span className="text-[11px] text-zinc-400">
                   Automatically purge latency and cost traces after the specified time window.
                 </span>
               </div>
@@ -1564,7 +1564,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   setTraceRetention(e.target.value);
                   showToast(`Trace retention updated to ${e.target.value}`);
                 }}
-                className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] border border-[#EAE5DC] text-xs font-mono text-charcoal-800 focus:outline-none"
+                className="px-3 py-1.5 rounded-lg bg-[#07090C] border border-white/[0.08] text-xs font-mono text-zinc-200 focus:outline-none"
               >
                 <option>7 days (Default)</option>
                 <option>14 days</option>
@@ -1574,11 +1574,11 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             </div>
 
             {/* 3 Vital Safeguards Checkboxes */}
-            <div className="pt-4 border-t border-[#EAE5DC] space-y-3">
+            <div className="pt-4 border-t border-white/[0.08] space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-charcoal-900 block">Exclude Sensitive HTTP Headers</span>
-                  <span className="text-[11px] text-charcoal-500">
+                  <span className="text-xs font-bold text-white block">Exclude Sensitive HTTP Headers</span>
+                  <span className="text-[11px] text-zinc-400">
                     Automatically strips <code>Authorization</code>, <code>Cookie</code>, and <code>X-API-Key</code> from traces.
                   </span>
                 </div>
@@ -1595,8 +1595,8 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-charcoal-900 block">Redact Detected Secrets</span>
-                  <span className="text-[11px] text-charcoal-500">
+                  <span className="text-xs font-bold text-white block">Redact Detected Secrets</span>
+                  <span className="text-[11px] text-zinc-400">
                     Scans outgoing prompts using high-entropy heuristic regexes and redacts OpenAI keys, AWS tokens, and credit cards.
                   </span>
                 </div>
@@ -1613,8 +1613,8 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-charcoal-900 block">Local-First Telemetry</span>
-                  <span className="text-[11px] text-charcoal-500">
+                  <span className="text-xs font-bold text-white block">Local-First Telemetry</span>
+                  <span className="text-[11px] text-zinc-400">
                     Aggregates gateway telemetry on your edge node prior to pushing analytics.
                   </span>
                 </div>
@@ -1638,13 +1638,13 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       {/* ============================================================ */}
       {createTokenModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl border border-[#EAE5DC] shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md bg-[#0B0E14] rounded-2xl border border-white/[0.08] shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-base font-bold text-charcoal-900 font-sans">
+                <h3 className="text-base font-bold text-white font-sans">
                   Create Virtual Token
                 </h3>
-                <p className="text-xs text-charcoal-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Generate scoped credentials for client SDKs or backend runtimes.
                 </p>
               </div>
@@ -1653,7 +1653,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   setCreateTokenModalOpen(false);
                   setCreatedTokenResult(null);
                 }}
-                className="text-charcoal-400 hover:text-charcoal-700 cursor-pointer"
+                className="text-zinc-500 hover:text-zinc-300 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1671,11 +1671,11 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] font-mono text-xs break-all flex items-center justify-between gap-2">
-                  <span className="font-bold text-charcoal-900">{createdTokenResult}</span>
+                <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] font-mono text-xs break-all flex items-center justify-between gap-2">
+                  <span className="font-bold text-white">{createdTokenResult}</span>
                   <button
                     onClick={() => copyToClipboard(createdTokenResult, 'Virtual Token')}
-                    className="px-2.5 py-1 rounded bg-white border border-[#EAE5DC] text-xs font-bold shrink-0 hover:bg-sandstone-100 cursor-pointer"
+                    className="px-2.5 py-1 rounded bg-[#0B0E14] border border-white/[0.08] text-xs font-bold shrink-0 hover:bg-white/[0.04] cursor-pointer"
                   >
                     {copiedField === 'Virtual Token' ? 'Copied' : 'Copy'}
                   </button>
@@ -1695,7 +1695,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             ) : (
               <form onSubmit={handleCreateTokenSubmit} className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
+                  <label className="text-xs font-bold text-zinc-300 block mb-1 font-mono uppercase">
                     Token Name
                   </label>
                   <input
@@ -1703,19 +1703,19 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                     value={newTokenName}
                     onChange={(e) => setNewTokenName(e.target.value)}
                     placeholder="e.g. Next.js AI Production Gateway"
-                    className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs font-sans text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                    className="w-full px-3 py-2 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-sans text-white focus:outline-none focus:border-[#C59E5F]"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
+                    <label className="text-xs font-bold text-zinc-300 block mb-1 font-mono uppercase">
                       Environment
                     </label>
                     <select
                       value={newTokenEnv}
                       onChange={(e) => setNewTokenEnv(e.target.value as any)}
-                      className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-mono text-white focus:outline-none"
                     >
                       <option>Production</option>
                       <option>Staging</option>
@@ -1724,13 +1724,13 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
+                    <label className="text-xs font-bold text-zinc-300 block mb-1 font-mono uppercase">
                       Expiration
                     </label>
                     <select
                       value={newTokenExpiry}
                       onChange={(e) => setNewTokenExpiry(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-mono text-white focus:outline-none"
                     >
                       <option>30 days</option>
                       <option>90 days</option>
@@ -1740,9 +1740,9 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] space-y-1.5">
-                  <span className="text-[11px] font-bold text-charcoal-700 font-mono uppercase block">Assigned Scopes</span>
-                  <div className="space-y-1 text-xs font-mono text-charcoal-600">
+                <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
+                  <span className="text-[11px] font-bold text-zinc-300 font-mono uppercase block">Assigned Scopes</span>
+                  <div className="space-y-1 text-xs font-mono text-zinc-400">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" defaultChecked className="rounded accent-[#18181B]" />
                       <span>models:infer (Model Execution)</span>
@@ -1762,7 +1762,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   <button
                     type="button"
                     onClick={() => setCreateTokenModalOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono font-bold text-charcoal-700 hover:bg-sandstone-100 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono font-bold text-zinc-300 hover:bg-white/[0.04] cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -1784,19 +1784,19 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       {/* ============================================================ */}
       {connectProviderModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl border border-[#EAE5DC] shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md bg-[#0B0E14] rounded-2xl border border-white/[0.08] shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-base font-bold text-charcoal-900 font-sans">
+                <h3 className="text-base font-bold text-white font-sans">
                   Store Encrypted Provider Key
                 </h3>
-                <p className="text-xs text-charcoal-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Your master key will be encrypted via Hardware HSM and never shared.
                 </p>
               </div>
               <button
                 onClick={() => setConnectProviderModalOpen(false)}
-                className="text-charcoal-400 hover:text-charcoal-700 cursor-pointer"
+                className="text-zinc-500 hover:text-zinc-300 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1832,13 +1832,13 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               className="space-y-4"
             >
               <div>
-                <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
+                <label className="text-xs font-bold text-zinc-300 block mb-1 font-mono uppercase">
                   Provider
                 </label>
                 <select
                   value={newProviderName}
                   onChange={(e) => setNewProviderName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-mono text-white focus:outline-none"
                 >
                   <option>OpenAI API</option>
                   <option>Google Gemini API</option>
@@ -1850,7 +1850,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               </div>
 
               <div>
-                <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
+                <label className="text-xs font-bold text-zinc-300 block mb-1 font-mono uppercase">
                   Master API Key
                 </label>
                 <input
@@ -1858,11 +1858,11 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   value={newProviderKey}
                   onChange={(e) => setNewProviderKey(e.target.value)}
                   placeholder="sk-... or AIzaSy..."
-                  className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F]"
                 />
               </div>
 
-              <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-[11px] text-charcoal-600 font-sans">
+              <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] text-[11px] text-zinc-400 font-sans">
                 Verified via zero-knowledge encrypted handshake before saving.
               </div>
 
@@ -1870,7 +1870,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                 <button
                   type="button"
                   onClick={() => setConnectProviderModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono font-bold text-charcoal-700 hover:bg-sandstone-100 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono font-bold text-zinc-300 hover:bg-white/[0.04] cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1891,28 +1891,28 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       {/* ============================================================ */}
       {backupCodesModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl border border-[#EAE5DC] shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md bg-[#0B0E14] rounded-2xl border border-white/[0.08] shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-base font-bold text-charcoal-900 font-sans">
+                <h3 className="text-base font-bold text-white font-sans">
                   2FA Backup & Recovery Codes
                 </h3>
-                <p className="text-xs text-charcoal-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Keep these one-time recovery codes in a secure password manager.
                 </p>
               </div>
               <button
                 onClick={() => setBackupCodesModalOpen(false)}
-                className="text-charcoal-400 hover:text-charcoal-700 cursor-pointer"
+                className="text-zinc-500 hover:text-zinc-300 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 p-3 bg-[#FAF8F5] border border-[#EAE5DC] rounded-xl font-mono text-xs text-charcoal-900">
+            <div className="grid grid-cols-2 gap-2 p-3 bg-[#07090C] border border-white/[0.08] rounded-xl font-mono text-xs text-white">
               {['8921-4410', '3910-8821', '5512-9904', '7731-0029', '1182-4591', '6620-3341', '9012-7744', '2241-8890'].map(
                 (code, idx) => (
-                  <div key={idx} className="p-1.5 bg-white rounded border border-[#EAE5DC] text-center font-bold">
+                  <div key={idx} className="p-1.5 bg-[#0B0E14] rounded border border-white/[0.08] text-center font-bold">
                     {code}
                   </div>
                 )
@@ -1924,7 +1924,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                 onClick={() => {
                   copyToClipboard('8921-4410\n3910-8821\n5512-9904\n7731-0029\n1182-4591\n6620-3341\n9012-7744\n2241-8890', 'Backup Codes');
                 }}
-                className="px-3.5 py-1.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono font-bold text-charcoal-800 hover:bg-sandstone-100 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono font-bold text-zinc-200 hover:bg-white/[0.04] cursor-pointer"
               >
                 Copy All Codes
               </button>
@@ -1944,24 +1944,24 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       {/* ============================================================ */}
       {addIpModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl border border-[#EAE5DC] shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md bg-[#0B0E14] rounded-2xl border border-white/[0.08] shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-base font-bold text-charcoal-900 font-sans">
+                <h3 className="text-base font-bold text-white font-sans">
                   Add Trusted IP or CIDR
                 </h3>
-                <p className="text-xs text-charcoal-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Whitelist specific networks for dashboard or API execution.
                 </p>
               </div>
-              <button onClick={() => setAddIpModalOpen(false)} className="text-charcoal-400 hover:text-charcoal-700 cursor-pointer">
+              <button onClick={() => setAddIpModalOpen(false)} className="text-zinc-500 hover:text-zinc-300 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleAddIpSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
+                <label className="text-xs font-bold text-zinc-300 block mb-1 font-mono uppercase">
                   Network Label
                 </label>
                 <input
@@ -1969,12 +1969,12 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   value={newIpLabel}
                   onChange={(e) => setNewIpLabel(e.target.value)}
                   placeholder="e.g. Acme HQ Main Office"
-                  className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs font-sans text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-sans text-white focus:outline-none focus:border-[#C59E5F]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-charcoal-700 block mb-1 font-mono uppercase">
+                <label className="text-xs font-bold text-zinc-300 block mb-1 font-mono uppercase">
                   IP or CIDR Range
                 </label>
                 <input
@@ -1982,7 +1982,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   value={newIpCidr}
                   onChange={(e) => setNewIpCidr(e.target.value)}
                   placeholder="e.g. 103.21.244.0/24 or 54.12.89.1/32"
-                  className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F]"
                 />
               </div>
 
@@ -1990,7 +1990,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                 <button
                   type="button"
                   onClick={() => setAddIpModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono font-bold text-charcoal-700 hover:bg-sandstone-100 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono font-bold text-zinc-300 hover:bg-white/[0.04] cursor-pointer"
                 >
                   Cancel
                 </button>

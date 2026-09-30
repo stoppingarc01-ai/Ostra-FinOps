@@ -447,3 +447,296 @@ export const OstraEclipseArtwork: React.FC<{ className?: string }> = ({
   );
 };
 
+export const MicrosoftAuthIcon: React.FC<{ className?: string }> = ({
+  className = 'w-4 h-4',
+}) => (
+  <svg className={`${className} shrink-0`} viewBox="0 0 21 21">
+    <rect x="1" y="1" width="9" height="9" fill="#F25022" />
+    <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
+    <rect x="1" y="11" width="9" height="9" fill="#00A4EF" />
+    <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
+  </svg>
+);
+
+/**
+ * 3D Animated Pedestal with floating dashboard card for Signup Page
+ * matches screenshot 1 with interactive animated motion
+ */
+export const SignupMovingPedestal: React.FC<{ className?: string }> = ({
+  className = '',
+}) => {
+  return (
+    <div className={`relative w-full max-w-[340px] sm:max-w-[400px] aspect-[4/3] flex items-center justify-center select-none ${className}`}>
+      {/* Background radial gold aura */}
+      <div className="absolute inset-0 bg-radial from-[#D4AF77]/20 via-[#C59E5F]/5 to-transparent blur-3xl pointer-events-none" />
+
+      {/* Orbit Rings (UI moving) */}
+      <svg
+        viewBox="0 0 400 300"
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        fill="none"
+      >
+        <ellipse
+          cx="200"
+          cy="185"
+          rx="155"
+          ry="65"
+          stroke="url(#signupOrbitGlow)"
+          strokeWidth="1.2"
+          strokeDasharray="4 6"
+          className="opacity-50 animate-[spin_40s_linear_infinite]"
+          style={{ transformOrigin: '200px 185px' }}
+        />
+        <ellipse
+          cx="200"
+          cy="185"
+          rx="125"
+          ry="50"
+          stroke="#C59E5F"
+          strokeWidth="0.8"
+          strokeDasharray="2 4"
+          className="opacity-30 animate-[spin_25s_linear_infinite_reverse]"
+          style={{ transformOrigin: '200px 185px' }}
+        />
+        <defs>
+          <linearGradient id="signupOrbitGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#E5C287" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#C59E5F" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#9E743A" stopOpacity="0.7" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      {/* Floating Glowing Particle on Orbit */}
+      <div className="absolute top-[35%] right-[2%] w-3.5 h-3.5 rounded-full bg-gradient-to-br from-[#FFE8B5] to-[#C59E5F] shadow-[0_0_16px_#E5C287] animate-pulse" />
+      <div className="absolute bottom-[22%] left-[4%] w-2 h-2 rounded-full bg-[#E5C287] shadow-[0_0_12px_#E5C287] animate-ping" />
+
+      {/* Golden Tiered Pedestal */}
+      <div className="absolute bottom-4 w-52 sm:w-60 h-16 flex flex-col items-center justify-end">
+        {/* Top Rim of Pedestal */}
+        <div className="w-48 sm:w-56 h-10 rounded-[100%] bg-gradient-to-b from-[#2A2318] via-[#14120D] to-[#0A0907] border-2 border-[#D4AF77]/60 shadow-[0_0_25px_rgba(212,175,119,0.35)] relative">
+          <div className="absolute inset-1 rounded-[100%] border border-[#E5C287]/40 bg-radial from-[#453620] via-[#1F1911] to-[#0C0B08]" />
+        </div>
+        {/* Base Rim */}
+        <div className="w-52 sm:w-60 h-10 -mt-5 rounded-[100%] bg-gradient-to-b from-[#3E311F] via-[#1A150E] to-[#090806] border-2 border-[#9E743A]/80 shadow-2xl" />
+      </div>
+
+      {/* Floating 3D Dashboard Card (Tilted Perspective with Float Animation) */}
+      <div className="relative -top-4 w-56 sm:w-64 rounded-2xl bg-[#090C10]/95 backdrop-blur-xl border border-white/[0.12] p-3.5 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.9),0_0_25px_rgba(197,158,95,0.2)] animate-float-1 transform -rotate-1 hover:rotate-0 transition-transform duration-500">
+        {/* Dashboard Card Top Header */}
+        <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.08]">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[10px] font-mono text-zinc-300 font-semibold tracking-wide">Live Gateway</span>
+          </div>
+          <span className="text-[9px] font-mono text-[#E5C38D] bg-[#E5C38D]/10 px-1.5 py-0.5 rounded border border-[#E5C38D]/20">99.99%</span>
+        </div>
+
+        {/* Dashboard Visuals: Spline Curve + Donut */}
+        <div className="grid grid-cols-12 gap-2 items-center">
+          {/* Left: Trend Sparkline */}
+          <div className="col-span-8 space-y-1">
+            <div className="text-[9px] text-zinc-400 font-mono">Token Burn</div>
+            <svg viewBox="0 0 120 40" className="w-full h-9 overflow-visible">
+              <defs>
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#C59E5F" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#C59E5F" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M 0 35 Q 25 15, 50 25 T 100 8 T 120 12 L 120 40 L 0 40 Z"
+                fill="url(#chartGrad)"
+              />
+              <path
+                d="M 0 35 Q 25 15, 50 25 T 100 8 T 120 12"
+                fill="none"
+                stroke="#E5C38D"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <circle cx="100" cy="8" r="2.5" fill="#FFE8B5" className="animate-ping" />
+              <circle cx="100" cy="8" r="2.5" fill="#FFE8B5" />
+            </svg>
+          </div>
+
+          {/* Right: Circular Donut Gauge */}
+          <div className="col-span-4 flex flex-col items-center justify-center">
+            <div className="relative w-9 h-9">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                <path
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#1A202C"
+                  strokeWidth="3.5"
+                />
+                <path
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#E5C38D"
+                  strokeWidth="3.5"
+                  strokeDasharray="74, 100"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-[8px] font-mono font-bold text-white">74%</span>
+            </div>
+            <span className="text-[8px] text-zinc-400 font-mono mt-0.5">Quota</span>
+          </div>
+        </div>
+
+        {/* Bottom Mini Metrics Bar */}
+        <div className="mt-2.5 pt-2 border-t border-white/[0.06] flex items-center justify-between text-[9px] font-mono text-zinc-400">
+          <div className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+            <span>2.4M tok</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>140ms</span>
+          </div>
+          <div className="flex items-center gap-1 text-[#E5C38D]">
+            <span>$0.0028</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 3D Animated Pedestal with Golden Security Shield & Orbiting Badges for Login Page
+ * matches screenshot 2 with dynamic floating elements
+ */
+export const LoginMovingShieldPedestal: React.FC<{ className?: string }> = ({
+  className = '',
+}) => {
+  return (
+    <div className={`relative w-full max-w-[340px] sm:max-w-[400px] aspect-[4/3] flex items-center justify-center select-none ${className}`}>
+      {/* Background radial gold aura */}
+      <div className="absolute inset-0 bg-radial from-[#D4AF77]/25 via-[#C59E5F]/5 to-transparent blur-3xl pointer-events-none" />
+
+      {/* Orbit Rings (UI moving) */}
+      <svg
+        viewBox="0 0 400 300"
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        fill="none"
+      >
+        <ellipse
+          cx="200"
+          cy="190"
+          rx="150"
+          ry="60"
+          stroke="url(#loginOrbitGlow)"
+          strokeWidth="1.2"
+          strokeDasharray="4 6"
+          className="opacity-50 animate-[spin_35s_linear_infinite]"
+          style={{ transformOrigin: '200px 190px' }}
+        />
+        <ellipse
+          cx="200"
+          cy="190"
+          rx="115"
+          ry="45"
+          stroke="#C59E5F"
+          strokeWidth="0.8"
+          strokeDasharray="2 4"
+          className="opacity-30 animate-[spin_20s_linear_infinite_reverse]"
+          style={{ transformOrigin: '200px 190px' }}
+        />
+        <defs>
+          <linearGradient id="loginOrbitGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FFE8B5" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#C59E5F" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#9E743A" stopOpacity="0.7" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      {/* Floating Orbiting Badges */}
+      {/* 1. Top-Left: Glowing Lock Badge */}
+      <div className="absolute top-[8%] left-[10%] sm:left-[14%] p-2.5 rounded-2xl bg-[#0E1217]/90 backdrop-blur-md border border-[#E5C287]/30 shadow-[0_8px_20px_rgba(0,0,0,0.6),0_0_15px_rgba(229,194,135,0.2)] animate-float-1">
+        <svg className="w-5 h-5 text-[#E5C38D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      </div>
+
+      {/* 2. Top-Right: Analytics Line Graph Badge */}
+      <div className="absolute top-[10%] right-[10%] sm:right-[14%] p-2.5 rounded-2xl bg-[#0E1217]/90 backdrop-blur-md border border-[#E5C287]/30 shadow-[0_8px_20px_rgba(0,0,0,0.6),0_0_15px_rgba(229,194,135,0.2)] animate-float-2">
+        <svg className="w-5 h-5 text-[#E5C38D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+          <polyline points="17 6 23 6 23 12" />
+        </svg>
+      </div>
+
+      {/* 3. Bottom-Right: Gold Dollar / Coin Badge */}
+      <div className="absolute bottom-[20%] right-[6%] sm:right-[10%] w-9 h-9 rounded-full bg-gradient-to-br from-[#FFE8B5] via-[#E5C287] to-[#9E743A] p-[1.5px] shadow-[0_8px_20px_rgba(0,0,0,0.6),0_0_20px_rgba(229,194,135,0.4)] animate-float-3">
+        <div className="w-full h-full rounded-full bg-[#18140E] flex items-center justify-center text-[#E5C38D] font-mono font-bold text-xs">
+          $
+        </div>
+      </div>
+
+      {/* Golden Tiered Pedestal */}
+      <div className="absolute bottom-4 w-52 sm:w-60 h-16 flex flex-col items-center justify-end">
+        {/* Top Rim */}
+        <div className="w-48 sm:w-56 h-10 rounded-[100%] bg-gradient-to-b from-[#2A2318] via-[#14120D] to-[#0A0907] border-2 border-[#D4AF77]/60 shadow-[0_0_25px_rgba(212,175,119,0.35)] relative">
+          <div className="absolute inset-1 rounded-[100%] border border-[#E5C287]/40 bg-radial from-[#453620] via-[#1F1911] to-[#0C0B08]" />
+        </div>
+        {/* Base Rim */}
+        <div className="w-52 sm:w-60 h-10 -mt-5 rounded-[100%] bg-gradient-to-b from-[#3E311F] via-[#1A150E] to-[#090806] border-2 border-[#9E743A]/80 shadow-2xl" />
+      </div>
+
+      {/* 3D Metallic Golden Shield (Floating Above Pedestal) */}
+      <div className="relative -top-5 flex flex-col items-center justify-center animate-float-1">
+        <svg
+          viewBox="0 0 100 120"
+          className="w-24 sm:w-28 h-auto drop-shadow-[0_15px_30px_rgba(0,0,0,0.9)] drop-shadow-[0_0_25px_rgba(212,175,119,0.5)]"
+        >
+          <defs>
+            <linearGradient id="shieldGoldOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFF2D6" />
+              <stop offset="35%" stopColor="#E5C287" />
+              <stop offset="70%" stopColor="#9E743A" />
+              <stop offset="100%" stopColor="#5E431E" />
+            </linearGradient>
+            <linearGradient id="shieldGoldInner" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3A2C18" />
+              <stop offset="50%" stopColor="#1C150B" />
+              <stop offset="100%" stopColor="#0B0905" />
+            </linearGradient>
+            <linearGradient id="shieldCore" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#FFE8B5" />
+              <stop offset="100%" stopColor="#AA824B" />
+            </linearGradient>
+          </defs>
+
+          {/* Outer Gold Bevel Rim */}
+          <path
+            d="M 50 5 L 88 22 C 88 70, 50 110, 50 110 C 50 110, 12 70, 12 22 Z"
+            fill="url(#shieldGoldOuter)"
+            stroke="#FFE8B5"
+            strokeWidth="1"
+          />
+
+          {/* Inner Dark Metallic Inset */}
+          <path
+            d="M 50 14 L 80 28 C 80 66, 50 100, 50 100 C 50 100, 20 66, 20 28 Z"
+            fill="url(#shieldGoldInner)"
+            stroke="#9E743A"
+            strokeWidth="1.5"
+          />
+
+          {/* Center Glowing Gold Core Shield */}
+          <path
+            d="M 50 24 L 70 34 C 70 60, 50 86, 50 86 C 50 86, 30 60, 30 34 Z"
+            fill="url(#shieldCore)"
+            opacity="0.9"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+};
+
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Plus,
   Search,
@@ -7,163 +7,44 @@ import {
   ArrowRight,
   X,
   Pause,
-  Play
+  Play,
+  CheckCircle2
 } from 'lucide-react';
+import {
+  subscribeToUserProjects,
+  createProject,
+  toggleProjectPause,
+  type UserProject,
+} from '../lib/projectsService';
+import { useAuth } from '../contexts/AuthContext';
 
-interface Project {
-  id: string;
-  name: string;
-  slug: string;
-  env: 'Production' | 'Staging' | 'Development';
-  spend: number;
-  budgetLimit: number;
-  tokens: string;
-  requests: number;
-  avgLatency: string;
-  primaryModel: string;
-  failoverModel: string;
-  endpoint: string;
-  paused: boolean;
-  lastActive: string;
-}
-
-const INITIAL_PROJECTS: Project[] = [
-  {
-    id: 'proj_prd_01',
-    name: 'Main Web Platform',
-    slug: 'web-platform',
-    env: 'Production',
-    spend: 2450.21,
-    budgetLimit: 3500.00,
-    tokens: '142.8M',
-    requests: 48920,
-    avgLatency: '320ms',
-    primaryModel: 'GPT-4o',
-    failoverModel: 'Claude 3.5 Sonnet',
-    endpoint: '127.0.0.1:8080/v1/projects/web-platform',
-    paused: false,
-    lastActive: 'Just now',
-  },
-  {
-    id: 'proj_prd_02',
-    name: 'Customer Support Copilot',
-    slug: 'support-copilot',
-    env: 'Production',
-    spend: 1210.43,
-    budgetLimit: 1500.00,
-    tokens: '94.2M',
-    requests: 26410,
-    avgLatency: '410ms',
-    primaryModel: 'Claude 3.5 Sonnet',
-    failoverModel: 'Claude 3.5 Haiku',
-    endpoint: '127.0.0.1:8080/v1/projects/support-copilot',
-    paused: false,
-    lastActive: '2m ago',
-  },
-  {
-    id: 'proj_prd_03',
-    name: 'Checkout Fraud Detector',
-    slug: 'fraud-detector',
-    env: 'Production',
-    spend: 412.32,
-    budgetLimit: 800.00,
-    tokens: '31.5M',
-    requests: 9840,
-    avgLatency: '180ms',
-    primaryModel: 'Gemini 1.5 Pro',
-    failoverModel: 'Gemini 1.5 Flash',
-    endpoint: '127.0.0.1:8080/v1/projects/fraud-detector',
-    paused: false,
-    lastActive: '5m ago',
-  },
-  {
-    id: 'proj_stg_01',
-    name: 'Internal Coding Assistant',
-    slug: 'internal-coder',
-    env: 'Staging',
-    spend: 164.34,
-    budgetLimit: 500.00,
-    tokens: '18.4M',
-    requests: 3120,
-    avgLatency: '480ms',
-    primaryModel: 'Claude 3.7 Sonnet',
-    failoverModel: 'Claude 3.5 Haiku',
-    endpoint: '127.0.0.1:8080/v1/projects/internal-coder',
-    paused: false,
-    lastActive: '18m ago',
-  },
-  {
-    id: 'proj_stg_02',
-    name: 'Analytics SQL Generator',
-    slug: 'sql-generator',
-    env: 'Staging',
-    spend: 54.12,
-    budgetLimit: 300.00,
-    tokens: '6.2M',
-    requests: 840,
-    avgLatency: '390ms',
-    primaryModel: 'GPT-4o-mini',
-    failoverModel: 'Gemini 1.5 Flash',
-    endpoint: '127.0.0.1:8080/v1/projects/sql-generator',
-    paused: false,
-    lastActive: '1h ago',
-  },
-  {
-    id: 'proj_dev_01',
-    name: 'Automated Code Reviewer',
-    slug: 'pr-reviewer',
-    env: 'Development',
-    spend: 21.40,
-    budgetLimit: 200.00,
-    tokens: '2.8M',
-    requests: 412,
-    avgLatency: '510ms',
-    primaryModel: 'Claude 3.5 Sonnet',
-    failoverModel: 'Haiku 3.5',
-    endpoint: '127.0.0.1:8080/v1/projects/pr-reviewer',
-    paused: false,
-    lastActive: '3h ago',
-  },
-  {
-    id: 'proj_dev_02',
-    name: 'Marketing Copy Generator',
-    slug: 'marketing-copy',
-    env: 'Development',
-    spend: 9.82,
-    budgetLimit: 150.00,
-    tokens: '1.4M',
-    requests: 120,
-    avgLatency: '290ms',
-    primaryModel: 'GPT-4o',
-    failoverModel: 'GPT-4o-mini',
-    endpoint: '127.0.0.1:8080/v1/projects/marketing-copy',
-    paused: false,
-    lastActive: '1d ago',
-  },
-  {
-    id: 'proj_dev_03',
-    name: 'R&D Synthetic Data Lab',
-    slug: 'rnd-synthetic',
-    env: 'Development',
-    spend: 6.00,
-    budgetLimit: 100.00,
-    tokens: '0.9M',
-    requests: 70,
-    avgLatency: '620ms',
-    primaryModel: 'DeepSeek-V3',
-    failoverModel: 'GPT-4o-mini',
-    endpoint: '127.0.0.1:8080/v1/projects/rnd-synthetic',
-    paused: true,
-    lastActive: '3d ago',
-  },
-];
+// Project interface re-exported from service
+type Project = UserProject;
 
 export const ProjectsView: React.FC = () => {
-  const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
+  const { user } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [envFilter, setEnvFilter] = useState<'All' | 'Production' | 'Staging' | 'Development'>('All');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // Subscribe to Firestore projects for the logged-in user
+  useEffect(() => {
+    if (!user?.uid) return;
+    const unsub = subscribeToUserProjects(user.uid, (list) => {
+      setProjects(list);
+      setLoading(false);
+    });
+    return unsub;
+  }, [user?.uid]);
 
   // New Project Form State
   const [newName, setNewName] = useState('');
@@ -178,35 +59,49 @@ export const ProjectsView: React.FC = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const togglePause = (id: string) => {
-    setProjects(prev =>
-      prev.map(p => (p.id === id ? { ...p, paused: !p.paused } : p))
-    );
-  };
+  const togglePause = useCallback(async (id: string) => {
+    if (!user?.uid) return;
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+    const nextPaused = !project.paused;
+    // Optimistic UI update
+    setProjects(prev => prev.map(p => p.id === id ? { ...p, paused: nextPaused } : p));
+    try {
+      await toggleProjectPause(user.uid, id, nextPaused);
+    } catch {
+      // Revert on failure
+      setProjects(prev => prev.map(p => p.id === id ? { ...p, paused: !nextPaused } : p));
+      showToast('Failed to update project state.');
+    }
+  }, [user?.uid, projects]);
 
-  const handleCreateProject = (e: React.FormEvent) => {
+  const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim()) return;
+    if (!newName.trim() || !user?.uid) return;
 
     const slug = newName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const newProj: Project = {
-      id: `proj_${newEnv.toLowerCase().slice(0, 3)}_${Math.floor(10 + Math.random() * 90)}`,
-      name: newName.trim(),
-      slug,
-      env: newEnv,
-      spend: 0.00,
-      budgetLimit: parseFloat(newBudget) || 500,
-      tokens: '0.0M',
-      requests: 0,
-      avgLatency: '0ms',
-      primaryModel: newPrimaryModel,
-      failoverModel: newFailoverModel,
-      endpoint: `127.0.0.1:8080/v1/projects/${slug}`,
-      paused: false,
-      lastActive: 'Just created',
-    };
 
-    setProjects([newProj, ...projects]);
+    try {
+      const newProj = await createProject(user.uid, {
+        name: newName.trim(),
+        slug,
+        env: newEnv,
+        spend: 0,
+        budgetLimit: parseFloat(newBudget) || 500,
+        tokens: '0.0M',
+        requests: 0,
+        avgLatency: '0ms',
+        primaryModel: newPrimaryModel,
+        failoverModel: newFailoverModel,
+        paused: false,
+        lastActive: 'Just created',
+      });
+      setProjects(prev => [newProj, ...prev]);
+      showToast(`Created project: ${newProj.name}`);
+    } catch {
+      showToast('Failed to create project — check Firestore connection.');
+    }
+
     setModalOpen(false);
     setNewName('');
     setNewBudget('1000');
@@ -226,86 +121,94 @@ export const ProjectsView: React.FC = () => {
   const prodCount = projects.filter(p => p.env === 'Production').length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans text-zinc-100">
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#18181B] text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-mono flex items-center gap-2 border border-[#3F3F46] animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <CheckCircle2 className="w-4 h-4 text-[#C59E5F]" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
       
       {/* ============================================================ */}
       {/* PAGE HEADER & CONTROLS                                       */}
       {/* ============================================================ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl lg:text-2xl font-extrabold text-charcoal-900 tracking-tight font-sans">
+          <h2 className="text-xl lg:text-2xl font-extrabold text-white tracking-tight font-sans">
             Projects &amp; Service Endpoints
           </h2>
-          <p className="text-xs text-charcoal-500 mt-1">
+          <p className="text-xs text-zinc-400 mt-1">
             Manage client applications, per-endpoint spend circuit-breakers, and model routing chains.
           </p>
         </div>
 
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm shrink-0 self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] hover:opacity-90 text-black text-xs font-extrabold transition-all shadow-md shrink-0 self-start sm:self-auto cursor-pointer"
         >
-          <Plus className="w-4 h-4 text-ostraGold-400" />
+          <Plus className="w-4 h-4 text-black" />
           <span>New Project Endpoint</span>
         </button>
       </div>
 
       {/* ============================================================ */}
-      {/* TOP SUMMARY METRICS (4 Cards, OstraOps Palette)            */}
+      {/* TOP SUMMARY METRICS (4 Cards, Dark Obsidian Palette)        */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Card 1: Active Endpoints */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-md flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-charcoal-500">Active Endpoints</span>
-            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-sandstone-200 text-charcoal-700">
+            <span className="text-xs font-medium text-zinc-400">Active Endpoints</span>
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-white/[0.06] text-zinc-300 border border-white/[0.08]">
               {prodCount} PROD
             </span>
           </div>
           <div className="pt-2">
-            <div className="text-2xl font-extrabold text-charcoal-900 font-mono">
+            <div className="text-2xl font-extrabold text-white font-mono">
               {projects.length}
             </div>
-            <div className="text-[11px] text-charcoal-500 mt-0.5">
+            <div className="text-[11px] text-zinc-500 mt-0.5">
               Across 3 deployment environments
             </div>
           </div>
         </div>
 
         {/* Card 2: Combined Monthly Spend */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-md flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-charcoal-500">Combined Monthly Spend</span>
-            <span className="text-[10px] font-mono text-charcoal-500">
+            <span className="text-xs font-medium text-zinc-400">Combined Monthly Spend</span>
+            <span className="text-[10px] font-mono text-zinc-500">
               USD
             </span>
           </div>
           <div className="pt-2">
-            <div className="text-2xl font-extrabold text-charcoal-900 font-mono">
+            <div className="text-2xl font-extrabold text-white font-mono">
               ${totalSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div className="text-[11px] text-charcoal-500 mt-0.5">
+            <div className="text-[11px] text-zinc-500 mt-0.5">
               Live loopback &amp; edge gateway traffic
             </div>
           </div>
         </div>
 
         {/* Card 3: Total Enforced Quota */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-md flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-charcoal-500">Total Enforced Budget</span>
-            <span className="text-[10px] font-mono font-bold text-charcoal-700">
+            <span className="text-xs font-medium text-zinc-400">Total Enforced Budget</span>
+            <span className="text-[10px] font-mono font-bold text-[#E5C38D]">
               {((totalSpend / totalBudget) * 100).toFixed(1)}% USED
             </span>
           </div>
           <div className="pt-2">
-            <div className="text-2xl font-extrabold text-charcoal-900 font-mono">
+            <div className="text-2xl font-extrabold text-white font-mono">
               ${totalBudget.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div className="h-1.5 w-full bg-[#EAE5DC] rounded-full overflow-hidden mt-1.5">
+            <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden mt-1.5">
               <div 
-                className="h-full bg-ostraGold-500 rounded-full"
+                className="h-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] rounded-full"
                 style={{ width: `${(totalSpend / totalBudget) * 100}%` }}
               />
             </div>
@@ -313,18 +216,18 @@ export const ProjectsView: React.FC = () => {
         </div>
 
         {/* Card 4: Model Failovers */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-md flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-charcoal-500">Failover Switches</span>
-            <span className="text-[10px] font-mono font-medium text-charcoal-600">
+            <span className="text-xs font-medium text-zinc-400">Failover Switches</span>
+            <span className="text-[10px] font-mono font-medium text-emerald-400">
               30 DAYS
             </span>
           </div>
           <div className="pt-2">
-            <div className="text-2xl font-extrabold text-charcoal-900 font-mono">
+            <div className="text-2xl font-extrabold text-white font-mono">
               19
             </div>
-            <div className="text-[11px] text-charcoal-500 mt-0.5">
+            <div className="text-[11px] text-zinc-500 mt-0.5">
               100% requests recovered without 5xx
             </div>
           </div>
@@ -335,7 +238,7 @@ export const ProjectsView: React.FC = () => {
       {/* ============================================================ */}
       {/* FILTER & SEARCH BAR                                          */}
       {/* ============================================================ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-md">
         
         {/* Environment Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
@@ -343,10 +246,10 @@ export const ProjectsView: React.FC = () => {
             <button
               key={tab}
               onClick={() => setEnvFilter(tab)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 cursor-pointer ${
                 envFilter === tab
-                  ? 'bg-charcoal-900 text-white font-bold shadow-xs'
-                  : 'text-charcoal-600 hover:bg-sandstone-200'
+                  ? 'bg-[#C59E5F] text-black font-bold shadow-xs'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               {tab}
@@ -356,13 +259,13 @@ export const ProjectsView: React.FC = () => {
 
         {/* Search Box */}
         <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-400" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, ID, or model..."
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#FAF8F5] border border-[#EAE5DC] rounded-xl text-charcoal-800 placeholder:text-charcoal-400 focus:outline-none focus:border-ostraGold-500 transition-colors"
+            className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#07090C] border border-white/[0.1] rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] transition-colors"
           />
         </div>
       </div>
@@ -370,18 +273,30 @@ export const ProjectsView: React.FC = () => {
       {/* ============================================================ */}
       {/* PROJECTS LIST GRID                                           */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredProjects.map((project) => {
-          const spendPercent = Math.min(100, (project.spend / project.budgetLimit) * 100);
-          const isNearCap = spendPercent >= 80;
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-64 rounded-3xl bg-[#0B0E14] border border-white/[0.06] animate-pulse p-6" />
+          ))}
+        </div>
+      ) : filteredProjects.length === 0 ? (
+        <div className="p-12 text-center rounded-3xl bg-[#0B0E14] border border-white/[0.08]">
+          <p className="text-zinc-400 text-sm font-mono">No projects found matching the filter criteria.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredProjects.map((project) => {
+            const endpoint = project.endpoint || `https://gateway.ostraops.internal/v1/projects/${project.slug}`;
+            const spendPercent = Math.min(100, (project.spend / project.budgetLimit) * 100);
+            const isNearCap = spendPercent >= 80;
 
           return (
             <div
               key={project.id}
-              className={`p-5 rounded-3xl bg-white border transition-all hover:shadow-md flex flex-col justify-between ${
+              className={`p-5 rounded-3xl bg-[#0B0E14] border transition-all hover:border-white/[0.16] shadow-md flex flex-col justify-between ${
                 project.paused
-                  ? 'border-dashed border-[#DCD5C9] opacity-75'
-                  : 'border-[#EAE5DC] shadow-subtle'
+                  ? 'border-dashed border-zinc-700 opacity-60'
+                  : 'border-white/[0.08]'
               }`}
             >
               <div className="space-y-4">
@@ -390,21 +305,21 @@ export const ProjectsView: React.FC = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-extrabold text-charcoal-900 tracking-tight font-sans">
+                      <h3 className="text-sm font-extrabold text-white tracking-tight font-sans">
                         {project.name}
                       </h3>
                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${
                         project.env === 'Production'
-                          ? 'bg-[#18181B] text-white'
+                          ? 'bg-[#C59E5F]/20 text-[#E5C38D] border border-[#C59E5F]/30'
                           : project.env === 'Staging'
-                          ? 'bg-sandstone-300 text-charcoal-800'
-                          : 'bg-sandstone-200 text-charcoal-600'
+                          ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30'
+                          : 'bg-white/[0.06] text-zinc-300 border border-white/[0.08]'
                       }`}>
                         {project.env}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-[11px] text-charcoal-400 font-mono mt-1">
+                    <div className="flex items-center gap-2 text-[11px] text-zinc-500 font-mono mt-1">
                       <span>{project.id}</span>
                       <span>•</span>
                       <span>{project.lastActive}</span>
@@ -414,39 +329,39 @@ export const ProjectsView: React.FC = () => {
                   {/* Pause / Resume Button */}
                   <button
                     onClick={() => togglePause(project.id)}
-                    className="p-1.5 rounded-lg border border-[#EAE5DC] hover:bg-sandstone-200 text-charcoal-600 transition-colors"
+                    className="p-1.5 rounded-lg border border-white/[0.08] hover:bg-white/[0.06] text-zinc-400 hover:text-white transition-colors cursor-pointer"
                     title={project.paused ? 'Resume routing' : 'Pause circuit-breaker route'}
                   >
                     {project.paused ? (
-                      <Play className="w-3.5 h-3.5 text-emerald-600" />
+                      <Play className="w-3.5 h-3.5 text-emerald-400" />
                     ) : (
-                      <Pause className="w-3.5 h-3.5 text-charcoal-500" />
+                      <Pause className="w-3.5 h-3.5 text-zinc-400" />
                     )}
                   </button>
                 </div>
 
                 {/* Spend & Circuit-Breaker Cap Bar */}
-                <div className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] space-y-2">
+                <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-charcoal-500 font-medium">Circuit-Breaker Spend</span>
+                    <span className="text-zinc-400 font-medium">Circuit-Breaker Spend</span>
                     <div className="font-mono">
-                      <span className="font-extrabold text-charcoal-900">
+                      <span className="font-extrabold text-white">
                         ${project.spend.toFixed(2)}
                       </span>
-                      <span className="text-charcoal-400"> / ${project.budgetLimit.toFixed(2)}</span>
+                      <span className="text-zinc-500"> / ${project.budgetLimit.toFixed(2)}</span>
                     </div>
                   </div>
 
-                  <div className="h-1.5 w-full bg-[#EAE5DC] rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
-                        isNearCap ? 'bg-charcoal-900' : 'bg-ostraGold-500'
+                        isNearCap ? 'bg-rose-500' : 'bg-gradient-to-r from-[#C59E5F] to-[#E5C38D]'
                       }`}
                       style={{ width: `${spendPercent}%` }}
                     />
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] text-charcoal-500 font-mono pt-0.5">
+                  <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono pt-0.5">
                     <span>{project.tokens} tokens</span>
                     <span>{project.requests.toLocaleString()} requests</span>
                     <span>{project.avgLatency}</span>
@@ -455,29 +370,29 @@ export const ProjectsView: React.FC = () => {
 
                 {/* Routing & Failover Chain */}
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex items-center justify-between text-charcoal-600">
-                    <span className="text-[11px] text-charcoal-500">Routing Chain:</span>
+                  <div className="flex items-center justify-between text-zinc-400">
+                    <span className="text-[11px] text-zinc-500">Routing Chain:</span>
                     <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                      <span className="px-2 py-0.5 rounded-md bg-sandstone-200 text-charcoal-900 font-bold">
+                      <span className="px-2 py-0.5 rounded-md bg-white/[0.06] text-[#E5C38D] border border-white/[0.08] font-bold">
                         {project.primaryModel}
                       </span>
-                      <span className="text-charcoal-400">→</span>
-                      <span className="px-2 py-0.5 rounded-md bg-sandstone-100 text-charcoal-700">
+                      <span className="text-zinc-600">→</span>
+                      <span className="px-2 py-0.5 rounded-md bg-white/[0.03] text-zinc-300 border border-white/[0.06]">
                         {project.failoverModel}
                       </span>
                     </div>
                   </div>
 
                   {/* Copyable Proxy Endpoint */}
-                  <div className="flex items-center justify-between p-2 rounded-xl bg-[#F5F2EB] text-[11px] font-mono text-charcoal-700">
-                    <span className="truncate pr-2">{project.endpoint}</span>
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-[#07090C] border border-white/[0.08] text-[11px] font-mono text-zinc-300">
+                    <span className="truncate pr-2">{endpoint}</span>
                     <button
-                      onClick={() => copyEndpoint(project.endpoint, project.id)}
-                      className="p-1 rounded hover:bg-sandstone-300 text-charcoal-600 shrink-0 transition-colors"
+                      onClick={() => copyEndpoint(endpoint, project.id)}
+                      className="p-1 rounded hover:bg-white/[0.08] text-zinc-400 hover:text-white shrink-0 transition-colors cursor-pointer"
                       title="Copy loopback endpoint"
                     >
                       {copiedId === project.id ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
                       ) : (
                         <Copy className="w-3.5 h-3.5" />
                       )}
@@ -488,18 +403,18 @@ export const ProjectsView: React.FC = () => {
               </div>
 
               {/* Card Footer Actions */}
-              <div className="pt-4 mt-2 border-t border-[#EAE5DC] flex items-center justify-between text-xs">
+              <div className="pt-4 mt-2 border-t border-white/[0.06] flex items-center justify-between text-xs">
                 <button
-                  onClick={() => alert(`Opening telemetry traces for ${project.name} (${project.id})`)}
-                  className="font-bold text-charcoal-900 hover:text-ostraGold-600 flex items-center gap-1 group transition-colors"
+                  onClick={() => showToast(`Opening live telemetry traces for ${project.name}...`)}
+                  className="font-bold text-[#E5C38D] hover:text-white flex items-center gap-1 group transition-colors cursor-pointer"
                 >
                   <span>Inspect Traces</span>
                   <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 </button>
 
                 <button
-                  onClick={() => alert(`Configuring limits & circuit-breaker for ${project.name}`)}
-                  className="text-charcoal-500 hover:text-charcoal-900 font-medium transition-colors"
+                  onClick={() => showToast(`Configuring budget guardrails & circuit-breaker for ${project.name}...`)}
+                  className="text-zinc-400 hover:text-white font-medium transition-colors cursor-pointer"
                 >
                   Configure Limits
                 </button>
@@ -508,52 +423,52 @@ export const ProjectsView: React.FC = () => {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* ============================================================ */}
       {/* NEW PROJECT ENDPOINT MODAL                                   */}
       {/* ============================================================ */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl border border-[#EAE5DC] shadow-2xl w-full max-w-md p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
+          <div className="relative w-full max-w-lg bg-[#0B0E14] rounded-3xl border border-white/[0.1] shadow-2xl p-6 sm:p-7 space-y-5 text-white">
             
-            <div className="flex items-center justify-between border-b border-[#EAE5DC] pb-4">
-              <div>
-                <h3 className="text-base font-extrabold text-charcoal-900 tracking-tight font-sans">
-                  Create New Endpoint
-                </h3>
-                <p className="text-xs text-charcoal-500 mt-0.5">
-                  Route traffic through local loopback proxy
-                </p>
-              </div>
-              <button
-                onClick={() => setModalOpen(false)}
-                className="p-1.5 rounded-lg text-charcoal-400 hover:bg-sandstone-200 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+            <button
+              onClick={() => setModalOpen(false)}
+              className="absolute top-5 right-5 p-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div>
+              <h3 className="text-lg font-extrabold text-white">
+                Create New Project Endpoint
+              </h3>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Generate a zero-latency loopback endpoint with dedicated circuit breaker limits.
+              </p>
             </div>
 
             <form onSubmit={handleCreateProject} className="space-y-4">
               
               {/* Project Name */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-charcoal-800 block">
-                  Application / Project Name
+                <label className="text-xs font-bold text-zinc-300 block">
+                  Project Name
                 </label>
                 <input
                   type="text"
                   required
+                  placeholder="e.g. Mobile App Gateway"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="e.g. Mobile Copilot Engine"
-                  className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-ostraGold-500 transition-colors"
+                  className="w-full px-3 py-2 text-xs bg-[#07090C] border border-white/[0.1] rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] transition-colors"
                 />
               </div>
 
               {/* Environment */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-charcoal-800 block">
+                <label className="text-xs font-bold text-zinc-300 block">
                   Deployment Environment
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -562,10 +477,10 @@ export const ProjectsView: React.FC = () => {
                       type="button"
                       key={env}
                       onClick={() => setNewEnv(env)}
-                      className={`py-1.5 text-xs font-medium rounded-xl border transition-all ${
+                      className={`py-1.5 text-xs font-medium rounded-xl border transition-all cursor-pointer ${
                         newEnv === env
-                          ? 'bg-charcoal-900 text-white border-charcoal-900 font-bold'
-                          : 'bg-[#FCFAF7] border-[#EAE5DC] text-charcoal-700 hover:bg-sandstone-200'
+                          ? 'bg-[#C59E5F] text-black border-[#C59E5F] font-bold'
+                          : 'bg-[#07090C] border-white/[0.08] text-zinc-300 hover:bg-white/[0.06]'
                       }`}
                     >
                       {env}
@@ -577,13 +492,13 @@ export const ProjectsView: React.FC = () => {
               {/* Primary Model */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-charcoal-800 block">
+                  <label className="text-xs font-bold text-zinc-300 block">
                     Primary Model
                   </label>
                   <select
                     value={newPrimaryModel}
                     onChange={(e) => setNewPrimaryModel(e.target.value)}
-                    className="w-full px-2.5 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 focus:outline-none focus:border-ostraGold-500 font-mono"
+                    className="w-full px-2.5 py-2 text-xs bg-[#07090C] border border-white/[0.1] rounded-xl text-white focus:outline-none focus:border-[#C59E5F] font-mono cursor-pointer"
                   >
                     <option value="GPT-4o">GPT-4o</option>
                     <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
@@ -594,13 +509,13 @@ export const ProjectsView: React.FC = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-charcoal-800 block">
+                  <label className="text-xs font-bold text-zinc-300 block">
                     Failover Model
                   </label>
                   <select
                     value={newFailoverModel}
                     onChange={(e) => setNewFailoverModel(e.target.value)}
-                    className="w-full px-2.5 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 focus:outline-none focus:border-ostraGold-500 font-mono"
+                    className="w-full px-2.5 py-2 text-xs bg-[#07090C] border border-white/[0.1] rounded-xl text-white focus:outline-none focus:border-[#C59E5F] font-mono cursor-pointer"
                   >
                     <option value="Claude 3.5 Haiku">Claude 3.5 Haiku</option>
                     <option value="GPT-4o-mini">GPT-4o-mini</option>
@@ -611,7 +526,7 @@ export const ProjectsView: React.FC = () => {
 
               {/* Circuit Breaker Cap */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-charcoal-800 block">
+                <label className="text-xs font-bold text-zinc-300 block">
                   Hard Monthly Budget Cap ($ USD)
                 </label>
                 <input
@@ -621,7 +536,7 @@ export const ProjectsView: React.FC = () => {
                   step="10"
                   value={newBudget}
                   onChange={(e) => setNewBudget(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 font-mono focus:outline-none focus:border-ostraGold-500 transition-colors"
+                  className="w-full px-3 py-2 text-xs bg-[#07090C] border border-white/[0.1] rounded-xl text-white font-mono focus:outline-none focus:border-[#C59E5F] transition-colors"
                 />
               </div>
 
@@ -630,13 +545,13 @@ export const ProjectsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-charcoal-600 hover:bg-sandstone-200 transition-colors"
+                  className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-black text-xs font-extrabold transition-all shadow-md cursor-pointer hover:opacity-90"
                 >
                   Create Endpoint
                 </button>

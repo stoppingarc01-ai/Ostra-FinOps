@@ -51,13 +51,6 @@ export default {
           600: '#B89258',
           700: '#8E6B2C',
         },
-        ostraGold: {
-          300: '#E8CA9B',
-          400: '#DDBB86',
-          500: '#D4AF7C',
-          600: '#B89258',
-          700: '#8E6B2C',
-        },
         // Sentinel Daemon Eclipse Palette
         chineseBlack: {
           DEFAULT: '#0C1519',

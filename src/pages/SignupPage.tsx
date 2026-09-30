@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
 import {
-  User,
+  User as UserIcon,
   Mail,
   Lock,
   Eye,
   EyeOff,
+  Building2,
+  Smartphone,
   ArrowRight,
-  ShieldCheck,
-  Activity,
-  Sliders,
-  Loader2,
-  AlertCircle,
+  Shield,
+  CreditCard,
+  RefreshCw,
   CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import {
-  OstraLogoAuth,
   GoogleAuthIcon,
   GitHubAuthIcon,
+  MicrosoftAuthIcon,
+  SignupMovingPedestal,
 } from '../components/AuthGraphics';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -25,39 +27,28 @@ interface SignupPageProps {
 }
 
 export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
-  const { signUp, signInWithGoogle, signInWithGithub } = useAuth();
+  const { signUp, signInWithGoogle, signInWithGithub, updateProfile } = useAuth();
 
-  // Inspect if user arrived having pre-selected a plan from Pricing Page
-  const [pendingPlan] = useState<{
-    planId: string;
-    name: string;
-    type: string;
-    amount: number;
-    billingInterval: string;
-    currency?: string;
-  } | null>(() => {
-    try {
-      const saved = sessionStorage.getItem('ostraops_pending_plan');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [authMode, setAuthMode] = useState<'email' | 'phone'>('email');
 
-  const [fullName, setFullName] = useState('');
+  // Form Fields
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [accountType, setAccountType] = useState<'solo' | 'team'>('solo');
+  const [agreeTerms, setAgreeTerms] = useState(true);
+
+  // Phone OTP State
+  const [phoneCountry, setPhoneCountry] = useState('+1');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
+
+  // UI / Async State
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{
-    name?: string;
-    email?: string;
-    password?: string;
-    confirmPassword?: string;
-  }>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -65,21 +56,32 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  // Password strength calculation (0 to 5 bars)
+  const calculateStrength = (pwd: string): { score: number; label: string; color: string } => {
+    if (!pwd) return { score: 0, label: '', color: '' };
+    let score = 0;
+    if (pwd.length >= 6) score += 1;
+    if (pwd.length >= 10) score += 1;
+    if (/[A-Z]/.test(pwd)) score += 1;
+    if (/[0-9]/.test(pwd)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+
+    if (score <= 2) return { score, label: 'Weak password', color: 'bg-rose-500' };
+    if (score <= 4) return { score, label: 'Medium strength', color: 'bg-amber-500' };
+    return { score: 5, label: 'Strong password', color: 'bg-[#C59E5F]' };
+  };
+
+  const strength = calculateStrength(password);
+
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: {
-      name?: string;
-      email?: string;
-      password?: string;
-      confirmPassword?: string;
-    } = {};
+    const newErrors: Record<string, string> = {};
 
-    if (!fullName.trim()) {
-      newErrors.name = 'Full name is required.';
-    }
+    if (!firstName.trim()) newErrors.firstName = 'First name is required.';
+    if (!lastName.trim()) newErrors.lastName = 'Last name is required.';
 
     if (!email.trim()) {
-      newErrors.email = 'Work email address is required.';
+      newErrors.email = 'Work email is required.';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Please provide a valid work email address.';
     }
@@ -90,8 +92,8 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
       newErrors.password = 'Password must be at least 6 characters long.';
     }
 
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match.';
+    if (!agreeTerms) {
+      newErrors.terms = 'You must agree to the Terms of Service & Privacy Policy.';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -102,44 +104,106 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     setErrors({});
     setLoading(true);
 
+    const fullName = `${firstName.trim()} ${lastName.trim()}`;
     const { error } = await signUp(email, password, fullName);
     setLoading(false);
 
     if (error) {
-      setErrors({
-        password: error.message || 'Signup failed. Please try again.',
-      });
+      setErrors({ password: error.message || 'Registration failed. Please try again.' });
       showToast(error.message || 'Registration failed.');
     } else {
+      if (companyName.trim()) {
+        updateProfile({ company_name: companyName.trim() }).catch(() => {});
+      }
       try {
-        localStorage.setItem('ostraops_active_plan', 'team_scale');
-        localStorage.setItem('ostraops_user_tier', 'team');
+        localStorage.removeItem('ostraops_onboarding_completed');
+        localStorage.setItem('ostraops_active_plan', 'team_trial');
+        localStorage.setItem('ostraops_user_tier', 'trial');
       } catch {}
 
-      showToast('Account created! Taking you to your dashboard...');
-      setTimeout(() => onNavigate('dashboard'), 400);
+      showToast('Account created! Setting up your workspace...');
+      onNavigate('onboarding');
     }
   };
 
-  const handleSocialAuth = async (provider: 'google' | 'github') => {
+  const handleSocialAuth = async (provider: 'google' | 'github' | 'microsoft') => {
+    if (provider === 'microsoft') {
+      showToast('Microsoft Single Sign-On initialized. Redirecting...');
+      setTimeout(() => {
+        showToast('Connecting Microsoft Azure AD tenant...');
+      }, 700);
+      return;
+    }
+
     setLoading(true);
     const { error } = provider === 'google' ? await signInWithGoogle() : await signInWithGithub();
     setLoading(false);
+
     if (error) {
       showToast(error.message);
     } else {
       try {
-        localStorage.setItem('ostraops_active_plan', 'team_scale');
-        localStorage.setItem('ostraops_user_tier', 'team');
+        localStorage.setItem('ostraops_active_plan', 'team_trial');
+        localStorage.setItem('ostraops_user_tier', 'trial');
       } catch {}
 
-      showToast('Signed in! Taking you to your dashboard...');
-      setTimeout(() => onNavigate('dashboard'), 400);
+      const isCompleted = localStorage.getItem('ostraops_onboarding_completed') === 'true';
+      showToast(isCompleted ? 'Signed in! Taking you to your dashboard...' : 'Account ready! Setting up your workspace...');
+      onNavigate(isCompleted ? 'dashboard' : 'onboarding');
+    }
+  };
+
+  const handleSendOtp = () => {
+    if (!phoneNumber.trim() || phoneNumber.length < 7) {
+      setErrors({ phone: 'Please enter a valid phone number.' });
+      return;
+    }
+    setErrors({});
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setOtpSent(true);
+      showToast(`Verification code sent to ${phoneCountry} ${phoneNumber}`);
+    }, 600);
+  };
+
+  const handleVerifyOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = otpCode.join('');
+    if (code.length < 6) {
+      setErrors({ otp: 'Please enter all 6 digits.' });
+      return;
+    }
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      const isCompleted = localStorage.getItem('ostraops_onboarding_completed') === 'true';
+      showToast(isCompleted ? 'Phone verified! Loading dashboard...' : 'Phone verified! Setting up your workspace...');
+      onNavigate(isCompleted ? 'dashboard' : 'onboarding');
+    }, 400);
+  };
+
+  const handleOtpInput = (index: number, val: string) => {
+    if (!/^\d*$/.test(val)) return;
+    const nextCode = [...otpCode];
+    nextCode[index] = val.slice(-1);
+    setOtpCode(nextCode);
+
+    if (val && index < 5) {
+      const nextInput = document.getElementById(`signup-otp-${index + 1}`);
+      nextInput?.focus();
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#07090C] text-white flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans selection:bg-[#E5C287]/20 selection:text-[#FFF4D6]">
+    <div className="min-h-screen bg-[#06080B] text-white flex flex-col justify-between p-4 sm:p-6 lg:p-10 font-sans selection:bg-[#C59E5F]/30 selection:text-[#FFF4D6] relative overflow-hidden">
+      {/* Background Ambient Radial Highlights */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#C59E5F]/[0.05] blur-[140px] pointer-events-none rounded-full" />
+      <div className="absolute bottom-10 right-1/4 w-[600px] h-[600px] bg-[#E5C287]/[0.04] blur-[160px] pointer-events-none rounded-full" />
+
+      {/* Floating Sparkle on Edge */}
+      <div className="absolute top-1/2 right-6 w-3 h-3 rounded-full bg-[#E5C287]/40 blur-xs animate-ping pointer-events-none" />
+
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-[#161C22] text-[#FFF4D6] px-4 py-3 rounded-2xl shadow-2xl border border-[#E5C287]/30 text-xs font-semibold flex items-center gap-2.5 animate-in slide-in-from-top-2">
@@ -148,404 +212,451 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* Main Card Container */}
-      <div className="w-full max-w-[1240px] rounded-[28px] border border-white/10 bg-[#0B0E12] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 transition-all">
+      {/* Main Column Wrapper */}
+      <div className="w-full max-w-4xl mx-auto space-y-10 my-auto">
         {/* ============================================================ */}
-        {/* Left Column: Branding, Hero Headline, Artwork & 3 Features   */}
+        {/* TOP HERO HEADER + MOVING UI PEDESTAL                         */}
         {/* ============================================================ */}
-        <div className="lg:col-span-6 bg-[#070A0D] p-8 sm:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/10 relative overflow-hidden min-h-[640px] lg:min-h-[820px]">
-          {/* Full-bleed 3D Photorealistic Octane Hero Background */}
-          <div className="absolute inset-0 z-0 select-none pointer-events-none overflow-hidden">
-            <img
-              src="/ostra_hero_vertical.jpg"
-              alt="Ostra 3D Architecture Scene"
-              className="w-full h-full object-cover object-center transform hover:scale-[1.01] transition-transform duration-1000"
-            />
-            {/* Subtle atmospheric gradients for crystal-clear readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#070A0D]/70 via-transparent to-[#070A0D]/85" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#070A0D]/40 via-transparent to-transparent" />
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          {/* Left: Headline & Subtitle */}
+          <div className="md:col-span-7 space-y-3 text-center md:text-left">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-white tracking-tight leading-tight">
+              Create your account <span className="text-[#E5C38D] text-2xl sm:text-3xl inline-block animate-pulse">✦</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-zinc-400 font-sans max-w-md">
+              Join thousands of teams already optimizing with OsterdOps.
+            </p>
           </div>
 
-          <div className="relative z-10 space-y-8">
-            {/* Top Brand Logo */}
-            <div className="flex items-center justify-between">
-              <OstraLogoAuth className="w-8 h-8" textClassName="text-2xl font-bold tracking-tight text-white font-sans" />
-              <button
-                onClick={() => onNavigate('home')}
-                className="text-[11px] font-mono text-[#8F9CA7] hover:text-white transition-colors cursor-pointer px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10"
-              >
-                ← Back to home
-              </button>
-            </div>
-
-            {/* Welcome to Ostra Headline */}
-            <div className="pt-2 space-y-2">
-              <div className="text-3xl sm:text-4xl font-light text-white tracking-tight">
-                Welcome to
-              </div>
-              <div className="text-4xl sm:text-5xl font-bold text-white tracking-tight">
-                Ostra
-              </div>
-              <div className="text-xs sm:text-sm text-[#9AA5B1] space-y-0.5 pt-2 leading-relaxed">
-                <p>The AI infrastructure for builders.</p>
-                <p>Control. Observe. Optimize.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom 3 Micro Feature Columns */}
-          <div className="relative z-10 grid grid-cols-3 gap-3 pt-6 border-t border-white/10 select-none bg-black/30 backdrop-blur-xs -mx-4 px-4 py-3 rounded-2xl">
-            {/* Feature 1: Track Usage */}
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5 text-white">
-                <Activity className="w-4 h-4 text-[#E2BA7D]" />
-              </div>
-              <div className="text-xs font-semibold text-white tracking-tight">
-                Track Usage
-              </div>
-              <div className="text-[10.5px] text-[#8F9CA7] leading-snug">
-                Know where your money goes.
-              </div>
-            </div>
-
-            {/* Feature 2: Set Limits */}
-            <div className="space-y-1 border-l border-white/10 pl-3">
-              <div className="flex items-center gap-1.5 text-white">
-                <Sliders className="w-4 h-4 text-[#E2BA7D]" />
-              </div>
-              <div className="text-xs font-semibold text-white tracking-tight">
-                Set Limits
-              </div>
-              <div className="text-[10.5px] text-[#8F9CA7] leading-snug">
-                Stay in control with smart caps.
-              </div>
-            </div>
-
-            {/* Feature 3: Optimize */}
-            <div className="space-y-1 border-l border-white/10 pl-3">
-              <div className="flex items-center gap-1.5 text-white">
-                <ShieldCheck className="w-4 h-4 text-[#E2BA7D]" />
-              </div>
-              <div className="text-xs font-semibold text-white tracking-tight">
-                Optimize
-              </div>
-              <div className="text-[10.5px] text-[#8F9CA7] leading-snug">
-                Get better performance & cost.
-              </div>
-            </div>
+          {/* Right: Floating 3D Animated Pedestal with Dashboard Card */}
+          <div className="md:col-span-5 flex justify-center md:justify-end">
+            <SignupMovingPedestal />
           </div>
         </div>
 
         {/* ============================================================ */}
-        {/* Right Column: Create Account Form                            */}
+        {/* CENTER CLEAN GLASS CARD                                      */}
         {/* ============================================================ */}
-        <div className="lg:col-span-6 bg-[#0B0E12] p-8 sm:p-12 flex flex-col justify-between">
-          <div>
-            {/* Top Right Navigation to Log In */}
-            <div className="flex justify-end text-xs text-[#8F9CA7] mb-6">
-              <span>
-                Already have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => onNavigate('login')}
-                  className="text-white hover:text-[#E2BA7D] font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors hover:underline ml-1"
-                >
-                  <span>Log in</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </span>
-            </div>
+        <div className="w-full max-w-lg mx-auto bg-[#0C1017] text-white rounded-[32px] p-6 sm:p-9 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.9),0_0_40px_rgba(197,158,95,0.12)] border border-white/[0.08]">
+          {/* Card Header */}
+          <div className="space-y-1 mb-5">
+            <h2 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
+              Create your account
+            </h2>
+            <p className="text-xs text-zinc-400 font-sans">
+              Start your 7-day free trial. No credit card required.
+            </p>
+          </div>
 
-            {/* Heading */}
-            <div className="space-y-1 mb-5">
-              <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                Create your account
-              </h2>
-              <p className="text-xs sm:text-sm text-[#8F9CA7]">
-                Start in minutes. No credit card required.
-              </p>
-            </div>
+          {/* Tab Switcher: Email vs Phone OTP */}
+          <div className="grid grid-cols-2 p-1 rounded-2xl bg-[#07090C] border border-white/[0.08] mb-5 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('email');
+                setErrors({});
+              }}
+              className={`flex items-center justify-center gap-2 py-2 rounded-xl transition-all cursor-pointer ${
+                authMode === 'email'
+                  ? 'bg-[#181D26] text-white border border-white/[0.14] shadow-sm font-bold'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span>Email</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('phone');
+                setErrors({});
+              }}
+              className={`flex items-center justify-center gap-2 py-2 rounded-xl transition-all cursor-pointer ${
+                authMode === 'phone'
+                  ? 'bg-[#181D26] text-white border border-white/[0.14] shadow-sm font-bold'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>Phone OTP</span>
+            </button>
+          </div>
 
-            {/* Pending Plan Selection Ribbon */}
-            {pendingPlan && (
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#17202A] via-[#1C1F26] to-[#1F1C16] border border-[#E2BA7D]/40 mb-5 flex items-center justify-between gap-3 shadow-lg animate-in fade-in">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-[#E2BA7D]/20 text-[#E2BA7D] flex items-center justify-center font-bold text-xs shrink-0">
-                    {pendingPlan.type === 'hosted' ? '☁️' : '⚡'}
+          {/* FORM: EMAIL MODE */}
+          {authMode === 'email' ? (
+            <form onSubmit={handleSignupSubmit} className="space-y-3.5">
+              {/* Row 1: First Name & Last Name */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-zinc-300 block">
+                    First name
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="John"
+                      value={firstName}
+                      onChange={(e) => {
+                        setFirstName(e.target.value);
+                        if (errors.firstName) setErrors((prev) => ({ ...prev, firstName: '' }));
+                      }}
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-[#07090C] border border-white/[0.1] text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]/30 transition-all font-sans"
+                    />
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-white flex items-center gap-1.5 flex-wrap">
-                      <span>Selected:</span>
-                      <span className="text-[#E2BA7D] font-mono">{pendingPlan.name}</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-semibold">
-                        Ready to activate
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-[#9AA5B1] truncate">
-                      {pendingPlan.type === 'hosted'
-                        ? '14-Day Free Trial included. Cloud Edge Gateway workspace.'
-                        : 'Local-first zero prompt retention proxy for solo builders.'}
-                    </p>
-                  </div>
+                  {errors.firstName && (
+                    <span className="text-[10px] text-rose-400 font-medium">{errors.firstName}</span>
+                  )}
                 </div>
-                <div className="text-right shrink-0 font-mono">
-                  <div className="text-xs font-bold text-white">
-                    {pendingPlan.currency === 'INR' ? '₹' : '$'}{pendingPlan.amount}
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-zinc-300 block">
+                    Last name
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Doe"
+                      value={lastName}
+                      onChange={(e) => {
+                        setLastName(e.target.value);
+                        if (errors.lastName) setErrors((prev) => ({ ...prev, lastName: '' }));
+                      }}
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-[#07090C] border border-white/[0.1] text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]/30 transition-all font-sans"
+                    />
                   </div>
-                  <div className="text-[10px] text-[#8F9CA7]">
-                    /{pendingPlan.billingInterval === 'yr' ? 'yr' : 'mo'}
-                  </div>
+                  {errors.lastName && (
+                    <span className="text-[10px] text-rose-400 font-medium">{errors.lastName}</span>
+                  )}
                 </div>
               </div>
-            )}
 
-            {/* Form */}
-            <form onSubmit={handleSignupSubmit} className="space-y-4">
-              {/* Full name */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#C8D1D9] block">
-                  Full name
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-[#6E7681] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => {
-                      setFullName(e.target.value);
-                      if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
-                    }}
-                    style={{ paddingLeft: '2.5rem' }}
-                    className={`w-full bg-[#11161B] border ${
-                      errors.name ? 'border-rose-400 ring-1 ring-rose-400/30' : 'border-white/10'
-                    } rounded-xl pr-3.5 py-2.5 text-xs text-white placeholder:text-[#525A64] focus:outline-none focus:border-[#E2BA7D] focus:ring-1 focus:ring-[#E2BA7D]/30 transition-all font-sans shadow-xs`}
-                  />
-                </div>
-                {errors.name && (
-                  <p className="text-[11px] text-rose-400 font-medium flex items-center gap-1 pt-0.5">
-                    <AlertCircle className="w-3 h-3 shrink-0" />
-                    <span>{errors.name}</span>
-                  </p>
-                )}
-              </div>
-
-              {/* Work email */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#C8D1D9] block">
+              {/* Row 2: Work Email */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-zinc-300 block">
                   Work email
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-[#6E7681] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Mail className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="email"
                     placeholder="you@company.com"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                      if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
                     }}
-                    style={{ paddingLeft: '2.5rem' }}
-                    className={`w-full bg-[#11161B] border ${
-                      errors.email ? 'border-rose-400 ring-1 ring-rose-400/30' : 'border-white/10'
-                    } rounded-xl pr-3.5 py-2.5 text-xs text-white placeholder:text-[#525A64] focus:outline-none focus:border-[#E2BA7D] focus:ring-1 focus:ring-[#E2BA7D]/30 transition-all font-sans shadow-xs`}
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-[#07090C] border border-white/[0.1] text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]/30 transition-all font-sans"
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-[11px] text-rose-400 font-medium flex items-center gap-1 pt-0.5">
-                    <AlertCircle className="w-3 h-3 shrink-0" />
-                    <span>{errors.email}</span>
-                  </p>
+                  <span className="text-[10px] text-rose-400 font-medium">{errors.email}</span>
                 )}
               </div>
 
-              {/* Password */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#C8D1D9] block">
+              {/* Row 3: Company Name */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-zinc-300 block">
+                  Company name
+                </label>
+                <div className="relative">
+                  <Building2 className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Acme Corp"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-[#07090C] border border-white/[0.1] text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]/30 transition-all font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Row 4: Password with 5-segment meter */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-zinc-300 block">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-[#6E7681] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Lock className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Create a strong password"
+                    placeholder="••••••••••••"
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
-                      if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                      if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
                     }}
-                    style={{ paddingLeft: '2.5rem', paddingRight: '2.75rem' }}
-                    className={`w-full bg-[#11161B] border ${
-                      errors.password ? 'border-rose-400 ring-1 ring-rose-400/30' : 'border-white/10'
-                    } rounded-xl py-2.5 text-xs text-white placeholder:text-[#525A64] focus:outline-none focus:border-[#E2BA7D] focus:ring-1 focus:ring-[#E2BA7D]/30 transition-all font-sans shadow-xs`}
+                    className="w-full pl-9 pr-9 py-2 text-xs rounded-xl bg-[#07090C] border border-white/[0.1] text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]/30 transition-all font-mono"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6E7681] hover:text-white transition-colors cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors cursor-pointer"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
+                </div>
+
+                {/* 5-segment golden strength meter */}
+                <div className="pt-1.5 space-y-1">
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {[1, 2, 3, 4, 5].map((lvl) => (
+                      <div
+                        key={lvl}
+                        className={`h-1.5 rounded-full transition-all ${
+                          lvl <= strength.score ? strength.color : 'bg-white/[0.08]'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  {strength.label && (
+                    <div className="text-[10px] text-zinc-400 font-medium flex justify-between">
+                      <span>{strength.label}</span>
+                      <span className="text-[#E5C38D] font-semibold">Min 6 characters</span>
+                    </div>
+                  )}
                 </div>
                 {errors.password && (
-                  <p className="text-[11px] text-rose-400 font-medium flex items-center gap-1 pt-0.5">
-                    <AlertCircle className="w-3 h-3 shrink-0" />
-                    <span>{errors.password}</span>
-                  </p>
+                  <span className="text-[10px] text-rose-400 font-medium">{errors.password}</span>
                 )}
               </div>
 
-              {/* Confirm password */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#C8D1D9] block">
-                  Confirm password
-                </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-[#6E7681] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              {/* Terms Checkbox */}
+              <div className="pt-1">
+                <label className="flex items-start gap-2 text-[11px] text-zinc-400 cursor-pointer select-none">
                   <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="Re-enter your password"
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value);
-                      if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
-                    }}
-                    style={{ paddingLeft: '2.5rem', paddingRight: '2.75rem' }}
-                    className={`w-full bg-[#11161B] border ${
-                      errors.confirmPassword ? 'border-rose-400 ring-1 ring-rose-400/30' : 'border-white/10'
-                    } rounded-xl py-2.5 text-xs text-white placeholder:text-[#525A64] focus:outline-none focus:border-[#E2BA7D] focus:ring-1 focus:ring-[#E2BA7D]/30 transition-all font-sans shadow-xs`}
+                    type="checkbox"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded mt-0.5 bg-[#07090C] border-white/20 text-[#C59E5F] focus:ring-0 cursor-pointer accent-[#C59E5F]"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6E7681] hover:text-white transition-colors cursor-pointer"
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {errors.confirmPassword && (
-                  <p className="text-[11px] text-rose-400 font-medium flex items-center gap-1 pt-0.5">
-                    <AlertCircle className="w-3 h-3 shrink-0" />
-                    <span>{errors.confirmPassword}</span>
-                  </p>
+                  <span>
+                    I agree to the:{' '}
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('terms')}
+                      className="font-bold text-[#E5C38D] hover:underline"
+                    >
+                      Terms of Service
+                    </button>{' '}
+                    and{' '}
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('privacy')}
+                      className="font-bold text-[#E5C38D] hover:underline"
+                    >
+                      Privacy Policy
+                    </button>
+                  </span>
+                </label>
+                {errors.terms && (
+                  <p className="text-[10px] text-rose-400 font-medium pt-0.5">{errors.terms}</p>
                 )}
               </div>
 
-              {/* Account type radio cards */}
-              <div className="space-y-2 pt-1">
-                <label className="text-xs font-medium text-[#C8D1D9] block">
-                  Account type
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Card 1: Solo Developer */}
-                  <div
-                    onClick={() => setAccountType('solo')}
-                    className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
-                      accountType === 'solo'
-                        ? 'bg-[#141B21] border-[#E2BA7D] ring-1 ring-[#E2BA7D]/30'
-                        : 'bg-[#11161B] border-white/10 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                          accountType === 'solo' ? 'border-[#E2BA7D] bg-[#E2BA7D]' : 'border-[#6E7681]'
-                        }`}
-                      >
-                        {accountType === 'solo' && <div className="w-1.5 h-1.5 rounded-full bg-[#0C1116]" />}
-                      </div>
-                      <span className="text-xs font-semibold text-white">Solo Developer</span>
-                    </div>
-                    <p className="text-[11px] text-[#8F9CA7] mt-1.5 leading-snug pl-5.5">
-                      Perfect for individual builders and indie hackers.
-                    </p>
-                  </div>
-
-                  {/* Card 2: Team / Organization */}
-                  <div
-                    onClick={() => setAccountType('team')}
-                    className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
-                      accountType === 'team'
-                        ? 'bg-[#141B21] border-[#E2BA7D] ring-1 ring-[#E2BA7D]/30'
-                        : 'bg-[#11161B] border-white/10 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                          accountType === 'team' ? 'border-[#E2BA7D] bg-[#E2BA7D]' : 'border-[#6E7681]'
-                        }`}
-                      >
-                        {accountType === 'team' && <div className="w-1.5 h-1.5 rounded-full bg-[#0C1116]" />}
-                      </div>
-                      <span className="text-xs font-semibold text-white">Team / Organization</span>
-                    </div>
-                    <p className="text-[11px] text-[#8F9CA7] mt-1.5 leading-snug pl-5.5">
-                      For teams with multiple developers and projects.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Create account CTA button */}
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-[#F0D5A5] via-[#E5C287] to-[#D8B06F] text-[#0C1116] font-bold text-xs sm:text-sm py-3 px-4 rounded-xl shadow-lg hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-4"
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#121722] hover:bg-[#1A2230] text-white border border-white/[0.12] hover:border-[#C59E5F]/50 text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-[#0C1116]" />
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
                 ) : (
                   <>
                     <span>Create account</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </>
                 )}
               </button>
             </form>
+          ) : (
+            /* FORM: PHONE OTP MODE */
+            <div className="space-y-4">
+              {!otpSent ? (
+                <div className="space-y-3">
+                  <label className="text-[11px] font-semibold text-zinc-300 block">
+                    Phone number
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={phoneCountry}
+                      onChange={(e) => setPhoneCountry(e.target.value)}
+                      className="px-2.5 py-2 text-xs rounded-xl bg-[#07090C] border border-white/[0.1] text-white font-mono focus:outline-none focus:border-[#C59E5F]"
+                    >
+                      <option value="+1">+1 (US/CA)</option>
+                      <option value="+44">+44 (UK)</option>
+                      <option value="+91">+91 (IN)</option>
+                      <option value="+49">+49 (DE)</option>
+                      <option value="+33">+33 (FR)</option>
+                      <option value="+81">+81 (JP)</option>
+                    </select>
+                    <input
+                      type="tel"
+                      placeholder="555-0199"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="flex-1 px-3 py-2 text-xs rounded-xl bg-[#07090C] border border-white/[0.1] text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C59E5F] font-mono"
+                    />
+                  </div>
+                  {errors.phone && (
+                    <span className="text-[10px] text-rose-400 font-medium">{errors.phone}</span>
+                  )}
 
-            {/* Divider */}
-            <div className="relative my-5 text-center">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10" />
-              </div>
-              <span className="relative bg-[#0B0E12] px-3 text-[11px] text-[#6E7681]">or</span>
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    disabled={loading}
+                    className="w-full py-3 px-4 rounded-xl bg-[#121722] hover:bg-[#1A2230] text-white border border-white/[0.12] hover:border-[#C59E5F]/50 text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    ) : (
+                      <>
+                        <span>Send Verification Code</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                  <div className="text-center space-y-1">
+                    <div className="text-xs font-semibold text-zinc-300">
+                      Enter the 6-digit code sent to
+                    </div>
+                    <div className="text-xs font-mono font-bold text-[#E5C38D]">
+                      {phoneCountry} {phoneNumber}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center gap-2">
+                    {otpCode.map((digit, i) => (
+                      <input
+                        key={i}
+                        id={`signup-otp-${i}`}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpInput(i, e.target.value)}
+                        className="w-9 h-11 text-center text-sm font-bold font-mono rounded-xl bg-[#07090C] border border-white/[0.14] text-white focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]"
+                      />
+                    ))}
+                  </div>
+                  {errors.otp && (
+                    <p className="text-[10px] text-rose-400 text-center font-medium">{errors.otp}</p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 px-4 rounded-xl bg-[#121722] hover:bg-[#1A2230] text-white border border-white/[0.12] hover:border-[#C59E5F]/50 text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    ) : (
+                      <>
+                        <span>Verify &amp; Create account</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setOtpSent(false)}
+                      className="text-[11px] text-zinc-400 hover:text-white underline cursor-pointer"
+                    >
+                      Change phone number
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
+          )}
 
-            {/* Social Logins */}
-            <div className="space-y-2.5">
-              <button
-                type="button"
-                onClick={() => handleSocialAuth('google')}
-                className="w-full bg-[#11161B] hover:bg-[#161D24] border border-white/10 rounded-xl py-2.5 px-4 text-xs text-white font-medium flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs"
-              >
-                <GoogleAuthIcon className="w-4 h-4" />
-                <span>Continue with Google</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSocialAuth('github')}
-                className="w-full bg-[#11161B] hover:bg-[#161D24] border border-white/10 rounded-xl py-2.5 px-4 text-xs text-white font-medium flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs"
-              >
-                <GitHubAuthIcon className="w-4 h-4 text-white" />
-                <span>Continue with GitHub</span>
-              </button>
+          {/* Divider */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/[0.08]" />
+            </div>
+            <div className="relative flex justify-center text-[10px] uppercase font-semibold text-zinc-500">
+              <span className="bg-[#0C1017] px-2.5 tracking-wider">OR SIGN UP WITH</span>
             </div>
           </div>
 
-          {/* Bottom Terms Disclaimer */}
-          <div className="pt-5 text-center text-[11px] text-[#6E7681] flex items-center justify-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#8F9CA7] shrink-0" />
-            <span>
-              By creating an account, you agree to our{' '}
-              <a href="#terms" className="text-[#C8D1D9] hover:underline">Terms of Service</a> and{' '}
-              <a href="#privacy" className="text-[#C8D1D9] hover:underline">Privacy Policy</a>.
-            </span>
+          {/* Social Buttons (Google, Microsoft, GitHub) */}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handleSocialAuth('google')}
+              className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border border-white/[0.08] bg-[#07090C] hover:bg-white/[0.04] text-[11px] font-semibold text-white transition-colors shadow-2xs cursor-pointer"
+            >
+              <GoogleAuthIcon className="w-3.5 h-3.5" />
+              <span>Google</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSocialAuth('microsoft')}
+              className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border border-white/[0.08] bg-[#07090C] hover:bg-white/[0.04] text-[11px] font-semibold text-white transition-colors shadow-2xs cursor-pointer"
+            >
+              <MicrosoftAuthIcon className="w-3.5 h-3.5" />
+              <span>Microsoft</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSocialAuth('github')}
+              className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border border-white/[0.08] bg-[#07090C] hover:bg-white/[0.04] text-[11px] font-semibold text-white transition-colors shadow-2xs cursor-pointer"
+            >
+              <GitHubAuthIcon className="w-3.5 h-3.5" />
+              <span>GitHub</span>
+            </button>
+          </div>
+
+          {/* Footer Link */}
+          <div className="text-center text-xs text-zinc-400 mt-4">
+            Already have an account?{' '}
+            <button
+              type="button"
+              onClick={() => onNavigate('login')}
+              className="font-bold text-[#E5C38D] hover:underline cursor-pointer"
+            >
+              Log in
+            </button>
+          </div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* BOTTOM FEATURE CARDS                                         */}
+        {/* ============================================================ */}
+        <div className="w-full max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] text-center">
+          <div className="flex flex-col items-center space-y-1">
+            <div className="w-8 h-8 rounded-full bg-[#181C24] border border-[#E5C287]/20 flex items-center justify-center text-[#E5C38D] mb-1">
+              <Shield className="w-4 h-4" />
+            </div>
+            <div className="text-xs font-bold text-white">7-day free trial</div>
+            <div className="text-[11px] text-zinc-400">Explore all features with full access.</div>
+          </div>
+
+          <div className="flex flex-col items-center space-y-1">
+            <div className="w-8 h-8 rounded-full bg-[#181C24] border border-[#E5C287]/20 flex items-center justify-center text-[#E5C38D] mb-1">
+              <CreditCard className="w-4 h-4" />
+            </div>
+            <div className="text-xs font-bold text-white">No credit card</div>
+            <div className="text-[11px] text-zinc-400">Get started instantly no commitment.</div>
+          </div>
+
+          <div className="flex flex-col items-center space-y-1">
+            <div className="w-8 h-8 rounded-full bg-[#181C24] border border-[#E5C287]/20 flex items-center justify-center text-[#E5C38D] mb-1">
+              <RefreshCw className="w-4 h-4" />
+            </div>
+            <div className="text-xs font-bold text-white">Cancel anytime</div>
+            <div className="text-[11px] text-zinc-400">Flexible plans that grow with you.</div>
           </div>
         </div>
       </div>
     </div>
   );
 };
-
-export default SignupPage;

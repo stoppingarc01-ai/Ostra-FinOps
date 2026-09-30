@@ -168,7 +168,7 @@ export const ProviderLogo: React.FC<{ provider: string; className?: string }> = 
   if (p.includes('qwen')) return <QwenLogo className={className} />;
   if (p.includes('cohere')) return <CohereLogo className={className} />;
   return (
-    <div className="w-5 h-5 rounded-md bg-sandstone-300 font-mono text-[10px] font-bold flex items-center justify-center text-charcoal-700">
+    <div className="w-5 h-5 rounded-md bg-white/[0.1] font-mono text-[10px] font-bold flex items-center justify-center text-zinc-300">
       {provider.slice(0, 2).toUpperCase()}
     </div>
   );
@@ -1099,18 +1099,18 @@ response = client.chat.completions.create(
       {/* ============================================================ */}
       {/* TOP HEADER: ENTERPRISE MODEL GATEWAY                          */}
       {/* ============================================================ */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EAE5DC] pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2 py-0.5 rounded-md bg-[#F4EFE6] text-[#9C7938] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#E5DBCA]">
+            <span className="px-2 py-0.5 rounded-md bg-[#C59E5F]/15 text-[#E5C38D] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#C59E5F]/30">
               Enterprise Model Gateway
             </span>
-            <span className="text-[11px] font-mono text-charcoal-400">40 Active Frontier Models</span>
+            <span className="text-[11px] font-mono text-zinc-500">40 Active Frontier Models</span>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-extrabold text-charcoal-900 tracking-tight font-sans">
+          <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight font-sans">
             AI Provider Integrations & Model Catalog
           </h1>
-          <p className="text-xs sm:text-sm text-charcoal-500 mt-1 max-w-2xl">
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl">
             Browse our curated 40-model production catalog with authentic logos, connect upstream master credentials, and generate 1-line gateway proxy snippets.
           </p>
         </div>
@@ -1118,7 +1118,7 @@ response = client.chat.completions.create(
         <div className="flex items-center gap-3">
           <button
             onClick={() => handleOpenModelIntegrate(CATALOG_MODELS[0])}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#C59E5F] hover:bg-[#B38D4F] text-white text-xs font-bold transition-all shadow-subtle hover:shadow-md cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#C59E5F] hover:bg-[#B38D4F] text-white text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Connect Upstream Provider</span>
@@ -1131,45 +1131,45 @@ response = client.chat.completions.create(
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-charcoal-500 tracking-wide uppercase font-mono">
+            <span className="text-xs font-semibold text-zinc-400 tracking-wide uppercase font-mono">
               Available Catalog Models
             </span>
-            <div className="w-7 h-7 rounded-xl bg-sandstone-200 text-charcoal-700 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-xl bg-white/[0.06] text-zinc-300 flex items-center justify-center">
               <Layers className="w-4 h-4 text-[#C59E5F]" />
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-charcoal-900 font-mono tracking-tight">
+          <div className="text-3xl font-extrabold text-white font-mono tracking-tight">
             40
           </div>
-          <div className="text-[11px] text-charcoal-500 mt-1 font-mono">
+          <div className="text-[11px] text-zinc-400 mt-1 font-mono">
             9 Active Provider Families
           </div>
         </div>
 
         {/* Metric 2 */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-charcoal-500 tracking-wide uppercase font-mono">
+            <span className="text-xs font-semibold text-zinc-400 tracking-wide uppercase font-mono">
               Active Workspace Keys
             </span>
-            <div className="w-7 h-7 rounded-xl bg-sandstone-200 text-charcoal-700 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-xl bg-white/[0.06] text-zinc-300 flex items-center justify-center">
               <Key className="w-4 h-4 text-[#C59E5F]" />
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-charcoal-900 font-mono tracking-tight">
+          <div className="text-3xl font-extrabold text-white font-mono tracking-tight">
             12
           </div>
-          <div className="text-[11px] text-charcoal-500 mt-1 font-mono">
+          <div className="text-[11px] text-zinc-400 mt-1 font-mono">
             Connected & authorized for proxy
           </div>
         </div>
 
         {/* Metric 3 */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-charcoal-500 tracking-wide uppercase font-mono">
+            <span className="text-xs font-semibold text-zinc-400 tracking-wide uppercase font-mono">
               Credential Security
             </span>
             <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
@@ -1180,25 +1180,25 @@ response = client.chat.completions.create(
             <Check className="w-4 h-4 stroke-[3]" />
             <span>AES-256-GCM Vault</span>
           </div>
-          <div className="text-[11px] text-charcoal-500 mt-1 font-mono">
+          <div className="text-[11px] text-zinc-400 mt-1 font-mono">
             Zero plaintext key storage in transit
           </div>
         </div>
 
         {/* Metric 4 */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-charcoal-500 tracking-wide uppercase font-mono">
+            <span className="text-xs font-semibold text-zinc-400 tracking-wide uppercase font-mono">
               Gateway Status
             </span>
             <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
               <Activity className="w-4 h-4 text-emerald-600" />
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-charcoal-900 font-mono tracking-tight">
+          <div className="text-3xl font-extrabold text-white font-mono tracking-tight">
             100%
           </div>
-          <div className="text-[11px] text-charcoal-500 mt-1 font-mono">
+          <div className="text-[11px] text-zinc-400 mt-1 font-mono">
             Dynamic routing & FinOps operational
           </div>
         </div>
@@ -1213,25 +1213,25 @@ response = client.chat.completions.create(
             <span className="text-[10px] font-mono uppercase font-bold text-[#C59E5F] tracking-wider block">
               Direct Model Catalog & 1-Click Integration
             </span>
-            <h2 className="text-lg font-bold text-charcoal-900 tracking-tight">
+            <h2 className="text-lg font-bold text-white tracking-tight">
               Choose a Model to Integrate
             </h2>
           </div>
 
           {/* Search Input */}
           <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-charcoal-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search gpt-5.6, gemini-3.8, claude-opus..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-[#EAE5DC] text-xs text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-[#C59E5F] transition-all font-mono"
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] transition-all font-mono"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-charcoal-400 hover:text-charcoal-700 cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -1250,7 +1250,7 @@ response = client.chat.completions.create(
                 className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
                   isActive
                     ? 'bg-[#18181B] text-white font-semibold shadow-xs'
-                    : 'bg-white hover:bg-[#F5F2EB] text-charcoal-600 border border-[#EAE5DC]'
+                    : 'bg-[#0B0E14] hover:bg-[#07090C] text-zinc-400 border border-white/[0.08]'
                 }`}
               >
                 {prov.value !== 'All' && (
@@ -1261,7 +1261,7 @@ response = client.chat.completions.create(
                 <span>{prov.label}</span>
                 <span
                   className={`text-[10px] font-mono px-1.5 py-0.2 rounded-md ${
-                    isActive ? 'bg-[#27272A] text-ostraGold-300' : 'bg-sandstone-200 text-charcoal-500'
+                    isActive ? 'bg-[#27272A] text-ostraGold-300' : 'bg-white/[0.06] text-zinc-400'
                   }`}
                 >
                   {prov.count}
@@ -1281,10 +1281,10 @@ response = client.chat.completions.create(
           return (
             <div
               key={model.id}
-              className={`rounded-2xl p-5 shadow-subtle hover:shadow-md transition-all flex flex-col justify-between group ${
+              className={`rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group ${
                 isShowcase
                   ? 'bg-gradient-to-b from-[#FFFDF9] to-white border-2 border-[#C59E5F] ring-2 ring-[#C59E5F]/10'
-                  : 'bg-white border border-[#EAE5DC] hover:border-[#D6BA84]'
+                  : 'bg-[#0B0E14] border border-white/[0.08] hover:border-[#D6BA84]'
               }`}
             >
               <div>
@@ -1293,19 +1293,19 @@ response = client.chat.completions.create(
                   <div className="flex items-center gap-2.5">
                     {/* Official Provider Logo Container */}
                     <div
-                      className={`w-9 h-9 rounded-xl border flex items-center justify-center p-1.5 shadow-2xs transition-all flex-shrink-0 ${
+                      className={`w-9 h-9 rounded-xl border flex items-center justify-center p-1.5 shadow-xs transition-all flex-shrink-0 ${
                         isShowcase
                           ? 'bg-[#FAF6ED] border-[#D6BA84]'
-                          : 'bg-[#FAF8F5] border-[#EAE5DC] group-hover:border-[#C59E5F]/60 group-hover:bg-white'
+                          : 'bg-[#07090C] border-white/[0.08] group-hover:border-[#C59E5F]/60 group-hover:bg-[#0B0E14]'
                       }`}
                     >
                       <ProviderLogo provider={model.provider} className="w-6 h-6 object-contain" />
                     </div>
                     <div>
-                      <span className="text-[10px] font-mono uppercase font-bold text-charcoal-500 block tracking-wider leading-none">
+                      <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 block tracking-wider leading-none">
                         {model.provider}
                       </span>
-                      <h3 className="text-sm font-bold text-charcoal-900 group-hover:text-[#18181B] transition-colors leading-tight mt-0.5 flex items-center gap-1.5">
+                      <h3 className="text-sm font-bold text-white group-hover:text-[#18181B] transition-colors leading-tight mt-0.5 flex items-center gap-1.5">
                         <span>{model.name}</span>
                         {isShowcase && <Sparkles className="w-3.5 h-3.5 text-[#C59E5F]" />}
                       </h3>
@@ -1318,7 +1318,7 @@ response = client.chat.completions.create(
                       <span>{model.status}</span>
                     </span>
                     {model.badgeLabel && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#FAF3E0] text-[#9C7938] border border-[#EEDDB8]">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#FAF3E0] text-[#E5C38D] border border-[#EEDDB8]">
                         {model.badgeLabel}
                       </span>
                     )}
@@ -1336,11 +1336,11 @@ response = client.chat.completions.create(
                 </div>
 
                 {/* Model ID Pill */}
-                <div className="mt-1 mb-3 px-2.5 py-1.5 rounded-lg bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between font-mono text-[11px] text-charcoal-700">
-                  <span className="truncate">ID: <span className="text-charcoal-900 font-semibold">{model.modelId}</span></span>
+                <div className="mt-1 mb-3 px-2.5 py-1.5 rounded-lg bg-[#07090C] border border-white/[0.08] flex items-center justify-between font-mono text-[11px] text-zinc-300">
+                  <span className="truncate">ID: <span className="text-white font-semibold">{model.modelId}</span></span>
                   <button
                     onClick={() => copyToClipboard(model.modelId, model.modelId)}
-                    className="text-charcoal-400 hover:text-charcoal-800 p-0.5 transition-colors cursor-pointer"
+                    className="text-zinc-500 hover:text-zinc-200 p-0.5 transition-colors cursor-pointer"
                     title="Copy Model ID"
                   >
                     {copiedKey === model.modelId ? (
@@ -1352,19 +1352,19 @@ response = client.chat.completions.create(
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-charcoal-600 leading-relaxed mb-4 min-h-[38px]">
+                <p className="text-xs text-zinc-400 leading-relaxed mb-4 min-h-[38px]">
                   {model.description}
                 </p>
 
                 {/* Specs Box: Context Window & Token Cost */}
-                <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] mb-3.5">
+                <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[#07090C] border border-white/[0.08] mb-3.5">
                   <div>
-                    <span className="text-[10px] text-charcoal-400 block font-mono">Context Window</span>
-                    <span className="text-xs font-bold font-mono text-charcoal-900">{model.contextWindow}</span>
+                    <span className="text-[10px] text-zinc-500 block font-mono">Context Window</span>
+                    <span className="text-xs font-bold font-mono text-white">{model.contextWindow}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-charcoal-400 block font-mono">Token Cost ($/1M)</span>
-                    <span className="text-xs font-bold font-mono text-charcoal-900">{model.tokenCost}</span>
+                    <span className="text-[10px] text-zinc-500 block font-mono">Token Cost ($/1M)</span>
+                    <span className="text-xs font-bold font-mono text-white">{model.tokenCost}</span>
                   </div>
                 </div>
 
@@ -1373,7 +1373,7 @@ response = client.chat.completions.create(
                   {model.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-[#F5F2EB] text-charcoal-700 border border-[#E5E0D5]"
+                      className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-[#07090C] text-zinc-300 border border-[#E5E0D5]"
                     >
                       {tag}
                     </span>
@@ -1381,8 +1381,8 @@ response = client.chat.completions.create(
                 </div>
 
                 {/* Fallback routing note */}
-                <div className="text-[10px] font-mono text-charcoal-400 truncate mb-4">
-                  Fallback: <span className="text-charcoal-600">{model.fallback}</span>
+                <div className="text-[10px] font-mono text-zinc-500 truncate mb-4">
+                  Fallback: <span className="text-zinc-400">{model.fallback}</span>
                 </div>
               </div>
 
@@ -1392,11 +1392,11 @@ response = client.chat.completions.create(
                 className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 group/btn cursor-pointer ${
                   isShowcase
                     ? 'bg-[#C59E5F] hover:bg-[#B38D4F] text-white shadow-xs'
-                    : 'bg-[#FAF8F5] hover:bg-[#18181B] text-charcoal-900 hover:text-white border border-[#EAE5DC] hover:border-[#18181B]'
+                    : 'bg-[#07090C] hover:bg-[#18181B] text-white hover:text-white border border-white/[0.08] hover:border-[#18181B]'
                 }`}
               >
                 <span>Configure & Proxy Model</span>
-                <ArrowUpRight className={`w-3.5 h-3.5 transition-colors ${isShowcase ? 'text-white' : 'text-charcoal-500 group-hover/btn:text-white'}`} />
+                <ArrowUpRight className={`w-3.5 h-3.5 transition-colors ${isShowcase ? 'text-white' : 'text-zinc-400 group-hover/btn:text-white'}`} />
               </button>
             </div>
           );
@@ -1408,24 +1408,24 @@ response = client.chat.completions.create(
       {/* ============================================================ */}
       {wizardOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-[#FAF8F5] border border-[#EAE5DC] w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+          <div className="bg-[#07090C] border border-white/[0.08] w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
             
             {/* Modal Top Header */}
-            <div className="px-6 py-4 border-b border-[#EAE5DC] flex items-center justify-between bg-white">
+            <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between bg-[#0B0E14]">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#FAF3E0] border border-[#EEDDB8] flex items-center justify-center flex-shrink-0">
                   <Zap className="w-5 h-5 text-[#C59E5F]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-charcoal-900 font-sans">
+                    <h3 className="text-base font-bold text-white font-sans">
                       Connect Upstream Model & Provider
                     </h3>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#18181B] text-white uppercase tracking-wider">
                       STEP {currentStep} OF 3
                     </span>
                   </div>
-                  <p className="text-xs text-charcoal-500">
+                  <p className="text-xs text-zinc-400">
                     {currentStep === 1
                       ? 'Select an upstream model provider family to authorize.'
                       : currentStep === 2
@@ -1436,21 +1436,21 @@ response = client.chat.completions.create(
               </div>
               <button
                 onClick={() => setWizardOpen(false)}
-                className="p-1.5 rounded-lg text-charcoal-400 hover:text-charcoal-900 hover:bg-sandstone-200 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* 3 Step Tabs Navigation Bar */}
-            <div className="grid grid-cols-3 border-b border-[#EAE5DC] text-xs font-mono">
+            <div className="grid grid-cols-3 border-b border-white/[0.08] text-xs font-mono">
               {/* Step 1 Tab */}
               <button
                 onClick={() => setCurrentStep(1)}
-                className={`py-3 px-4 flex items-center justify-center gap-2 border-r border-[#EAE5DC] transition-colors cursor-pointer ${
+                className={`py-3 px-4 flex items-center justify-center gap-2 border-r border-white/[0.08] transition-colors cursor-pointer ${
                   currentStep === 1
-                    ? 'bg-[#F5EFE0] text-[#9C7938] font-bold'
-                    : 'bg-white hover:bg-sandstone-100 text-charcoal-600'
+                    ? 'bg-[#F5EFE0] text-[#E5C38D] font-bold'
+                    : 'bg-[#0B0E14] hover:bg-white/[0.04] text-zinc-400'
                 }`}
               >
                 <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]">
@@ -1462,12 +1462,12 @@ response = client.chat.completions.create(
               {/* Step 2 Tab */}
               <button
                 onClick={() => setCurrentStep(2)}
-                className={`py-3 px-4 flex items-center justify-center gap-2 border-r border-[#EAE5DC] transition-colors cursor-pointer ${
+                className={`py-3 px-4 flex items-center justify-center gap-2 border-r border-white/[0.08] transition-colors cursor-pointer ${
                   currentStep === 2
-                    ? 'bg-[#F5EFE0] text-[#9C7938] font-bold'
+                    ? 'bg-[#F5EFE0] text-[#E5C38D] font-bold'
                     : currentStep > 2
-                    ? 'bg-white text-emerald-700'
-                    : 'bg-white hover:bg-sandstone-100 text-charcoal-600'
+                    ? 'bg-[#0B0E14] text-emerald-700'
+                    : 'bg-[#0B0E14] hover:bg-white/[0.04] text-zinc-400'
                 }`}
               >
                 <div
@@ -1476,7 +1476,7 @@ response = client.chat.completions.create(
                       ? 'bg-[#C59E5F] text-white'
                       : currentStep > 2
                       ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-sandstone-300 text-charcoal-700'
+                      : 'bg-white/[0.1] text-zinc-300'
                   }`}
                 >
                   {currentStep > 2 ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : '2'}
@@ -1492,17 +1492,17 @@ response = client.chat.completions.create(
                 disabled={!canProceedStep2 && currentStep < 3}
                 className={`py-3 px-4 flex items-center justify-center gap-2 transition-colors ${
                   currentStep === 3
-                    ? 'bg-[#F5EFE0] text-[#9C7938] font-bold cursor-pointer'
+                    ? 'bg-[#F5EFE0] text-[#E5C38D] font-bold cursor-pointer'
                     : canProceedStep2
-                    ? 'bg-white hover:bg-sandstone-100 text-charcoal-600 cursor-pointer'
-                    : 'bg-[#FAF8F5] text-charcoal-400 cursor-not-allowed opacity-60'
+                    ? 'bg-[#0B0E14] hover:bg-white/[0.04] text-zinc-400 cursor-pointer'
+                    : 'bg-[#07090C] text-zinc-500 cursor-not-allowed opacity-60'
                 }`}
               >
                 <div
                   className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
                     currentStep === 3
                       ? 'bg-[#C59E5F] text-white'
-                      : 'bg-sandstone-200 text-charcoal-500'
+                      : 'bg-white/[0.06] text-zinc-400'
                   }`}
                 >
                   3
@@ -1519,7 +1519,7 @@ response = client.chat.completions.create(
               {/* ============================================================ */}
               {currentStep === 1 && (
                 <div className="space-y-4">
-                  <div className="text-xs text-charcoal-600">
+                  <div className="text-xs text-zinc-400">
                     Select an upstream AI provider to vault credentials and generate your gateway proxy route:
                   </div>
                   <div className="grid grid-cols-3 gap-3">
@@ -1549,18 +1549,18 @@ response = client.chat.completions.create(
                           }}
                           className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
                             isSel
-                              ? 'bg-white border-[#C59E5F] shadow-sm ring-1 ring-[#C59E5F]'
-                              : 'bg-white border-[#EAE5DC] hover:border-[#D6BA84] hover:bg-sandstone-100'
+                              ? 'bg-[#0B0E14] border-[#C59E5F] shadow-sm ring-1 ring-[#C59E5F]'
+                              : 'bg-[#0B0E14] border-white/[0.08] hover:border-[#D6BA84] hover:bg-white/[0.04]'
                           }`}
                         >
-                          <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center p-1.5 flex-shrink-0">
+                          <div className="w-8 h-8 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center p-1.5 flex-shrink-0">
                             <ProviderLogo provider={provName} className="w-5 h-5 object-contain" />
                           </div>
                           <div>
-                            <span className="text-xs font-bold text-charcoal-900 block leading-tight font-sans">
+                            <span className="text-xs font-bold text-white block leading-tight font-sans">
                               {provName}
                             </span>
-                            <span className="text-[10px] text-charcoal-400 font-mono">
+                            <span className="text-[10px] text-zinc-500 font-mono">
                               {CATALOG_MODELS.filter((m) => m.provider === provName).length} models
                             </span>
                           </div>
@@ -1579,7 +1579,7 @@ response = client.chat.completions.create(
                   
                   {/* Field 1: Connection Name */}
                   <div>
-                    <label className="text-xs font-bold text-charcoal-700 block mb-1.5 font-mono uppercase tracking-wide">
+                    <label className="text-xs font-bold text-zinc-300 block mb-1.5 font-mono uppercase tracking-wide">
                       Connection Name
                     </label>
                     <input
@@ -1587,14 +1587,14 @@ response = client.chat.completions.create(
                       value={connectionName}
                       onChange={(e) => setConnectionName(e.target.value)}
                       placeholder="e.g. Production Anthropic Cluster"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F] transition-all"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F] transition-all"
                     />
                   </div>
 
                   {/* Field 2: Upstream API Key / Secret with Security Badge */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-bold text-charcoal-700 font-mono uppercase tracking-wide">
+                      <label className="text-xs font-bold text-zinc-300 font-mono uppercase tracking-wide">
                         Upstream API Key / Secret
                       </label>
                       <div className="flex items-center gap-1 text-[11px] font-mono text-emerald-700">
@@ -1616,18 +1616,18 @@ response = client.chat.completions.create(
                         placeholder={
                           PROVIDER_RULES[activeProvider]?.placeholder || 'Enter upstream secret key...'
                         }
-                        className={`w-full px-3.5 py-2.5 pr-10 rounded-xl bg-white text-xs font-mono transition-all focus:outline-none ${
+                        className={`w-full px-3.5 py-2.5 pr-10 rounded-xl bg-[#0B0E14] text-xs font-mono transition-all focus:outline-none ${
                           keyTouched && !keyValidation.valid
                             ? 'border-2 border-rose-400 bg-rose-50/20 text-rose-900 focus:border-rose-500'
                             : keyTouched && keyValidation.valid
-                            ? 'border border-emerald-400 text-charcoal-900 focus:border-emerald-500'
-                            : 'border border-[#EAE5DC] text-charcoal-900 focus:border-[#C59E5F]'
+                            ? 'border border-emerald-400 text-white focus:border-emerald-500'
+                            : 'border border-white/[0.08] text-white focus:border-[#C59E5F]'
                         }`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-400 hover:text-charcoal-700 cursor-pointer"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 cursor-pointer"
                         title={showApiKey ? 'Hide Key' : 'Show Key'}
                       >
                         {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -1645,7 +1645,7 @@ response = client.chat.completions.create(
 
                   {/* Field 3: Target Model Identifier Pills */}
                   <div>
-                    <label className="text-xs font-bold text-charcoal-700 block mb-1.5 font-mono uppercase tracking-wide">
+                    <label className="text-xs font-bold text-zinc-300 block mb-1.5 font-mono uppercase tracking-wide">
                       Target Model Identifier
                     </label>
 
@@ -1665,7 +1665,7 @@ response = client.chat.completions.create(
                             className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium transition-all cursor-pointer ${
                               isSelected
                                 ? 'bg-[#18181B] text-[#C59E5F] border border-[#C59E5F] font-bold shadow-xs'
-                                : 'bg-white text-charcoal-700 border border-[#EAE5DC] hover:border-[#D6BA84]'
+                                : 'bg-[#0B0E14] text-zinc-300 border border-white/[0.08] hover:border-[#D6BA84]'
                             }`}
                           >
                             {m.modelId}
@@ -1680,7 +1680,7 @@ response = client.chat.completions.create(
                       value={customModelId}
                       onChange={(e) => setCustomModelId(e.target.value)}
                       placeholder="Or enter custom model ID (e.g. meta-llama/Llama-3.3-70B-Instruct, custom-lora-v1)"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-[#C59E5F] transition-all"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] transition-all"
                     />
                   </div>
 
@@ -1692,10 +1692,10 @@ response = client.chat.completions.create(
                       disabled={handshakeState === 'testing' || !canProceedStep2}
                       className={`w-full py-2.5 px-4 rounded-xl border text-xs font-semibold font-mono flex items-center justify-center gap-2 transition-all cursor-pointer ${
                         !canProceedStep2
-                          ? 'bg-sandstone-100 text-charcoal-400 border-[#EAE5DC] cursor-not-allowed opacity-60'
+                          ? 'bg-white/[0.04] text-zinc-500 border-white/[0.08] cursor-not-allowed opacity-60'
                           : handshakeState === 'success'
                           ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                          : 'bg-white border-[#EAE5DC] hover:border-[#C59E5F] text-charcoal-800 hover:bg-sandstone-100'
+                          : 'bg-[#0B0E14] border-white/[0.08] hover:border-[#C59E5F] text-zinc-200 hover:bg-white/[0.04]'
                       }`}
                     >
                       {handshakeState === 'testing' ? (
@@ -1720,7 +1720,7 @@ response = client.chat.completions.create(
                   {/* Field 5 & 6: 2 Columns (Monthly Spend Limit & Budget Fallback Model) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div>
-                      <label className="text-[11px] font-bold text-charcoal-600 block mb-1 font-mono uppercase">
+                      <label className="text-[11px] font-bold text-zinc-400 block mb-1 font-mono uppercase">
                         Monthly Spend Limit (Optional)
                       </label>
                       <input
@@ -1728,12 +1728,12 @@ response = client.chat.completions.create(
                         value={monthlySpendLimit}
                         onChange={(e) => setMonthlySpendLimit(e.target.value)}
                         placeholder="$ e.g. 500"
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                        className="w-full px-3 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F]"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[11px] font-bold text-charcoal-600 block mb-1 font-mono uppercase">
+                      <label className="text-[11px] font-bold text-zinc-400 block mb-1 font-mono uppercase">
                         Budget Fallback Model (Optional)
                       </label>
                       <input
@@ -1741,7 +1741,7 @@ response = client.chat.completions.create(
                         value={fallbackModelId}
                         onChange={(e) => setFallbackModelId(e.target.value)}
                         placeholder="e.g. gemini-3.5-flash-lite, gpt-5.4-mini"
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                        className="w-full px-3 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F]"
                       />
                     </div>
                   </div>
@@ -1768,14 +1768,14 @@ response = client.chat.completions.create(
 
                   {/* 1-Line Gateway Base URL Box */}
                   <div>
-                    <label className="text-xs font-bold text-charcoal-700 block mb-1.5 font-mono uppercase">
+                    <label className="text-xs font-bold text-zinc-300 block mb-1.5 font-mono uppercase">
                       1-Line Gateway Base URL
                     </label>
-                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-[#EAE5DC] font-mono text-xs text-charcoal-900">
+                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] font-mono text-xs text-white">
                       <span className="text-emerald-700 font-semibold">https://gateway.ostraops.com/v1</span>
                       <button
                         onClick={() => copyToClipboard('https://gateway.ostraops.com/v1', 'Gateway URL')}
-                        className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sandstone-100 hover:bg-sandstone-200 text-charcoal-700 font-sans text-xs font-semibold cursor-pointer"
+                        className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-zinc-300 font-sans text-xs font-semibold cursor-pointer"
                       >
                         {copiedKey === 'Gateway URL' ? (
                           <>
@@ -1795,7 +1795,7 @@ response = client.chat.completions.create(
                   {/* Code Snippet Tabs */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs font-bold text-charcoal-700 font-mono uppercase">
+                      <label className="text-xs font-bold text-zinc-300 font-mono uppercase">
                         Drop-In Client Snippet
                       </label>
                       <div className="flex items-center gap-1">
@@ -1806,7 +1806,7 @@ response = client.chat.completions.create(
                             className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium transition-all cursor-pointer ${
                               codeSnippetLang === lang
                                 ? 'bg-[#18181B] text-white'
-                                : 'bg-white text-charcoal-600 border border-[#EAE5DC] hover:bg-sandstone-100'
+                                : 'bg-[#0B0E14] text-zinc-400 border border-white/[0.08] hover:bg-white/[0.04]'
                             }`}
                           >
                             {lang === 'typescript' ? 'TS (Vercel AI)' : lang === 'python' ? 'Python' : 'cURL'}
@@ -1834,14 +1834,14 @@ response = client.chat.completions.create(
             </div>
 
             {/* Modal Bottom Action Bar */}
-            <div className="px-6 py-4 bg-white border-t border-[#EAE5DC] flex items-center justify-between">
+            <div className="px-6 py-4 bg-[#0B0E14] border-t border-white/[0.08] flex items-center justify-between">
               {currentStep === 1 ? (
                 <div></div>
               ) : currentStep === 2 ? (
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-charcoal-600 hover:text-charcoal-900 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Change Provider</span>
@@ -1850,7 +1850,7 @@ response = client.chat.completions.create(
                 <button
                   type="button"
                   onClick={() => setCurrentStep(2)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-charcoal-600 hover:text-charcoal-900 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Back to Credentials</span>
@@ -1873,8 +1873,8 @@ response = client.chat.completions.create(
                   disabled={!canProceedStep2}
                   className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
                     canProceedStep2
-                      ? 'bg-[#C59E5F] hover:bg-[#B38D4F] text-white cursor-pointer shadow-subtle hover:shadow-md'
-                      : 'bg-charcoal-300 text-charcoal-500 cursor-not-allowed opacity-60'
+                      ? 'bg-[#C59E5F] hover:bg-[#B38D4F] text-white cursor-pointer shadow-xs hover:shadow-md'
+                      : 'bg-charcoal-300 text-zinc-400 cursor-not-allowed opacity-60'
                   }`}
                 >
                   <span>Connect & Generate Snippet</span>

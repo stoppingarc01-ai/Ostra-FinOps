@@ -9,6 +9,7 @@ import { AgentEcosystemSection } from './components/AgentEcosystemSection';
 import { DeveloperQuickstartSection } from './components/DeveloperQuickstartSection';
 import { FAQSection } from './components/FAQSection';
 import { EnterpriseTrustSection } from './components/EnterpriseTrustSection';
+import { TeamsDevelopersSection } from './components/TeamsDevelopersSection';
 import { PricingPage } from './pages/PricingPage';
 import { ModelsPage } from './pages/ModelsPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -16,12 +17,16 @@ import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { AuthShowcasePage } from './pages/AuthShowcasePage';
-import { LegalPage } from './pages/LegalPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { TermsOfServicePage } from './pages/TermsOfServicePage';
+import { CookiePolicyPage } from './pages/CookiePolicyPage';
+import { RefundPolicyPage } from './pages/RefundPolicyPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { BuildErrorPage } from './pages/BuildErrorPage';
 import { ServerErrorPage } from './pages/ServerErrorPage';
 import { RateLimitPage } from './pages/RateLimitPage';
 import { AboutUsPage } from './pages/AboutUsPage';
+import { OnboardingPage } from './pages/OnboardingPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CookieBanner } from './components/CookieBanner';
 import { Footer } from './components/Footer';
@@ -29,14 +34,14 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { OstraIcon } from './components/OstraBrand';
 
-export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'about' | '404' | '500' | 'build-error' | '429';
+export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'refund' | 'about' | '404' | '500' | 'build-error' | '429';
 
 // Routes that require authentication
-const PROTECTED_ROUTES: AppRoute[] = ['dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings'];
-const HOMEPAGE_SECTIONS = ['#features', '#architecture', '#agents', '#developers', '#docs', '#quickstart', '#security', '#faq', '#ui-showcase', '#hero', '#about-sec'];
+const PROTECTED_ROUTES: AppRoute[] = ['dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings', 'onboarding'];
+const HOMEPAGE_SECTIONS = ['#features', '#architecture', '#agents', '#developers', '#docs', '#quickstart', '#security', '#faq', '#ui-showcase', '#hero', '#about-sec', '#teams'];
 
 const AppInner: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
 
   const getInitialRoute = (): AppRoute => {
     const path = window.location.pathname.toLowerCase();
@@ -44,6 +49,14 @@ const AppInner: React.FC = () => {
     if (path.includes('auth-showcase') || hash.includes('auth-showcase') || hash.includes('auth')) return 'auth-showcase';
     if (path.includes('login') || hash.includes('login')) return 'login';
     if (path.includes('signup') || hash.includes('signup')) return 'signup';
+    if (path.includes('onboarding') || hash.includes('onboarding')) {
+      const isAlreadyOnboarded =
+        localStorage.getItem('ostraops_onboarding_completed') === 'true' ||
+        Boolean(profile?.onboarding_completed);
+      const hasForce = hash.includes('force=true') || path.includes('force=true');
+      if (isAlreadyOnboarded && !hasForce) return 'dashboard';
+      return 'onboarding';
+    }
     if (hash.includes('forgot-password')) return 'forgot-password';
     if (path.includes('settings') || hash.includes('settings')) return 'settings';
     if (path.includes('team') || hash.includes('team')) return 'team';
@@ -57,6 +70,7 @@ const AppInner: React.FC = () => {
     if (path.includes('privacy') || hash.includes('privacy')) return 'privacy';
     if (path.includes('terms') || hash.includes('terms')) return 'terms';
     if (path.includes('cookies') || hash.includes('cookies') || path.includes('cookie') || hash.includes('cookie')) return 'cookies';
+    if (path.includes('refund') || hash.includes('refund')) return 'refund';
     if (path.includes('about') || hash.includes('about')) return 'about';
     if (path.includes('pricing') || hash.includes('pricing')) return 'pricing';
     if (path.includes('429') || hash.includes('429') || path.includes('rate-limit') || hash.includes('rate-limit') || path.includes('quota') || hash.includes('quota')) return '429';
@@ -95,12 +109,32 @@ const AppInner: React.FC = () => {
       window.history.pushState(null, '', `#${authTarget}`);
       return;
     }
-    // If logged in and navigating to login/signup, go to their respective console
+    // If logged in and navigating to login/signup, go to their respective console or onboarding
     if (user && (route === 'login' || route === 'signup')) {
-      const target = getPreferredConsole();
+      const isAlreadyOnboarded =
+        localStorage.getItem('ostraops_onboarding_completed') === 'true' ||
+        (user?.id && localStorage.getItem(`ostraops_onboarding_${user.id}`) === 'true') ||
+        Boolean(profile?.onboarding_completed);
+
+      const target: AppRoute = (route === 'signup' || !isAlreadyOnboarded) ? 'onboarding' : getPreferredConsole();
       setCurrentRoute(target);
       window.history.pushState(null, '', `#${target}`);
       return;
+    }
+    // If navigating to onboarding but already completed, prevent showing onboarding repeatedly
+    if (route === 'onboarding') {
+      const isAlreadyOnboarded =
+        localStorage.getItem('ostraops_onboarding_completed') === 'true' ||
+        (user?.id && localStorage.getItem(`ostraops_onboarding_${user.id}`) === 'true') ||
+        Boolean(profile?.onboarding_completed);
+
+      const hasForce = window.location.hash.includes('force=true') || window.location.search.includes('force=true');
+      if (isAlreadyOnboarded && !hasForce) {
+        const target = getPreferredConsole();
+        setCurrentRoute(target);
+        window.history.pushState(null, '', `#${target}`);
+        return;
+      }
     }
     setCurrentRoute(route as AppRoute);
     const newPath = route === 'home' ? '#' : `#${route}`;
@@ -121,13 +155,31 @@ const AppInner: React.FC = () => {
       setCurrentRoute(authTarget);
       window.history.replaceState(null, '', `#${authTarget}`);
     }
-    // If logged in and on auth pages, go to their console
+    // If logged in and on auth pages, go to onboarding for new signups or dashboard for existing users
     if (user && (currentRoute === 'login' || currentRoute === 'signup')) {
-      const target = getPreferredConsole();
+      const isAlreadyOnboarded =
+        localStorage.getItem('ostraops_onboarding_completed') === 'true' ||
+        (user?.id && localStorage.getItem(`ostraops_onboarding_${user.id}`) === 'true') ||
+        Boolean(profile?.onboarding_completed);
+
+      const target: AppRoute = (currentRoute === 'signup' || !isAlreadyOnboarded) ? 'onboarding' : getPreferredConsole();
       setCurrentRoute(target);
       window.history.replaceState(null, '', `#${target}`);
     }
-  }, [loading, user, currentRoute]);
+    // If logged in and on onboarding route, but already completed onboarding, redirect to dashboard
+    if (user && currentRoute === 'onboarding') {
+      const isAlreadyOnboarded =
+        localStorage.getItem('ostraops_onboarding_completed') === 'true' ||
+        (user?.id && localStorage.getItem(`ostraops_onboarding_${user.id}`) === 'true') ||
+        Boolean(profile?.onboarding_completed);
+
+      const hasForce = window.location.hash.includes('force=true') || window.location.search.includes('force=true');
+      if (isAlreadyOnboarded && !hasForce) {
+        setCurrentRoute('dashboard');
+        window.history.replaceState(null, '', '#dashboard');
+      }
+    }
+  }, [loading, user, profile, currentRoute]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -137,6 +189,15 @@ const AppInner: React.FC = () => {
       if (hash.includes('auth-showcase') || hash.includes('auth')) route = 'auth-showcase';
       else if (hash.includes('login')) route = 'login';
       else if (hash.includes('signup')) route = 'signup';
+      else if (path.includes('onboarding') || hash.includes('onboarding')) {
+        const isAlreadyOnboarded =
+          localStorage.getItem('ostraops_onboarding_completed') === 'true' ||
+          (user?.id && localStorage.getItem(`ostraops_onboarding_${user.id}`) === 'true') ||
+          Boolean(profile?.onboarding_completed);
+
+        const hasForce = hash.includes('force=true') || path.includes('force=true');
+        route = (isAlreadyOnboarded && !hasForce) ? 'dashboard' : 'onboarding';
+      }
       else if (hash.includes('forgot-password')) route = 'forgot-password';
       else if (path.includes('settings') || hash.includes('settings')) route = 'settings';
       else if (path.includes('team') || hash.includes('team')) route = 'team';
@@ -150,6 +211,7 @@ const AppInner: React.FC = () => {
       else if (path.includes('privacy') || hash.includes('privacy')) route = 'privacy';
       else if (path.includes('terms') || hash.includes('terms')) route = 'terms';
       else if (path.includes('cookies') || hash.includes('cookies') || path.includes('cookie') || hash.includes('cookie')) route = 'cookies';
+      else if (path.includes('refund') || hash.includes('refund')) route = 'refund';
       else if (path.includes('about') || hash.includes('about')) route = 'about';
       else if (path.includes('pricing') || hash.includes('pricing')) route = 'pricing';
       else if (path.includes('429') || hash.includes('429') || path.includes('rate-limit') || hash.includes('rate-limit') || path.includes('quota') || hash.includes('quota')) route = '429';
@@ -186,26 +248,60 @@ const AppInner: React.FC = () => {
   // Loading skeleton — prevents unauthenticated render flash
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
+      <div className="min-h-screen bg-[#07090C] text-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <OstraIcon className="w-12 h-12 animate-pulse" variant="gold" />
-          <Loader2 className="w-5 h-5 animate-spin text-ostraGold-500" />
+          <Loader2 className="w-5 h-5 animate-spin text-[#C59E5F]" />
         </div>
       </div>
     );
   }
 
-  // Legal Hub (Privacy Policy, Terms of Service, Cookie Policy & Interactive Controls)
-  if (currentRoute === 'privacy' || currentRoute === 'terms' || currentRoute === 'cookies') {
+  // Dedicated Privacy Policy Page
+  if (currentRoute === 'privacy') {
     return (
       <>
         <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
         <div key={currentRoute} className="page-transition-enter">
-          <LegalPage
-            initialTab={currentRoute}
-            onNavigateHome={() => navigate('home')}
-            onNavigatePricing={() => navigate('pricing')}
-          />
+          <PrivacyPolicyPage onNavigate={navigate} />
+        </div>
+        <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
+      </>
+    );
+  }
+
+  // Dedicated Terms of Service Page
+  if (currentRoute === 'terms') {
+    return (
+      <>
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <TermsOfServicePage onNavigate={navigate} />
+        </div>
+        <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
+      </>
+    );
+  }
+
+  // Dedicated Cookie, Storage & Data Governance Page
+  if (currentRoute === 'cookies') {
+    return (
+      <>
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <CookiePolicyPage onNavigate={navigate} />
+        </div>
+      </>
+    );
+  }
+
+  // Dedicated Refund & Cancellation Policy Page
+  if (currentRoute === 'refund') {
+    return (
+      <>
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <RefundPolicyPage onNavigate={navigate} />
         </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
       </>
@@ -256,6 +352,18 @@ const AppInner: React.FC = () => {
           <ForgotPasswordPage onNavigate={navigate} />
         </div>
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
+      </>
+    );
+  }
+
+  // Onboarding Page
+  if (currentRoute === 'onboarding') {
+    return (
+      <>
+        <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
+        <div key={currentRoute} className="page-transition-enter">
+          <OnboardingPage onNavigate={navigate} />
+        </div>
       </>
     );
   }
@@ -336,7 +444,7 @@ const AppInner: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans antialiased selection:bg-ostraGold-500/20 selection:text-charcoal-900 overflow-x-hidden">
+    <div className="min-h-screen bg-[#07090C] text-zinc-100 font-sans antialiased selection:bg-[#C59E5F]/20 selection:text-[#FFF4D6] overflow-x-hidden">
       <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
       {/* Fixed Navigation Header */}
       <Navbar currentRoute={currentRoute} onNavigate={navigate} />
@@ -364,6 +472,12 @@ const AppInner: React.FC = () => {
 
             {/* Universal Agent Ecosystem (Cursor, Cline, Windsurf, Antigravity, Aider) */}
             <AgentEcosystemSection />
+
+            {/* Teams & Developers FinOps & Governance Section */}
+            <TeamsDevelopersSection 
+              onNavigateDashboard={() => navigate('dashboard')} 
+              onNavigatePricing={() => navigate('pricing')} 
+            />
 
             {/* Developer Quickstart & Terminal SDK Preview */}
             <DeveloperQuickstartSection />

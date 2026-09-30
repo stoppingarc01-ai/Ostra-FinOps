@@ -83,6 +83,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [timeRange, setTimeRange] = useState<string>(() => formatRange(6));
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [appliedRec, setAppliedRec] = useState(false);
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState<'30s' | '1m' | '5m' | 'off'>('30s');
+  const [autoRefreshOpen, setAutoRefreshOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Keep date updated in real time
   useEffect(() => {
@@ -92,7 +95,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'User';
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Admin';
   const displayEmail = profile?.email || user?.email || '';
   const initials = displayName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
   const firstName = displayName.split(' ')[0];
@@ -112,7 +115,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
-  // Heatmap intensity matrix (7 days x 5 time slots) in pure OstraOps sandstone & gold palette
+  // Heatmap intensity matrix (7 days x 5 time slots) in dark obsidian gold palette
   const heatmapData = [
     // 12 AM
     [0.1, 0.15, 0.2, 0.25, 0.35, 0.2, 0.1],
@@ -127,20 +130,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   ];
 
   const getHeatmapColor = (val: number) => {
-    if (val < 0.2) return 'bg-[#F4EFE6]';
-    if (val < 0.4) return 'bg-[#E8DFC8]';
-    if (val < 0.6) return 'bg-[#D6BA84]';
-    if (val < 0.8) return 'bg-[#C59E5F]';
-    return 'bg-[#9C7938]';
+    if (val < 0.2) return 'bg-white/[0.04] border border-white/[0.06]';
+    if (val < 0.4) return 'bg-[#C59E5F]/20 border border-[#C59E5F]/30';
+    if (val < 0.6) return 'bg-[#C59E5F]/45 border border-[#C59E5F]/55';
+    if (val < 0.8) return 'bg-[#C59E5F]/75 border border-[#C59E5F]/85';
+    return 'bg-[#E5C38D] border border-[#E5C38D] shadow-[0_0_10px_rgba(229,195,141,0.3)]';
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans flex antialiased selection:bg-ostraGold-500/20 selection:text-charcoal-900">
+    <div className="min-h-screen bg-[#07090C] text-white font-sans flex antialiased selection:bg-[#C59E5F]/25 selection:text-white">
       
       {/* Mobile Sidebar Overlay */}
       {mobileSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
           onClick={() => setMobileSidebarOpen(false)}
         />
       )}
@@ -149,7 +152,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       {/* LEFT SIDEBAR                                                 */}
       {/* ============================================================ */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-[#F5F2EB] border-r border-[#E8E2D5] flex flex-col justify-between py-5 px-4 transition-transform duration-300 ease-in-out ${
+        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-[#07090C] border-r border-white/[0.08] flex flex-col justify-between py-5 px-4 transition-transform duration-300 ease-in-out ${
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -163,8 +166,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             >
               <OstraLogo
                 iconClassName="w-8 h-8 group-hover:scale-105 transition-transform duration-200"
-                textClassName="text-xl font-bold tracking-tight text-[#0B0F0F] font-sans"
-                variant="charcoal"
+                textClassName="text-xl font-bold tracking-tight text-white font-sans"
+                variant="gold"
                 showTagline={true}
                 taglineType="control"
               />
@@ -173,7 +176,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             {/* Mobile close button */}
             <button
               onClick={() => setMobileSidebarOpen(false)}
-              className="lg:hidden p-1.5 rounded-lg text-charcoal-500 hover:bg-sandstone-300"
+              className="lg:hidden p-1.5 rounded-lg text-zinc-400 hover:bg-white/[0.08]"
             >
               <X className="w-5 h-5" />
             </button>
@@ -191,23 +194,23 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     setActiveTab(item.id);
                     setMobileSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-[#EAE3D2] text-charcoal-900 font-semibold shadow-xs'
-                      : 'text-charcoal-600 hover:bg-[#EFEAE0] hover:text-charcoal-900'
+                      ? 'bg-[#C59E5F]/15 text-[#E5C38D] border border-[#C59E5F]/30 font-semibold shadow-xs'
+                      : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <Icon
                       className={`w-4 h-4 ${
-                        isActive ? 'text-charcoal-900' : 'text-charcoal-500'
+                        isActive ? 'text-[#E5C38D]' : 'text-zinc-500'
                       }`}
                     />
                     <span>{item.label}</span>
                   </div>
 
                   {item.badge && (
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#E8DCC4] text-charcoal-800 font-mono">
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#C59E5F]/20 text-[#E5C38D] border border-[#C59E5F]/30 font-mono">
                       {item.badge}
                     </span>
                   )}
@@ -218,14 +221,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
         {/* Sidebar Footer: Current Plan + User Profile */}
-        <div className="space-y-3 pt-3 border-t border-[#E8E2D5]">
+        <div className="space-y-3 pt-3 border-t border-white/[0.08]">
           {/* Current Plan Box */}
-          <div className="p-3.5 rounded-2xl bg-[#FCFAF7] border border-[#EAE4D8] space-y-2.5">
+          <div className="p-3.5 rounded-2xl bg-[#0D1016] border border-white/[0.08] space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-charcoal-500 uppercase tracking-wider font-mono">
-                {subscription?.plan_name || 'Free Tier'}
+              <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-mono">
+                {subscription?.plan_name || 'HOSTED GATEWAY'}
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                 Active
               </span>
             </div>
@@ -233,22 +236,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             {/* Quota Progress Bar */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-[11px]">
-                <span className="text-charcoal-500 font-medium">Monthly Proxy Quota</span>
-                <span className="font-bold text-charcoal-800 font-mono">
-                  {subscription?.quota_usage_percent ?? 74}%
+                <span className="text-zinc-400 font-medium">Monthly Proxy Quota</span>
+                <span className="font-bold text-white font-mono">
+                  {subscription?.quota_usage_percent ?? 2.4}%
                 </span>
               </div>
-              <div className="h-1.5 w-full bg-[#EAE4D8] rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-ostraGold-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, subscription?.quota_usage_percent ?? 74)}%` }}
+                  className="h-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, subscription?.quota_usage_percent ?? 2.4)}%` }}
                 />
               </div>
             </div>
 
             <button
               onClick={onNavigatePricing}
-              className="w-full text-center py-1 text-[11px] font-bold text-charcoal-800 hover:text-charcoal-950 flex items-center justify-center gap-1 group cursor-pointer"
+              className="w-full text-center py-1 text-[11px] font-bold text-[#E5C38D] hover:text-white flex items-center justify-center gap-1 group cursor-pointer transition-colors"
             >
               <span>Manage Plan</span>
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -258,32 +261,32 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           {/* User Profile Card */}
           <div 
             onClick={() => setActiveTab('settings')}
-            className="flex items-center justify-between p-2 rounded-xl hover:bg-[#EFEAE0] transition-colors cursor-pointer group"
+            className="flex items-center justify-between p-2 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer group"
           >
             <div className="flex items-center gap-2.5">
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
                   alt={displayName}
-                  className="w-8 h-8 rounded-full object-cover border border-[#D5C9B3] shadow-2xs"
+                  className="w-8 h-8 rounded-full object-cover border border-[#C59E5F]/30 shadow-2xs"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-[#18181B] text-white text-xs font-bold flex items-center justify-center font-mono">
+                <div className="w-8 h-8 rounded-full bg-[#18181B] border border-[#C59E5F]/30 text-[#E5C38D] text-xs font-bold flex items-center justify-center font-mono">
                   {initials}
                 </div>
               )}
               <div className="text-left">
-                <div className="text-xs font-bold text-charcoal-900 leading-tight group-hover:text-black">
+                <div className="text-xs font-bold text-white leading-tight group-hover:text-[#E5C38D] transition-colors">
                   {displayName}
                 </div>
-                <div className="text-[10px] text-charcoal-500 font-mono truncate max-w-[110px]">
+                <div className="text-[10px] text-zinc-500 font-mono truncate max-w-[110px]">
                   {displayEmail}
                 </div>
               </div>
             </div>
             <button
               onClick={(e) => { e.stopPropagation(); signOut(); onNavigateHome(); }}
-              className="p-1.5 rounded-lg text-charcoal-400 hover:text-charcoal-700 hover:bg-sandstone-300 transition-colors"
+              className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.08] transition-colors"
               title="Sign out"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -298,21 +301,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <main className="flex-1 flex flex-col min-w-0 pb-16">
         
         {/* Top Header Bar */}
-        <header className="sticky top-0 z-30 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#EAE5DC] px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-30 bg-[#07090C]/90 backdrop-blur-md border-b border-white/[0.08] px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
           
           {/* Greeting */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-xl text-charcoal-600 hover:bg-sandstone-200"
+              className="lg:hidden p-2 rounded-xl text-zinc-400 hover:bg-white/[0.08]"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-lg lg:text-xl font-extrabold text-charcoal-900 tracking-tight leading-snug flex items-center gap-2">
+              <h1 className="text-lg lg:text-xl font-extrabold text-white tracking-tight leading-snug flex items-center gap-2">
                 <span>Good morning, {firstName}</span>
               </h1>
-              <p className="text-xs text-charcoal-500 hidden sm:block">
+              <p className="text-xs text-zinc-400 hidden sm:block">
                 Here's your proxy spend intelligence for today.
               </p>
             </div>
@@ -322,11 +325,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <div className="flex items-center gap-2.5 sm:gap-3">
             {/* Search Input */}
             <div className="relative hidden md:block">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-400" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input
                 type="text"
                 placeholder="Search anything... ⌘K"
-                className="w-44 lg:w-56 pl-8 pr-3 py-1.5 text-xs bg-white border border-[#EAE5DC] rounded-xl text-charcoal-800 placeholder:text-charcoal-400 focus:outline-none focus:border-ostraGold-500 transition-colors"
+                className="w-44 lg:w-56 pl-8 pr-3 py-1.5 text-xs bg-[#0F131A] border border-white/[0.1] rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] transition-colors"
               />
             </div>
 
@@ -334,16 +337,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="relative">
               <button
                 onClick={() => setDateDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-medium text-charcoal-700 hover:bg-sandstone-100 transition-colors shadow-xs cursor-pointer"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-medium text-zinc-200 hover:bg-white/[0.06] transition-colors shadow-xs cursor-pointer"
               >
-                <Calendar className="w-3.5 h-3.5 text-charcoal-500" />
+                <Calendar className="w-3.5 h-3.5 text-[#C59E5F]" />
                 <span className="hidden sm:inline font-mono">{timeRange}</span>
-                <ChevronDown className={`w-3 h-3 text-charcoal-400 transition-transform duration-200 ${dateDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3 h-3 text-zinc-400 transition-transform duration-200 ${dateDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {dateDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white border border-[#EAE5DC] shadow-xl p-2 z-50 animate-in fade-in zoom-in-95 font-sans">
-                  <div className="text-[10px] font-mono text-charcoal-400 uppercase tracking-wider px-2.5 py-1">
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-[#0B0E14] border border-white/[0.1] shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 font-sans">
+                  <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider px-2.5 py-1">
                     Live Time Range
                   </div>
                   {[
@@ -367,10 +370,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                         opt.action();
                         setDateDropdownOpen(false);
                       }}
-                      className="w-full text-left px-2.5 py-2 rounded-xl text-xs hover:bg-sandstone-100 text-charcoal-800 flex items-center justify-between transition-colors cursor-pointer"
+                      className="w-full text-left px-2.5 py-2 rounded-xl text-xs hover:bg-white/[0.06] text-zinc-300 hover:text-white flex items-center justify-between transition-colors cursor-pointer"
                     >
                       <span className="font-semibold">{opt.label}</span>
-                      <span className="text-[10px] font-mono text-charcoal-500">{opt.sub}</span>
+                      <span className="text-[10px] font-mono text-zinc-500">{opt.sub}</span>
                     </button>
                   ))}
                 </div>
@@ -378,30 +381,67 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
 
             {/* Auto refresh */}
-            <button className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-medium text-charcoal-700 hover:bg-sandstone-100 transition-colors shadow-xs">
-              <RefreshCw className="w-3.5 h-3.5 text-charcoal-500" />
-              <span>Auto refresh</span>
-              <ChevronDown className="w-3 h-3 text-charcoal-400" />
-            </button>
+            <div className="relative hidden sm:block">
+              <button
+                onClick={() => setAutoRefreshOpen(!autoRefreshOpen)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/50 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors shadow-xs cursor-pointer"
+                title="Telemetry refresh interval"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${autoRefreshInterval !== 'off' ? 'text-[#C59E5F]' : 'text-zinc-500'} ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>Auto refresh {autoRefreshInterval !== 'off' ? `(${autoRefreshInterval})` : '(Paused)'}</span>
+                <ChevronDown className={`w-3 h-3 text-zinc-500 transition-transform ${autoRefreshOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {autoRefreshOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#0B0E14] border border-white/[0.12] shadow-2xl p-1.5 z-50 space-y-1 font-mono text-xs">
+                  {[
+                    { val: '30s', label: 'Every 30 seconds (Default)' },
+                    { val: '1m', label: 'Every 1 minute' },
+                    { val: '5m', label: 'Every 5 minutes' },
+                    { val: 'off', label: 'Pause auto-refresh' }
+                  ].map((opt) => (
+                    <button
+                      key={opt.val}
+                      onClick={() => {
+                        setAutoRefreshInterval(opt.val as any);
+                        setAutoRefreshOpen(false);
+                        setIsRefreshing(true);
+                        setTimeout(() => setIsRefreshing(false), 800);
+                      }}
+                      className={`w-full text-left px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
+                        autoRefreshInterval === opt.val
+                          ? 'bg-[#C59E5F]/20 text-[#E5C38D]'
+                          : 'text-zinc-300 hover:bg-white/[0.06] hover:text-white'
+                      }`}
+                    >
+                      <span className="text-[11px] font-semibold">{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Notification Bell */}
             <button
               onClick={() => setActiveTab('alerts')}
-              className={`p-2 rounded-xl border text-charcoal-600 hover:text-charcoal-900 shadow-xs relative transition-colors cursor-pointer ${
-                activeTab === 'alerts' ? 'bg-charcoal-900 text-white border-transparent' : 'bg-white border-[#EAE5DC]'
+              className={`p-2 rounded-xl border shadow-xs relative transition-colors cursor-pointer ${
+                activeTab === 'alerts' 
+                  ? 'bg-[#C59E5F]/20 text-[#E5C38D] border-[#C59E5F]/40' 
+                  : 'bg-[#0B0E14] border-white/[0.08] text-zinc-400 hover:text-white'
               }`}
               title="View System Alerts"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white" />
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-[#07090C]" />
             </button>
+
             {/* Quick exit to website */}
             <button
               onClick={onNavigateHome}
-              className="px-3 py-1.5 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-medium transition-all shadow-xs flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-white text-xs font-medium border border-white/[0.08] transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <span>Exit Console</span>
-              <ExternalLink className="w-3 h-3 text-ostraGold-400" />
+              <ExternalLink className="w-3 h-3 text-[#C59E5F]" />
             </button>
           </div>
         </header>
@@ -433,464 +473,464 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <TeamView />
           ) : activeTab === 'settings' ? (
             <SettingsView onNavigateHome={onNavigateHome} />
-          ) : activeTab === 'dashboard' ? (
+          ) : activeTab === 'guide' ? (
             <DashboardHomeView
-              onGetStarted={() => setActiveTab('overview')}
+              onGetStarted={() => setActiveTab('dashboard')}
               onViewIntegrations={() => setActiveTab('integrations')}
-              onViewOverview={() => setActiveTab('overview')}
+              onViewOverview={() => setActiveTab('dashboard')}
             />
           ) : (
             <>
-{/* ========================================================== */}
-              {/* ROW 1: TOP 5 METRICS CARDS (Pure OstraOps palette)        */}
+              {/* ========================================================== */}
+              {/* ROW 1: TOP 5 METRICS CARDS (Pure Obsidian & Gold palette)  */}
               {/* ========================================================== */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             
-            {/* Metric 1: Total Spend */}
-            <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-charcoal-500">Total Spend (This Month)</span>
-                  <div className="w-7 h-7 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center text-xs font-mono font-bold">
-                    $
-                  </div>
-                </div>
-                <div className="text-2xl font-extrabold text-charcoal-900 tracking-tight font-mono">
-                  $4,328.64
-                </div>
-                <div className="flex items-center gap-1 text-[11px] font-medium text-charcoal-600 mt-1 font-mono">
-                  <TrendingUp className="w-3 h-3 text-ostraGold-600" />
-                  <span>28.6% vs last month</span>
-                </div>
-              </div>
-
-              {/* Sparkline curve */}
-              <div className="pt-3">
-                <svg className="w-full h-8 overflow-visible" viewBox="0 0 100 25" preserveAspectRatio="none">
-                  <path
-                    d="M0,20 Q15,18 30,12 T60,15 T85,6 T100,2"
-                    fill="none"
-                    stroke="#C59E5F"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M0,20 Q15,18 30,12 T60,15 T85,6 T100,2 L100,25 L0,25 Z"
-                    fill="url(#goldGrad)"
-                    opacity="0.15"
-                  />
-                  <defs>
-                    <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#C59E5F" />
-                      <stop offset="100%" stopColor="#C59E5F" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
-
-            {/* Metric 2: Tokens Used */}
-            <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-charcoal-500">Tokens Used</span>
-                  <div className="w-7 h-7 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center text-xs font-mono font-bold">
-                    TOK
-                  </div>
-                </div>
-                <div className="text-2xl font-extrabold text-charcoal-900 tracking-tight font-mono">
-                  312.6M
-                </div>
-                <div className="flex items-center gap-1 text-[11px] font-medium text-charcoal-600 mt-1 font-mono">
-                  <TrendingUp className="w-3 h-3 text-ostraGold-600" />
-                  <span>18.2% vs last month</span>
-                </div>
-              </div>
-
-              {/* Mini bar chart */}
-              <div className="pt-3 flex items-end gap-1.5 h-8">
-                {[35, 45, 60, 40, 70, 55, 80, 65, 90, 75, 95].map((h, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 bg-charcoal-700 hover:bg-charcoal-900 transition-colors rounded-xs"
-                    style={{ height: `${h}%` }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Metric 3: Models Using */}
-            <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-charcoal-500">Models Using</span>
-                  <div className="w-7 h-7 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center text-xs font-mono font-bold">
-                    CPU
-                  </div>
-                </div>
-                <div className="text-2xl font-extrabold text-charcoal-900 tracking-tight font-mono">
-                  12 Active
-                </div>
-                <div className="flex items-center gap-1 text-[11px] font-medium text-charcoal-600 mt-1 font-mono">
-                  <span>GPT-4o, Claude 3.5, Gemini</span>
-                </div>
-              </div>
-
-              {/* Sparkline curve */}
-              <div className="pt-3">
-                <svg className="w-full h-8 overflow-visible" viewBox="0 0 100 25" preserveAspectRatio="none">
-                  <path
-                    d="M0,22 Q20,20 40,16 T75,10 T100,3"
-                    fill="none"
-                    stroke="#8E6B2C"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M0,22 Q20,20 40,16 T75,10 T100,3 L100,25 L0,25 Z"
-                    fill="url(#bronzeGrad)"
-                    opacity="0.15"
-                  />
-                  <defs>
-                    <linearGradient id="bronzeGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8E6B2C" />
-                      <stop offset="100%" stopColor="#8E6B2C" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
-
-            {/* Metric 4: Total Requests */}
-            <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-charcoal-500">Total Requests</span>
-                  <div className="w-7 h-7 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center text-xs font-mono font-bold">
-                    REQ
-                  </div>
-                </div>
-                <div className="text-2xl font-extrabold text-charcoal-900 tracking-tight font-mono">
-                  89,732
-                </div>
-                <div className="flex items-center gap-1 text-[11px] font-medium text-charcoal-600 mt-1 font-mono">
-                  <TrendingUp className="w-3 h-3 text-ostraGold-600" />
-                  <span>24.1% vs last month</span>
-                </div>
-              </div>
-
-              {/* Sparkline curve */}
-              <div className="pt-3">
-                <svg className="w-full h-8 overflow-visible" viewBox="0 0 100 25" preserveAspectRatio="none">
-                  <path
-                    d="M0,18 Q30,8 60,18 T90,5 T100,2"
-                    fill="none"
-                    stroke="#946A2C"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M0,18 Q30,8 60,18 T90,5 T100,2 L100,25 L0,25 Z"
-                    fill="url(#goldGrad2)"
-                    opacity="0.15"
-                  />
-                  <defs>
-                    <linearGradient id="goldGrad2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#946A2C" />
-                      <stop offset="100%" stopColor="#946A2C" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
-
-            {/* Metric 5: Error Rate */}
-            <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-charcoal-500">Error Rate</span>
-                  <div className="w-7 h-7 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center text-xs font-mono font-bold">
-                    ERR
-                  </div>
-                </div>
-                <div className="text-2xl font-extrabold text-charcoal-900 tracking-tight font-mono">
-                  0.02%
-                </div>
-                <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-600 mt-1 font-mono">
-                  <span>- 0.05% vs last month</span>
-                </div>
-              </div>
-
-              {/* Sparkline curve */}
-              <div className="pt-3">
-                <svg className="w-full h-8 overflow-visible" viewBox="0 0 100 25" preserveAspectRatio="none">
-                  <path
-                    d="M0,8 Q25,6 50,15 T75,20 T100,22"
-                    fill="none"
-                    stroke="#10B981"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M0,8 Q25,6 50,15 T75,20 T100,22 L100,25 L0,25 Z"
-                    fill="url(#greenGrad)"
-                    opacity="0.15"
-                  />
-                  <defs>
-                    <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10B981" />
-                      <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
-
-          </div>
-
-          {/* ============================================================ */}
-          {/* ROW 2: SPEND INTELLIGENCE + REAL-TIME FAILOVER SIMULATOR     */}
-          {/* ============================================================ */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-            
-            {/* Left Col (8 cols): Interactive Spend Velocity & Failover Chart */}
-            <div className="lg:col-span-8 flex flex-col">
-              <SpendVelocityChart />
-            </div>
-
-            {/* Right Col (4 cols): Active Financial Gateway Card */}
-            <div className="lg:col-span-4 p-6 rounded-3xl bg-charcoal-900 text-white shadow-xl flex flex-col justify-between relative overflow-hidden border border-charcoal-800">
-              
-              {/* Subtle Ambient Gold Vector Background */}
-              <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <svg className="w-full h-full" viewBox="0 0 200 200">
-                  <circle cx="150" cy="50" r="80" stroke="#C59E5F" strokeWidth="1.5" fill="none" />
-                  <circle cx="150" cy="50" r="120" stroke="#C59E5F" strokeWidth="1" fill="none" strokeDasharray="6 6" />
-                </svg>
-              </div>
-
-              <div className="relative z-10 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-charcoal-800 text-ostraGold-400 text-[10px] font-mono font-bold border border-charcoal-700">
-                    <Shield className="w-3 h-3 text-ostraGold-400" />
-                    <span>LOCAL FINANCIAL GATEWAY</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    ARMED
-                  </span>
-                </div>
-
-                <div>
-                  <h4 className="text-lg font-bold tracking-tight text-zinc-100">
-                    Velocity Hard Cap
-                  </h4>
-                  <p className="text-xs text-zinc-400 mt-1">
-                    Guarantees infinite loop agent defense. If spend exceeds rate threshold, requests fall back to 100% free local Haiku or fail shut.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-[#1C1C20] border border-charcoal-700 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-zinc-400">Current Velocity:</span>
-                    <span className="font-mono font-bold text-white">$0.04 / min</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-zinc-400">Hard Kill Limit:</span>
-                    <span className="font-mono font-bold text-ostraGold-400">$15.00 / hour</span>
-                  </div>
-                  <div className="w-full bg-charcoal-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-ostraGold-500 h-full rounded-full" style={{ width: '18%' }} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative z-10 pt-4 border-t border-charcoal-800 flex items-center justify-between">
-                <span className="text-xs text-zinc-400">Daemon status:</span>
-                <span className="text-xs font-mono font-bold text-emerald-400">0 dropped frames</span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* ============================================================ */}
-          {/* ROW 3: HEATMAP + MODEL USAGE + ASSISTANT COPILOT            */}
-          {/* ============================================================ */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-            
-            {/* Heatmap Card (6 cols) */}
-            <div className="lg:col-span-6 p-6 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
+                {/* Metric 1: Total Spend */}
+                <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle hover:border-[#C59E5F]/40 transition-colors flex flex-col justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-charcoal-900 tracking-tight">
-                      Weekly Hourly Spend Heatmap
-                    </h3>
-                    <p className="text-xs text-charcoal-500 mt-0.5">
-                      Peak token usage across 7 days by operational time window.
-                    </p>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-zinc-400">Total Spend (This Month)</span>
+                      <div className="w-7 h-7 rounded-xl bg-white/[0.04] border border-white/[0.08] text-[#E5C38D] flex items-center justify-center text-xs font-mono font-bold">
+                        $
+                      </div>
+                    </div>
+                    <div className="text-2xl font-extrabold text-white tracking-tight font-mono">
+                      $4,328.64
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-400 mt-1 font-mono">
+                      <TrendingUp className="w-3 h-3 text-emerald-400" />
+                      <span>28.6% vs last month</span>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-mono text-charcoal-400">UTC-7</span>
+
+                  {/* Sparkline curve */}
+                  <div className="pt-3">
+                    <svg className="w-full h-8 overflow-visible" viewBox="0 0 100 25" preserveAspectRatio="none">
+                      <path
+                        d="M0,20 Q15,18 30,12 T60,15 T85,6 T100,2"
+                        fill="none"
+                        stroke="#C59E5F"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M0,20 Q15,18 30,12 T60,15 T85,6 T100,2 L100,25 L0,25 Z"
+                        fill="url(#goldGrad)"
+                        opacity="0.15"
+                      />
+                      <defs>
+                        <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#C59E5F" />
+                          <stop offset="100%" stopColor="#C59E5F" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
                 </div>
 
-                {/* Heatmap Grid */}
-                <div className="space-y-2 pt-2">
-                  <div className="grid grid-cols-8 gap-1.5 text-center text-[10px] font-mono text-charcoal-400">
-                    <span></span>
-                    <span>Mon</span>
-                    <span>Tue</span>
-                    <span>Wed</span>
-                    <span>Thu</span>
-                    <span>Fri</span>
-                    <span>Sat</span>
-                    <span>Sun</span>
+                {/* Metric 2: Tokens Used */}
+                <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle hover:border-[#C59E5F]/40 transition-colors flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-zinc-400">Tokens Used</span>
+                      <div className="w-7 h-7 rounded-xl bg-white/[0.04] border border-white/[0.08] text-zinc-300 flex items-center justify-center text-[10px] font-mono font-bold">
+                        TOK
+                      </div>
+                    </div>
+                    <div className="text-2xl font-extrabold text-white tracking-tight font-mono">
+                      312.6M
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-medium text-[#E5C38D] mt-1 font-mono">
+                      <TrendingUp className="w-3 h-3 text-[#E5C38D]" />
+                      <span>18.2% vs last month</span>
+                    </div>
                   </div>
 
-                  {['12 AM', '6 AM', '12 PM', '6 PM', '11 PM'].map((slot, rowIdx) => (
-                    <div key={slot} className="grid grid-cols-8 gap-1.5 items-center">
-                      <span className="text-[10px] font-mono text-charcoal-400 text-right pr-1">
-                        {slot}
+                  {/* Mini bar chart */}
+                  <div className="pt-3 flex items-end gap-1.5 h-8">
+                    {[35, 45, 60, 40, 70, 55, 80, 65, 90, 75, 95].map((h, i) => (
+                      <div
+                        key={i}
+                        className="flex-1 bg-white/[0.12] hover:bg-[#C59E5F] transition-colors rounded-xs"
+                        style={{ height: `${h}%` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Metric 3: Models Using */}
+                <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle hover:border-[#C59E5F]/40 transition-colors flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-zinc-400">Models Using</span>
+                      <div className="w-7 h-7 rounded-xl bg-white/[0.04] border border-white/[0.08] text-zinc-300 flex items-center justify-center text-[10px] font-mono font-bold">
+                        CPU
+                      </div>
+                    </div>
+                    <div className="text-2xl font-extrabold text-white tracking-tight font-mono">
+                      12 Active
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-medium text-zinc-400 mt-1 font-mono">
+                      <span>GPT-4o, Claude 3.5, Gemini</span>
+                    </div>
+                  </div>
+
+                  {/* Sparkline curve */}
+                  <div className="pt-3">
+                    <svg className="w-full h-8 overflow-visible" viewBox="0 0 100 25" preserveAspectRatio="none">
+                      <path
+                        d="M0,22 Q20,20 40,16 T75,10 T100,3"
+                        fill="none"
+                        stroke="#C59E5F"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M0,22 Q20,20 40,16 T75,10 T100,3 L100,25 L0,25 Z"
+                        fill="url(#bronzeGrad)"
+                        opacity="0.15"
+                      />
+                      <defs>
+                        <linearGradient id="bronzeGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#C59E5F" />
+                          <stop offset="100%" stopColor="#C59E5F" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Metric 4: Total Requests */}
+                <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle hover:border-[#C59E5F]/40 transition-colors flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-zinc-400">Total Requests</span>
+                      <div className="w-7 h-7 rounded-xl bg-white/[0.04] border border-white/[0.08] text-zinc-300 flex items-center justify-center text-[10px] font-mono font-bold">
+                        REQ
+                      </div>
+                    </div>
+                    <div className="text-2xl font-extrabold text-white tracking-tight font-mono">
+                      89,732
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-400 mt-1 font-mono">
+                      <TrendingUp className="w-3 h-3 text-emerald-400" />
+                      <span>24.1% vs last month</span>
+                    </div>
+                  </div>
+
+                  {/* Sparkline curve */}
+                  <div className="pt-3">
+                    <svg className="w-full h-8 overflow-visible" viewBox="0 0 100 25" preserveAspectRatio="none">
+                      <path
+                        d="M0,18 Q30,8 60,18 T90,5 T100,2"
+                        fill="none"
+                        stroke="#E5C38D"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M0,18 Q30,8 60,18 T90,5 T100,2 L100,25 L0,25 Z"
+                        fill="url(#goldGrad2)"
+                        opacity="0.15"
+                      />
+                      <defs>
+                        <linearGradient id="goldGrad2" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#E5C38D" />
+                          <stop offset="100%" stopColor="#E5C38D" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Metric 5: Error Rate */}
+                <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle hover:border-[#C59E5F]/40 transition-colors flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-zinc-400">Error Rate</span>
+                      <div className="w-7 h-7 rounded-xl bg-white/[0.04] border border-white/[0.08] text-emerald-400 flex items-center justify-center text-[10px] font-mono font-bold">
+                        ERR
+                      </div>
+                    </div>
+                    <div className="text-2xl font-extrabold text-white tracking-tight font-mono">
+                      0.02%
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-400 mt-1 font-mono">
+                      <span>- 0.05% vs last month</span>
+                    </div>
+                  </div>
+
+                  {/* Sparkline curve */}
+                  <div className="pt-3">
+                    <svg className="w-full h-8 overflow-visible" viewBox="0 0 100 25" preserveAspectRatio="none">
+                      <path
+                        d="M0,8 Q25,6 50,15 T75,20 T100,22"
+                        fill="none"
+                        stroke="#10B981"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M0,8 Q25,6 50,15 T75,20 T100,22 L100,25 L0,25 Z"
+                        fill="url(#greenGrad)"
+                        opacity="0.15"
+                      />
+                      <defs>
+                        <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#10B981" />
+                          <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* ============================================================ */}
+              {/* ROW 2: SPEND INTELLIGENCE + REAL-TIME FAILOVER SIMULATOR     */}
+              {/* ============================================================ */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                
+                {/* Left Col (8 cols): Interactive Spend Velocity & Failover Chart */}
+                <div className="lg:col-span-8 flex flex-col">
+                  <SpendVelocityChart />
+                </div>
+
+                {/* Right Col (4 cols): Active Financial Gateway Card */}
+                <div className="lg:col-span-4 p-6 rounded-3xl bg-[#0B0E14] text-white shadow-xl flex flex-col justify-between relative overflow-hidden border border-white/[0.08]">
+                  
+                  {/* Subtle Ambient Gold Vector Background */}
+                  <div className="absolute inset-0 opacity-20 pointer-events-none">
+                    <svg className="w-full h-full" viewBox="0 0 200 200">
+                      <circle cx="150" cy="50" r="80" stroke="#C59E5F" strokeWidth="1.5" fill="none" />
+                      <circle cx="150" cy="50" r="120" stroke="#C59E5F" strokeWidth="1" fill="none" strokeDasharray="6 6" />
+                    </svg>
+                  </div>
+
+                  <div className="relative z-10 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#18181B] text-[#E5C38D] text-[10px] font-mono font-bold border border-white/[0.08]">
+                        <Shield className="w-3 h-3 text-[#C59E5F]" />
+                        <span>LOCAL FINANCIAL GATEWAY</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        ARMED
                       </span>
-                      {heatmapData[rowIdx].map((val, colIdx) => (
-                        <div
-                          key={colIdx}
-                          className={`h-7 rounded-lg transition-transform hover:scale-105 cursor-pointer ${getHeatmapColor(val)}`}
-                          title={`Intensity: ${Math.round(val * 100)}%`}
-                        />
+                    </div>
+
+                    <div>
+                      <h4 className="text-lg font-bold tracking-tight text-white font-display">
+                        Velocity Hard Cap
+                      </h4>
+                      <p className="text-xs text-zinc-400 mt-1">
+                        Guarantees infinite loop agent defense. If spend exceeds rate threshold, requests fall back to 100% free local Haiku or fail shut.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-zinc-400">Current Velocity:</span>
+                        <span className="font-mono font-bold text-white">$0.04 / min</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-zinc-400">Hard Kill Limit:</span>
+                        <span className="font-mono font-bold text-[#E5C38D]">$15.00 / hour</span>
+                      </div>
+                      <div className="w-full bg-white/[0.08] h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] h-full rounded-full" style={{ width: '18%' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="relative z-10 pt-4 border-t border-white/[0.08] flex items-center justify-between">
+                    <span className="text-xs text-zinc-400">Daemon status:</span>
+                    <span className="text-xs font-mono font-bold text-emerald-400">0 dropped frames</span>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* ============================================================ */}
+              {/* ROW 3: HEATMAP + MODEL USAGE + ASSISTANT COPILOT            */}
+              {/* ============================================================ */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                
+                {/* Heatmap Card (6 cols) */}
+                <div className="lg:col-span-6 p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-sm font-bold text-white tracking-tight">
+                          Weekly Hourly Spend Heatmap
+                        </h3>
+                        <p className="text-xs text-zinc-400 mt-0.5">
+                          Peak token usage across 7 days by operational time window.
+                        </p>
+                      </div>
+                      <span className="text-[11px] font-mono text-zinc-500">UTC-7</span>
+                    </div>
+
+                    {/* Heatmap Grid */}
+                    <div className="space-y-2 pt-2">
+                      <div className="grid grid-cols-8 gap-1.5 text-center text-[10px] font-mono text-zinc-400">
+                        <span></span>
+                        <span>Mon</span>
+                        <span>Tue</span>
+                        <span>Wed</span>
+                        <span>Thu</span>
+                        <span>Fri</span>
+                        <span>Sat</span>
+                        <span>Sun</span>
+                      </div>
+
+                      {['12 AM', '6 AM', '12 PM', '6 PM', '11 PM'].map((slot, rowIdx) => (
+                        <div key={slot} className="grid grid-cols-8 gap-1.5 items-center">
+                          <span className="text-[10px] font-mono text-zinc-500 text-right pr-1">
+                            {slot}
+                          </span>
+                          {heatmapData[rowIdx].map((val, colIdx) => (
+                            <div
+                              key={colIdx}
+                              className={`h-7 rounded-lg transition-transform hover:scale-105 cursor-pointer ${getHeatmapColor(val)}`}
+                              title={`Intensity: ${Math.round(val * 100)}%`}
+                            />
+                          ))}
+                        </div>
                       ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Heatmap legend */}
-              <div className="pt-4 border-t border-[#F0ECE4] flex items-center justify-between text-xs text-charcoal-500">
-                <span>Low Activity</span>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-[#F4EFE6]" />
-                  <div className="w-3 h-3 rounded bg-[#E8DFC8]" />
-                  <div className="w-3 h-3 rounded bg-[#D6BA84]" />
-                  <div className="w-3 h-3 rounded bg-[#C59E5F]" />
-                  <div className="w-3 h-3 rounded bg-[#9C7938]" />
-                </div>
-                <span>Peak Load</span>
-              </div>
-            </div>
-
-            {/* Top Models Distribution (3 cols) */}
-            <div className="lg:col-span-3 p-6 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-bold text-charcoal-900 tracking-tight">
-                    Top Models By Cost
-                  </h3>
-                  <span className="text-xs text-charcoal-400">This Month</span>
-                </div>
-
-                <div className="space-y-4">
-                  {[
-                    { name: 'Claude 3.7 Sonnet', share: '48%', cost: '$2,077.74', color: 'bg-ostraGold-600' },
-                    { name: 'GPT-4o', share: '32%', cost: '$1,385.16', color: 'bg-charcoal-800' },
-                    { name: 'Claude 3.5 Haiku', share: '12%', cost: '$519.43', color: 'bg-sandstone-300' },
-                    { name: 'Gemini 1.5 Pro', share: '8%', cost: '$346.29', color: 'bg-zinc-400' },
-                  ].map((m) => (
-                    <div key={m.name} className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-charcoal-800">{m.name}</span>
-                        <span className="font-mono text-charcoal-900 font-bold">{m.share}</span>
-                      </div>
-                      <div className="w-full bg-[#EAE6DD] h-1.5 rounded-full overflow-hidden">
-                        <div className={`${m.color} h-full rounded-full`} style={{ width: m.share }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-[#F0ECE4] text-[11px] text-charcoal-500">
-                82% of workloads routed via cost-optimized fallbacks
-              </div>
-            </div>
-
-            {/* Quick Copilot spend intelligence box (3 cols) */}
-            <div className="lg:col-span-3 p-6 rounded-3xl bg-[#18181B] text-white border border-charcoal-800 shadow-xl flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-ostraGold-400 font-mono">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>OPS COPILOT</span>
                   </div>
-                  <span className="text-[10px] font-mono text-zinc-400">READY</span>
+
+                  {/* Heatmap legend */}
+                  <div className="pt-4 border-t border-white/[0.08] flex items-center justify-between text-xs text-zinc-400">
+                    <span>Low Activity</span>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded bg-white/[0.04] border border-white/[0.06]" />
+                      <div className="w-3 h-3 rounded bg-[#C59E5F]/20" />
+                      <div className="w-3 h-3 rounded bg-[#C59E5F]/45" />
+                      <div className="w-3 h-3 rounded bg-[#C59E5F]/75" />
+                      <div className="w-3 h-3 rounded bg-[#E5C38D]" />
+                    </div>
+                    <span>Peak Load</span>
+                  </div>
                 </div>
 
-                <h4 className="text-sm font-bold text-zinc-100">
-                  AI Cost Optimization Bot
-                </h4>
+                {/* Top Models Distribution (3 cols) */}
+                <div className="lg:col-span-3 p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-bold text-white tracking-tight">
+                        Top Models By Cost
+                      </h3>
+                      <span className="text-xs text-zinc-500 font-mono">This Month</span>
+                    </div>
 
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  "Claude Sonnet spike detected on Agent-4. Rerouting 40% of non-code queries to Gemini 1.5 Flash would save $420/month."
-                </p>
+                    <div className="space-y-4">
+                      {[
+                        { name: 'Claude 3.7 Sonnet', share: '48%', cost: '$2,077.74', color: 'bg-[#C59E5F]' },
+                        { name: 'GPT-4o', share: '32%', cost: '$1,385.16', color: 'bg-emerald-500' },
+                        { name: 'Claude 3.5 Haiku', share: '12%', cost: '$519.43', color: 'bg-[#E5C38D]' },
+                        { name: 'Gemini 1.5 Pro', share: '8%', cost: '$346.29', color: 'bg-blue-400' },
+                      ].map((m) => (
+                        <div key={m.name} className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-semibold text-zinc-200">{m.name}</span>
+                            <span className="font-mono text-white font-bold">{m.share}</span>
+                          </div>
+                          <div className="w-full bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
+                            <div className={`${m.color} h-full rounded-full`} style={{ width: m.share }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-                <button
-                  onClick={() => setAppliedRec((prev) => !prev)}
-                  className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    appliedRec
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-ostraGold-500 hover:bg-ostraGold-600 text-charcoal-950 shadow-xs'
-                  }`}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>{appliedRec ? 'Rule Applied to Gateway' : 'Apply Automated Reroute'}</span>
-                </button>
-              </div>
-
-              {/* Chat Input */}
-              <div className="pt-3 border-t border-zinc-800 space-y-2">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (assistantInput.trim()) {
-                      alert(`Ops Copilot Query: "${assistantInput}"\nAnalyzing telemetry metrics for active workspace...`);
-                      setAssistantInput('');
-                    }
-                  }}
-                  className="relative"
-                >
-                  <input
-                    type="text"
-                    value={assistantInput}
-                    onChange={(e) => setAssistantInput(e.target.value)}
-                    placeholder="Ask anything about your proxy spend..."
-                    className="w-full pl-3 pr-9 py-2 rounded-xl bg-[#242427] border border-zinc-700 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-ostraGold-500 transition-colors"
-                  />
-                  <button
-                    type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-ostraGold-400 transition-colors"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
-                </form>
-
-                <div className="flex items-center gap-1.5 pt-1 overflow-x-auto text-[10px] text-zinc-400 font-mono">
-                  <span
-                    onClick={() => setAssistantInput('Explain Sonnet spike')}
-                    className="px-2 py-0.5 rounded-md bg-[#242427] hover:text-white cursor-pointer transition-colors shrink-0"
-                  >
-                    Explain spike
-                  </span>
-                  <span
-                    onClick={() => setAssistantInput('Simulate haiku failover')}
-                    className="px-2 py-0.5 rounded-md bg-[#242427] hover:text-white cursor-pointer transition-colors shrink-0"
-                  >
-                    Test failover
-                  </span>
+                  <div className="pt-4 border-t border-white/[0.08] text-[11px] text-zinc-500 font-mono">
+                    82% of workloads routed via cost-optimized fallbacks
+                  </div>
                 </div>
+
+                {/* Quick Copilot spend intelligence box (3 cols) */}
+                <div className="lg:col-span-3 p-6 rounded-3xl bg-[#0B0E14] text-white border border-white/[0.08] shadow-xl flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-[#E5C38D] font-mono">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>OPS COPILOT</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-zinc-400">READY</span>
+                    </div>
+
+                    <h4 className="text-sm font-bold text-white">
+                      AI Cost Optimization Bot
+                    </h4>
+
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      "Claude Sonnet spike detected on Agent-4. Rerouting 40% of non-code queries to Gemini 1.5 Flash would save $420/month."
+                    </p>
+
+                    <button
+                      onClick={() => setAppliedRec((prev) => !prev)}
+                      className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        appliedRec
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          : 'bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] hover:brightness-110 shadow-xs'
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>{appliedRec ? 'Rule Applied to Gateway' : 'Apply Automated Reroute'}</span>
+                    </button>
+                  </div>
+
+                  {/* Chat Input */}
+                  <div className="pt-3 border-t border-white/[0.08] space-y-2">
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (assistantInput.trim()) {
+                          alert(`Ops Copilot Query: "${assistantInput}"\nAnalyzing telemetry metrics for active workspace...`);
+                          setAssistantInput('');
+                        }
+                      }}
+                      className="relative"
+                    >
+                      <input
+                        type="text"
+                        value={assistantInput}
+                        onChange={(e) => setAssistantInput(e.target.value)}
+                        placeholder="Ask anything about your proxy spend..."
+                        className="w-full pl-3 pr-9 py-2 rounded-xl bg-[#07090C] border border-white/[0.1] text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] transition-colors"
+                      />
+                      <button
+                        type="submit"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-[#E5C38D] transition-colors cursor-pointer"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                    </form>
+
+                    <div className="flex items-center gap-1.5 pt-1 overflow-x-auto text-[10px] text-zinc-400 font-mono">
+                      <span
+                        onClick={() => setAssistantInput('Explain Sonnet spike')}
+                        className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] hover:text-white cursor-pointer transition-colors shrink-0"
+                      >
+                        Explain spike
+                      </span>
+                      <span
+                        onClick={() => setAssistantInput('Simulate haiku failover')}
+                        className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] hover:text-white cursor-pointer transition-colors shrink-0"
+                      >
+                        Test failover
+                      </span>
+                    </div>
+                  </div>
+
+                </div>
+
               </div>
-
-            </div>
-
-          </div>
-          </>
+            </>
           )}
         </div>
       </main>

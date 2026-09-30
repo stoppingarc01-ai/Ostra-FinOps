@@ -48,57 +48,57 @@ with track("claude-3-7-sonnet"):
   };
 
   return (
-    <section id="developers" className="relative py-24 bg-[#F5F2EB] border-t border-[#EAE5DB] overflow-hidden">
+    <section id="developers" className="relative py-24 bg-[#07090C] border-t border-white/[0.08] overflow-hidden">
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
         
         {/* Section Header: Product Induction */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider mb-2 font-mono">
+          <p className="text-xs font-semibold text-[#E5C38D] uppercase tracking-wider mb-2 font-mono">
             How OstraOps Works
           </p>
-          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
+          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-[-0.02em] font-display">
             What OstraOps Does &amp; How It Works.{' '}
             <span className="gold-gradient-text block">Simple, Honest Budget Control.</span>
           </h2>
-          <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
+          <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-2xl mx-auto">
             Building with AI shouldn't come with the fear of surprise invoices. OstraOps gives you real-time spend visibility, hard budget limits, and complete data privacy.
           </p>
         </div>
 
         {/* 3 Step Induction: How it works */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="p-7 rounded-2xl bg-white border border-[#EAE5DB] shadow-subtle space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-charcoal-900 text-white flex items-center justify-center font-mono text-sm font-bold">
+          <div className="p-7 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xl space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.1] text-[#E5C38D] flex items-center justify-center font-mono text-sm font-bold">
               1
             </div>
-            <h4 className="text-base font-bold text-charcoal-900 font-sans">
+            <h4 className="text-base font-bold text-zinc-100 font-sans">
               Connect In Seconds
             </h4>
-            <p className="text-xs text-charcoal-600 leading-relaxed">
-              Run <code className="bg-sandstone-200 px-1.5 py-0.5 rounded font-mono text-charcoal-900">npx ostraops</code> in your terminal or add our lightweight package to your project. No complex configs required.
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Run <code className="bg-white/[0.06] border border-white/[0.08] px-1.5 py-0.5 rounded font-mono text-[#E5C38D]">npx ostraops</code> in your terminal or add our lightweight package to your project. No complex configs required.
             </p>
           </div>
 
-          <div className="p-7 rounded-2xl bg-white border border-[#EAE5DB] shadow-subtle space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-ostraGold-600 text-white flex items-center justify-center font-mono text-sm font-bold">
+          <div className="p-7 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xl space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-[#C59E5F]/15 border border-[#C59E5F]/30 text-[#E5C38D] flex items-center justify-center font-mono text-sm font-bold">
               2
             </div>
-            <h4 className="text-base font-bold text-charcoal-900 font-sans">
+            <h4 className="text-base font-bold text-zinc-100 font-sans">
               Set Your Budget Limit
             </h4>
-            <p className="text-xs text-charcoal-600 leading-relaxed">
+            <p className="text-xs text-zinc-400 leading-relaxed">
               Define your comfort limit (e.g. $10/day or $200/month). As prompts run, OstraOps tallies every input and output token down to the cent.
             </p>
           </div>
 
-          <div className="p-7 rounded-2xl bg-white border border-[#EAE5DB] shadow-subtle space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-mono text-sm font-bold">
+          <div className="p-7 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xl space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-mono text-sm font-bold">
               3
             </div>
-            <h4 className="text-base font-bold text-charcoal-900 font-sans">
+            <h4 className="text-base font-bold text-zinc-100 font-sans">
               Build Without Anxiety
             </h4>
-            <p className="text-xs text-charcoal-600 leading-relaxed">
+            <p className="text-xs text-zinc-400 leading-relaxed">
               If an agent gets stuck in a loop or an API call goes out of control, requests pause safely before you get billed for runaway tokens.
             </p>
           </div>

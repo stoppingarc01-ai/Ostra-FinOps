@@ -54,22 +54,22 @@ export const FeaturesSection: React.FC = () => {
   ];
 
   return (
-    <section id="features" className="py-24 border-t border-[#EAE5DB] bg-[#FAF8F5] relative overflow-hidden">
+    <section id="features" className="py-24 border-t border-white/[0.08] bg-[#07090C] relative overflow-hidden">
       {/* Background glow */}
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-ostraGold-300/10 via-sandstone-300/15 to-transparent blur-[130px] pointer-events-none -z-10" />
+      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-[#C59E5F]/10 via-[#C59E5F]/5 to-transparent blur-[130px] pointer-events-none -z-10" />
 
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider mb-2 font-mono">
+          <p className="text-xs font-semibold text-[#E5C38D] uppercase tracking-wider mb-2 font-mono">
             Core Platform Capabilities
           </p>
-          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
+          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-[-0.02em] font-display">
             Built For Developers Who{' '}
             <span className="gold-gradient-text block">Demand Real Budget Control.</span>
           </h2>
-          <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
+          <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-2xl mx-auto">
             Traditional AI cost tools only alert you after the money is already gone. OstraOps protects your account in real time as requests are processed.
           </p>
         </div>
@@ -81,36 +81,36 @@ export const FeaturesSection: React.FC = () => {
             return (
               <div
                 key={item.title}
-                className="group relative p-7 rounded-3xl bg-white border border-[#EAE5DB] shadow-subtle hover:shadow-card-3d hover:border-ostraGold-500/60 transition-all duration-300 flex flex-col justify-between transform preserve-3d hover:-translate-y-1.5"
+                className="group relative p-7 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xl hover:shadow-[0_0_30px_rgba(197,158,95,0.12)] hover:border-[#C59E5F]/40 transition-all duration-300 flex flex-col justify-between transform preserve-3d hover:-translate-y-1.5"
               >
                 <div>
                   <div className="flex items-center justify-between mb-5">
                     {/* Icon Container */}
-                    <div className="w-12 h-12 rounded-2xl bg-sandstone-200/80 border border-sandstone-300/80 flex items-center justify-center text-charcoal-800 group-hover:bg-charcoal-900 group-hover:text-white transition-all duration-200 shadow-2xs">
+                    <div className="w-12 h-12 rounded-2xl bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D] group-hover:bg-[#C59E5F] group-hover:text-[#07090C] transition-all duration-200 shadow-2xs">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-sandstone-100 text-charcoal-600 border border-sandstone-200">
+                    <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-white/[0.05] text-zinc-300 border border-white/[0.08]">
                       {item.badge}
                     </span>
                   </div>
 
                   <div className="space-y-2">
-                    <span className="text-[11px] font-semibold tracking-wider text-ostraGold-600 uppercase font-mono">
+                    <span className="text-[11px] font-semibold tracking-wider text-[#E5C38D] uppercase font-mono">
                       {item.subtitle}
                     </span>
-                    <h3 className="text-lg font-bold text-charcoal-900 font-display group-hover:text-charcoal-950 transition-colors">
+                    <h3 className="text-lg font-bold text-zinc-100 font-display group-hover:text-white transition-colors">
                       {item.title}
                     </h3>
-                    <p className="text-xs text-charcoal-600 leading-relaxed pt-1">
+                    <p className="text-xs text-zinc-400 leading-relaxed pt-1">
                       {item.description}
                     </p>
                   </div>
                 </div>
 
                 {/* Bottom Tag */}
-                <div className="mt-6 pt-4 border-t border-[#EFEBE3] flex items-center justify-between text-xs font-mono text-charcoal-600">
-                  <span className="font-semibold text-charcoal-800">{item.highlight}</span>
-                  <ArrowUpRight className="w-4 h-4 text-charcoal-400 group-hover:text-ostraGold-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <div className="mt-6 pt-4 border-t border-white/[0.08] flex items-center justify-between text-xs font-mono text-zinc-400">
+                  <span className="font-semibold text-zinc-200">{item.highlight}</span>
+                  <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-[#E5C38D] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </div>
               </div>
             );

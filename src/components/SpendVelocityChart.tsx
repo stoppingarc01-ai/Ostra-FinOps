@@ -120,29 +120,29 @@ export const SpendVelocityChart: React.FC = () => {
   const yTicks = [0, maxVal * 0.33, maxVal * 0.66, maxVal];
 
   return (
-    <div className="p-6 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between transition-all duration-300">
+    <div className="p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xl flex flex-col justify-between transition-all duration-300">
       
       {/* Header Bar */}
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-extrabold text-charcoal-900 tracking-tight flex items-center gap-2">
+              <h3 className="text-base font-extrabold text-white tracking-tight flex items-center gap-2">
                 <span>Spend Velocity &amp; Intra-Family Failover</span>
               </h3>
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-mono font-semibold">
-                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-semibold">
+                <ShieldCheck className="w-3 h-3 text-emerald-400" />
                 Active Protection
               </span>
             </div>
-            <p className="text-xs text-charcoal-500 mt-0.5">
+            <p className="text-xs text-zinc-400 mt-0.5">
               Live token expenditures showing actual spend vs. unmanaged run-rate.
             </p>
           </div>
           
           <div className="flex items-center gap-2 self-start sm:self-auto">
             {/* Timeframe pill selector */}
-            <div className="flex items-center p-0.5 rounded-xl bg-[#F5F2EB] border border-[#E8E2D5] text-xs font-mono">
+            <div className="flex items-center p-0.5 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-mono">
               {(['24h', '7d', '30d'] as Timeframe[]).map((tf) => (
                 <button
                   key={tf}
@@ -152,8 +152,8 @@ export const SpendVelocityChart: React.FC = () => {
                   }}
                   className={`px-2.5 py-1 rounded-lg transition-all font-semibold cursor-pointer ${
                     timeframe === tf
-                      ? 'bg-white text-charcoal-900 shadow-xs'
-                      : 'text-charcoal-500 hover:text-charcoal-900'
+                      ? 'bg-[#C59E5F] text-black shadow-xs font-bold'
+                      : 'text-zinc-400 hover:text-white'
                   }`}
                 >
                   {tf.toUpperCase()}
@@ -162,44 +162,44 @@ export const SpendVelocityChart: React.FC = () => {
             </div>
 
             {/* Local Proxy status */}
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sandstone-200 border border-sandstone-300 text-[10px] font-mono font-bold text-charcoal-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[10px] font-mono font-bold text-zinc-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="hidden md:inline">PROXY</span> 127.0.0.1:8080
             </span>
           </div>
         </div>
 
         {/* Live Headline Stat Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE4D8]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 p-3 rounded-2xl bg-[#07090C] border border-white/[0.08]">
           <div className="space-y-0.5">
-            <span className="text-[10.5px] font-medium text-charcoal-500">Current Managed Spend</span>
-            <div className="text-base sm:text-lg font-extrabold text-charcoal-900 font-mono tracking-tight flex items-baseline gap-1">
+            <span className="text-[10.5px] font-medium text-zinc-400">Current Managed Spend</span>
+            <div className="text-base sm:text-lg font-extrabold text-white font-mono tracking-tight flex items-baseline gap-1">
               <span>${dataset[dataset.length - 1].actual.toLocaleString()}</span>
-              <span className="text-[10px] font-normal text-emerald-600 font-mono">Controlled</span>
+              <span className="text-[10px] font-normal text-emerald-400 font-mono">Controlled</span>
             </div>
           </div>
 
           <div className="space-y-0.5">
-            <span className="text-[10.5px] font-medium text-charcoal-500">Unmanaged Run-Rate</span>
-            <div className="text-base sm:text-lg font-extrabold text-charcoal-400 line-through font-mono tracking-tight">
+            <span className="text-[10.5px] font-medium text-zinc-400">Unmanaged Run-Rate</span>
+            <div className="text-base sm:text-lg font-extrabold text-zinc-500 line-through font-mono tracking-tight">
               ${dataset[dataset.length - 1].unmanaged.toLocaleString()}
             </div>
           </div>
 
           <div className="space-y-0.5">
-            <span className="text-[10.5px] font-medium text-charcoal-500">Circuit Breaker Savings</span>
-            <div className="text-base sm:text-lg font-extrabold text-emerald-700 font-mono tracking-tight flex items-center gap-1">
+            <span className="text-[10.5px] font-medium text-zinc-400">Circuit Breaker Savings</span>
+            <div className="text-base sm:text-lg font-extrabold text-emerald-400 font-mono tracking-tight flex items-center gap-1">
               <span>${totalSaved.toLocaleString()}</span>
-              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800">
+              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 +{savedPercent}%
               </span>
             </div>
           </div>
 
           <div className="space-y-0.5">
-            <span className="text-[10.5px] font-medium text-charcoal-500">Active Routing Model</span>
-            <div className="text-xs sm:text-sm font-bold text-charcoal-800 font-mono truncate flex items-center gap-1">
-              <Zap className="w-3.5 h-3.5 text-ostraGold-500 shrink-0" />
+            <span className="text-[10.5px] font-medium text-zinc-400">Active Routing Model</span>
+            <div className="text-xs sm:text-sm font-bold text-[#E5C38D] font-mono truncate flex items-center gap-1">
+              <Zap className="w-3.5 h-3.5 text-[#C59E5F] shrink-0" />
               <span className="truncate">{activePoint.model.replace('⚡ ', '')}</span>
             </div>
           </div>
@@ -245,7 +245,7 @@ export const SpendVelocityChart: React.FC = () => {
                     y1={y} 
                     x2={width - padding.right} 
                     y2={y} 
-                    stroke="#F0ECE3" 
+                    stroke="rgba(255,255,255,0.06)" 
                     strokeDasharray={idx === 0 ? undefined : "3 3"} 
                     strokeWidth="1"
                   />
@@ -253,7 +253,7 @@ export const SpendVelocityChart: React.FC = () => {
                     x={padding.left - 8}
                     y={y + 3.5}
                     textAnchor="end"
-                    fill="#A8A29E"
+                    fill="#71717A"
                     fontSize="9.5"
                     fontFamily="monospace"
                   >
@@ -273,14 +273,14 @@ export const SpendVelocityChart: React.FC = () => {
                     y1={height - padding.bottom} 
                     x2={x} 
                     y2={height - padding.bottom + 4} 
-                    stroke="#D6D3D1" 
+                    stroke="rgba(255,255,255,0.12)" 
                     strokeWidth="1"
                   />
                   <text
                     x={x}
                     y={height - padding.bottom + 16}
                     textAnchor="middle"
-                    fill={hoverIndex === i ? '#1C1917' : '#78716C'}
+                    fill={hoverIndex === i ? '#FFFFFF' : '#71717A'}
                     fontSize="10"
                     fontWeight={hoverIndex === i ? '700' : '500'}
                     fontFamily="sans-serif"
@@ -478,25 +478,25 @@ export const SpendVelocityChart: React.FC = () => {
       </div>
 
       {/* Bottom Legend & Safeguard Summary */}
-      <div className="pt-4 mt-2 border-t border-[#F0ECE4] flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+      <div className="pt-4 mt-2 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-1 rounded-full bg-ostraGold-500" />
-            <span className="text-charcoal-700 font-sans font-medium">Controlled Run-Rate (OstraOps)</span>
+            <span className="w-3 h-1 rounded-full bg-[#C59E5F]" />
+            <span className="text-zinc-300 font-sans font-medium">Controlled Run-Rate (OstraOps)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-1 rounded-full bg-stone-400 border-dashed border-b" />
-            <span className="text-charcoal-500 font-sans">Base Unmanaged Spend</span>
+            <span className="w-3 h-1 rounded-full bg-zinc-600 border-dashed border-b" />
+            <span className="text-zinc-500 font-sans">Base Unmanaged Spend</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-100 border border-emerald-300" />
-            <span className="text-charcoal-600 font-sans font-medium">Protected Delta Zone</span>
+            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500/20 border border-emerald-500/40" />
+            <span className="text-zinc-300 font-sans font-medium">Protected Delta Zone</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-charcoal-600 font-sans">
+        <div className="flex items-center gap-2 text-zinc-400 font-sans">
           <span>Protected Savings:</span>
-          <span className="px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-mono font-bold">
+          <span className="px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono font-bold">
             ${totalSaved.toLocaleString()}
           </span>
         </div>

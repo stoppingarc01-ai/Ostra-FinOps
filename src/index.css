@@ -452,3 +452,289 @@
   animation: tab-fade-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
   will-change: opacity, transform;
 }
+
+/* ============================================================ */
+/* OBSIDIAN & WARM GOLD GLOBAL ENTERPRISE THEME SYSTEM          */
+/* ============================================================ */
+
+html, body {
+  background-color: #07090C !important;
+  color: #F4F4F5 !important;
+}
+
+/* Scrollbar Track & Thumb */
+::-webkit-scrollbar-track {
+  background: #07090C !important;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272A !important;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3F3F46 !important;
+}
+
+/* Global Light Background Inversions -> Obsidian Void */
+.bg-white,
+[class*="bg-white/"],
+[class*="bg-white\/"],
+[class*="bg-[#FAF"],
+[class*="bg-[#faf"],
+[class*="bg-[#F5F"],
+[class*="bg-[#f5f"],
+[class*="bg-[#F4E"],
+[class*="bg-[#f4e"],
+[class*="bg-[#F2E"],
+[class*="bg-[#f2e"],
+[class*="bg-[#F8F"],
+[class*="bg-[#f8f"],
+[class*="bg-[#F9F"],
+[class*="bg-[#f9f"],
+[class*="bg-[#F6F"],
+[class*="bg-[#f6f"],
+[class*="bg-[#FFF"],
+[class*="bg-[#fff"],
+[class*="bg-[#FCF"],
+[class*="bg-[#fcf"],
+[class*="bg-[#FDF"],
+[class*="bg-[#fdf"],
+[class*="bg-[#FBF"],
+[class*="bg-[#fbf"],
+[class*="bg-[#EFE"],
+[class*="bg-[#efe"],
+[class*="bg-[#EAE"],
+[class*="bg-[#eae"],
+[class*="bg-[#E8D"],
+[class*="bg-[#e8d"],
+[class*="bg-[#E8E"],
+[class*="bg-[#e8e"],
+[class*="bg-[#E5F"],
+[class*="bg-[#e5f"],
+[class*="bg-[#EFF"],
+[class*="bg-[#eff"],
+[class*="bg-[#EEF"],
+[class*="bg-[#eef"],
+.bg-sandstone-50,
+.bg-sandstone-100,
+.bg-sandstone-200,
+.bg-sandstone-300 {
+  background-color: #0B0E14 !important;
+  color: #F4F4F5 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Semi-transparent Light Backgrounds -> Obsidian Tones */
+.bg-\[\#FAF8F5\]\/90,
+.bg-\[\#FAF8F5\]\/80,
+.bg-\[\#FAF8F5\]\/60,
+.bg-\[\#FAF8F5\]\/50,
+.bg-\[\#FAF8F5\]\/40,
+.bg-\[\#FAF8F5\]\/30,
+.bg-\[\#FAF8F5\]\/20,
+.bg-\[\#FAF8F5\]\/10,
+.bg-\[\#F5F2EB\]\/80,
+.bg-\[\#F5F2EB\]\/60,
+.bg-sandstone-300\/80,
+.bg-sandstone-300\/50 {
+  background-color: rgba(11, 14, 20, 0.75) !important;
+}
+
+/* Hover States: Prevent any element from flashing white/beige on hover */
+[class*="hover:bg-[#FAF"]:hover,
+[class*="hover:bg-[#faf"]:hover,
+[class*="hover:bg-[#F5F"]:hover,
+[class*="hover:bg-[#f5f"]:hover,
+[class*="hover:bg-[#F4E"]:hover,
+[class*="hover:bg-[#F2E"]:hover,
+[class*="hover:bg-[#F8F"]:hover,
+[class*="hover:bg-[#F9F"]:hover,
+[class*="hover:bg-[#FFF"]:hover,
+[class*="hover:bg-[#fff"]:hover,
+[class*="hover:bg-[#FCF"]:hover,
+[class*="hover:bg-[#FDF"]:hover,
+[class*="hover:bg-[#FBF"]:hover,
+[class*="hover:bg-[#EFE"]:hover,
+[class*="hover:bg-[#EAE"]:hover,
+[class*="hover:bg-[#E8D"]:hover,
+[class*="hover:bg-[#EFF"]:hover,
+[class*="hover:bg-[#EEF"]:hover,
+[class*="hover:bg-sandstone"]:hover,
+[class*="hover:bg-white"]:hover,
+.hover\:bg-sandstone-100:hover,
+.hover\:bg-sandstone-200:hover,
+.hover\:bg-sandstone-300:hover,
+.hover\:bg-black\/5:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Global Border Normalization for legacy beige/light borders */
+[class*="border-[#EAE"],
+[class*="border-[#eae"],
+[class*="border-[#E8E"],
+[class*="border-[#e8e"],
+[class*="border-[#E5D"],
+[class*="border-[#e5d"],
+[class*="border-[#F0E"],
+[class*="border-[#f0e"],
+[class*="border-[#F2E"],
+[class*="border-[#f2e"],
+[class*="border-[#F8E"],
+[class*="border-[#f8e"],
+[class*="border-[#EFE"],
+[class*="border-[#efe"],
+[class*="border-[#DDD"],
+[class*="border-[#ddd"],
+[class*="border-[#D5F"],
+[class*="border-[#D6E"],
+[class*="border-sandstone"],
+[class*="border-amber-100"],
+[class*="border-amber-200"],
+[class*="border-emerald-100"],
+[class*="border-emerald-200"],
+[class*="border-blue-100"],
+[class*="border-blue-200"] {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Typography Overrides: Ensure zero unreadable black-on-black */
+.text-charcoal-900,
+.text-charcoal-950,
+.text-\[\#0B0F0F\],
+.text-\[\#18181B\],
+h1, h2, h3, h4, h5, h6 {
+  color: #FFFFFF !important;
+}
+
+.text-charcoal-800,
+.text-charcoal-700 {
+  color: #E4E4E7 !important;
+}
+
+.text-charcoal-600 {
+  color: #A1A1AA !important;
+}
+
+.text-charcoal-500,
+.text-charcoal-400,
+.text-\[\#71717A\],
+.text-\[\#A1A1AA\] {
+  color: #71717A !important;
+}
+
+/* Universal Input, Textarea & Select Dark Theming */
+input,
+select,
+textarea {
+  background-color: #07090C !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #C59E5F !important;
+  outline: none !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #71717A !important;
+}
+
+/* Universal Button Overrides for Light / White buttons */
+button.bg-white,
+button[class*="bg-white"],
+button[class*="bg-[#FAF"],
+button[class*="bg-[#F5F"],
+button[class*="bg-[#F4E"],
+button[class*="bg-[#FFF"],
+button[class*="bg-sandstone-"] {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: #E4E4E7 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+button.bg-white:hover,
+button[class*="bg-white"]:hover,
+button[class*="bg-[#FAF"]:hover,
+button[class*="bg-[#F5F"]:hover,
+button[class*="bg-sandstone-"]:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(197, 158, 95, 0.4) !important;
+}
+
+/* Subtle Pills and Badges */
+span[class*="bg-sandstone-"],
+span[class*="bg-[#F2EDE2]"],
+span[class*="bg-[#E8DCC4]"],
+span[class*="bg-[#FAF"],
+span[class*="bg-[#F5F"],
+span[class*="bg-[#F4E"] {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #D4D4D8 !important;
+}
+
+/* Colored Status Badges Inverted to High-Contrast Obsidian */
+.bg-amber-50,
+[class*="bg-amber-50"] {
+  background-color: rgba(197, 158, 95, 0.15) !important;
+  color: #E5C38D !important;
+  border-color: rgba(197, 158, 95, 0.3) !important;
+}
+
+.bg-emerald-50,
+[class*="bg-emerald-50"] {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #34D399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.bg-blue-50,
+[class*="bg-blue-50"] {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: #60A5FA !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+.bg-rose-50,
+[class*="bg-rose-50"] {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+  color: #FB7185 !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+/* Glassmorphic Surfaces */
+.surface-glass-3d {
+  background: rgba(11, 14, 20, 0.88) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Dashboard Sidebar background */
+aside.bg-\[\#F5F2EB\],
+aside[class*="bg-white"],
+aside[class*="bg-[#F"] {
+  background-color: #090C10 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Primary Action Glow Buttons */
+.btn-primary-glow {
+  background: linear-gradient(135deg, #C59E5F 0%, #E5C38D 100%) !important;
+  color: #07090C !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 20px rgba(197, 158, 95, 0.3) !important;
+}
+
+/* Primary Action Glow Buttons */
+.btn-primary-glow {
+  background: linear-gradient(135deg, #C59E5F 0%, #E5C38D 100%) !important;
+  color: #07090C !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 20px rgba(197, 158, 95, 0.3) !important;
+}
+

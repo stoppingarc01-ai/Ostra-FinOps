@@ -8,7 +8,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   return (
-    <footer className="bg-[#FAF8F5] border-t border-[#EAE5DC] pt-16 pb-12 text-charcoal-600 text-xs">
+    <footer className="bg-[#07090C] border-t border-white/[0.08] pt-16 pb-12 text-zinc-400 text-xs">
       <div className="max-w-7xl mx-auto px-6 sm:px-8">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
           {/* Brand Column */}
@@ -19,15 +19,15 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             >
               <OstraLogo
                 iconClassName="w-8 h-8 group-hover:scale-105 transition-transform duration-300"
-                textClassName="text-xl font-bold tracking-tight text-charcoal-900 font-sans"
+                textClassName="text-xl font-bold tracking-tight text-white font-sans"
                 variant="gold"
                 showTagline={false}
               />
             </button>
-            <p className="text-xs text-charcoal-500 max-w-sm leading-relaxed">
+            <p className="text-xs text-zinc-400 max-w-sm leading-relaxed">
               OstraOps gives developers and teams real-time spend visibility, hard budget limits, and complete data privacy across Claude, OpenAI, Gemini, and DeepSeek.
             </p>
-            <div className="flex items-center gap-2 pt-1 text-[11px] text-emerald-700 font-medium">
+            <div className="flex items-center gap-2 pt-1 text-[11px] text-emerald-400 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
               <span>Zero prompt storage • Direct provider communication</span>
             </div>
@@ -35,7 +35,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
           {/* Column 1: Product */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-900 font-mono">Product</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white font-mono">Product</span>
             <ul className="space-y-2">
               <li>
                 <button 
@@ -136,12 +136,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
           {/* Column 3: Company & Trust */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-900 font-mono">Company</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white font-mono">Company</span>
             <ul className="space-y-2">
               <li>
                 <button 
                   onClick={() => onNavigate && onNavigate('about')} 
-                  className="hover:text-charcoal-900 transition-colors text-left cursor-pointer font-medium text-charcoal-800"
+                  className="hover:text-white transition-colors text-left cursor-pointer font-medium text-zinc-300"
                 >
                   About Us
                 </button>
@@ -149,7 +149,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <li>
                 <button 
                   onClick={() => onNavigate && onNavigate('privacy')} 
-                  className="hover:text-charcoal-900 transition-colors text-left cursor-pointer"
+                  className="hover:text-white transition-colors text-left cursor-pointer"
                 >
                   Privacy Policy
                 </button>
@@ -157,7 +157,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <li>
                 <button 
                   onClick={() => onNavigate && onNavigate('terms')} 
-                  className="hover:text-charcoal-900 transition-colors text-left cursor-pointer"
+                  className="hover:text-white transition-colors text-left cursor-pointer"
                 >
                   Terms of Service
                 </button>
@@ -165,9 +165,17 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <li>
                 <button 
                   onClick={() => onNavigate && onNavigate('cookies')} 
-                  className="hover:text-charcoal-900 transition-colors text-left cursor-pointer"
+                  className="hover:text-white transition-colors text-left cursor-pointer"
                 >
                   Cookie Policy &amp; Preferences
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => onNavigate && onNavigate('refund')} 
+                  className="hover:text-white transition-colors text-left cursor-pointer"
+                >
+                  Refund Policy
                 </button>
               </li>
             </ul>
@@ -175,11 +183,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-[#EAE5DC] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-charcoal-500">
+        <div className="pt-8 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-zinc-500">
           <div>
             &copy; {new Date().getFullYear()} OstraOps Technologies Inc. All rights reserved.
           </div>
-          <div className="flex items-center gap-1.5 text-charcoal-500">
+          <div className="flex items-center gap-1.5 text-zinc-500">
             <span>Built with precision for developers managing AI spend.</span>
           </div>
         </div>

@@ -59,21 +59,21 @@ export const ProductUIShowcase: React.FC = () => {
   };
 
   return (
-    <section id="ui-showcase" className="relative py-24 bg-[#FAF8F5] border-t border-[#EAE5DB] overflow-hidden">
+    <section id="ui-showcase" className="relative py-24 bg-[#07090C] border-t border-white/[0.08] overflow-hidden">
       {/* Warm Ambient Radial Aura */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-ostraGold-500/10 via-sandstone-300/20 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-[#C59E5F]/10 via-[#C59E5F]/5 to-transparent blur-[140px] pointer-events-none -z-10" />
 
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-14">
-          <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider mb-2 font-mono">
+          <p className="text-xs font-semibold text-[#E5C38D] uppercase tracking-wider mb-2 font-mono">
             Product Walkthrough
           </p>
-          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
+          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-[-0.02em] font-display">
             See OstraOps In Action.{' '}
             <span className="gold-gradient-text block">Simple Setup. Real-Time Protection.</span>
           </h2>
-          <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
+          <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-2xl mx-auto">
             Watch a 2-minute walkthrough of how OstraOps tracks token costs live, sets hard spend caps, and keeps your AI infrastructure running predictably.
           </p>
         </div>
@@ -199,40 +199,40 @@ export const ProductUIShowcase: React.FC = () => {
           </div>
         </div>
 
-        {/* 3 Real, Honest Product Capabilities (Insaani Bhasha) */}
+        {/* 3 Real, Honest Product Capabilities */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-5xl mx-auto">
-          <div className="p-6 rounded-2xl bg-white border border-[#EAE5DB] shadow-subtle space-y-2.5">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700">
+          <div className="p-6 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xl space-y-2.5">
+            <div className="w-10 h-10 rounded-xl bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
               <DollarSign className="w-5 h-5" />
             </div>
-            <h4 className="text-base font-bold text-charcoal-900 font-sans">
+            <h4 className="text-base font-bold text-zinc-100 font-sans">
               Accurate Spend Calculations
             </h4>
-            <p className="text-xs text-charcoal-600 leading-relaxed">
+            <p className="text-xs text-zinc-400 leading-relaxed">
               Every token is tallied against current provider rate cards. You see the true cost for each request as it happens, not at the end of the month.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white border border-[#EAE5DB] shadow-subtle space-y-2.5">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-700">
+          <div className="p-6 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xl space-y-2.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
               <ShieldCheck className="w-5 h-5" />
             </div>
-            <h4 className="text-base font-bold text-charcoal-900 font-sans">
+            <h4 className="text-base font-bold text-zinc-100 font-sans">
               Hard Budget Limits
             </h4>
-            <p className="text-xs text-charcoal-600 leading-relaxed">
+            <p className="text-xs text-zinc-400 leading-relaxed">
               Set a firm maximum spend (daily or monthly). If an autonomous loop or test script loops infinitely, requests pause safely so your card isn't drained.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white border border-[#EAE5DB] shadow-subtle space-y-2.5">
-            <div className="w-10 h-10 rounded-xl bg-sandstone-200/90 border border-sandstone-300 flex items-center justify-center text-charcoal-800">
+          <div className="p-6 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xl space-y-2.5">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.1] flex items-center justify-center text-[#C59E5F]">
               <CheckCircle2 className="w-5 h-5" />
             </div>
-            <h4 className="text-base font-bold text-charcoal-900 font-sans">
+            <h4 className="text-base font-bold text-zinc-100 font-sans">
               Zero Prompt Retention
             </h4>
-            <p className="text-xs text-charcoal-600 leading-relaxed">
+            <p className="text-xs text-zinc-400 leading-relaxed">
               We never save, view, or train on your prompts or code. Your API calls go straight to your selected model provider with complete privacy.
             </p>
           </div>

@@ -159,7 +159,7 @@ export const OptimizationView: React.FC = () => {
   const [simTargetModel, setSimTargetModel] = useState('gemini-3-8-flash');
   const [simMonthlyTokens, setSimMonthlyTokens] = useState<number>(10); // in Millions
 
-  // Model costs per 1M tokens (input + output average)
+  // Model rates per 1M tokens
   const modelRates: Record<string, { name: string; provider: string; avgPerMillion: number; latencyMs: number; qualityScore: number }> = {
     'gpt-5-6': { name: 'GPT-5.6', provider: 'OpenAI', avgPerMillion: 11.25, latencyMs: 380, qualityScore: 98 },
     'gpt-5-5': { name: 'GPT-5.5', provider: 'OpenAI', avgPerMillion: 7.50, latencyMs: 310, qualityScore: 94 },
@@ -228,7 +228,7 @@ export const OptimizationView: React.FC = () => {
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#18181B] text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-mono flex items-center gap-2 border border-[#3F3F46] animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 bg-[#0B0E14] text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-mono flex items-center gap-2 border border-[#C59E5F]/40 animate-in fade-in slide-in-from-bottom-2 duration-200">
           <CheckCircle2 className="w-4 h-4 text-[#C59E5F]" />
           <span>{toastMessage}</span>
         </div>
@@ -237,17 +237,17 @@ export const OptimizationView: React.FC = () => {
       {/* ============================================================ */}
       {/* 1. TOP HEADER & TELEMETRY SUMMARY                            */}
       {/* ============================================================ */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#EAE5DC] pb-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-md bg-[#F4EFE6] text-[#9C7938] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#E5DBCA]">
-              Cost & Latency Governance
+            <span className="px-2.5 py-0.5 rounded-md bg-[#C59E5F]/15 text-[#E5C38D] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#C59E5F]/30">
+              Cost &amp; Latency Governance
             </span>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-extrabold text-charcoal-900 tracking-tight font-sans">
-            AI Spend & Model Optimization
+          <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight font-sans">
+            AI Spend &amp; Model Optimization
           </h1>
-          <p className="text-xs sm:text-sm text-charcoal-500 mt-1 max-w-3xl">
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-3xl">
             Automated model substitution recommendations, prompt token caching telemetry, dynamic thinking budget caps, and proxy-level savings heuristics.
           </p>
         </div>
@@ -256,7 +256,7 @@ export const OptimizationView: React.FC = () => {
           <button
             onClick={handleRunScan}
             disabled={isScanning}
-            className="px-4 py-2 rounded-xl bg-[#18181B] hover:bg-black text-white text-xs font-bold font-mono transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="px-4 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.1] hover:bg-white/[0.06] text-white text-xs font-bold font-mono transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-[#C59E5F] ${isScanning ? 'animate-spin' : ''}`} />
             <span>{isScanning ? 'Scanning Traffic...' : 'Run Optimization Scan'}</span>
@@ -265,106 +265,106 @@ export const OptimizationView: React.FC = () => {
       </div>
 
       {/* Policy Governance Banner */}
-      <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-start gap-3">
-        <Info className="w-4 h-4 text-[#9C7938] flex-shrink-0 mt-0.5" />
-        <div className="text-xs text-charcoal-600 leading-relaxed font-sans">
-          <strong className="text-charcoal-900 font-semibold">Strict Governance Mode:</strong> All optimization rules require explicit policy toggling or verification. OstraOps never alters upstream prompt payloads or downgrades models silently without your configured rules.
+      <div className="p-4 rounded-xl bg-[#0B0E14] border border-white/[0.08] flex items-start gap-3">
+        <Info className="w-4 h-4 text-[#C59E5F] flex-shrink-0 mt-0.5" />
+        <div className="text-xs text-zinc-300 leading-relaxed font-sans">
+          <strong className="text-white font-semibold">Strict Governance Mode:</strong> All optimization rules require explicit policy toggling or verification. OstraOps never alters upstream prompt payloads or downgrades models silently without your configured rules.
         </div>
       </div>
 
       {/* ============================================================ */}
-      {/* 2. NUMERICAL KPI TILES (Strictly Numerical, No Status Bars)  */}
+      {/* 2. NUMERICAL KPI TILES                                       */}
       {/* ============================================================ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Tile 1: Projected Monthly Savings */}
-        <div className="p-5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between space-y-3">
+        <div className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono uppercase text-charcoal-500 font-bold tracking-wider">
+            <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold tracking-wider">
               Projected Monthly Savings
             </span>
-            <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center text-[#C59E5F]">
+            <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-[#E5C38D]">
               <Sparkles className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-2xl lg:text-3xl font-black text-charcoal-900 font-mono tracking-tight">
+            <div className="text-2xl lg:text-3xl font-black text-white font-mono tracking-tight">
               $1,248.50
             </div>
             <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-emerald-700 bg-emerald-50 text-[10px] font-bold font-mono px-1.5 py-0.2 rounded border border-emerald-200">
+              <span className="text-emerald-400 bg-emerald-500/15 text-[10px] font-bold font-mono px-1.5 py-0.2 rounded border border-emerald-500/30">
                 +34.2% Saved
               </span>
-              <span className="text-[11px] text-charcoal-500 font-mono">across all models</span>
+              <span className="text-[11px] text-zinc-500 font-mono">across all models</span>
             </div>
           </div>
         </div>
 
         {/* Tile 2: Cache Acceleration */}
-        <div className="p-5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between space-y-3">
+        <div className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono uppercase text-charcoal-500 font-bold tracking-wider">
+            <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold tracking-wider">
               Prompt Cache Hit Rate
             </span>
-            <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center text-charcoal-800">
+            <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-zinc-200">
               <Zap className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-2xl lg:text-3xl font-black text-charcoal-900 font-mono tracking-tight">
+            <div className="text-2xl lg:text-3xl font-black text-white font-mono tracking-tight">
               68.4%
             </div>
             <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-emerald-700 bg-emerald-50 text-[10px] font-bold font-mono px-1.5 py-0.2 rounded border border-emerald-200">
+              <span className="text-emerald-400 bg-emerald-500/15 text-[10px] font-bold font-mono px-1.5 py-0.2 rounded border border-emerald-500/30">
                 3.8M Tokens
               </span>
-              <span className="text-[11px] text-charcoal-500 font-mono">bypassed this month</span>
+              <span className="text-[11px] text-zinc-500 font-mono">bypassed this month</span>
             </div>
           </div>
         </div>
 
         {/* Tile 3: Average Latency Reduction */}
-        <div className="p-5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between space-y-3">
+        <div className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono uppercase text-charcoal-500 font-bold tracking-wider">
+            <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold tracking-wider">
               Latency Improvement
             </span>
-            <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center text-emerald-700">
+            <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-emerald-400">
               <Clock className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-2xl lg:text-3xl font-black text-charcoal-900 font-mono tracking-tight">
+            <div className="text-2xl lg:text-3xl font-black text-white font-mono tracking-tight">
               -148ms
             </div>
             <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-emerald-700 bg-emerald-50 text-[10px] font-bold font-mono px-1.5 py-0.2 rounded border border-emerald-200">
+              <span className="text-emerald-400 bg-emerald-500/15 text-[10px] font-bold font-mono px-1.5 py-0.2 rounded border border-emerald-500/30">
                 Faster TTFT
               </span>
-              <span className="text-[11px] text-charcoal-500 font-mono">avg response time</span>
+              <span className="text-[11px] text-zinc-500 font-mono">avg response time</span>
             </div>
           </div>
         </div>
 
         {/* Tile 4: Active Routing Rules */}
-        <div className="p-5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between space-y-3">
+        <div className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono uppercase text-charcoal-500 font-bold tracking-wider">
+            <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold tracking-wider">
               Active Optimization Rules
             </span>
-            <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center text-[#C59E5F]">
+            <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-[#E5C38D]">
               <Shield className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-2xl lg:text-3xl font-black text-charcoal-900 font-mono tracking-tight">
+            <div className="text-2xl lg:text-3xl font-black text-white font-mono tracking-tight">
               5 of 6
             </div>
             <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-charcoal-700 bg-[#FAF8F5] text-[10px] font-bold font-mono px-1.5 py-0.2 rounded border border-[#EAE5DC]">
+              <span className="text-zinc-300 bg-white/[0.06] text-[10px] font-bold font-mono px-1.5 py-0.2 rounded border border-white/[0.08]">
                 Policies Enforced
               </span>
-              <span className="text-[11px] text-charcoal-500 font-mono">zero silent overrides</span>
+              <span className="text-[11px] text-zinc-500 font-mono">zero silent overrides</span>
             </div>
           </div>
         </div>
@@ -372,18 +372,18 @@ export const OptimizationView: React.FC = () => {
       </div>
 
       {/* ============================================================ */}
-      {/* 3. ACTIVE OPTIMIZATION OPPORTUNITIES (ACTIONABLE CARDS)      */}
+      {/* 3. ACTIVE OPTIMIZATION OPPORTUNITIES                         */}
       {/* ============================================================ */}
-      <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 lg:p-7 shadow-subtle space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EAE5DC] pb-4">
+      <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 lg:p-7 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded-md bg-[#F4EFE6] text-[#9C7938] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#E5DBCA]">
+              <span className="px-2 py-0.5 rounded-md bg-[#C59E5F]/15 text-[#E5C38D] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#C59E5F]/30">
                 Verified Recommendations
               </span>
-              <span className="text-xs font-mono text-charcoal-500">{filteredOpportunities.length} Available</span>
+              <span className="text-xs font-mono text-zinc-400">{filteredOpportunities.length} Available</span>
             </div>
-            <h3 className="text-base font-bold text-charcoal-900 font-sans">
+            <h3 className="text-base font-bold text-white font-sans">
               High-Impact Optimization Opportunities
             </h3>
           </div>
@@ -394,7 +394,7 @@ export const OptimizationView: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search opportunities..."
-              className="px-3 py-1.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-[#C59E5F] font-sans"
+              className="px-3 py-1.5 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C59E5F] font-sans"
             />
             {['All', 'Model Downgrade', 'Semantic Caching', 'Batch Processing', 'Prompt Trimming'].map((cat) => (
               <button
@@ -402,8 +402,8 @@ export const OptimizationView: React.FC = () => {
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer ${
                   selectedCategory === cat
-                    ? 'bg-[#18181B] text-white font-bold'
-                    : 'bg-[#FAF8F5] text-charcoal-700 hover:bg-sandstone-200 border border-[#EAE5DC]'
+                    ? 'bg-[#C59E5F] text-black font-bold'
+                    : 'bg-[#07090C] text-zinc-400 hover:text-white border border-white/[0.08]'
                 }`}
               >
                 {cat}
@@ -419,26 +419,26 @@ export const OptimizationView: React.FC = () => {
               key={opp.id}
               className={`p-5 rounded-2xl border transition-all space-y-4 ${
                 opp.applied
-                  ? 'bg-[#FAF8F5]/60 border-emerald-200'
-                  : 'bg-white border-[#EAE5DC] hover:border-[#C59E5F] shadow-2xs'
+                  ? 'bg-emerald-500/[0.03] border-emerald-500/30'
+                  : 'bg-[#07090C] border-white/[0.08] hover:border-[#C59E5F]/50 shadow-xs'
               }`}
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center p-2 shadow-2xs">
+                  <div className="w-10 h-10 rounded-xl bg-[#0B0E14] border border-white/[0.08] flex items-center justify-center p-2 shadow-xs">
                     <ProviderLogo provider={opp.provider} className="w-5 h-5" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono font-bold uppercase text-[#C59E5F]">
+                      <span className="text-[10px] font-mono font-bold uppercase text-[#E5C38D]">
                         {opp.category}
                       </span>
-                      <span className="text-[10px] font-mono text-charcoal-400">·</span>
-                      <span className="text-[10px] font-mono text-charcoal-500">
+                      <span className="text-[10px] font-mono text-zinc-500">·</span>
+                      <span className="text-[10px] font-mono text-zinc-400">
                         {opp.impactScope}
                       </span>
                     </div>
-                    <h4 className="text-sm font-bold text-charcoal-900 font-sans mt-0.5">
+                    <h4 className="text-sm font-bold text-white font-sans mt-0.5">
                       {opp.title}
                     </h4>
                   </div>
@@ -447,49 +447,49 @@ export const OptimizationView: React.FC = () => {
                 {/* Savings & Action */}
                 <div className="flex items-center gap-3 self-end md:self-auto">
                   <div className="text-right font-mono">
-                    <span className="text-sm font-extrabold text-emerald-700 block">
+                    <span className="text-sm font-extrabold text-emerald-400 block">
                       {opp.monthlySavings}
                     </span>
-                    <span className="text-[10px] text-charcoal-400">
+                    <span className="text-[10px] text-zinc-500">
                       {opp.latencyImprovement}
                     </span>
                   </div>
 
                   {opp.applied ? (
-                    <div className="px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-mono font-bold border border-emerald-200 flex items-center gap-1.5">
+                    <div className="px-3.5 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-400 text-xs font-mono font-bold border border-emerald-500/30 flex items-center gap-1.5">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                       <span>Applied</span>
                     </div>
                   ) : (
                     <button
                       onClick={() => handleApplyOpportunity(opp.id, opp.title)}
-                      className="px-4 py-2 rounded-xl bg-[#18181B] hover:bg-black text-white text-xs font-mono font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 rounded-xl bg-[#C59E5F] hover:bg-[#D4AF37] text-black text-xs font-mono font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
                     >
                       <span>Apply Rule</span>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-[#C59E5F]" />
+                      <ArrowUpRight className="w-3.5 h-3.5 text-black" />
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Description Body */}
-              <p className="text-xs text-charcoal-600 leading-relaxed font-sans bg-[#FAF8F5] p-3.5 rounded-xl border border-[#EAE5DC]">
+              <p className="text-xs text-zinc-300 leading-relaxed font-sans bg-[#0B0E14] p-3.5 rounded-xl border border-white/[0.08]">
                 {opp.description}
               </p>
 
               {/* Scope & Metric Chips */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] font-mono text-charcoal-500">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] font-mono text-zinc-400">
                 <div className="flex items-center gap-3">
-                  <span>Current: <strong className="text-charcoal-800">{opp.currentModel}</strong></span>
+                  <span>Current: <strong className="text-white">{opp.currentModel}</strong></span>
                   {opp.recommendedModel && (
                     <>
                       <span>→</span>
-                      <span>Target: <strong className="text-[#C59E5F]">{opp.recommendedModel}</strong></span>
+                      <span>Target: <strong className="text-[#E5C38D]">{opp.recommendedModel}</strong></span>
                     </>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded bg-sandstone-200 text-charcoal-700 text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded bg-white/[0.06] text-zinc-300 text-[10px] font-bold border border-white/[0.08]">
                     Confidence: {opp.confidenceScore}
                   </span>
                 </div>
@@ -502,18 +502,18 @@ export const OptimizationView: React.FC = () => {
       {/* ============================================================ */}
       {/* 4. MODEL SUBSTITUTION SIMULATOR (CALCULATOR)                 */}
       {/* ============================================================ */}
-      <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 lg:p-7 shadow-subtle space-y-6">
-        <div className="border-b border-[#EAE5DC] pb-4">
+      <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 lg:p-7 shadow-xs space-y-6">
+        <div className="border-b border-white/[0.08] pb-4">
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded-md bg-[#F4EFE6] text-[#9C7938] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#E5DBCA]">
+            <span className="px-2 py-0.5 rounded-md bg-[#C59E5F]/15 text-[#E5C38D] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#C59E5F]/30">
               Interactive Estimator
             </span>
-            <span className="text-xs font-mono text-charcoal-500">Real-Time Pricing Model</span>
+            <span className="text-xs font-mono text-zinc-400">Real-Time Pricing Model</span>
           </div>
-          <h3 className="text-base font-bold text-charcoal-900 font-sans">
-            Model Substitution & Savings Calculator
+          <h3 className="text-base font-bold text-white font-sans">
+            Model Substitution &amp; Savings Calculator
           </h3>
-          <p className="text-xs text-charcoal-500 mt-0.5 font-sans">
+          <p className="text-xs text-zinc-400 mt-0.5 font-sans">
             Simulate the financial and latency impact of switching models across your production telemetry volume.
           </p>
         </div>
@@ -521,15 +521,15 @@ export const OptimizationView: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
           
           {/* Column 1: Source Model & Volume */}
-          <div className="space-y-4 p-5 rounded-2xl bg-[#FAF8F5] border border-[#EAE5DC]">
+          <div className="space-y-4 p-5 rounded-2xl bg-[#07090C] border border-white/[0.08]">
             <div>
-              <label className="text-[10px] font-mono uppercase font-bold text-charcoal-500 block mb-1.5">
+              <label className="text-[10px] font-mono uppercase font-bold text-zinc-400 block mb-1.5">
                 Baseline Model (Current)
               </label>
               <select
                 value={simSourceModel}
                 onChange={(e) => setSimSourceModel(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0E14] border border-white/[0.1] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F] cursor-pointer"
               >
                 <option value="gpt-5-6">OpenAI · GPT-5.6 ($11.25/M avg)</option>
                 <option value="claude-opus-4-8">Anthropic · Claude Opus 4.8 ($20.00/M avg)</option>
@@ -540,10 +540,10 @@ export const OptimizationView: React.FC = () => {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[10px] font-mono uppercase font-bold text-charcoal-500">
+                <label className="text-[10px] font-mono uppercase font-bold text-zinc-400">
                   Monthly Prompt Volume
                 </label>
-                <span className="text-xs font-mono font-bold text-charcoal-900">
+                <span className="text-xs font-mono font-bold text-white">
                   {simMonthlyTokens}M Tokens / mo
                 </span>
               </div>
@@ -556,29 +556,29 @@ export const OptimizationView: React.FC = () => {
                 onChange={(e) => setSimMonthlyTokens(parseInt(e.target.value, 10))}
                 className="w-full accent-[#C59E5F] cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] font-mono text-charcoal-400 mt-1">
+              <div className="flex justify-between text-[10px] font-mono text-zinc-500 mt-1">
                 <span>1M</span>
                 <span>25M</span>
                 <span>50M Tokens</span>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-[#EAE5DC] text-xs font-mono">
-              <span className="text-charcoal-500">Current Cost: </span>
-              <strong className="text-charcoal-900">${sourceMonthlyCost.toFixed(2)} / mo</strong>
+            <div className="pt-2 border-t border-white/[0.08] text-xs font-mono">
+              <span className="text-zinc-400">Current Cost: </span>
+              <strong className="text-white">${sourceMonthlyCost.toFixed(2)} / mo</strong>
             </div>
           </div>
 
           {/* Column 2: Target Model */}
-          <div className="space-y-4 p-5 rounded-2xl bg-[#FAF8F5] border border-[#EAE5DC]">
+          <div className="space-y-4 p-5 rounded-2xl bg-[#07090C] border border-white/[0.08]">
             <div>
-              <label className="text-[10px] font-mono uppercase font-bold text-charcoal-500 block mb-1.5">
+              <label className="text-[10px] font-mono uppercase font-bold text-zinc-400 block mb-1.5">
                 Target Model (Recommended Alternative)
               </label>
               <select
                 value={simTargetModel}
                 onChange={(e) => setSimTargetModel(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EAE5DC] text-xs font-mono text-charcoal-900 focus:outline-none focus:border-[#C59E5F]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0E14] border border-white/[0.1] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F] cursor-pointer"
               >
                 <option value="gemini-3-8-flash">Google · Gemini 3.8 Flash ($0.38/M avg)</option>
                 <option value="gemini-3-7-flash">Google · Gemini 3.7 Flash ($0.30/M avg)</option>
@@ -589,26 +589,26 @@ export const OptimizationView: React.FC = () => {
               </select>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-white border border-[#EAE5DC] space-y-2 text-xs font-mono">
+            <div className="p-3.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] space-y-2 text-xs font-mono">
               <div className="flex justify-between">
-                <span className="text-charcoal-500">Target Benchmark Score:</span>
-                <span className="font-bold text-charcoal-900">{simTarget.qualityScore}/100</span>
+                <span className="text-zinc-400">Target Benchmark Score:</span>
+                <span className="font-bold text-white">{simTarget.qualityScore}/100</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-charcoal-500">Expected Latency:</span>
-                <span className="font-bold text-charcoal-900">{simTarget.latencyMs}ms TTFT</span>
+                <span className="text-zinc-400">Expected Latency:</span>
+                <span className="font-bold text-white">{simTarget.latencyMs}ms TTFT</span>
               </div>
-              <div className="flex justify-between border-t border-[#EAE5DC] pt-1.5">
-                <span className="text-charcoal-500">Optimized Cost:</span>
-                <span className="font-bold text-emerald-700">${targetMonthlyCost.toFixed(2)} / mo</span>
+              <div className="flex justify-between border-t border-white/[0.08] pt-1.5">
+                <span className="text-zinc-400">Optimized Cost:</span>
+                <span className="font-bold text-emerald-400">${targetMonthlyCost.toFixed(2)} / mo</span>
               </div>
             </div>
           </div>
 
           {/* Column 3: Net Simulated Impact */}
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-[#18181B] via-[#27272A] to-[#3F3F46] text-white shadow-md space-y-4">
+          <div className="p-6 rounded-2xl bg-[#07090C] border border-[#C59E5F]/30 text-white shadow-md space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[#C59E5F] font-bold">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#E5C38D] font-bold">
                 Projected Net Impact
               </span>
               <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-500/30">
@@ -620,20 +620,20 @@ export const OptimizationView: React.FC = () => {
               <div className="text-3xl lg:text-4xl font-black font-mono tracking-tight text-white">
                 ${netSavingsDollars.toFixed(2)}
               </div>
-              <span className="text-xs text-white/70 font-mono block mt-0.5">
+              <span className="text-xs text-zinc-400 font-mono block mt-0.5">
                 Net dollars saved per month
               </span>
             </div>
 
             <div className="space-y-2 pt-3 border-t border-white/10 text-xs font-mono">
-              <div className="flex items-center justify-between text-white/80">
+              <div className="flex items-center justify-between text-zinc-300">
                 <span>Latency Shift:</span>
                 <span className={latencyDelta <= 0 ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
                   {latencyDelta <= 0 ? `${latencyDelta}ms (Faster)` : `+${latencyDelta}ms`}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-white/80">
+              <div className="flex items-center justify-between text-zinc-300">
                 <span>Quality Retention:</span>
                 <span className="text-white font-bold">
                   {Math.round((simTarget.qualityScore / simSource.qualityScore) * 100)}% preserved
@@ -643,7 +643,7 @@ export const OptimizationView: React.FC = () => {
 
             <button
               onClick={() => showToast(`Created substitution policy: Route ${simSource.name} -> ${simTarget.name}`)}
-              className="w-full py-2 rounded-xl bg-[#C59E5F] hover:bg-[#b08b4f] text-charcoal-950 text-xs font-mono font-bold transition-all cursor-pointer shadow-xs"
+              className="w-full py-2.5 rounded-xl bg-[#C59E5F] hover:bg-[#D4AF37] text-black text-xs font-mono font-bold transition-all cursor-pointer shadow-xs"
             >
               Deploy Substitution Rule
             </button>
@@ -655,56 +655,56 @@ export const OptimizationView: React.FC = () => {
       {/* ============================================================ */}
       {/* 5. AUTONOMOUS HEURISTIC RULES MATRIX                         */}
       {/* ============================================================ */}
-      <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 lg:p-7 shadow-subtle space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EAE5DC] pb-4">
+      <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 lg:p-7 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded-md bg-[#F4EFE6] text-[#9C7938] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#E5DBCA]">
+              <span className="px-2 py-0.5 rounded-md bg-[#C59E5F]/15 text-[#E5C38D] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#C59E5F]/30">
                 Proxy Policies
               </span>
-              <span className="text-xs font-mono text-charcoal-500">Autonomous Gateways</span>
+              <span className="text-xs font-mono text-zinc-400">Autonomous Gateways</span>
             </div>
-            <h3 className="text-base font-bold text-charcoal-900 font-sans">
+            <h3 className="text-base font-bold text-white font-sans">
               Proxy Heuristic Enforcement Rules
             </h3>
           </div>
 
-          <span className="text-xs font-mono text-charcoal-500">
+          <span className="text-xs font-mono text-zinc-400">
             Rules apply globally across all API vault keys
           </span>
         </div>
 
-        <div className="divide-y divide-[#EAE5DC]">
+        <div className="divide-y divide-white/[0.06]">
           {heuristicRules.map((rule) => (
             <div key={rule.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1 max-w-2xl">
                 <div className="flex items-center gap-2.5">
-                  <h4 className="text-sm font-bold text-charcoal-900 font-sans">
+                  <h4 className="text-sm font-bold text-white font-sans">
                     {rule.name}
                   </h4>
-                  <span className="px-2 py-0.2 rounded text-[10px] font-mono font-bold bg-[#FAF8F5] text-charcoal-600 border border-[#EAE5DC]">
+                  <span className="px-2 py-0.2 rounded text-[10px] font-mono font-bold bg-white/[0.06] text-zinc-300 border border-white/[0.08]">
                     {rule.category}
                   </span>
                 </div>
-                <p className="text-xs text-charcoal-500 font-sans leading-relaxed">
+                <p className="text-xs text-zinc-400 font-sans leading-relaxed">
                   {rule.description}
                 </p>
               </div>
 
               <div className="flex items-center gap-4 self-end sm:self-auto flex-shrink-0">
-                <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/15 px-2.5 py-1 rounded-lg border border-emerald-500/30">
                   {rule.impactEst}
                 </span>
 
-                {/* Toggle switch without status bars */}
+                {/* Toggle switch */}
                 <button
                   onClick={() => handleToggleRule(rule.id, rule.name, rule.enabled)}
                   className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                    rule.enabled ? 'bg-[#18181B]' : 'bg-[#EAE5DC]'
+                    rule.enabled ? 'bg-[#C59E5F]' : 'bg-zinc-700'
                   }`}
                 >
                   <div
-                    className={`w-5 h-5 rounded-full bg-white transition-transform shadow-xs absolute top-0.5 ${
+                    className={`w-5 h-5 rounded-full bg-black transition-transform shadow-xs absolute top-0.5 ${
                       rule.enabled ? 'translate-x-5.5' : 'translate-x-0.5'
                     }`}
                   />
@@ -718,29 +718,29 @@ export const OptimizationView: React.FC = () => {
       {/* ============================================================ */}
       {/* 6. RECENT OPTIMIZATION AUDIT LOG                             */}
       {/* ============================================================ */}
-      <div className="rounded-2xl bg-white border border-[#EAE5DC] p-6 lg:p-7 shadow-subtle space-y-4">
-        <div className="flex items-center justify-between border-b border-[#EAE5DC] pb-4">
+      <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 lg:p-7 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded-md bg-[#F4EFE6] text-[#9C7938] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#E5DBCA]">
+              <span className="px-2 py-0.5 rounded-md bg-[#C59E5F]/15 text-[#E5C38D] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#C59E5F]/30">
                 Audit Telemetry
               </span>
-              <span className="text-xs font-mono text-charcoal-500">Live Stream</span>
+              <span className="text-xs font-mono text-zinc-400">Live Stream</span>
             </div>
-            <h3 className="text-base font-bold text-charcoal-900 font-sans">
+            <h3 className="text-base font-bold text-white font-sans">
               Automated Optimization Execution Ledger
             </h3>
           </div>
 
           <button
             onClick={() => showToast('Exporting optimization execution ledger to CSV...')}
-            className="px-3 py-1.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] hover:border-charcoal-400 text-charcoal-800 text-xs font-mono font-bold transition-all cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/[0.08] hover:bg-white/[0.1] text-zinc-200 text-xs font-mono font-bold transition-all cursor-pointer"
           >
             Export Ledger
           </button>
         </div>
 
-        <div className="divide-y divide-[#EAE5DC] font-mono text-xs">
+        <div className="divide-y divide-white/[0.06] font-mono text-xs">
           {[
             { time: 'Just now', action: 'Prompt Cache Hit', model: 'Claude Sonnet 4.6', tokens: '4,120 cached', savings: '$0.05', latency: '4ms' },
             { time: '12m ago', action: 'Auto-Downgrade Applied', model: 'GPT-5.6 -> GPT-5.6-nano', tokens: '1,890 tokens', savings: '$0.02', latency: '82ms' },
@@ -748,18 +748,18 @@ export const OptimizationView: React.FC = () => {
             { time: '2h ago', action: 'Batch Endpoint Offload', model: 'GPT-5.5 (Batch API)', tokens: '420,000 tokens', savings: '$18.40', latency: 'Async' },
             { time: '4h ago', action: 'Thinking Budget Capped', model: 'Gemini 3.7 Flash', tokens: '2,048 max thinking', savings: '$0.12', latency: '290ms' },
           ].map((item, idx) => (
-            <div key={idx} className="py-3 flex items-center justify-between hover:bg-sandstone-100 p-2 rounded-lg transition-colors">
+            <div key={idx} className="py-3 flex items-center justify-between hover:bg-white/[0.03] p-2 rounded-lg transition-colors">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                <div className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
                 <div>
-                  <span className="font-bold text-charcoal-900 block font-sans">{item.action}</span>
-                  <span className="text-charcoal-500 text-[11px]">{item.model} · {item.tokens}</span>
+                  <span className="font-bold text-white block font-sans">{item.action}</span>
+                  <span className="text-zinc-400 text-[11px]">{item.model} · {item.tokens}</span>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="text-emerald-700 font-bold block">Saved {item.savings}</span>
-                <span className="text-charcoal-400 text-[10px]">{item.time} · {item.latency}</span>
+                <span className="text-emerald-400 font-bold block">Saved {item.savings}</span>
+                <span className="text-zinc-500 text-[10px]">{item.time} · {item.latency}</span>
               </div>
             </div>
           ))}

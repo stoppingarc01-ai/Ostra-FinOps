@@ -177,11 +177,11 @@ export const BudgetsView: React.FC = () => {
   const activeWarningCount = budgets.filter((b) => b.status === 'warning' || b.status === 'breached').length;
 
   return (
-    <div className="space-y-6 pb-14 font-sans selection:bg-[#D4AF7C]/30 selection:text-charcoal-900">
+    <div className="space-y-6 pb-14 font-sans selection:bg-[#C59E5F]/30 selection:text-white">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-[#0B0F0F] text-[#FAF8F5] px-4 py-3 rounded-2xl shadow-2xl border border-[#D4AF7C]/40 text-xs font-semibold flex items-center gap-2.5 animate-in slide-in-from-top-2">
-          <CheckCircle2 className="w-4 h-4 text-[#D4AF7C]" />
+        <div className="fixed top-6 right-6 z-50 bg-[#0B0E14] text-white px-4 py-3 rounded-2xl shadow-2xl border border-[#C59E5F]/40 text-xs font-semibold flex items-center gap-2.5 animate-in slide-in-from-top-2">
+          <CheckCircle2 className="w-4 h-4 text-[#C59E5F]" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -190,50 +190,50 @@ export const BudgetsView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl font-bold tracking-tight text-charcoal-900 font-sans">
-              Budgets, Spend Caps & Rate Limits
+            <h1 className="text-2xl font-bold tracking-tight text-white font-sans">
+              Budgets, Spend Caps &amp; Rate Limits
             </h1>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#D4AF7C]/20 text-[#8E6B2C] border border-[#D4AF7C]/40">
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#C59E5F]/20 text-[#E5C38D] border border-[#C59E5F]/30">
               Ostra Guardrails
             </span>
           </div>
-          <p className="text-xs text-charcoal-500 font-medium">
+          <p className="text-xs text-zinc-400 font-medium">
             Granular per-organization, per-project, model and virtual key financial caps and throughput rate limit controls.
           </p>
         </div>
 
         {/* Action Controls & Sub-tabs */}
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center p-1 rounded-xl bg-sandstone-200/80 border border-[#EAE5DC] text-xs font-mono">
+          <div className="flex items-center p-1 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-mono">
             <button
               onClick={() => setActiveSubTab('budgets')}
               className={`px-3 py-1.5 rounded-lg transition-all font-semibold flex items-center gap-1.5 cursor-pointer ${
                 activeSubTab === 'budgets'
-                  ? 'bg-white text-charcoal-900 shadow-xs'
-                  : 'text-charcoal-600 hover:text-charcoal-900'
+                  ? 'bg-[#C59E5F] text-black shadow-xs'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <Wallet className="w-3.5 h-3.5 text-[#D4AF7C]" />
+              <Wallet className="w-3.5 h-3.5" />
               <span>Spend Budgets ({budgets.length})</span>
             </button>
             <button
               onClick={() => setActiveSubTab('ratelimits')}
               className={`px-3 py-1.5 rounded-lg transition-all font-semibold flex items-center gap-1.5 cursor-pointer ${
                 activeSubTab === 'ratelimits'
-                  ? 'bg-white text-charcoal-900 shadow-xs'
-                  : 'text-charcoal-600 hover:text-charcoal-900'
+                  ? 'bg-[#C59E5F] text-black shadow-xs'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <Gauge className="w-3.5 h-3.5 text-[#00A678]" />
+              <Gauge className="w-3.5 h-3.5" />
               <span>Model Rate Limits ({rateLimits.length})</span>
             </button>
           </div>
 
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-bold transition-all shadow-subtle flex items-center gap-1.5 cursor-pointer shrink-0"
+            className="px-3.5 py-2 rounded-xl bg-[#C59E5F] hover:bg-[#D4AF37] text-black text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
           >
-            <Plus className="w-3.5 h-3.5 text-ostraGold-400" />
+            <Plus className="w-3.5 h-3.5 text-black" />
             <span>Set New Budget Cap</span>
           </button>
         </div>
@@ -242,31 +242,31 @@ export const BudgetsView: React.FC = () => {
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1: Monthly Hard Cap */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-charcoal-500">Monthly Budget Cap</span>
-            <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center font-bold text-xs">
+            <span className="text-xs font-medium text-zinc-400">Monthly Budget Cap</span>
+            <div className="w-8 h-8 rounded-xl bg-white/[0.06] text-[#E5C38D] flex items-center justify-center font-bold text-xs border border-white/[0.08]">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-charcoal-900 font-mono">
+              <span className="text-2xl font-black text-white font-mono">
                 ${totalMonthlySpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              <span className="text-xs font-mono text-charcoal-500">
+              <span className="text-xs font-mono text-zinc-500">
                 / ${totalMonthlyCap.toLocaleString()}
               </span>
             </div>
             {/* Progress bar */}
             <div className="mt-2.5 space-y-1">
-              <div className="flex justify-between text-[10px] font-mono text-charcoal-500">
+              <div className="flex justify-between text-[10px] font-mono text-zinc-400">
                 <span>Consumed</span>
-                <span className="font-bold text-charcoal-800">{spendPercent}%</span>
+                <span className="font-bold text-zinc-200">{spendPercent}%</span>
               </div>
-              <div className="h-1.5 w-full bg-sandstone-200 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#D4AF7C] rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] rounded-full transition-all duration-500"
                   style={{ width: `${spendPercent}%` }}
                 />
               </div>
@@ -275,52 +275,52 @@ export const BudgetsView: React.FC = () => {
         </div>
 
         {/* Metric 2: Projected Month-End */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-charcoal-500">Projected Month-End</span>
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+            <span className="text-xs font-medium text-zinc-400">Projected Month-End</span>
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-charcoal-900 font-mono">$4,650.00</span>
-            <span className="text-[11px] font-mono text-emerald-700 font-semibold">Within Cap</span>
+            <span className="text-2xl font-black text-white font-mono">$4,650.00</span>
+            <span className="text-[11px] font-mono text-emerald-400 font-semibold">Within Cap</span>
           </div>
-          <div className="text-[11px] text-charcoal-500 mt-2 font-mono">
+          <div className="text-[11px] text-zinc-500 mt-2 font-mono">
             Forecast trajectory: $350 buffer remaining
           </div>
         </div>
 
         {/* Metric 3: Active Warnings */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-charcoal-500">Cap Warnings & Breaches</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center">
+            <span className="text-xs font-medium text-zinc-400">Cap Warnings &amp; Breaches</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-charcoal-900 font-mono">{activeWarningCount}</span>
-            <span className="text-[11px] font-mono text-amber-700 font-semibold">Active limits</span>
+            <span className="text-2xl font-black text-white font-mono">{activeWarningCount}</span>
+            <span className="text-[11px] font-mono text-amber-400 font-semibold">Active limits</span>
           </div>
-          <div className="text-[11px] text-charcoal-400 mt-2 font-mono">
+          <div className="text-[11px] text-zinc-500 mt-2 font-mono">
             1 key blocked, 1 model downgraded
           </div>
         </div>
 
         {/* Metric 4: Protected Requests */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-charcoal-500">Protected Invocations</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-700 flex items-center justify-center">
+            <span className="text-xs font-medium text-zinc-400">Protected Invocations</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
               <Shield className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-charcoal-900 font-mono">14,280</span>
-            <span className="text-[11px] font-mono text-emerald-700 font-semibold">Guarded</span>
+            <span className="text-2xl font-black text-white font-mono">14,280</span>
+            <span className="text-[11px] font-mono text-emerald-400 font-semibold">Guarded</span>
           </div>
-          <div className="text-[11px] text-charcoal-400 mt-2 font-mono">
+          <div className="text-[11px] text-zinc-500 mt-2 font-mono">
             Zero runaway cost incidents
           </div>
         </div>
@@ -339,31 +339,31 @@ export const BudgetsView: React.FC = () => {
               return (
                 <div
                   key={budget.id}
-                  className={`p-5 rounded-2xl bg-white border transition-all flex flex-col justify-between space-y-4 ${
+                  className={`p-5 rounded-2xl bg-[#0B0E14] border transition-all flex flex-col justify-between space-y-4 ${
                     isPaused
-                      ? 'border-dashed border-[#D2D9DC] opacity-60 bg-sandstone-50'
+                      ? 'border-dashed border-zinc-700 opacity-60 bg-[#07090C]'
                       : isBreached
-                      ? 'border-red-500/40 shadow-xs'
+                      ? 'border-red-500/50 shadow-xs'
                       : isWarning
-                      ? 'border-amber-500/40 shadow-xs'
-                      : 'border-[#EAE5DC] shadow-subtle hover:border-[#D4AF7C]'
+                      ? 'border-amber-500/50 shadow-xs'
+                      : 'border-white/[0.08] shadow-xs hover:border-[#C59E5F]/50'
                   }`}
                 >
                   <div className="space-y-3">
                     {/* Top Row: Scope & Status Badge */}
                     <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-sandstone-200 text-charcoal-700 font-bold">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-white/[0.06] text-zinc-300 font-bold border border-white/[0.08]">
                         {budget.scope} • {budget.period}
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase font-mono tracking-wider ${
                           isPaused
-                            ? 'bg-neutral-100 text-neutral-600'
+                            ? 'bg-zinc-800 text-zinc-400'
                             : isBreached
-                            ? 'bg-red-500/15 text-red-700 border border-red-500/30'
+                            ? 'bg-red-500/15 text-red-400 border border-red-500/30'
                             : isWarning
-                            ? 'bg-amber-500/15 text-amber-800 border border-amber-500/30'
-                            : 'bg-emerald-500/15 text-emerald-700'
+                            ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                            : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                         }`}
                       >
                         {budget.status}
@@ -371,10 +371,10 @@ export const BudgetsView: React.FC = () => {
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-bold text-charcoal-900 leading-snug">
+                      <h3 className="text-sm font-bold text-white leading-snug">
                         {budget.name}
                       </h3>
-                      <p className="text-xs text-charcoal-500 font-mono mt-0.5">
+                      <p className="text-xs text-zinc-400 font-mono mt-0.5">
                         {budget.target_name}
                       </p>
                     </div>
@@ -382,17 +382,17 @@ export const BudgetsView: React.FC = () => {
                     {/* Spend amount vs Limit */}
                     <div className="flex items-baseline justify-between pt-1">
                       <div>
-                        <span className="text-lg font-black text-charcoal-900 font-mono">
+                        <span className="text-lg font-black text-white font-mono">
                           ${budget.current_spend.toFixed(2)}
                         </span>
-                        <span className="text-xs font-mono text-charcoal-500">
+                        <span className="text-xs font-mono text-zinc-500">
                           {' '}
                           / ${budget.limit_amount.toLocaleString()}
                         </span>
                       </div>
                       <span
                         className={`text-xs font-mono font-bold ${
-                          isBreached ? 'text-red-600' : isWarning ? 'text-amber-700' : 'text-charcoal-700'
+                          isBreached ? 'text-red-400' : isWarning ? 'text-amber-400' : 'text-zinc-300'
                         }`}
                       >
                         {pct}%
@@ -400,19 +400,19 @@ export const BudgetsView: React.FC = () => {
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="h-2 w-full bg-sandstone-200 rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-white/[0.08] rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
-                          isBreached ? 'bg-red-500' : isWarning ? 'bg-amber-500' : 'bg-[#D4AF7C]'
+                          isBreached ? 'bg-red-500' : isWarning ? 'bg-amber-500' : 'bg-gradient-to-r from-[#C59E5F] to-[#E5C38D]'
                         }`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
 
                     {/* Action on Breach Tag */}
-                    <div className="p-2.5 rounded-xl bg-sandstone-100/70 border border-[#EAE5DC] text-[11px] font-mono text-charcoal-600 flex items-center justify-between">
+                    <div className="p-2.5 rounded-xl bg-[#07090C] border border-white/[0.08] text-[11px] font-mono text-zinc-400 flex items-center justify-between">
                       <span>On limit breach:</span>
-                      <span className="font-bold text-charcoal-900">
+                      <span className="font-bold text-white">
                         {budget.action_on_breach === 'hard_block'
                           ? '🛑 Hard Block API'
                           : budget.action_on_breach === 'downgrade_model'
@@ -425,19 +425,19 @@ export const BudgetsView: React.FC = () => {
                   </div>
 
                   {/* Bottom Controls */}
-                  <div className="flex items-center justify-between pt-3 border-t border-[#EAE5DC]">
+                  <div className="flex items-center justify-between pt-3 border-t border-white/[0.08]">
                     <button
                       onClick={() => handleToggleStatus(budget.id)}
-                      className="flex items-center gap-1 text-xs font-medium text-charcoal-700 hover:text-charcoal-900 cursor-pointer"
+                      className="flex items-center gap-1 text-xs font-medium text-zinc-300 hover:text-white cursor-pointer"
                     >
                       {budget.status !== 'paused' ? (
                         <>
-                          <ToggleRight className="w-5 h-5 text-emerald-600" />
+                          <ToggleRight className="w-5 h-5 text-emerald-400" />
                           <span>Active</span>
                         </>
                       ) : (
                         <>
-                          <ToggleLeft className="w-5 h-5 text-charcoal-400" />
+                          <ToggleLeft className="w-5 h-5 text-zinc-500" />
                           <span>Paused</span>
                         </>
                       )}
@@ -446,7 +446,7 @@ export const BudgetsView: React.FC = () => {
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleDeleteBudget(budget.id)}
-                        className="p-1.5 rounded-lg text-charcoal-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                         title="Delete Budget"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -463,17 +463,17 @@ export const BudgetsView: React.FC = () => {
       {/* Sub-tab 2: MODEL RATE LIMITS (RPM / TPM) */}
       {activeSubTab === 'ratelimits' && (
         <div className="space-y-4">
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#0B0F0F] to-[#161C20] text-white border border-white/10 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-4 rounded-2xl bg-[#0B0E14] text-white border border-white/[0.08] shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#00A678]/20 border border-[#00A678]/30 text-[#00A678] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
                 <Gauge className="w-5 h-5" />
               </div>
               <div>
                 <div className="text-sm font-bold font-sans flex items-center gap-2">
-                  <span>Upstream Provider Quota Throttling & Burst Queue</span>
+                  <span>Upstream Provider Quota Throttling &amp; Burst Queue</span>
                   <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 </div>
-                <p className="text-xs text-neutral-400 font-mono">
+                <p className="text-xs text-zinc-400 font-mono">
                   Ostra Gateway intercepts and smooths request spikes to eliminate HTTP 429 rate limit exceptions.
                 </p>
               </div>
@@ -488,26 +488,26 @@ export const BudgetsView: React.FC = () => {
               return (
                 <div
                   key={tier.id}
-                  className="p-5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6"
+                  className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs hover:border-[#C59E5F]/40 transition-all flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6"
                 >
                   <div className="space-y-1 min-w-[240px]">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-charcoal-900 font-sans">
+                      <span className="text-sm font-bold text-white font-sans">
                         {tier.model}
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase font-mono ${
                           tier.status === 'throttling'
-                            ? 'bg-red-500/15 text-red-700'
+                            ? 'bg-red-500/15 text-red-400 border border-red-500/30'
                             : tier.status === 'warning'
-                            ? 'bg-amber-500/15 text-amber-800'
-                            : 'bg-emerald-500/15 text-emerald-700'
+                            ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                            : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                         }`}
                       >
                         {tier.status}
                       </span>
                     </div>
-                    <p className="text-xs text-charcoal-500 font-mono">
+                    <p className="text-xs text-zinc-400 font-mono">
                       Provider: {tier.provider}
                     </p>
                   </div>
@@ -517,15 +517,15 @@ export const BudgetsView: React.FC = () => {
                     {/* TPM Gauge */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-mono">
-                        <span className="text-charcoal-500">TPM (Tokens/min)</span>
-                        <span className="font-bold text-charcoal-900">
+                        <span className="text-zinc-400">TPM (Tokens/min)</span>
+                        <span className="font-bold text-white">
                           {(tier.tpm_current / 1000).toFixed(0)}k / {(tier.tpm_limit / 1000).toFixed(0)}k ({tpmPct}%)
                         </span>
                       </div>
-                      <div className="h-1.5 w-full bg-sandstone-200 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
-                            tpmPct > 90 ? 'bg-red-500' : tpmPct > 75 ? 'bg-amber-500' : 'bg-emerald-500'
+                            tpmPct > 90 ? 'bg-red-500' : tpmPct > 75 ? 'bg-amber-500' : 'bg-emerald-400'
                           }`}
                           style={{ width: `${Math.min(100, tpmPct)}%` }}
                         />
@@ -535,14 +535,14 @@ export const BudgetsView: React.FC = () => {
                     {/* RPM Gauge */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-mono">
-                        <span className="text-charcoal-500">RPM (Reqs/min)</span>
-                        <span className="font-bold text-charcoal-900">
+                        <span className="text-zinc-400">RPM (Reqs/min)</span>
+                        <span className="font-bold text-white">
                           {tier.rpm_current.toLocaleString()} / {tier.rpm_limit.toLocaleString()} ({rpmPct}%)
                         </span>
                       </div>
-                      <div className="h-1.5 w-full bg-sandstone-200 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                          className="h-full bg-blue-400 rounded-full transition-all duration-500"
                           style={{ width: `${Math.min(100, rpmPct)}%` }}
                         />
                       </div>
@@ -551,14 +551,14 @@ export const BudgetsView: React.FC = () => {
                     {/* Concurrency Gauge */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-mono">
-                        <span className="text-charcoal-500">Concurrency</span>
-                        <span className="font-bold text-charcoal-900">
+                        <span className="text-zinc-400">Concurrency</span>
+                        <span className="font-bold text-white">
                           {tier.concurrency_current} / {tier.concurrency_limit} parallel
                         </span>
                       </div>
-                      <div className="h-1.5 w-full bg-sandstone-200 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-purple-500 rounded-full transition-all duration-500"
+                          className="h-full bg-[#C59E5F] rounded-full transition-all duration-500"
                           style={{ width: `${Math.min(100, (tier.concurrency_current / tier.concurrency_limit) * 100)}%` }}
                         />
                       </div>
@@ -567,7 +567,7 @@ export const BudgetsView: React.FC = () => {
 
                   {/* Right: Burst Status */}
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="px-2.5 py-1 rounded-lg bg-sandstone-100 text-[11px] font-mono text-charcoal-700">
+                    <span className="px-2.5 py-1 rounded-lg bg-[#07090C] border border-white/[0.08] text-[11px] font-mono text-zinc-300">
                       {tier.queue_burst_allowed ? '⚡ Queue Burst On' : '🔒 Strict Clamp'}
                     </span>
                   </div>
@@ -580,42 +580,42 @@ export const BudgetsView: React.FC = () => {
 
       {/* Create New Budget Cap Modal */}
       {createModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white border border-[#EAE5DC] rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl relative space-y-5 animate-in zoom-in-95 duration-150 font-sans">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#0B0E14] border border-white/[0.1] rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl relative space-y-5 animate-in zoom-in-95 duration-150 font-sans text-white">
             <button
               onClick={() => setCreateModalOpen(false)}
-              className="absolute right-5 top-5 p-2 rounded-xl text-charcoal-400 hover:text-charcoal-800 hover:bg-sandstone-100 transition-colors cursor-pointer"
+              className="absolute right-5 top-5 p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div>
-              <h2 className="text-lg font-bold text-charcoal-900">Set New Budget Guardrail</h2>
-              <p className="text-xs text-charcoal-500 mt-0.5">
+              <h2 className="text-lg font-bold text-white">Set New Budget Guardrail</h2>
+              <p className="text-xs text-zinc-400 mt-0.5">
                 Enforce hard spend limits or graceful automated downgrades in Firestore.
               </p>
             </div>
 
             <form onSubmit={handleCreateBudget} className="space-y-4 text-xs">
               <div>
-                <label className="font-bold text-charcoal-800 block mb-1">Budget Rule Name</label>
+                <label className="font-bold text-zinc-300 block mb-1">Budget Rule Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Autonomous Agent Pool Cap"
                   value={newBudgetName}
                   onChange={(e) => setNewBudgetName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE5DC] focus:outline-none focus:border-[#D4AF7C] text-charcoal-900 text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#07090C] border border-white/[0.1] focus:outline-none focus:border-[#C59E5F] text-white text-xs placeholder:text-zinc-600"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-charcoal-800 block mb-1">Scope</label>
+                  <label className="font-bold text-zinc-300 block mb-1">Scope</label>
                   <select
                     value={newBudgetScope}
                     onChange={(e) => setNewBudgetScope(e.target.value as BudgetScope)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-[#EAE5DC] focus:outline-none focus:border-[#D4AF7C] text-charcoal-900 text-xs cursor-pointer"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#07090C] border border-white/[0.1] focus:outline-none focus:border-[#C59E5F] text-white text-xs cursor-pointer"
                   >
                     <option value="organization">Organization-Wide</option>
                     <option value="project">Specific Project</option>
@@ -625,11 +625,11 @@ export const BudgetsView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="font-bold text-charcoal-800 block mb-1">Period</label>
+                  <label className="font-bold text-zinc-300 block mb-1">Period</label>
                   <select
                     value={newBudgetPeriod}
                     onChange={(e) => setNewBudgetPeriod(e.target.value as BudgetPeriod)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-[#EAE5DC] focus:outline-none focus:border-[#D4AF7C] text-charcoal-900 text-xs cursor-pointer"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#07090C] border border-white/[0.1] focus:outline-none focus:border-[#C59E5F] text-white text-xs cursor-pointer"
                   >
                     <option value="monthly">Monthly</option>
                     <option value="daily">Daily Cap</option>
@@ -640,49 +640,49 @@ export const BudgetsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="font-bold text-charcoal-800 block mb-1">Target Entity / Name</label>
+                <label className="font-bold text-zinc-300 block mb-1">Target Entity / Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Project: swe-agent-v1 or Key: dev-rag-backend"
                   value={newBudgetTarget}
                   onChange={(e) => setNewBudgetTarget(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE5DC] focus:outline-none focus:border-[#D4AF7C] text-charcoal-900 text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#07090C] border border-white/[0.1] focus:outline-none focus:border-[#C59E5F] text-white text-xs placeholder:text-zinc-600"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-charcoal-800 block mb-1">Limit Amount ($ USD)</label>
+                  <label className="font-bold text-zinc-300 block mb-1">Limit Amount ($ USD)</label>
                   <input
                     type="number"
                     min="1"
                     value={newBudgetLimit}
                     onChange={(e) => setNewBudgetLimit(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE5DC] focus:outline-none focus:border-[#D4AF7C] text-charcoal-900 text-xs font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#07090C] border border-white/[0.1] focus:outline-none focus:border-[#C59E5F] text-white text-xs font-mono"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="font-bold text-charcoal-800 block mb-1">Notify Threshold (%)</label>
+                  <label className="font-bold text-zinc-300 block mb-1">Notify Threshold (%)</label>
                   <input
                     type="number"
                     min="10"
                     max="100"
                     value={newBudgetNotify}
                     onChange={(e) => setNewBudgetNotify(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE5DC] focus:outline-none focus:border-[#D4AF7C] text-charcoal-900 text-xs font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#07090C] border border-white/[0.1] focus:outline-none focus:border-[#C59E5F] text-white text-xs font-mono"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="font-bold text-charcoal-800 block mb-1">Action On Limit Breach</label>
+                <label className="font-bold text-zinc-300 block mb-1">Action On Limit Breach</label>
                 <select
                   value={newBudgetAction}
                   onChange={(e) => setNewBudgetAction(e.target.value as BudgetBreachAction)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-[#EAE5DC] focus:outline-none focus:border-[#D4AF7C] text-charcoal-900 text-xs cursor-pointer"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#07090C] border border-white/[0.1] focus:outline-none focus:border-[#C59E5F] text-white text-xs cursor-pointer"
                 >
                   <option value="hard_block">🛑 Hard Block: Reject incoming API calls with 429</option>
                   <option value="downgrade_model">🔄 Automated Fallback: Route to cheaper model</option>
@@ -691,11 +691,11 @@ export const BudgetsView: React.FC = () => {
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#EAE5DC]">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/[0.08]">
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-sandstone-100 hover:bg-sandstone-200 text-charcoal-800 text-xs font-bold transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 text-xs font-bold transition-all cursor-pointer"
                   disabled={isSubmitting}
                 >
                   Cancel
@@ -703,7 +703,7 @@ export const BudgetsView: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-bold transition-all shadow-subtle cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#C59E5F] hover:bg-[#D4AF37] text-black text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? 'Saving to Firestore...' : 'Enforce Budget Cap'}
                 </button>

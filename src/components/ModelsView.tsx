@@ -101,27 +101,27 @@ export const ModelsView: React.FC = () => {
   }, [selectedProvider, selectedCategory, searchQuery, sortBy]);
 
   return (
-    <div className="space-y-8 select-none">
+    <div className="space-y-8 select-none text-zinc-100">
       {/* 1. Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EAE5DC] pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
         <div>
-          <p className="text-xs font-semibold text-ostraGold-700 uppercase tracking-wider mb-1 font-mono">
+          <p className="text-xs font-semibold text-[#E5C38D] uppercase tracking-wider mb-1 font-mono">
             Model Directory &amp; Pricing
           </p>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-charcoal-900 tracking-tight font-sans">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-sans">
             Compare AI Models &amp; Real Token Costs
           </h1>
-          <p className="text-xs sm:text-sm text-charcoal-500 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
             Real prices, context limits, and honest speed ratings across 40 popular foundation models. No marketing hype or hidden fees.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="px-3.5 py-2 rounded-xl bg-[#F5F2EB] border border-[#EAE5DC] text-right">
-            <span className="text-[10px] uppercase font-mono text-charcoal-400 font-bold block">
+          <div className="px-3.5 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-right">
+            <span className="text-[10px] uppercase font-mono text-zinc-500 font-bold block">
               Catalog
             </span>
-            <span className="text-sm font-extrabold text-charcoal-900 font-mono">
+            <span className="text-sm font-extrabold text-[#E5C38D] font-mono">
               {filteredModels.length} Models Available
             </span>
           </div>
@@ -130,75 +130,75 @@ export const ModelsView: React.FC = () => {
 
       {/* 2. Top Stats Overview Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-white border border-[#EAE5DC] shadow-subtle flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-mono uppercase text-charcoal-500 font-bold block">
+            <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">
               Active Models
             </span>
-            <div className="text-2xl font-black text-charcoal-900 font-mono mt-0.5">40</div>
-            <span className="text-[10px] font-mono text-charcoal-400">Claude, GPT, Gemini &amp; more</span>
+            <div className="text-2xl font-black text-white font-mono mt-0.5">40</div>
+            <span className="text-[10px] font-mono text-zinc-500">Claude, GPT, Gemini &amp; more</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center text-ostraGold-600">
+          <div className="w-10 h-10 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center text-[#E5C38D]">
             <Cpu className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-white border border-[#EAE5DC] shadow-subtle flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-mono uppercase text-charcoal-500 font-bold block">
+            <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">
               AI Providers
             </span>
-            <div className="text-2xl font-black text-charcoal-900 font-mono mt-0.5">9</div>
-            <span className="text-[10px] font-mono text-charcoal-400">Zero vendor lock-in</span>
+            <div className="text-2xl font-black text-white font-mono mt-0.5">9</div>
+            <span className="text-[10px] font-mono text-zinc-500">Zero vendor lock-in</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center text-charcoal-800">
+          <div className="w-10 h-10 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center text-zinc-300">
             <Layers className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-white border border-[#EAE5DC] shadow-subtle flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-mono uppercase text-charcoal-500 font-bold block">
+            <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">
               Max Context Window
             </span>
-            <div className="text-2xl font-black text-charcoal-900 font-mono mt-0.5">4.2M</div>
-            <span className="text-[10px] font-mono text-charcoal-400">Tokens per single prompt</span>
+            <div className="text-2xl font-black text-white font-mono mt-0.5">4.2M</div>
+            <span className="text-[10px] font-mono text-zinc-500">Tokens per single prompt</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center text-ostraGold-600">
+          <div className="w-10 h-10 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center text-[#E5C38D]">
             <Sparkles className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-white border border-[#EAE5DC] shadow-subtle flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-mono uppercase text-charcoal-500 font-bold block">
+            <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">
               Starting Input Price
             </span>
-            <div className="text-2xl font-black text-charcoal-900 font-mono mt-0.5">$0.03</div>
-            <span className="text-[10px] font-mono text-charcoal-400">per 1M input tokens</span>
+            <div className="text-2xl font-black text-white font-mono mt-0.5">$0.03</div>
+            <span className="text-[10px] font-mono text-zinc-500">per 1M input tokens</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center text-emerald-700">
+          <div className="w-10 h-10 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center text-emerald-400">
             <Zap className="w-5 h-5" />
           </div>
         </div>
       </div>
 
       {/* 3. Search & Filter Bar */}
-      <div className="rounded-2xl bg-white border border-[#EAE5DC] p-5 shadow-subtle space-y-4">
+      <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-5 shadow-2xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-charcoal-400 absolute left-3.5 top-3" />
+            <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by model name, provider, or capability..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:border-[#C59E5F] font-sans"
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#07090C] border border-white/[0.1] text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] font-sans"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-2.5 text-charcoal-400 hover:text-charcoal-700 cursor-pointer"
+                className="absolute right-3 top-2.5 text-zinc-500 hover:text-white cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -206,12 +206,12 @@ export const ModelsView: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-charcoal-400 hidden sm:block" />
-            <span className="text-xs font-mono text-charcoal-500 hidden sm:inline">Sort:</span>
+            <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-400 hidden sm:block" />
+            <span className="text-xs font-mono text-zinc-400 hidden sm:inline">Sort:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs font-mono text-charcoal-800 focus:outline-none focus:border-[#C59E5F]"
+              className="px-3 py-2 rounded-xl bg-[#07090C] border border-white/[0.1] text-xs font-mono text-zinc-200 focus:outline-none focus:border-[#C59E5F]"
             >
               <option value="recommended">Recommended / Flagships First</option>
               <option value="cost-asc">Lowest Cost First</option>
@@ -223,8 +223,8 @@ export const ModelsView: React.FC = () => {
         </div>
 
         {/* Provider Filter Tabs */}
-        <div className="space-y-1.5 pt-1 border-t border-[#EAE5DC]">
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-charcoal-400 block">
+        <div className="space-y-1.5 pt-1 border-t border-white/[0.08]">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 block">
             Filter by Provider:
           </span>
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
@@ -236,8 +236,8 @@ export const ModelsView: React.FC = () => {
                   onClick={() => setSelectedProvider(prov)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
                     isSelected
-                      ? 'bg-[#18181B] text-white shadow-xs font-bold'
-                      : 'bg-[#FAF8F5] text-charcoal-700 hover:bg-sandstone-200 border border-[#EAE5DC]'
+                      ? 'bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] shadow-xs font-bold'
+                      : 'bg-[#07090C] text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.08]'
                   }`}
                 >
                   {prov !== 'All' && (
@@ -260,8 +260,8 @@ export const ModelsView: React.FC = () => {
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-ostraGold-500 text-charcoal-950 font-bold'
-                    : 'bg-sandstone-100 text-charcoal-600 hover:bg-sandstone-200'
+                    ? 'bg-[#C59E5F]/20 text-[#E5C38D] border border-[#C59E5F]/40 font-bold'
+                    : 'bg-[#07090C] text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.08]'
                 }`}
               >
                 {cat}
@@ -273,17 +273,17 @@ export const ModelsView: React.FC = () => {
 
       {/* 4. Model Cards Grid */}
       {filteredModels.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-white border border-[#EAE5DC] space-y-3">
-          <Info className="w-8 h-8 text-charcoal-400 mx-auto" />
-          <h3 className="text-base font-bold text-charcoal-900 font-sans">No matching models found</h3>
-          <p className="text-xs text-charcoal-500">Try changing your search terms or resetting the provider filters.</p>
+        <div className="p-12 text-center rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-3">
+          <Info className="w-8 h-8 text-zinc-500 mx-auto" />
+          <h3 className="text-base font-bold text-white font-sans">No matching models found</h3>
+          <p className="text-xs text-zinc-400">Try changing your search terms or resetting the provider filters.</p>
           <button
             onClick={() => {
               setSearchQuery('');
               setSelectedProvider('All');
               setSelectedCategory('All');
             }}
-            className="px-4 py-2 rounded-xl bg-charcoal-900 text-white text-xs font-medium"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] font-bold text-xs cursor-pointer"
           >
             Reset Filters
           </button>
@@ -293,46 +293,46 @@ export const ModelsView: React.FC = () => {
           {filteredModels.map((model) => (
             <div
               key={model.id}
-              className="p-5 rounded-2xl bg-white border border-[#EAE5DC] hover:border-ostraGold-500/60 shadow-subtle hover:shadow-card-3d transition-all duration-200 flex flex-col justify-between group"
+              className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/50 shadow-2xl transition-all duration-200 flex flex-col justify-between group"
             >
               <div>
                 {/* Provider Logo + Model Name */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center p-2 shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center p-2 shrink-0">
                       <ProviderLogo provider={model.provider} className="w-6 h-6" />
                     </div>
                     <div>
-                      <span className="text-[10px] font-mono text-charcoal-400 font-bold uppercase block">
+                      <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase block">
                         {model.provider}
                       </span>
-                      <h3 className="text-sm font-bold text-charcoal-900 font-sans group-hover:text-ostraGold-700 transition-colors">
+                      <h3 className="text-sm font-bold text-white font-sans group-hover:text-[#E5C38D] transition-colors">
                         {model.name}
                       </h3>
                     </div>
                   </div>
 
                   {model.badgeLabel && (
-                    <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 uppercase shrink-0">
+                    <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-[#C59E5F]/15 text-[#E5C38D] border border-[#C59E5F]/30 uppercase shrink-0">
                       {model.badgeLabel.split('•')[0].trim()}
                     </span>
                   )}
                 </div>
 
                 {/* Plain Human Description */}
-                <p className="text-xs text-charcoal-600 leading-relaxed font-sans line-clamp-3 mb-4">
+                <p className="text-xs text-zinc-400 leading-relaxed font-sans line-clamp-3 mb-4">
                   {model.description}
                 </p>
 
                 {/* Key Specifications Strip */}
-                <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EAE5DC] mb-3">
+                <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-[#07090C] p-2.5 rounded-xl border border-white/[0.08] mb-3">
                   <div>
-                    <span className="text-[10px] text-charcoal-400 block uppercase font-bold">Context Size</span>
-                    <span className="font-bold text-charcoal-900">{model.contextWindow}</span>
+                    <span className="text-[10px] text-zinc-500 block uppercase font-bold">Context Size</span>
+                    <span className="font-bold text-white">{model.contextWindow}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-charcoal-400 block uppercase font-bold">Price per 1M</span>
-                    <span className="font-bold text-charcoal-900">{model.tokenCost}</span>
+                    <span className="text-[10px] text-zinc-500 block uppercase font-bold">Price per 1M</span>
+                    <span className="font-bold text-[#E5C38D]">{model.tokenCost}</span>
                   </div>
                 </div>
 
@@ -341,7 +341,7 @@ export const ModelsView: React.FC = () => {
                   {model.tags.slice(0, 3).map((tag, idx) => (
                     <span
                       key={idx}
-                      className="px-2 py-0.5 rounded bg-sandstone-100 text-charcoal-600 text-[10px] font-mono"
+                      className="px-2 py-0.5 rounded bg-white/[0.04] text-zinc-400 border border-white/[0.06] text-[10px] font-mono"
                     >
                       {tag}
                     </span>
@@ -352,10 +352,10 @@ export const ModelsView: React.FC = () => {
               {/* Action Button: View Specs Modal */}
               <button
                 onClick={() => setActiveDetailModel(model)}
-                className="w-full py-2.5 px-3 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-semibold font-sans transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                className="w-full py-2.5 px-3 rounded-xl bg-white/[0.06] hover:bg-gradient-to-r hover:from-[#C59E5F] hover:to-[#E5C38D] hover:text-[#07090C] text-zinc-200 border border-white/[0.1] hover:border-transparent text-xs font-semibold font-sans transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs group/btn"
               >
                 <span>View Full Model Details</span>
-                <ArrowRight className="w-3.5 h-3.5 text-ostraGold-400" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#E5C38D] group-hover/btn:text-[#07090C] transition-colors" />
               </button>
             </div>
           ))}
@@ -364,24 +364,24 @@ export const ModelsView: React.FC = () => {
 
       {/* 5. Clean Model Details Modal (Zero Snippet Generator) */}
       {activeDetailModel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white border border-[#EAE5DC] w-full max-w-2xl rounded-2xl shadow-2xl p-6 lg:p-7 space-y-5 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+          <div className="bg-[#0B0E14] border border-white/[0.1] w-full max-w-2xl rounded-2xl shadow-2xl p-6 lg:p-7 space-y-5 max-h-[90vh] overflow-y-auto text-zinc-100">
             {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-[#EAE5DC] pb-4">
+            <div className="flex items-start justify-between border-b border-white/[0.08] pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center p-2.5 shadow-2xs">
+                <div className="w-12 h-12 rounded-2xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center p-2.5 shadow-2xs">
                   <ProviderLogo provider={activeDetailModel.provider} className="w-7 h-7" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold uppercase text-ostraGold-700">
+                    <span className="text-xs font-mono font-bold uppercase text-[#E5C38D]">
                       {activeDetailModel.provider}
                     </span>
-                    <span className="text-[10px] font-mono bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded border border-emerald-200 font-bold">
+                    <span className="text-[10px] font-mono bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-bold">
                       Available for Tracking
                     </span>
                   </div>
-                  <h3 className="text-xl font-bold text-charcoal-900 font-sans mt-0.5">
+                  <h3 className="text-xl font-bold text-white font-sans mt-0.5">
                     {activeDetailModel.name}
                   </h3>
                 </div>
@@ -389,7 +389,7 @@ export const ModelsView: React.FC = () => {
 
               <button
                 onClick={() => setActiveDetailModel(null)}
-                className="w-8 h-8 rounded-full bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-center text-charcoal-600 hover:text-charcoal-900 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-[#07090C] border border-white/[0.1] flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -397,77 +397,77 @@ export const ModelsView: React.FC = () => {
 
             {/* Description in Plain Human Language */}
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-charcoal-900 uppercase font-mono">Overview:</span>
-              <p className="text-xs sm:text-sm text-charcoal-700 leading-relaxed font-sans bg-[#FAF8F5] p-3.5 rounded-xl border border-[#EAE5DC]">
+              <span className="text-xs font-bold text-zinc-300 uppercase font-mono">Overview:</span>
+              <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans bg-[#07090C] p-3.5 rounded-xl border border-white/[0.08]">
                 {activeDetailModel.description}
               </p>
             </div>
 
             {/* Detailed Specs Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="p-3 rounded-xl bg-white border border-[#EAE5DC] space-y-1">
-                <span className="text-[10px] font-mono uppercase text-charcoal-400 font-bold block">
+              <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1">
+                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold block">
                   Context Window
                 </span>
-                <span className="text-sm font-extrabold text-charcoal-900 font-mono block">
+                <span className="text-sm font-extrabold text-white font-mono block">
                   {activeDetailModel.contextWindow}
                 </span>
-                <span className="text-[10px] text-charcoal-500 block leading-tight">
+                <span className="text-[10px] text-zinc-400 block leading-tight">
                   Total prompt &amp; completion memory
                 </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-white border border-[#EAE5DC] space-y-1">
-                <span className="text-[10px] font-mono uppercase text-charcoal-400 font-bold block">
+              <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1">
+                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold block">
                   Official Pricing
                 </span>
-                <span className="text-sm font-extrabold text-charcoal-900 font-mono block">
+                <span className="text-sm font-extrabold text-[#E5C38D] font-mono block">
                   {activeDetailModel.tokenCost}
                 </span>
-                <span className="text-[10px] text-charcoal-500 block leading-tight">
+                <span className="text-[10px] text-zinc-400 block leading-tight">
                   Per 1M input / output tokens
                 </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-white border border-[#EAE5DC] space-y-1">
-                <span className="text-[10px] font-mono uppercase text-charcoal-400 font-bold block">
+              <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1">
+                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold block">
                   Recommended Fallback
                 </span>
-                <span className="text-sm font-extrabold text-charcoal-900 font-mono block">
+                <span className="text-sm font-extrabold text-zinc-200 font-mono block">
                   {activeDetailModel.fallback}
                 </span>
-                <span className="text-[10px] text-charcoal-500 block leading-tight">
+                <span className="text-[10px] text-zinc-400 block leading-tight">
                   If rate-limited or unavailable
                 </span>
               </div>
             </div>
 
             {/* What OstraOps Tracks for this Model */}
-            <div className="space-y-2 border-t border-[#EAE5DC] pt-4">
-              <span className="text-xs font-bold text-charcoal-900 font-sans block">
+            <div className="space-y-2 border-t border-white/[0.08] pt-4">
+              <span className="text-xs font-bold text-white font-sans block">
                 How OstraOps Manages Calls to {activeDetailModel.name}:
               </span>
-              <div className="space-y-2 text-xs text-charcoal-700">
+              <div className="space-y-2 text-xs text-zinc-300">
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <span><strong>Live Cost Calculation:</strong> Tally input and output tokens accurately with official provider prices.</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <span><strong>Budget Threshold Warning:</strong> Get alerted before you reach your monthly spending target.</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <span><strong>Complete Privacy:</strong> Your prompt contents and completions are never stored on external servers.</span>
                 </div>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="border-t border-[#EAE5DC] pt-4 flex justify-end">
+            <div className="border-t border-white/[0.08] pt-4 flex justify-end">
               <button
                 onClick={() => setActiveDetailModel(null)}
-                className="px-5 py-2 rounded-xl bg-charcoal-900 text-white text-xs font-semibold hover:bg-black transition-colors cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-white/[0.08] text-white text-xs font-semibold hover:bg-white/[0.14] border border-white/[0.1] transition-colors cursor-pointer"
               >
                 Close Details
               </button>

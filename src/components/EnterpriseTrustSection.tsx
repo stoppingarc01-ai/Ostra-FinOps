@@ -7,19 +7,19 @@ interface EnterpriseTrustProps {
 
 export const EnterpriseTrustSection: React.FC<EnterpriseTrustProps> = ({ onNavigateToPricing }) => {
   return (
-    <section id="security" className="relative py-24 bg-[#FAF8F5] border-t border-[#EAE5DB] overflow-hidden">
+    <section id="security" className="relative py-24 bg-[#07090C] border-t border-white/[0.08] overflow-hidden">
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-2 font-mono">
+          <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2 font-mono">
             Security &amp; Data Privacy
           </p>
-          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-charcoal-900 tracking-[-0.02em] font-display">
+          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-[-0.02em] font-display">
             Built On Zero Data Retention.{' '}
             <span className="gold-gradient-text block">By Design, Not By Promise.</span>
           </h2>
-          <p className="mt-4 text-base text-charcoal-600 leading-relaxed max-w-2xl mx-auto">
+          <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-2xl mx-auto">
             Your proprietary codebase, prompt trajectories, and system instructions never get stored on our servers.
           </p>
         </div>
@@ -56,23 +56,23 @@ export const EnterpriseTrustSection: React.FC<EnterpriseTrustProps> = ({ onNavig
             return (
               <div
                 key={item.title}
-                className="p-6 rounded-3xl bg-white border border-[#EAE5DB] shadow-subtle hover:shadow-card-3d transition-all duration-200 flex flex-col justify-between"
+                className="p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xl hover:shadow-[0_0_25px_rgba(197,158,95,0.1)] hover:border-[#C59E5F]/40 transition-all duration-200 flex flex-col justify-between"
               >
                 <div className="space-y-4">
-                  <div className="w-12 h-12 rounded-2xl bg-sandstone-200/80 border border-sandstone-300/80 flex items-center justify-center text-charcoal-800">
+                  <div className="w-12 h-12 rounded-2xl bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
                     <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-base font-bold text-charcoal-900 font-display">
+                    <h4 className="text-base font-bold text-zinc-100 font-display">
                       {item.title}
                     </h4>
-                    <p className="text-xs text-charcoal-600 leading-relaxed mt-1">
+                    <p className="text-xs text-zinc-400 leading-relaxed mt-1">
                       {item.desc}
                     </p>
                   </div>
                 </div>
-                <div className="mt-5 pt-3 border-t border-[#EFEBE3]">
-                  <span className="text-[10px] font-mono font-bold text-charcoal-700 bg-sandstone-200/80 px-2.5 py-0.5 rounded-full border border-sandstone-300">
+                <div className="mt-5 pt-3 border-t border-white/[0.06]">
+                  <span className="text-[10px] font-mono font-bold text-zinc-300 bg-white/[0.06] px-2.5 py-0.5 rounded-full border border-white/[0.08]">
                     {item.badge}
                   </span>
                 </div>

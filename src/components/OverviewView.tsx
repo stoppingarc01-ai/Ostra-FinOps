@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   DollarSign, 
   Cpu, 
@@ -7,9 +7,11 @@ import {
   ChevronDown, 
   Check, 
   AlertTriangle, 
-  CheckCircle2,
+  CheckCircle2, 
   X
 } from 'lucide-react';
+import { fetchGatewayLogs, isSupabaseConfigured } from '../lib/supabase';
+import type { GatewayLog } from '../types/database';
 
 interface OverviewViewProps {
   onNavigateToUsage?: () => void;
@@ -29,6 +31,76 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   const [selectedDay, setSelectedDay] = useState<number | null>(6);
   const [selectedAlert, setSelectedAlert] = useState<string | null>(null);
 
+  // Live Backend Telemetry Integration
+  const [liveLogs, setLiveLogs] = useState<GatewayLog[]>([]);
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
+  const [gatewayStatus, setGatewayStatus] = useState<{ uptime: number; activeRequests: number; version?: string } | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // 1. Check Local Gateway Backend (via Vite proxy /gateway/healthz)
+    const checkGateway = async () => {
+      try {
+        const res = await fetch('/gateway/healthz');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.status === 'ok') {
+            setGatewayStatus(data);
+            setIsLiveConnected(true);
+          }
+        }
+      } catch {
+        try {
+          const directRes = await fetch('http://localhost:8080/healthz');
+          if (directRes.ok) {
+            const data = await directRes.json();
+            if (isMounted && data.status === 'ok') {
+              setGatewayStatus(data);
+              setIsLiveConnected(true);
+            }
+          }
+        } catch {}
+      }
+    };
+
+    // 2. Check Supabase Telemetry Logs if configured
+    const loadLogs = async () => {
+      if (isSupabaseConfigured) {
+        try {
+          const logs = await fetchGatewayLogs(100);
+          if (isMounted && logs && logs.length > 0) {
+            setLiveLogs(logs);
+            setIsLiveConnected(true);
+          }
+        } catch {
+          // Graceful fallback to rich defaults
+        }
+      }
+    };
+
+    checkGateway();
+    loadLogs();
+    const interval = setInterval(() => {
+      checkGateway();
+      loadLogs();
+    }, 15000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Compute live spend / tokens / requests if live logs exist
+  const liveSpend = liveLogs.length > 0
+    ? liveLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0)
+    : null;
+  const liveTokens = liveLogs.length > 0
+    ? liveLogs.reduce((acc, l) => acc + (l.input_tokens || 0) + (l.output_tokens || 0), 0)
+    : null;
+  const liveRequestsCount = liveLogs.length > 0 ? liveLogs.length : null;
+
   const trendData = [
     { day: 'Sep 1', spend: '$0.20', height: 14, tokens: '18.4K', requests: '1,120' },
     { day: 'Sep 2', spend: '$0.45', height: 24, tokens: '38.2K', requests: '2,400' },
@@ -42,33 +114,46 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   const timeOptions = ['Today', 'Yesterday', 'Last 7 days', 'Last 30 days', 'All time'];
 
   return (
-    <div className="space-y-6 text-charcoal-900 animate-in fade-in duration-200">
+    <div className="space-y-6 text-white animate-in fade-in duration-200">
       
       {/* ============================================================ */}
       {/* HEADER: TITLE + SUBTITLE + TIMEFRAME SELECTOR                */}
       {/* ============================================================ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-charcoal-900 tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
             Overview
           </h1>
-          <p className="text-xs sm:text-sm text-charcoal-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-zinc-400 mt-0.5">
             Your AI infrastructure at a glance
           </p>
         </div>
 
-        {/* Timeframe Dropdown */}
-        <div className="relative self-start sm:self-auto">
-          <button
-            onClick={() => setDropdownOpen((prev) => !prev)}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-[#EAE5DC] bg-white text-xs font-semibold text-charcoal-800 shadow-xs hover:bg-[#F9F7F2] transition-colors cursor-pointer"
-          >
+        {/* Header Actions: Gateway Status + Timeframe */}
+        <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
+          {/* Live Gateway Indicator */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/[0.08] bg-[#0B0E14] text-xs font-mono shadow-xs">
+            <span className={`w-2 h-2 rounded-full ${isLiveConnected ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_#34D399]' : 'bg-zinc-600'}`} />
+            <span className="text-zinc-300 font-medium">
+              {isLiveConnected ? 'Gateway :8080 Live' : 'Gateway Standby'}
+            </span>
+            {gatewayStatus?.version && (
+              <span className="text-[10px] text-zinc-500 font-mono">v{gatewayStatus.version}</span>
+            )}
+          </div>
+
+          {/* Timeframe Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-white/[0.08] bg-[#0B0E14] text-xs font-semibold text-zinc-200 shadow-xs hover:border-white/[0.2] transition-colors cursor-pointer"
+            >
             <span>{timeframe}</span>
-            <ChevronDown className={`w-3.5 h-3.5 text-charcoal-400 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 text-zinc-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-40 rounded-2xl bg-white border border-[#EAE5DC] shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95">
+            <div className="absolute right-0 top-full mt-1.5 w-40 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95">
               {timeOptions.map((opt) => (
                 <button
                   key={opt}
@@ -78,16 +163,17 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                   }}
                   className={`w-full text-left px-3 py-1.5 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-between ${
                     timeframe === opt
-                      ? 'bg-sandstone-200 text-charcoal-900 font-bold'
-                      : 'text-charcoal-600 hover:bg-sandstone-100 hover:text-charcoal-900'
+                      ? 'bg-white/[0.06] text-white font-bold'
+                      : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white'
                   }`}
                 >
                   <span>{opt}</span>
-                  {timeframe === opt && <Check className="w-3.5 h-3.5 text-charcoal-800" />}
+                  {timeframe === opt && <Check className="w-3.5 h-3.5 text-zinc-200" />}
                 </button>
               ))}
             </div>
           )}
+          </div>
         </div>
       </div>
 
@@ -99,31 +185,32 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         {/* Card 1: Total Spend */}
         <div 
           onClick={onNavigateToUsage}
-          className="p-5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
+          className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/50 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-charcoal-500">Total Spend</span>
-            <div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-100/80 flex items-center justify-center text-ostraGold-700">
+            <span className="text-xs font-medium text-zinc-400">Total Spend</span>
+            <div className="w-7 h-7 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
               <DollarSign className="w-3.5 h-3.5" />
             </div>
           </div>
 
           <div className="flex items-baseline gap-1.5 my-1">
-            <span className="text-2xl sm:text-[26px] font-extrabold text-charcoal-900 tracking-tight font-sans">
-              $1.42
+            <span className="text-2xl sm:text-[26px] font-extrabold text-white tracking-tight font-sans">
+              {liveSpend != null ? `$${liveSpend.toFixed(2)}` : '$1.42'}
             </span>
-            <span className="text-xs text-charcoal-400 font-medium">/ $5.00</span>
+            <span className="text-xs text-zinc-500 font-medium">/ $5.00</span>
           </div>
 
           <div className="mt-3">
-            <div className="w-full bg-[#EAE6DD] h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-white/[0.06] h-2 rounded-full overflow-hidden">
               <div 
-                className="bg-[#946A2C] h-full rounded-full transition-all duration-700" 
-                style={{ width: '28%' }} 
+                className="bg-[#C59E5F] h-full rounded-full transition-all duration-700" 
+                style={{ width: `${Math.min(100, Math.round(((liveSpend ?? 1.42) / 5) * 100))}%` }} 
               />
             </div>
-            <div className="mt-1.5 text-right">
-              <span className="text-[10px] font-mono text-charcoal-400 font-medium">28% cap</span>
+            <div className="mt-1.5 flex items-center justify-between text-[10px] font-mono text-zinc-500 font-medium">
+              <span>{isLiveConnected ? '● Live Gateway' : 'Cached Seed'}</span>
+              <span>{Math.min(100, Math.round(((liveSpend ?? 1.42) / 5) * 100))}% cap</span>
             </div>
           </div>
         </div>
@@ -131,24 +218,24 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         {/* Card 2: Tokens Used */}
         <div 
           onClick={onNavigateToUsage}
-          className="p-5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
+          className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/50 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-charcoal-500">Tokens Used</span>
-            <div className="w-7 h-7 rounded-lg bg-sandstone-200/80 border border-sandstone-300/60 flex items-center justify-center text-charcoal-700">
-              <Cpu className="w-3.5 h-3.5" />
+            <span className="text-xs font-medium text-zinc-400">Tokens Used</span>
+            <div className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/[0.1] flex items-center justify-center text-zinc-300">
+              <Cpu className="w-3.5 h-3.5 text-[#C59E5F]" />
             </div>
           </div>
 
           <div className="flex items-baseline gap-1.5 my-1">
-            <span className="text-2xl sm:text-[26px] font-extrabold text-charcoal-900 tracking-tight font-sans">
-              142K
+            <span className="text-2xl sm:text-[26px] font-extrabold text-white tracking-tight font-sans">
+              {liveTokens != null ? `${(liveTokens / 1000).toFixed(1)}K` : '142K'}
             </span>
-            <span className="text-xs text-charcoal-400 font-medium">/ min</span>
+            <span className="text-xs text-zinc-500 font-medium">/ min</span>
           </div>
 
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
+            <span className="text-xs font-bold text-emerald-400 flex items-center gap-0.5">
               + 12%
             </span>
             {/* Smooth Sine Curve Sparkline */}
@@ -166,24 +253,24 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         {/* Card 3: Active Models */}
         <div 
           onClick={onNavigateToModels}
-          className="p-5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
+          className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/50 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-charcoal-500">Active Models</span>
-            <div className="w-7 h-7 rounded-lg bg-amber-50/80 border border-amber-100 flex items-center justify-center text-ostraGold-600">
+            <span className="text-xs font-medium text-zinc-400">Active Models</span>
+            <div className="w-7 h-7 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
               <Zap className="w-3.5 h-3.5" />
             </div>
           </div>
 
           <div className="my-1">
-            <span className="text-xl sm:text-[22px] font-extrabold text-charcoal-900 tracking-tight block truncate">
-              Gemini Flash
+            <span className="text-xl sm:text-[22px] font-extrabold text-white tracking-tight block truncate">
+              {liveLogs.length > 0 && liveLogs[0].routed_model ? liveLogs[0].routed_model : 'Gemini Flash'}
             </span>
           </div>
 
           <div className="mt-3">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50/90 px-2.5 py-1 rounded-full border border-emerald-200/80">
-              <Check className="w-3 h-3 text-emerald-600" />
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+              <Check className="w-3 h-3 text-emerald-400" />
               <span>Cost Optimized</span>
             </span>
           </div>
@@ -192,23 +279,23 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         {/* Card 4: Total Requests */}
         <div 
           onClick={onNavigateToUsage}
-          className="p-5 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
+          className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/50 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-charcoal-500">Total Requests</span>
-            <div className="w-7 h-7 rounded-lg bg-sandstone-200/80 border border-sandstone-300/60 flex items-center justify-center text-charcoal-700">
-              <Activity className="w-3.5 h-3.5" />
+            <span className="text-xs font-medium text-zinc-400">Total Requests</span>
+            <div className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/[0.1] flex items-center justify-center text-zinc-300">
+              <Activity className="w-3.5 h-3.5 text-[#C59E5F]" />
             </div>
           </div>
 
           <div className="my-1">
-            <span className="text-2xl sm:text-[26px] font-extrabold text-charcoal-900 tracking-tight font-sans">
-              8,932
+            <span className="text-2xl sm:text-[26px] font-extrabold text-white tracking-tight font-sans">
+              {liveRequestsCount != null ? liveRequestsCount.toLocaleString() : '8,932'}
             </span>
           </div>
 
           <div className="mt-3">
-            <span className="text-xs font-bold text-emerald-600">
+            <span className="text-xs font-bold text-emerald-400">
               + 18%
             </span>
           </div>
@@ -222,10 +309,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
         {/* Spend Trend Chart (7 cols on lg) */}
-        <div className="lg:col-span-7 p-6 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="lg:col-span-7 p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-charcoal-900 tracking-tight">Spend Trend</h3>
-            <span className="text-xs font-mono text-charcoal-400 font-medium">USD ($)</span>
+            <h3 className="text-sm font-bold text-white tracking-tight">Spend Trend</h3>
+            <span className="text-xs font-mono text-zinc-500 font-medium">USD ($)</span>
           </div>
 
           {/* SVG Area & Line Chart */}
@@ -242,7 +329,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               <line x1="0" y1="20" x2="450" y2="20" stroke="#F4EFE6" strokeDasharray="4 4" />
               <line x1="0" y1="55" x2="450" y2="55" stroke="#F4EFE6" strokeDasharray="4 4" />
               <line x1="0" y1="90" x2="450" y2="90" stroke="#F4EFE6" strokeDasharray="4 4" />
-              <line x1="0" y1="125" x2="450" y2="125" stroke="#EAE5DC" />
+              <line x1="0" y1="125" x2="450" y2="125" stroke="rgba(255,255,255,0.08)" />
 
               {/* Gradient Area Fill */}
               <path
@@ -285,15 +372,15 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </svg>
 
             {/* X-Axis Date Labels */}
-            <div className="flex justify-between text-[11px] font-mono text-charcoal-400 mt-3 px-2">
+            <div className="flex justify-between text-[11px] font-mono text-zinc-500 mt-3 px-2">
               {trendData.map((d, i) => (
                 <button
                   key={d.day}
                   onClick={() => setSelectedDay(i)}
                   className={`cursor-pointer transition-colors ${
                     selectedDay === i 
-                      ? 'font-bold text-charcoal-900 underline decoration-ostraGold-500 underline-offset-4' 
-                      : 'hover:text-charcoal-800'
+                      ? 'font-bold text-white underline decoration-ostraGold-500 underline-offset-4' 
+                      : 'hover:text-zinc-200'
                   }`}
                 >
                   {d.day}
@@ -303,14 +390,14 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
             {/* Selected Day Tooltip */}
             {selectedDay !== null && (
-              <div className="mt-3 p-2.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between text-xs">
-                <span className="font-semibold text-charcoal-800">
+              <div className="mt-3 p-2.5 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between text-xs">
+                <span className="font-semibold text-zinc-300">
                   {trendData[selectedDay].day} Detail:
                 </span>
                 <div className="flex items-center gap-4 text-[11px] font-mono">
-                  <span>Spend: <strong className="text-charcoal-900">{trendData[selectedDay].spend}</strong></span>
-                  <span>Tokens: <strong className="text-charcoal-900">{trendData[selectedDay].tokens}</strong></span>
-                  <span>Requests: <strong className="text-charcoal-900">{trendData[selectedDay].requests}</strong></span>
+                  <span>Spend: <strong className="text-[#E5C38D]">{trendData[selectedDay].spend}</strong></span>
+                  <span>Tokens: <strong className="text-white">{trendData[selectedDay].tokens}</strong></span>
+                  <span>Requests: <strong className="text-white">{trendData[selectedDay].requests}</strong></span>
                 </div>
               </div>
             )}
@@ -320,20 +407,20 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         {/* Top Models by Cost (5 cols on lg) */}
         <div 
           onClick={onNavigateToModels}
-          className="lg:col-span-5 p-6 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between cursor-pointer group hover:shadow-md transition-all"
+          className="lg:col-span-5 p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between cursor-pointer group hover:shadow-md transition-all"
         >
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-charcoal-900 tracking-tight">Top Models by Cost</h3>
-              <span className="text-xs text-charcoal-400 group-hover:text-charcoal-700 transition-colors">View All →</span>
+              <h3 className="text-sm font-bold text-white tracking-tight">Top Models by Cost</h3>
+              <span className="text-xs text-zinc-500 group-hover:text-zinc-300 transition-colors">View All →</span>
             </div>
 
             <div className="space-y-4">
               {/* Gemini Flash */}
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1.5">
-                  <span className="text-charcoal-800">Gemini Flash</span>
-                  <span className="text-charcoal-950 font-bold font-mono">62%</span>
+                  <span className="text-zinc-200">Gemini Flash</span>
+                  <span className="text-white font-bold font-mono">62%</span>
                 </div>
                 <div className="w-full bg-[#EAE6DD] h-2 rounded-full overflow-hidden">
                   <div className="bg-[#946A2C] h-full rounded-full" style={{ width: '62%' }} />
@@ -343,8 +430,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               {/* GPT-4o */}
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1.5">
-                  <span className="text-charcoal-800">GPT-4o</span>
-                  <span className="text-charcoal-950 font-bold font-mono">23%</span>
+                  <span className="text-zinc-200">GPT-4o</span>
+                  <span className="text-white font-bold font-mono">23%</span>
                 </div>
                 <div className="w-full bg-[#EAE6DD] h-2 rounded-full overflow-hidden">
                   <div className="bg-[#18181B] h-full rounded-full" style={{ width: '23%' }} />
@@ -354,8 +441,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               {/* Claude Sonnet */}
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1.5">
-                  <span className="text-charcoal-800">Claude Sonnet</span>
-                  <span className="text-charcoal-950 font-bold font-mono">9%</span>
+                  <span className="text-zinc-200">Claude Sonnet</span>
+                  <span className="text-white font-bold font-mono">9%</span>
                 </div>
                 <div className="w-full bg-[#EAE6DD] h-2 rounded-full overflow-hidden">
                   <div className="bg-[#C59E5F] h-full rounded-full" style={{ width: '9%' }} />
@@ -365,8 +452,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               {/* Other */}
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1.5">
-                  <span className="text-charcoal-800">Other</span>
-                  <span className="text-charcoal-950 font-bold font-mono">6%</span>
+                  <span className="text-zinc-200">Other</span>
+                  <span className="text-white font-bold font-mono">6%</span>
                 </div>
                 <div className="w-full bg-[#EAE6DD] h-2 rounded-full overflow-hidden">
                   <div className="bg-[#D4CEBF] h-full rounded-full" style={{ width: '6%' }} />
@@ -375,7 +462,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </div>
           </div>
 
-          <div className="pt-4 border-t border-[#F0ECE4] text-[11px] text-charcoal-500 flex items-center justify-between">
+          <div className="pt-4 border-t border-white/[0.08] text-[11px] text-zinc-400 flex items-center justify-between">
             <span>Primary driver: Gemini Flash</span>
             <span className="font-semibold text-emerald-700">90% savings enabled</span>
           </div>
@@ -389,13 +476,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
         {/* Recent Alerts (7 cols on lg) */}
-        <div className="lg:col-span-7 p-6 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="lg:col-span-7 p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3.5">
-              <h3 className="text-sm font-bold text-charcoal-900 tracking-tight">Recent Alerts</h3>
+              <h3 className="text-sm font-bold text-white tracking-tight">Recent Alerts</h3>
               <button 
                 onClick={onNavigateToAlerts}
-                className="text-xs text-charcoal-500 hover:text-charcoal-900 transition-colors cursor-pointer"
+                className="text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
               >
                 View full audit log →
               </button>
@@ -403,69 +490,69 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
             <div className="space-y-2.5">
               {/* Alert 1 */}
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FFFDF9] border border-[#F8EBD4] transition-all hover:bg-[#FFF9EE]">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-[#07090C] border border-amber-500/25 transition-all hover:border-amber-500/40">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-amber-100/90 text-amber-800 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0">
                     <AlertTriangle className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-charcoal-900 leading-snug">
+                    <div className="text-xs font-bold text-white leading-snug">
                       Token spike detected!
                     </div>
-                    <div className="text-[11px] text-charcoal-500 mt-0.5">
+                    <div className="text-[11px] text-zinc-400 mt-0.5">
                       Agent: research-agent • 2m ago
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedAlert('Token spike detected on research-agent: 42,000 tokens consumed in 45s during autonomous web search loop. Intra-family rate limit applied.')}
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-white border border-[#EAE5DC] text-charcoal-800 hover:bg-sandstone-100 transition-colors shadow-2xs cursor-pointer"
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-[#0B0E14]/[0.06] border border-white/[0.1] text-zinc-300 hover:text-white hover:bg-[#0B0E14]/[0.1] transition-colors shadow-xs cursor-pointer"
                 >
                   View
                 </button>
               </div>
 
               {/* Alert 2 */}
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-[#F8FDFB] border border-[#D5F0E4] transition-all hover:bg-[#EFFBF5]">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-[#07090C] border border-emerald-500/25 transition-all hover:border-emerald-500/40">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-100/90 text-emerald-800 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
                     <CheckCircle2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-charcoal-900 leading-snug">
+                    <div className="text-xs font-bold text-white leading-snug">
                       Budget cap updated
                     </div>
-                    <div className="text-[11px] text-charcoal-500 mt-0.5">
+                    <div className="text-[11px] text-zinc-400 mt-0.5">
                       New limit: $1.00 → $5.00 • 12m ago
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={onNavigateToBudgets}
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-white border border-[#EAE5DC] text-charcoal-800 hover:bg-sandstone-100 transition-colors shadow-2xs cursor-pointer"
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-[#0B0E14]/[0.06] border border-white/[0.1] text-zinc-300 hover:text-white hover:bg-[#0B0E14]/[0.1] transition-colors shadow-xs cursor-pointer"
                 >
                   View
                 </button>
               </div>
 
               {/* Alert 3 */}
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-[#F8FAFD] border border-[#D6E4F8] transition-all hover:bg-[#EEF4FD]">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-[#07090C] border border-blue-500/25 transition-all hover:border-blue-500/40">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-blue-100/90 text-blue-800 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0">
                     <Zap className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-charcoal-900 leading-snug">
+                    <div className="text-xs font-bold text-white leading-snug">
                       Model optimization suggested
                     </div>
-                    <div className="text-[11px] text-charcoal-500 mt-0.5">
+                    <div className="text-[11px] text-zinc-400 mt-0.5">
                       Switch to Gemini Flash (90% cheaper)
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={onNavigateToModels}
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-white border border-[#EAE5DC] text-charcoal-800 hover:bg-sandstone-100 transition-colors shadow-2xs cursor-pointer"
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-[#0B0E14]/[0.06] border border-white/[0.1] text-zinc-300 hover:text-white hover:bg-[#0B0E14]/[0.1] transition-colors shadow-xs cursor-pointer"
                 >
                   View
                 </button>
@@ -509,27 +596,27 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
       {/* Alert Detail Modal */}
       {selectedAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#EAE5DC] space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#C59E5F] text-black font-bold/50 backdrop-blur-xs p-4">
+          <div className="bg-[#0B0E14] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-white/[0.08] space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-600" />
-                <h4 className="font-bold text-charcoal-900 text-sm">Security &amp; Velocity Event</h4>
+                <h4 className="font-bold text-white text-sm">Security &amp; Velocity Event</h4>
               </div>
               <button 
                 onClick={() => setSelectedAlert(null)}
-                className="text-charcoal-400 hover:text-charcoal-800 p-1 cursor-pointer"
+                className="text-zinc-500 hover:text-zinc-200 p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs text-charcoal-700 leading-relaxed bg-sandstone-100 p-3 rounded-xl font-mono">
+            <p className="text-xs text-zinc-300 leading-relaxed bg-white/[0.04] p-3 rounded-xl font-mono">
               {selectedAlert}
             </p>
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setSelectedAlert(null)}
-                className="px-4 py-2 rounded-xl bg-charcoal-900 text-white text-xs font-semibold cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#C59E5F] text-black font-bold text-xs font-semibold cursor-pointer"
               >
                 Dismiss
               </button>

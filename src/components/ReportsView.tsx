@@ -27,6 +27,8 @@ export const ReportsView: React.FC = () => {
   const [breakdownModal, setBreakdownModal] = useState<'project' | 'model' | 'status' | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState('May 10 - May 16, 2026');
+  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -214,7 +216,7 @@ export const ReportsView: React.FC = () => {
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-[#18181B] text-white px-4 py-2.5 rounded-2xl shadow-xl border border-ostraGold-500/40 text-xs font-mono flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-          <Check className="w-4 h-4 text-ostraGold-400" />
+          <Check className="w-4 h-4 text-[#E5C38D]" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -224,35 +226,68 @@ export const ReportsView: React.FC = () => {
       {/* ============================================================ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl lg:text-2xl font-extrabold text-charcoal-900 tracking-tight font-sans">
+          <h2 className="text-xl lg:text-2xl font-extrabold text-white tracking-tight font-sans">
             Reports &amp; Executive Intelligence
           </h2>
-          <p className="text-xs text-charcoal-500 mt-0.5">
+          <p className="text-xs text-zinc-400 mt-0.5">
             Comprehensive telemetry audits, spend pacing, and failover health logs.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
           {/* Date Selector */}
-          <button className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-[#EAE5DC] text-xs font-medium text-charcoal-700 hover:bg-sandstone-100 transition-colors shadow-subtle font-mono">
-            <Calendar className="w-3.5 h-3.5 text-charcoal-500" />
-            <span>May 10 - May 16, 2026</span>
-            <ChevronDown className="w-3 h-3 text-charcoal-400" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/50 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/[0.04] transition-colors shadow-xs font-mono cursor-pointer"
+            >
+              <Calendar className="w-3.5 h-3.5 text-[#C59E5F]" />
+              <span>{dateRange}</span>
+              <ChevronDown className={`w-3 h-3 text-zinc-500 transition-transform ${dateDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {dateDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#0B0E14] border border-white/[0.12] shadow-2xl p-1.5 z-40 space-y-1 font-mono text-xs">
+                {[
+                  { label: 'May 10 - May 16, 2026', sub: 'Last 7 Days (Default)' },
+                  { label: 'May 01 - May 16, 2026', sub: 'Month-to-Date (MTD)' },
+                  { label: 'Apr 16 - May 16, 2026', sub: 'Rolling 30 Days' },
+                  { label: 'Jan 01 - May 16, 2026', sub: 'Year-to-Date (YTD)' }
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      setDateRange(item.label);
+                      setDateDropdownOpen(false);
+                      showToast(`Date window updated: ${item.label}`);
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg transition-colors flex flex-col cursor-pointer ${
+                      dateRange === item.label
+                        ? 'bg-[#C59E5F]/20 text-[#E5C38D]'
+                        : 'text-zinc-300 hover:bg-white/[0.06] hover:text-white'
+                    }`}
+                  >
+                    <span className="font-semibold text-[11px]">{item.label}</span>
+                    <span className="text-[10px] text-zinc-500">{item.sub}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Filters Button */}
           <button
             onClick={() => showToast('Filters applied: All production & staging routes')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-[#EAE5DC] hover:bg-sandstone-100 text-charcoal-800 text-xs font-bold transition-all shadow-subtle"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] hover:bg-white/[0.04] text-zinc-200 text-xs font-bold transition-all shadow-xs"
           >
-            <Filter className="w-3.5 h-3.5 text-charcoal-500" />
+            <Filter className="w-3.5 h-3.5 text-zinc-400" />
             <span>Filters</span>
           </button>
 
           {/* Refresh Button */}
           <button
             onClick={() => showToast('Reports data refreshed from proxy log')}
-            className="p-2 rounded-xl bg-white border border-[#EAE5DC] hover:bg-sandstone-100 text-charcoal-600 transition-colors shadow-subtle"
+            className="p-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] hover:bg-white/[0.04] text-zinc-400 transition-colors shadow-xs"
             title="Refresh reports"
           >
             <RefreshCw className="w-4 h-4" />
@@ -263,15 +298,15 @@ export const ReportsView: React.FC = () => {
       {/* ============================================================ */}
       {/* SUB-NAVIGATION TABS (Exact match to reference mockup)         */}
       {/* ============================================================ */}
-      <div className="border-b border-[#EAE5DC] flex items-center gap-6 overflow-x-auto text-xs font-medium">
+      <div className="border-b border-white/[0.08] flex items-center gap-6 overflow-x-auto text-xs font-medium">
         {subTabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveSubTab(tab)}
             className={`pb-3.5 whitespace-nowrap transition-all relative ${
               activeSubTab === tab
-                ? 'text-charcoal-900 font-bold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#C59E5F]'
-                : 'text-charcoal-500 hover:text-charcoal-900'
+                ? 'text-white font-bold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#C59E5F]'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             {tab}
@@ -285,17 +320,17 @@ export const ReportsView: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Metric 1: Total Spend */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-charcoal-500">Total Spend</span>
-            <span className="text-[10px] font-mono text-charcoal-400">USD</span>
+            <span className="text-xs font-medium text-zinc-400">Total Spend</span>
+            <span className="text-[10px] font-mono text-zinc-500">USD</span>
           </div>
           <div className="pt-2">
-            <div className="text-2xl font-extrabold text-charcoal-900 font-mono tracking-tight">
+            <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
               $4,328.64
             </div>
-            <div className="flex items-center gap-1 text-[11px] font-mono text-charcoal-600 mt-1">
-              <TrendingUp className="w-3 h-3 text-ostraGold-600" />
+            <div className="flex items-center gap-1 text-[11px] font-mono text-zinc-400 mt-1">
+              <TrendingUp className="w-3 h-3 text-[#E5C38D]" />
               <span>↑ 28.6% vs May 3 - May 9</span>
             </div>
           </div>
@@ -308,17 +343,17 @@ export const ReportsView: React.FC = () => {
         </div>
 
         {/* Metric 2: Total Tokens */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-charcoal-500">Total Tokens</span>
-            <span className="text-[10px] font-mono text-charcoal-400">VOLUME</span>
+            <span className="text-xs font-medium text-zinc-400">Total Tokens</span>
+            <span className="text-[10px] font-mono text-zinc-500">VOLUME</span>
           </div>
           <div className="pt-2">
-            <div className="text-2xl font-extrabold text-charcoal-900 font-mono tracking-tight">
+            <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
               312.6M
             </div>
-            <div className="flex items-center gap-1 text-[11px] font-mono text-charcoal-600 mt-1">
-              <TrendingUp className="w-3 h-3 text-ostraGold-600" />
+            <div className="flex items-center gap-1 text-[11px] font-mono text-zinc-400 mt-1">
+              <TrendingUp className="w-3 h-3 text-[#E5C38D]" />
               <span>↑ 18.2% vs May 3 - May 9</span>
             </div>
           </div>
@@ -331,17 +366,17 @@ export const ReportsView: React.FC = () => {
         </div>
 
         {/* Metric 3: Total Requests */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-charcoal-500">Total Requests</span>
-            <span className="text-[10px] font-mono text-charcoal-400">THROUGHPUT</span>
+            <span className="text-xs font-medium text-zinc-400">Total Requests</span>
+            <span className="text-[10px] font-mono text-zinc-500">THROUGHPUT</span>
           </div>
           <div className="pt-2">
-            <div className="text-2xl font-extrabold text-charcoal-900 font-mono tracking-tight">
+            <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
               89,732
             </div>
-            <div className="flex items-center gap-1 text-[11px] font-mono text-charcoal-600 mt-1">
-              <TrendingUp className="w-3 h-3 text-ostraGold-600" />
+            <div className="flex items-center gap-1 text-[11px] font-mono text-zinc-400 mt-1">
+              <TrendingUp className="w-3 h-3 text-[#E5C38D]" />
               <span>↑ 24.1% vs May 3 - May 9</span>
             </div>
           </div>
@@ -354,13 +389,13 @@ export const ReportsView: React.FC = () => {
         </div>
 
         {/* Metric 4: Avg Cost / 1K Tokens */}
-        <div className="p-4 rounded-2xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-charcoal-500">Avg. Cost / 1K Tokens</span>
-            <span className="text-[10px] font-mono text-charcoal-400">UNIT RATE</span>
+            <span className="text-xs font-medium text-zinc-400">Avg. Cost / 1K Tokens</span>
+            <span className="text-[10px] font-mono text-zinc-500">UNIT RATE</span>
           </div>
           <div className="pt-2">
-            <div className="text-2xl font-extrabold text-charcoal-900 font-mono tracking-tight">
+            <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
               $0.0028
             </div>
             <div className="flex items-center gap-1 text-[11px] font-mono text-emerald-700 mt-1">
@@ -389,46 +424,46 @@ export const ReportsView: React.FC = () => {
         <div className="xl:col-span-9 space-y-6">
           
           {/* CARD 1: SPEND OVER TIME (Reference Matched & Mathematically Aligned) */}
-          <div className="p-6 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle space-y-4">
+          <div className="p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs space-y-4">
             
             {/* Header: Title + Legend on Left, Filter Toggle + Menu on Right */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="text-base font-extrabold text-charcoal-900 tracking-tight font-sans">
+                  <h3 className="text-base font-extrabold text-white tracking-tight font-sans">
                     Spend Over Time
                   </h3>
-                  <Info className="w-3.5 h-3.5 text-charcoal-400 cursor-pointer hover:text-charcoal-700 transition-colors" />
+                  <Info className="w-3.5 h-3.5 text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors" />
                 </div>
                 
                 {/* Reference-aligned Legend under Title */}
                 <div className="flex items-center gap-4 mt-1.5 text-[11px] font-mono">
                   <div className="flex items-center gap-1.5">
                     <span className="w-3.5 h-0.5 bg-[#18181B] rounded-full" />
-                    <span className="text-charcoal-700 font-medium">Actual Spend</span>
+                    <span className="text-zinc-300 font-medium">Actual Spend</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-3.5 h-0.5 border-t border-dashed border-[#C59E5F]" />
-                    <span className="text-charcoal-700 font-medium">Forecast</span>
+                    <span className="text-zinc-300 font-medium">Forecast</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-3.5 h-0.5 border-t border-dashed border-[#E05252]" />
-                    <span className="text-charcoal-600 font-medium">Budget ($5K)</span>
+                    <span className="text-zinc-400 font-medium">Budget ($5K)</span>
                   </div>
                 </div>
               </div>
 
               {/* Controls: Daily / Weekly / Monthly Toggle + Menu */}
               <div className="flex items-center gap-2">
-                <div className="flex items-center p-1 rounded-xl bg-[#F5F2EB] border border-[#EAE5DC]">
+                <div className="flex items-center p-1 rounded-xl bg-[#07090C] border border-white/[0.08]">
                   {(['Daily', 'Weekly', 'Monthly'] as const).map((mode) => (
                     <button
                       key={mode}
                       onClick={() => setTimeFilter(mode)}
                       className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
                         timeFilter === mode
-                          ? 'bg-white text-charcoal-900 shadow-xs'
-                          : 'text-charcoal-600 hover:text-charcoal-900'
+                          ? 'bg-[#0B0E14] text-white shadow-xs'
+                          : 'text-zinc-400 hover:text-white'
                       }`}
                     >
                       {mode}
@@ -438,7 +473,7 @@ export const ReportsView: React.FC = () => {
 
                 <button 
                   onClick={() => showToast('Graph display preferences opened')}
-                  className="p-1.5 rounded-xl bg-white border border-[#EAE5DC] text-charcoal-500 hover:text-charcoal-900 hover:bg-sandstone-100 transition-colors shadow-xs"
+                  className="p-1.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors shadow-xs"
                 >
                   <MoreVertical className="w-4 h-4" />
                 </button>
@@ -451,51 +486,51 @@ export const ReportsView: React.FC = () => {
               {/* Tooltip Box: Centered precisely over the active point */}
               {hoveredPoint !== null && (
                 <div 
-                  className="absolute z-20 p-3.5 rounded-2xl bg-white border border-[#EAE5DC] shadow-xl text-xs space-y-2 pointer-events-none transition-all duration-150 font-mono"
+                  className="absolute z-20 p-3.5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xl text-xs space-y-2 pointer-events-none transition-all duration-150 font-mono"
                   style={{
                     left: `${(getPtX(hoveredPoint) / chartWidth) * 100}%`,
                     top: `${Math.max(12, (timelinePoints[hoveredPoint].actual !== null ? getPtY(timelinePoints[hoveredPoint].actual!) : getPtY(timelinePoints[hoveredPoint].forecast)) - 130)}px`,
                     transform: 'translateX(-50%)',
                   }}
                 >
-                  <div className="font-bold text-charcoal-900 border-b border-[#EAE5DC] pb-1 flex items-center justify-between gap-4">
+                  <div className="font-bold text-white border-b border-white/[0.08] pb-1 flex items-center justify-between gap-4">
                     <span>{timelinePoints[hoveredPoint].date}, 2026</span>
-                    <span className="text-[10px] text-charcoal-400 font-normal">Telemetry Audit</span>
+                    <span className="text-[10px] text-zinc-500 font-normal">Telemetry Audit</span>
                   </div>
                   <div className="space-y-1 text-[11px]">
                     <div className="flex items-center justify-between gap-5">
-                      <span className="flex items-center gap-1.5 text-charcoal-600">
+                      <span className="flex items-center gap-1.5 text-zinc-400">
                         <span className="w-2 h-2 rounded-full bg-[#18181B]" />
                         <span>Actual Spend:</span>
                       </span>
-                      <span className="font-extrabold text-charcoal-900">
+                      <span className="font-extrabold text-white">
                         {timelinePoints[hoveredPoint].actual !== null ? `$${timelinePoints[hoveredPoint].actual?.toFixed(2)}` : '—'}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between gap-5">
-                      <span className="flex items-center gap-1.5 text-charcoal-600">
+                      <span className="flex items-center gap-1.5 text-zinc-400">
                         <span className="w-2 h-2 rounded-full bg-[#C59E5F]" />
                         <span>Forecast:</span>
                       </span>
-                      <span className="font-bold text-charcoal-700">
+                      <span className="font-bold text-zinc-300">
                         ${timelinePoints[hoveredPoint].forecast.toFixed(2)}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between gap-5">
-                      <span className="flex items-center gap-1.5 text-charcoal-600">
+                      <span className="flex items-center gap-1.5 text-zinc-400">
                         <span className="w-2 h-2 rounded-full bg-[#E05252]" />
                         <span>Budget Cap:</span>
                       </span>
-                      <span className="font-medium text-charcoal-500">
+                      <span className="font-medium text-zinc-400">
                         ${timelinePoints[hoveredPoint].budget.toFixed(2)}
                       </span>
                     </div>
                   </div>
 
                   {/* Downward indicator arrow */}
-                  <div className="absolute left-1/2 -bottom-1.5 -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-[#EAE5DC] rotate-45" />
+                  <div className="absolute left-1/2 -bottom-1.5 -translate-x-1/2 w-3 h-3 bg-[#0B0E14] border-r border-b border-white/[0.08] rotate-45" />
                 </div>
               )}
 
@@ -526,14 +561,14 @@ export const ReportsView: React.FC = () => {
                         y1={y}
                         x2="735"
                         y2={y}
-                        stroke="#F2EFE9"
+                        stroke="rgba(255,255,255,0.06)"
                         strokeDasharray="3 3"
                       />
                       <text
                         x="45"
                         y={y + 3.5}
                         textAnchor="end"
-                        className="text-[10px] font-mono fill-charcoal-400 select-none"
+                        className="text-[10px] font-mono fill-zinc-500 select-none"
                       >
                         {g.label}
                       </text>
@@ -650,8 +685,8 @@ export const ReportsView: React.FC = () => {
                       textAnchor="middle"
                       className={`text-[10px] font-mono cursor-pointer transition-colors select-none ${
                         isHovered
-                          ? 'fill-charcoal-900 font-bold'
-                          : 'fill-charcoal-400 hover:fill-charcoal-700'
+                          ? 'fill-white font-bold'
+                          : 'fill-zinc-500 hover:fill-zinc-300'
                       }`}
                       onClick={() => setHoveredPoint(idx)}
                     >
@@ -668,17 +703,17 @@ export const ReportsView: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             
             {/* Donut 1: Spend by Project */}
-            <div className="p-5 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between items-center text-center">
+            <div className="p-5 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between items-center text-center">
               <div className="w-full">
                 <div className="flex items-center justify-center gap-1.5 mb-2">
-                  <h4 className="text-xs font-bold text-charcoal-900">Spend by Project</h4>
-                  <Info className="w-3.5 h-3.5 text-charcoal-400 cursor-pointer hover:text-charcoal-700" />
+                  <h4 className="text-xs font-bold text-white">Spend by Project</h4>
+                  <Info className="w-3.5 h-3.5 text-zinc-500 cursor-pointer hover:text-zinc-300" />
                 </div>
 
                 {/* Hero Donut Chart */}
                 <div className="relative w-36 h-36 mx-auto my-4 flex items-center justify-center">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#F0ECE4" strokeWidth="3.6" />
+                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3.6" />
                     {/* Production 42.6% */}
                     <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#18181B" strokeWidth="3.8" strokeDasharray="42.6 100" strokeDashoffset="0" />
                     {/* Marketing 20.2% */}
@@ -693,15 +728,15 @@ export const ReportsView: React.FC = () => {
                     <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#D4CABE" strokeWidth="3.8" strokeDasharray="2.6 100" strokeDashoffset="-97.4" />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                    <span className="text-sm font-extrabold text-charcoal-900 font-mono tracking-tight">$4,328.64</span>
-                    <span className="text-[10px] text-charcoal-400 font-medium font-mono mt-0.5">Total Spend</span>
+                    <span className="text-sm font-extrabold text-white font-mono tracking-tight">$4,328.64</span>
+                    <span className="text-[10px] text-zinc-500 font-medium font-mono mt-0.5">Total Spend</span>
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={() => setBreakdownModal('project')}
-                className="w-full pt-3 border-t border-[#EAE5DC] flex items-center justify-center gap-1.5 text-xs font-bold text-charcoal-900 hover:text-ostraGold-600 transition-colors group cursor-pointer"
+                className="w-full pt-3 border-t border-white/[0.08] flex items-center justify-center gap-1.5 text-xs font-bold text-white hover:text-[#E5C38D] transition-colors group cursor-pointer"
               >
                 <span>View full breakdown</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -709,17 +744,17 @@ export const ReportsView: React.FC = () => {
             </div>
 
             {/* Donut 2: Spend by Model */}
-            <div className="p-5 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between items-center text-center">
+            <div className="p-5 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between items-center text-center">
               <div className="w-full">
                 <div className="flex items-center justify-center gap-1.5 mb-2">
-                  <h4 className="text-xs font-bold text-charcoal-900">Spend by Model</h4>
-                  <Info className="w-3.5 h-3.5 text-charcoal-400 cursor-pointer hover:text-charcoal-700" />
+                  <h4 className="text-xs font-bold text-white">Spend by Model</h4>
+                  <Info className="w-3.5 h-3.5 text-zinc-500 cursor-pointer hover:text-zinc-300" />
                 </div>
 
                 {/* Hero Donut Chart */}
                 <div className="relative w-36 h-36 mx-auto my-4 flex items-center justify-center">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#F0ECE4" strokeWidth="3.6" />
+                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3.6" />
                     {/* GPT-4o 45.0% */}
                     <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#18181B" strokeWidth="3.8" strokeDasharray="45.0 100" strokeDashoffset="0" />
                     {/* Claude Sonnet 26.1% */}
@@ -732,15 +767,15 @@ export const ReportsView: React.FC = () => {
                     <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#D4CABE" strokeWidth="3.8" strokeDasharray="4.5 100" strokeDashoffset="-95.5" />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                    <span className="text-sm font-extrabold text-charcoal-900 font-mono tracking-tight">$4,328.64</span>
-                    <span className="text-[10px] text-charcoal-400 font-medium font-mono mt-0.5">Total Spend</span>
+                    <span className="text-sm font-extrabold text-white font-mono tracking-tight">$4,328.64</span>
+                    <span className="text-[10px] text-zinc-500 font-medium font-mono mt-0.5">Total Spend</span>
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={() => setBreakdownModal('model')}
-                className="w-full pt-3 border-t border-[#EAE5DC] flex items-center justify-center gap-1.5 text-xs font-bold text-charcoal-900 hover:text-ostraGold-600 transition-colors group cursor-pointer"
+                className="w-full pt-3 border-t border-white/[0.08] flex items-center justify-center gap-1.5 text-xs font-bold text-white hover:text-[#E5C38D] transition-colors group cursor-pointer"
               >
                 <span>View full breakdown</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -748,17 +783,17 @@ export const ReportsView: React.FC = () => {
             </div>
 
             {/* Donut 3: Requests by Status */}
-            <div className="p-5 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle flex flex-col justify-between items-center text-center">
+            <div className="p-5 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between items-center text-center">
               <div className="w-full">
                 <div className="flex items-center justify-center gap-1.5 mb-2">
-                  <h4 className="text-xs font-bold text-charcoal-900">Requests by Status</h4>
-                  <Info className="w-3.5 h-3.5 text-charcoal-400 cursor-pointer hover:text-charcoal-700" />
+                  <h4 className="text-xs font-bold text-white">Requests by Status</h4>
+                  <Info className="w-3.5 h-3.5 text-zinc-500 cursor-pointer hover:text-zinc-300" />
                 </div>
 
                 {/* Hero Donut Chart */}
                 <div className="relative w-36 h-36 mx-auto my-4 flex items-center justify-center">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#F0ECE4" strokeWidth="3.6" />
+                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3.6" />
                     {/* Successful 91.5% */}
                     <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#18181B" strokeWidth="3.8" strokeDasharray="91.5 100" strokeDashoffset="0" />
                     {/* Blocked / Guardrails 4.8% */}
@@ -769,15 +804,15 @@ export const ReportsView: React.FC = () => {
                     <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#D4CABE" strokeWidth="3.8" strokeDasharray="1.3 100" strokeDashoffset="-98.7" />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                    <span className="text-sm font-extrabold text-charcoal-900 font-mono tracking-tight">89,732</span>
-                    <span className="text-[10px] text-charcoal-400 font-medium font-mono mt-0.5">Total Requests</span>
+                    <span className="text-sm font-extrabold text-white font-mono tracking-tight">89,732</span>
+                    <span className="text-[10px] text-zinc-500 font-medium font-mono mt-0.5">Total Requests</span>
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={() => setBreakdownModal('status')}
-                className="w-full pt-3 border-t border-[#EAE5DC] flex items-center justify-center gap-1.5 text-xs font-bold text-charcoal-900 hover:text-ostraGold-600 transition-colors group cursor-pointer"
+                className="w-full pt-3 border-t border-white/[0.08] flex items-center justify-center gap-1.5 text-xs font-bold text-white hover:text-[#E5C38D] transition-colors group cursor-pointer"
               >
                 <span>View details</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -787,14 +822,14 @@ export const ReportsView: React.FC = () => {
           </div>
 
           {/* CARD 3: TOP PROJECTS BY SPEND TABLE */}
-          <div className="p-6 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle space-y-4">
+          <div className="p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-extrabold text-charcoal-900 tracking-tight font-sans">
+              <h3 className="text-base font-extrabold text-white tracking-tight font-sans">
                 Top Projects by Spend
               </h3>
               <button 
                 onClick={() => showToast('Viewing all project endpoints')}
-                className="text-xs font-bold text-charcoal-700 hover:text-charcoal-950 font-mono"
+                className="text-xs font-bold text-zinc-300 hover:text-white font-mono"
               >
                 View all projects →
               </button>
@@ -803,7 +838,7 @@ export const ReportsView: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-[#EAE5DC] text-charcoal-500 font-mono text-[11px]">
+                  <tr className="border-b border-white/[0.08] text-zinc-400 font-mono text-[11px]">
                     <th className="pb-3 font-semibold">Project</th>
                     <th className="pb-3 font-semibold">Spend</th>
                     <th className="pb-3 font-semibold">% Change</th>
@@ -814,27 +849,27 @@ export const ReportsView: React.FC = () => {
                     <th className="pb-3 font-semibold text-right">Trend</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#F5F2EB] font-mono">
+                <tbody className="divide-y divide-white/[0.04] font-mono">
                   {topProjects.map((row, i) => (
-                    <tr key={i} className="hover:bg-[#FCFAF7] transition-colors">
-                      <td className="py-3 font-bold text-charcoal-900">
+                    <tr key={i} className="hover:bg-[#07090C] transition-colors">
+                      <td className="py-3 font-bold text-white">
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-md bg-sandstone-200 text-charcoal-800 text-[10px] font-mono font-bold flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-md bg-white/[0.06] text-zinc-200 text-[10px] font-mono font-bold flex items-center justify-center">
                             {row.code}
                           </span>
                           <span>{row.name}</span>
                         </div>
                       </td>
-                      <td className="py-3 font-extrabold text-charcoal-900">{row.spend}</td>
+                      <td className="py-3 font-extrabold text-white">{row.spend}</td>
                       <td className="py-3">
-                        <span className={`font-semibold ${row.isUp ? 'text-charcoal-800' : 'text-emerald-700'}`}>
+                        <span className={`font-semibold ${row.isUp ? 'text-zinc-200' : 'text-emerald-700'}`}>
                           {row.change}
                         </span>
                       </td>
-                      <td className="py-3 text-charcoal-600">{row.tokens}</td>
-                      <td className="py-3 text-charcoal-600">{row.requests}</td>
-                      <td className="py-3 text-charcoal-600">{row.costPer1k}</td>
-                      <td className="py-3 font-bold text-charcoal-900">{row.savings}</td>
+                      <td className="py-3 text-zinc-400">{row.tokens}</td>
+                      <td className="py-3 text-zinc-400">{row.requests}</td>
+                      <td className="py-3 text-zinc-400">{row.costPer1k}</td>
+                      <td className="py-3 font-bold text-white">{row.savings}</td>
                       <td className="py-3 text-right">
                         <div className="inline-flex items-end gap-0.5 h-5">
                           {row.bars.map((h, bIdx) => (
@@ -861,8 +896,8 @@ export const ReportsView: React.FC = () => {
         <div className="xl:col-span-3 space-y-6">
           
           {/* CARD 1: REPORT ACTIONS (4 Interactive items) */}
-          <div className="p-6 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle space-y-4">
-            <h3 className="text-xs font-bold text-charcoal-900 tracking-tight font-sans">
+          <div className="p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs space-y-4">
+            <h3 className="text-xs font-bold text-white tracking-tight font-sans">
               Report Actions
             </h3>
 
@@ -870,16 +905,16 @@ export const ReportsView: React.FC = () => {
               {/* Action 1: Generate PDF */}
               <button
                 onClick={() => setPdfModalOpen(true)}
-                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-ostraGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
+                className="w-full p-3 rounded-2xl bg-[#07090C] border border-white/[0.08] hover:border-ostraGold-500 hover:bg-[#0B0E14] text-left transition-all flex items-start gap-3 group"
               >
-                <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <FileText className="w-4 h-4 text-charcoal-800" />
+                <div className="w-8 h-8 rounded-xl bg-white/[0.06] text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <FileText className="w-4 h-4 text-zinc-200" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-charcoal-900 font-sans">
+                  <div className="text-xs font-bold text-white font-sans">
                     Generate PDF Report
                   </div>
-                  <div className="text-[11px] text-charcoal-500">
+                  <div className="text-[11px] text-zinc-400">
                     Download executive PDF summary
                   </div>
                 </div>
@@ -888,16 +923,16 @@ export const ReportsView: React.FC = () => {
               {/* Action 2: Schedule Report */}
               <button
                 onClick={() => setScheduleModalOpen(true)}
-                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-ostraGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
+                className="w-full p-3 rounded-2xl bg-[#07090C] border border-white/[0.08] hover:border-ostraGold-500 hover:bg-[#0B0E14] text-left transition-all flex items-start gap-3 group"
               >
-                <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Clock className="w-4 h-4 text-charcoal-800" />
+                <div className="w-8 h-8 rounded-xl bg-white/[0.06] text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Clock className="w-4 h-4 text-zinc-200" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-charcoal-900 font-sans">
+                  <div className="text-xs font-bold text-white font-sans">
                     Schedule Report
                   </div>
-                  <div className="text-[11px] text-charcoal-500">
+                  <div className="text-[11px] text-zinc-400">
                     Automate reports to email / Slack
                   </div>
                 </div>
@@ -906,16 +941,16 @@ export const ReportsView: React.FC = () => {
               {/* Action 3: Create Custom Report */}
               <button
                 onClick={() => showToast('Opening Custom Report Query Builder')}
-                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-ostraGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
+                className="w-full p-3 rounded-2xl bg-[#07090C] border border-white/[0.08] hover:border-ostraGold-500 hover:bg-[#0B0E14] text-left transition-all flex items-start gap-3 group"
               >
-                <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <SlidersHorizontal className="w-4 h-4 text-charcoal-800" />
+                <div className="w-8 h-8 rounded-xl bg-white/[0.06] text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <SlidersHorizontal className="w-4 h-4 text-zinc-200" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-charcoal-900 font-sans">
+                  <div className="text-xs font-bold text-white font-sans">
                     Create Custom Report
                   </div>
-                  <div className="text-[11px] text-charcoal-500">
+                  <div className="text-[11px] text-zinc-400">
                     Build advanced reports with filters
                   </div>
                 </div>
@@ -929,16 +964,16 @@ export const ReportsView: React.FC = () => {
                   showToast('Report link copied to clipboard!');
                   setTimeout(() => setCopiedLink(false), 2000);
                 }}
-                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-ostraGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
+                className="w-full p-3 rounded-2xl bg-[#07090C] border border-white/[0.08] hover:border-ostraGold-500 hover:bg-[#0B0E14] text-left transition-all flex items-start gap-3 group"
               >
-                <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-charcoal-800" />}
+                <div className="w-8 h-8 rounded-xl bg-white/[0.06] text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-zinc-200" />}
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-charcoal-900 font-sans">
+                  <div className="text-xs font-bold text-white font-sans">
                     Share Report
                   </div>
-                  <div className="text-[11px] text-charcoal-500">
+                  <div className="text-[11px] text-zinc-400">
                     {copiedLink ? 'Link copied!' : 'Share telemetry insights with your team'}
                   </div>
                 </div>
@@ -947,17 +982,17 @@ export const ReportsView: React.FC = () => {
               {/* Action 5: Export Fine-Tuning Dataset (Helicone Parity) */}
               <button
                 onClick={handleExportFineTuningJsonl}
-                className="w-full p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] hover:border-ostraGold-500 hover:bg-white text-left transition-all flex items-start gap-3 group"
+                className="w-full p-3 rounded-2xl bg-[#07090C] border border-white/[0.08] hover:border-ostraGold-500 hover:bg-[#0B0E14] text-left transition-all flex items-start gap-3 group"
               >
-                <div className="w-8 h-8 rounded-xl bg-sandstone-200 text-charcoal-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Download className="w-4 h-4 text-charcoal-800" />
+                <div className="w-8 h-8 rounded-xl bg-white/[0.06] text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Download className="w-4 h-4 text-zinc-200" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-charcoal-900 font-sans flex items-center gap-1.5">
+                  <div className="text-xs font-bold text-white font-sans flex items-center gap-1.5">
                     <span>Export Fine-Tuning JSONL</span>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#F0EBE1] text-charcoal-700">OpenAI</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-white/[0.06] text-zinc-300">OpenAI</span>
                   </div>
-                  <div className="text-[11px] text-charcoal-500">
+                  <div className="text-[11px] text-zinc-400">
                     Download fine-tune dataset from gateway traces
                   </div>
                 </div>
@@ -966,58 +1001,58 @@ export const ReportsView: React.FC = () => {
           </div>
 
           {/* CARD 2: TELEMETRY INSIGHTS (3 Items) */}
-          <div className="p-6 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle space-y-4">
+          <div className="p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-charcoal-900 tracking-tight font-sans">
+              <h3 className="text-xs font-bold text-white tracking-tight font-sans">
                 Telemetry Insights
               </h3>
-              <span className="text-[10px] font-mono text-charcoal-400">LIVE</span>
+              <span className="text-[10px] font-mono text-zinc-500">LIVE</span>
             </div>
 
             <div className="space-y-3">
               {/* Insight 1 */}
-              <div className="p-3.5 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] space-y-1.5">
-                <div className="text-xs font-bold text-charcoal-900">
+              <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
+                <div className="text-xs font-bold text-white">
                   Spend Spike Detected
                 </div>
-                <p className="text-[11px] text-charcoal-600 leading-snug">
-                  Production endpoint spend increased by <span className="font-semibold text-charcoal-900">42%</span> compared to last week.
+                <p className="text-[11px] text-zinc-400 leading-snug">
+                  Production endpoint spend increased by <span className="font-semibold text-white">42%</span> compared to last week.
                 </p>
                 <button 
                   onClick={() => showToast('Opening Production traffic drilldown')}
-                  className="text-[10px] font-bold text-charcoal-900 hover:text-ostraGold-600 font-mono block pt-1"
+                  className="text-[10px] font-bold text-white hover:text-[#E5C38D] font-mono block pt-1"
                 >
                   View Details →
                 </button>
               </div>
 
               {/* Insight 2 */}
-              <div className="p-3.5 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] space-y-1.5">
-                <div className="text-xs font-bold text-charcoal-900">
+              <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
+                <div className="text-xs font-bold text-white">
                   Optimization Opportunity
                 </div>
-                <p className="text-[11px] text-charcoal-600 leading-snug">
-                  You can save <span className="font-bold text-charcoal-900 font-mono">$742.18 (17%)</span> by applying prompt caching to Sonnet 3.5.
+                <p className="text-[11px] text-zinc-400 leading-snug">
+                  You can save <span className="font-bold text-white font-mono">$742.18 (17%)</span> by applying prompt caching to Sonnet 3.5.
                 </p>
                 <button 
                   onClick={() => showToast('Routing optimization rules ready')}
-                  className="text-[10px] font-bold text-charcoal-900 hover:text-ostraGold-600 font-mono block pt-1"
+                  className="text-[10px] font-bold text-white hover:text-[#E5C38D] font-mono block pt-1"
                 >
                   View Recommendations →
                 </button>
               </div>
 
               {/* Insight 3 */}
-              <div className="p-3.5 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] space-y-1.5">
-                <div className="text-xs font-bold text-charcoal-900">
+              <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
+                <div className="text-xs font-bold text-white">
                   Model Efficiency
                 </div>
-                <p className="text-[11px] text-charcoal-600 leading-snug">
+                <p className="text-[11px] text-zinc-400 leading-snug">
                   GPT-4o unit rate is high. Consider intra-family failover to Haiku for classification calls.
                 </p>
                 <button 
                   onClick={() => showToast('Opening Model Analysis')}
-                  className="text-[10px] font-bold text-charcoal-900 hover:text-ostraGold-600 font-mono block pt-1"
+                  className="text-[10px] font-bold text-white hover:text-[#E5C38D] font-mono block pt-1"
                 >
                   View Model Analysis →
                 </button>
@@ -1026,59 +1061,59 @@ export const ReportsView: React.FC = () => {
           </div>
 
           {/* CARD 3: TOP COST DRIVERS */}
-          <div className="p-6 rounded-3xl bg-white border border-[#EAE5DC] shadow-subtle space-y-4">
+          <div className="p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-charcoal-900 tracking-tight font-sans">
+              <h3 className="text-xs font-bold text-white tracking-tight font-sans">
                 Top Cost Drivers
               </h3>
-              <span className="text-[10px] font-mono text-charcoal-400">MTD</span>
+              <span className="text-[10px] font-mono text-zinc-500">MTD</span>
             </div>
 
             <div className="space-y-2 font-mono text-xs">
-              <div className="flex items-center justify-between p-2 rounded-xl bg-[#FCFAF7]">
-                <span className="text-charcoal-700">High Token Usage</span>
+              <div className="flex items-center justify-between p-2 rounded-xl bg-[#07090C]">
+                <span className="text-zinc-300">High Token Usage</span>
                 <div className="text-right">
-                  <span className="font-bold text-charcoal-900">$1,842.35</span>
-                  <span className="text-[10px] text-charcoal-500 ml-1.5">↑ 42%</span>
+                  <span className="font-bold text-white">$1,842.35</span>
+                  <span className="text-[10px] text-zinc-400 ml-1.5">↑ 42%</span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-2 rounded-xl bg-[#FCFAF7]">
-                <span className="text-charcoal-700">Large Context Windows</span>
+              <div className="flex items-center justify-between p-2 rounded-xl bg-[#07090C]">
+                <span className="text-zinc-300">Large Context Windows</span>
                 <div className="text-right">
-                  <span className="font-bold text-charcoal-900">$876.54</span>
-                  <span className="text-[10px] text-charcoal-500 ml-1.5">↑ 18%</span>
+                  <span className="font-bold text-white">$876.54</span>
+                  <span className="text-[10px] text-zinc-400 ml-1.5">↑ 18%</span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-2 rounded-xl bg-[#FCFAF7]">
-                <span className="text-charcoal-700">Inefficient Prompts</span>
+              <div className="flex items-center justify-between p-2 rounded-xl bg-[#07090C]">
+                <span className="text-zinc-300">Inefficient Prompts</span>
                 <div className="text-right">
-                  <span className="font-bold text-charcoal-900">$645.23</span>
-                  <span className="text-[10px] text-charcoal-500 ml-1.5">↑ 12%</span>
+                  <span className="font-bold text-white">$645.23</span>
+                  <span className="text-[10px] text-zinc-400 ml-1.5">↑ 12%</span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-2 rounded-xl bg-[#FCFAF7]">
-                <span className="text-charcoal-700">Retry &amp; Failures</span>
+              <div className="flex items-center justify-between p-2 rounded-xl bg-[#07090C]">
+                <span className="text-zinc-300">Retry &amp; Failures</span>
                 <div className="text-right">
-                  <span className="font-bold text-charcoal-900">$512.12</span>
-                  <span className="text-[10px] text-charcoal-500 ml-1.5">↑ 9%</span>
+                  <span className="font-bold text-white">$512.12</span>
+                  <span className="text-[10px] text-zinc-400 ml-1.5">↑ 9%</span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-2 rounded-xl bg-[#FCFAF7]">
-                <span className="text-charcoal-700">Model Choice</span>
+              <div className="flex items-center justify-between p-2 rounded-xl bg-[#07090C]">
+                <span className="text-zinc-300">Model Choice</span>
                 <div className="text-right">
-                  <span className="font-bold text-charcoal-900">$452.11</span>
-                  <span className="text-[10px] text-charcoal-500 ml-1.5">↑ 7%</span>
+                  <span className="font-bold text-white">$452.11</span>
+                  <span className="text-[10px] text-zinc-400 ml-1.5">↑ 7%</span>
                 </div>
               </div>
             </div>
 
             <button 
               onClick={() => showToast('Opening deep cost attribution report')}
-              className="text-left text-[11px] font-bold text-charcoal-900 hover:text-ostraGold-600 pt-3 border-t border-[#EAE5DC] flex items-center gap-1 group w-full"
+              className="text-left text-[11px] font-bold text-white hover:text-[#E5C38D] pt-3 border-t border-white/[0.08] flex items-center gap-1 group w-full"
             >
               <span>View full cost analysis</span>
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -1094,30 +1129,30 @@ export const ReportsView: React.FC = () => {
       {/* ============================================================ */}
       {pdfModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl border border-[#EAE5DC] shadow-2xl w-full max-w-md p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-[#EAE5DC] pb-4">
+          <div className="bg-[#0B0E14] rounded-3xl border border-white/[0.08] shadow-2xl w-full max-w-md p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
               <div>
-                <h3 className="text-base font-extrabold text-charcoal-900 tracking-tight font-sans">
+                <h3 className="text-base font-extrabold text-white tracking-tight font-sans">
                   Export Executive PDF Report
                 </h3>
-                <p className="text-xs text-charcoal-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   May 10 - May 16, 2026 Telemetry Audit
                 </p>
               </div>
               <button
                 onClick={() => setPdfModalOpen(false)}
-                className="p-1.5 rounded-lg text-charcoal-400 hover:bg-sandstone-200 transition-colors"
+                className="p-1.5 rounded-lg text-zinc-500 hover:bg-white/[0.06] transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs text-charcoal-700 font-mono">
-              <div className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] space-y-1.5">
-                <div className="flex justify-between font-bold text-charcoal-900">
+            <div className="space-y-3 text-xs text-zinc-300 font-mono">
+              <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
+                <div className="flex justify-between font-bold text-white">
                   <span>Report Sections Included:</span>
                 </div>
-                <div className="text-[11px] text-charcoal-500 space-y-1">
+                <div className="text-[11px] text-zinc-400 space-y-1">
                   <div>✓ Executive Spend &amp; Quota Pacing Summary</div>
                   <div>✓ Upstream LLM Breakdown (GPT-4o, Claude, Gemini)</div>
                   <div>✓ Project Endpoints &amp; Failover Recovery Logs</div>
@@ -1127,7 +1162,7 @@ export const ReportsView: React.FC = () => {
 
               <div className="flex items-center justify-between text-[11px]">
                 <span>Document Format:</span>
-                <span className="font-bold text-charcoal-900">PDF (Vector Charts • 300 DPI)</span>
+                <span className="font-bold text-white">PDF (Vector Charts • 300 DPI)</span>
               </div>
             </div>
 
@@ -1135,7 +1170,7 @@ export const ReportsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPdfModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-charcoal-600 hover:bg-sandstone-200 transition-colors"
+                className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-white/[0.06] transition-colors"
               >
                 Cancel
               </button>
@@ -1145,9 +1180,9 @@ export const ReportsView: React.FC = () => {
                   setPdfModalOpen(false);
                   showToast('Executive PDF generated and downloaded to local storage!');
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C59E5F] hover:bg-[#D4AF37] text-black font-bold text-xs font-bold transition-all shadow-sm"
               >
-                <Download className="w-3.5 h-3.5 text-ostraGold-400" />
+                <Download className="w-3.5 h-3.5 text-[#E5C38D]" />
                 <span>Download PDF</span>
               </button>
             </div>
@@ -1160,19 +1195,19 @@ export const ReportsView: React.FC = () => {
       {/* ============================================================ */}
       {scheduleModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl border border-[#EAE5DC] shadow-2xl w-full max-w-md p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-[#EAE5DC] pb-4">
+          <div className="bg-[#0B0E14] rounded-3xl border border-white/[0.08] shadow-2xl w-full max-w-md p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
               <div>
-                <h3 className="text-base font-extrabold text-charcoal-900 tracking-tight font-sans">
+                <h3 className="text-base font-extrabold text-white tracking-tight font-sans">
                   Schedule Automated Delivery
                 </h3>
-                <p className="text-xs text-charcoal-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Receive recurring executive spend summaries
                 </p>
               </div>
               <button
                 onClick={() => setScheduleModalOpen(false)}
-                className="p-1.5 rounded-lg text-charcoal-400 hover:bg-sandstone-200 transition-colors"
+                className="p-1.5 rounded-lg text-zinc-500 hover:bg-white/[0.06] transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1180,8 +1215,8 @@ export const ReportsView: React.FC = () => {
 
             <div className="space-y-3.5 text-xs">
               <div className="space-y-1.5">
-                <label className="font-bold text-charcoal-800 block">Frequency</label>
-                <select className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 font-mono focus:outline-none focus:border-ostraGold-500">
+                <label className="font-bold text-zinc-200 block">Frequency</label>
+                <select className="w-full px-3 py-2 text-xs bg-[#07090C] border border-white/[0.08] rounded-xl text-white font-mono focus:outline-none focus:border-ostraGold-500">
                   <option>Weekly (Every Monday at 9:00 AM)</option>
                   <option>Monthly (1st day of each month)</option>
                   <option>Daily (Every morning at 8:00 AM)</option>
@@ -1189,16 +1224,16 @@ export const ReportsView: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-bold text-charcoal-800 block">Destination Channel</label>
+                <label className="font-bold text-zinc-200 block">Destination Channel</label>
                 <input
                   type="email"
                   defaultValue="finops-alerts@acmecorp.com"
                   placeholder="name@company.com or Slack Webhook"
-                  className="w-full px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE5DC] rounded-xl text-charcoal-900 font-mono focus:outline-none focus:border-ostraGold-500"
+                  className="w-full px-3 py-2 text-xs bg-[#07090C] border border-white/[0.08] rounded-xl text-white font-mono focus:outline-none focus:border-ostraGold-500"
                 />
               </div>
 
-              <div className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE5DC] text-[11px] text-charcoal-500">
+              <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.08] text-[11px] text-zinc-400">
                 Delivery contains key odometer burns, spend anomalies, and recommended failovers.
               </div>
             </div>
@@ -1207,7 +1242,7 @@ export const ReportsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setScheduleModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-charcoal-600 hover:bg-sandstone-200 transition-colors"
+                className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-white/[0.06] transition-colors"
               >
                 Cancel
               </button>
@@ -1217,7 +1252,7 @@ export const ReportsView: React.FC = () => {
                   setScheduleModalOpen(false);
                   showToast('Automated schedule saved! First report delivers Monday 9:00 AM.');
                 }}
-                className="px-4 py-2 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm"
+                className="px-4 py-2 rounded-xl bg-[#C59E5F] hover:bg-[#D4AF37] text-black font-bold text-xs font-bold transition-all shadow-sm"
               >
                 Activate Schedule
               </button>
@@ -1235,37 +1270,37 @@ export const ReportsView: React.FC = () => {
           onClick={() => setBreakdownModal(null)}
         >
           <div 
-            className="bg-white rounded-3xl border border-[#EAE5DC] shadow-2xl max-w-lg w-full p-6 space-y-5 animate-in zoom-in-95"
+            className="bg-[#0B0E14] rounded-3xl border border-white/[0.08] shadow-2xl max-w-lg w-full p-6 space-y-5 animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#EAE5DC]">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
               <div>
-                <h3 className="text-base font-extrabold text-charcoal-900 font-sans tracking-tight">
+                <h3 className="text-base font-extrabold text-white font-sans tracking-tight">
                   {breakdownModal === 'project'
                     ? 'Project Spend Breakdown'
                     : breakdownModal === 'model'
                     ? 'Model Provider Share Breakdown'
                     : 'Gateway Traffic & Reliability Breakdown'}
                 </h3>
-                <p className="text-xs text-charcoal-500 font-mono mt-0.5">
+                <p className="text-xs text-zinc-400 font-mono mt-0.5">
                   Telemetry window: May 10 – May 16, 2026
                 </p>
               </div>
               <button
                 onClick={() => setBreakdownModal(null)}
-                className="p-1.5 rounded-xl text-charcoal-400 hover:text-charcoal-800 hover:bg-sandstone-100 transition-colors"
+                className="p-1.5 rounded-xl text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Total Metric Banner */}
-            <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#EAE5DC] flex items-center justify-between font-mono">
-              <span className="text-xs text-charcoal-600 font-medium font-sans">
+            <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between font-mono">
+              <span className="text-xs text-zinc-400 font-medium font-sans">
                 {breakdownModal === 'status' ? 'Total Analyzed Requests:' : 'Total Realized Spend:'}
               </span>
-              <span className="text-base font-extrabold text-charcoal-900">
+              <span className="text-base font-extrabold text-white">
                 {breakdownModal === 'status' ? '89,732 requests' : '$4,328.64 USD'}
               </span>
             </div>
@@ -1291,15 +1326,15 @@ export const ReportsView: React.FC = () => {
                 { name: 'Failed / Upstream 5xx', val: '2,145 reqs', pct: 2.4, color: '#8E6B2C', count: 'Auto-retried' },
                 { name: 'Provider Rate Limits', val: '1,152 reqs', pct: 1.3, color: '#D4CABE', count: 'Fallback triggered' },
               ]).map((it) => (
-                <div key={it.name} className="p-3 rounded-2xl bg-white border border-[#EAE5DC] space-y-1.5 font-mono hover:bg-[#FAF8F5] transition-colors">
+                <div key={it.name} className="p-3 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-1.5 font-mono hover:bg-[#07090C] transition-colors">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-2 font-bold text-charcoal-900">
+                    <span className="flex items-center gap-2 font-bold text-white">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: it.color }} />
                       <span>{it.name}</span>
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-charcoal-900">{it.val}</span>
-                      <span className="text-[11px] text-charcoal-400">({it.pct}%)</span>
+                      <span className="font-extrabold text-white">{it.val}</span>
+                      <span className="text-[11px] text-zinc-500">({it.pct}%)</span>
                     </div>
                   </div>
                   
@@ -1310,7 +1345,7 @@ export const ReportsView: React.FC = () => {
                       style={{ width: `${it.pct}%`, backgroundColor: it.color }}
                     />
                   </div>
-                  <div className="text-[10px] text-charcoal-400 flex justify-between font-mono">
+                  <div className="text-[10px] text-zinc-500 flex justify-between font-mono">
                     <span>{it.count}</span>
                     <span>Share of total volume</span>
                   </div>
@@ -1319,19 +1354,19 @@ export const ReportsView: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-2 flex items-center justify-between border-t border-[#EAE5DC]">
+            <div className="pt-2 flex items-center justify-between border-t border-white/[0.08]">
               <button
                 onClick={() => {
                   showToast('Exporting breakdown to CSV...');
                   setBreakdownModal(null);
                 }}
-                className="px-3.5 py-1.5 rounded-xl border border-[#EAE5DC] hover:bg-sandstone-100 text-charcoal-700 text-xs font-bold transition-all shadow-2xs"
+                className="px-3.5 py-1.5 rounded-xl border border-white/[0.08] hover:bg-white/[0.04] text-zinc-300 text-xs font-bold transition-all shadow-xs"
               >
                 Export CSV
               </button>
               <button
                 onClick={() => setBreakdownModal(null)}
-                className="px-4 py-1.5 rounded-xl bg-charcoal-900 hover:bg-black text-white text-xs font-bold transition-all shadow-xs"
+                className="px-4 py-1.5 rounded-xl bg-[#C59E5F] hover:bg-[#D4AF37] text-black font-bold text-xs font-bold transition-all shadow-xs"
               >
                 Close
               </button>
