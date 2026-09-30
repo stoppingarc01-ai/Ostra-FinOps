@@ -44,6 +44,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+scratch_install.ps1
+scratch/
+
 
 # Testing & Code Coverage
 coverage/
