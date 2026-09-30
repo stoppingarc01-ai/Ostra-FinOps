@@ -93,6 +93,16 @@ const formatFirebaseError = (err: any): Error => {
       return new Error('Please enter a valid email address.');
     case 'auth/popup-closed-by-user':
       return new Error('Sign-in popup closed before completion.');
+    case 'auth/popup-blocked':
+      return new Error('Sign-in popup was blocked by your browser. Please allow popups for this site.');
+    case 'auth/cancelled-popup-request':
+      return new Error('Sign-in request was cancelled. Please try again.');
+    case 'auth/account-exists-with-different-credential':
+      return new Error('An account already exists with this email using a different sign-in method.');
+    case 'auth/too-many-requests':
+      return new Error('Too many failed attempts. Access temporarily paused; please try again later or reset password.');
+    case 'auth/network-request-failed':
+      return new Error('Network connection error. Please check your internet connectivity.');
     case 'auth/unauthorized-domain':
       return new Error('Domain not authorized. Please add this domain to Authorized Domains in Firebase Console.');
     default:
@@ -122,11 +132,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [loading, setLoading] = useState(true);
 
-  const syncOrCreateUserDocs = async (fbUser: FirebaseUser) => {
+  const syncOrCreateUserDocs = async (fbUser: FirebaseUser, overrideFullName?: string) => {
     try {
       const userId = fbUser.uid;
       const profileRef = doc(db, 'profiles', userId);
       const profileSnap = await getDoc(profileRef);
+
+      const effectiveName = overrideFullName?.trim() || fbUser.displayName || null;
 
       // Check local cached avatar for this user
       let cachedAvatar: string | null = null;
@@ -136,9 +148,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (profileSnap.exists()) {
         const profileData = profileSnap.data() as Profile;
+        const updates: Partial<Profile> = {};
+        let needsUpdate = false;
+
+        if ((!profileData.full_name || profileData.full_name === 'Admin') && effectiveName) {
+          profileData.full_name = effectiveName;
+          updates.full_name = effectiveName;
+          needsUpdate = true;
+        }
         if (!profileData.avatar_url && (fbUser.photoURL || cachedAvatar)) {
           profileData.avatar_url = fbUser.photoURL || cachedAvatar;
-          setDoc(profileRef, { avatar_url: profileData.avatar_url }, { merge: true }).catch(() => {});
+          updates.avatar_url = profileData.avatar_url;
+          needsUpdate = true;
+        }
+        if (needsUpdate) {
+          setDoc(profileRef, updates, { merge: true }).catch(() => {});
         }
         setProfile(profileData);
         if (profileData.avatar_url) {
@@ -168,7 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const orgId = `org_${userId.slice(0, 8)}`;
         const initialOrg: Organization = {
           id: orgId,
-          name: `${fbUser.displayName || 'My'}'s Workspace`,
+          name: `${effectiveName || 'My'}'s Workspace`,
           slug: `workspace-${userId.slice(0, 6)}`,
           billing_status: 'active',
           plan: 'free',
@@ -189,7 +213,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const initialProfile: Profile = {
           id: userId,
           org_id: orgId,
-          full_name: fbUser.displayName || null,
+          full_name: effectiveName,
           email: fbUser.email || null,
           phone: null,
           job_title: null,
@@ -287,12 +311,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       if (fullName) {
-        await updateAuthProfile(cred.user, { displayName: fullName });
+        await updateAuthProfile(cred.user, { displayName: fullName }).catch(() => {});
       }
-      const authUser = formatAuthUser(cred.user);
+      const authUser: AuthUser = {
+        id: cred.user.uid,
+        uid: cred.user.uid,
+        email: cred.user.email,
+        displayName: fullName || cred.user.displayName,
+      };
       setUser(authUser);
       setSession({ user: authUser });
-      await syncOrCreateUserDocs(cred.user);
+      await syncOrCreateUserDocs(cred.user, fullName);
       return { error: null };
     } catch (err) {
       return { error: formatFirebaseError(err) };

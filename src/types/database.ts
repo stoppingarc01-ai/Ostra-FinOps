@@ -91,7 +91,7 @@ export interface RateLimitTier {
 export interface UserSubscription {
   id: string;
   user_id: string;
-  plan_id: 'free' | 'solo_pro' | 'team_scale' | 'enterprise';
+  plan_id: 'free' | 'solo_pro' | 'team_scale' | 'enterprise' | 'team_trial' | 'telemetry_observer' | 'starter_gateway' | 'pro_gateway' | string;
   plan_name: string;
   price_amount: number;
   billing_interval: 'mo' | 'yr';
@@ -127,13 +127,21 @@ export interface Profile {
   id: string;
   org_id: string | null;
   full_name: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  role?: string | null;
   email: string | null;
   phone: string | null;
   job_title: string | null;
   company_name: string | null;
   company_website: string | null;
+  company_size?: string | null;
+  country?: string | null;
+  state?: string | null;
+  city?: string | null;
   avatar_url: string | null;
   timezone: string | null;
+  onboarding_completed?: boolean;
   created_at: string;
   updated_at: string;
 }
