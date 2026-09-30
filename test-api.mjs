@@ -49,8 +49,10 @@ const run = async () => {
 
   const startTime = Date.now();
 
+  const modelToTest = args[1] || 'gemini-3.5-flash-lite';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTest}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  console.log(`\x1b[90mTesting model:\x1b[0m \x1b[36m${modelToTest}\x1b[0m`);
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

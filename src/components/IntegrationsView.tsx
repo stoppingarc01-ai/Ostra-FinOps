@@ -953,7 +953,7 @@ export const IntegrationsView: React.FC = () => {
   // INTERACTIVE TEST PLAYGROUND STATE
   // ============================================================
   const [testModalOpen, setTestModalOpen] = useState(false);
-  const [testModelId, setTestModelId] = useState('gemini-2.0-flash');
+  const [testModelId, setTestModelId] = useState('gemini-3.5-flash-lite');
   const [testPrompt, setTestPrompt] = useState('Say hello and confirm live gateway connectivity in 1 sentence.');
   const [testCustomKey, setTestCustomKey] = useState('');
   const [testRunning, setTestRunning] = useState(false);
@@ -1253,7 +1253,7 @@ export const IntegrationsView: React.FC = () => {
 
       if (isGemini) {
         // Direct Google Gemini API test with real user key
-        const normalizedModel = testModelId.includes('flash') ? 'gemini-1.5-flash' : 'gemini-1.5-pro';
+        const normalizedModel = testModelId.includes('pro') ? 'gemini-1.5-pro' : 'gemini-3.5-flash-lite';
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${normalizedModel}:generateContent?key=${encodeURIComponent(keyToUse)}`;
         const res = await fetch(endpoint, {
           method: 'POST',
@@ -2445,10 +2445,9 @@ response = client.chat.completions.create(
                         className="w-full px-3 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F] transition-all"
                       >
                         <optgroup label="Google Gemini">
-                          <option value="gemini-2.0-flash">Google Gemini 2.0 Flash (Recommended)</option>
-                          <option value="gemini-1.5-flash">Google Gemini 1.5 Flash</option>
+                          <option value="gemini-3.5-flash-lite">Google Gemini 3.5 Flash Lite (Verified Active)</option>
+                          <option value="gemini-3-flash-preview">Google Gemini 3 Flash Preview</option>
                           <option value="gemini-1.5-pro">Google Gemini 1.5 Pro</option>
-                          <option value="gemini-2.5-flash">Google Gemini 2.5 Flash</option>
                         </optgroup>
                         <optgroup label="Anthropic Claude">
                           <option value="claude-3-7-sonnet">Claude 3.7 Sonnet</option>
