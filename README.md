@@ -64,23 +64,9 @@ If the monitoring layer ever experiences a transient hiccup, your production tra
 
 ## 📐 System Architecture
 
-```mermaid
-flowchart LR
-    A["Your Code / Agent\n(Cursor, LangChain, AutoGen)"] -->|"OpenAI-compatible request"| B["OstraOps Hosted Gateway\n(Cloud Edge Proxy)"]
-    
-    subgraph OstraOps Security & Control Plane
-        B --> C{"Active Budget Cap?"}
-        C -- Exceeded --> D["429 Blocked\n(Hard Stop)"]
-        C -- Within Limit --> E{"Prompt in Cache?"}
-        E -- Cache Hit --> F["Return Cached (<5ms)\n$0.00 Token Cost"]
-        E -- Cache Miss --> G["Forward to Upstream LLM"]
-    end
-    
-    G --> H["Upstream AI Provider\n(OpenAI, Anthropic, Gemini, DeepSeek)"]
-    H -->|"Stream tokens + usage"| B
-    B -->|"Instant response"| A
-    B -.->|"Store metrics only\n(Tokens, Model, Cost)"| I[("Supabase Postgres\n(Row Level Security)")]
-```
+<p align="center">
+  <img width="960" alt="OstraOps Cloud Gateway Technical Architecture Blueprint Schematic" src="./public/architecture_blueprint.jpg" />
+</p>
 
 ---
 
