@@ -398,51 +398,164 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                 <span className="text-[#C59E5F]">baseURL</span>: 'https://gateway.ostraops.com/v1'
               </div>
             </div>
-          ) : (
-            <div className="relative h-48 w-full pt-3">
-              {/* Dynamic Bars for days with data */}
-              <div className="flex items-end justify-between h-36 gap-2 px-2 pt-4">
-                {dailyStats.map((d, index) => {
-                  const maxSpend = Math.max(...dailyStats.map(s => s.totalSpendUsd), 0.01);
-                  const heightPercent = Math.max(12, Math.round((d.totalSpendUsd / maxSpend) * 100));
-                  const isSelected = selectedDayIndex === index;
+            <div className="relative w-full pt-1">
+              {/* SVG Smooth Line Graph */}
+              {(() => {
+                const maxSpend = Math.max(...dailyStats.map((s) => s.totalSpendUsd), 0.0001);
+                const width = 500;
+                const height = 140;
+                const padX = 24;
+                const padTop = 16;
+                const padBottom = 28;
+                const plotW = width - padX * 2;
+                const plotH = height - padTop - padBottom;
 
-                  return (
-                    <div 
-                      key={d.date} 
-                      onClick={() => setSelectedDayIndex(index)}
-                      className="flex-1 flex flex-col items-center gap-1.5 cursor-pointer group"
-                    >
-                      <div className="w-full bg-white/[0.04] rounded-t-lg h-28 flex items-end overflow-hidden p-0.5">
-                        <div 
-                          className={`w-full rounded-t-md transition-all duration-300 ${
-                            isSelected 
-                              ? 'bg-[#E5C38D]' 
-                              : 'bg-gradient-to-t from-[#AA824B] to-[#C59E5F] group-hover:from-[#C59E5F] group-hover:to-[#E5C38D]'
-                          }`}
-                          style={{ height: `${heightPercent}%` }}
+                const points = dailyStats.map((d, i) => {
+                  const x = padX + (i / Math.max(1, dailyStats.length - 1)) * plotW;
+                  const ratio = Math.min(1, Math.max(0, d.totalSpendUsd / maxSpend));
+                  const y = padTop + (1 - ratio) * plotH;
+                  return { x, y, d, i };
+                });
+
+                // Generate smooth cubic bezier SVG path
+                let pathD = '';
+                if (points.length > 0) {
+                  pathD = `M ${points[0].x} ${points[0].y}`;
+                  for (let i = 0; i < points.length - 1; i++) {
+                    const curr = points[i];
+                    const next = points[i + 1];
+                    const cpx = (curr.x + next.x) / 2;
+                    pathD += ` C ${cpx} ${curr.y}, ${cpx} ${next.y}, ${next.x} ${next.y}`;
+                  }
+                }
+
+                // Area path for gradient fill
+                const lastPt = points[points.length - 1] || { x: width - padX, y: height - padBottom };
+                const firstPt = points[0] || { x: padX, y: height - padBottom };
+                const areaD = `${pathD} L ${lastPt.x} ${height - padBottom} L ${firstPt.x} ${height - padBottom} Z`;
+
+                const activeDay = selectedDayIndex !== null ? dailyStats[selectedDayIndex] : dailyStats[dailyStats.length - 1];
+
+                return (
+                  <div className="space-y-3">
+                    <div className="relative w-full overflow-hidden">
+                      <svg
+                        viewBox={`0 0 ${width} ${height}`}
+                        className="w-full h-36 overflow-visible"
+                        preserveAspectRatio="none"
+                      >
+                        <defs>
+                          <linearGradient id="spendAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#C59E5F" stopOpacity="0.35" />
+                            <stop offset="70%" stopColor="#C59E5F" stopOpacity="0.05" />
+                            <stop offset="100%" stopColor="#C59E5F" stopOpacity="0" />
+                          </linearGradient>
+                          <filter id="glowLine" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#C59E5F" floodOpacity="0.4" />
+                          </filter>
+                        </defs>
+
+                        {/* Background Horizontal Grid Lines */}
+                        <line
+                          x1={padX}
+                          y1={padTop}
+                          x2={width - padX}
+                          y2={padTop}
+                          stroke="rgba(255,255,255,0.06)"
+                          strokeDasharray="3 3"
                         />
-                      </div>
-                      <span className="text-[10px] font-mono text-zinc-500 group-hover:text-zinc-300">
-                        {d.date.slice(5)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+                        <line
+                          x1={padX}
+                          y1={padTop + plotH / 2}
+                          x2={width - padX}
+                          y2={padTop + plotH / 2}
+                          stroke="rgba(255,255,255,0.06)"
+                          strokeDasharray="3 3"
+                        />
+                        <line
+                          x1={padX}
+                          y1={height - padBottom}
+                          x2={width - padX}
+                          y2={height - padBottom}
+                          stroke="rgba(255,255,255,0.12)"
+                        />
 
-              {selectedDayIndex !== null && dailyStats[selectedDayIndex] && (
-                <div className="mt-3 p-2.5 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between text-xs">
-                  <span className="font-semibold text-zinc-300">
-                    {dailyStats[selectedDayIndex].date}:
-                  </span>
-                  <div className="flex items-center gap-4 text-[11px] font-mono">
-                    <span>Spend: <strong className="text-[#E5C38D]">${dailyStats[selectedDayIndex].totalSpendUsd.toFixed(2)}</strong></span>
-                    <span>Tokens: <strong className="text-white">{dailyStats[selectedDayIndex].totalTokens.toLocaleString()}</strong></span>
-                    <span>Requests: <strong className="text-white">{dailyStats[selectedDayIndex].totalRequests}</strong></span>
+                        {/* Gradient Area Fill */}
+                        <path d={areaD} fill="url(#spendAreaGrad)" />
+
+                        {/* Smooth Glowing Line */}
+                        <path
+                          d={pathD}
+                          fill="none"
+                          stroke="#C59E5F"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          filter="url(#glowLine)"
+                        />
+
+                        {/* Interactive Data Points (Nodes) */}
+                        {points.map((pt) => {
+                          const isSel = selectedDayIndex === pt.i;
+                          return (
+                            <g
+                              key={pt.i}
+                              className="cursor-pointer group"
+                              onClick={() => setSelectedDayIndex(pt.i)}
+                            >
+                              {/* Hover / Active Halo */}
+                              <circle
+                                cx={pt.x}
+                                cy={pt.y}
+                                r={isSel ? 7 : 4}
+                                className={`transition-all duration-200 ${
+                                  isSel
+                                    ? 'fill-[#E5C38D] stroke-[#0B0E14] stroke-2 shadow-lg'
+                                    : 'fill-[#C59E5F] stroke-[#0B0E14] stroke-2 hover:r-6'
+                                }`}
+                              />
+                              {/* X-axis date labels */}
+                              <text
+                                x={pt.x}
+                                y={height - 10}
+                                textAnchor="middle"
+                                className={`text-[10px] font-mono transition-colors ${
+                                  isSel ? 'fill-[#E5C38D] font-bold' : 'fill-zinc-500 hover:fill-zinc-300'
+                                }`}
+                              >
+                                {pt.d.date.slice(5)}
+                              </text>
+                            </g>
+                          );
+                        })}
+                      </svg>
+                    </div>
+
+                    {/* Active Selected Point Detail Card */}
+                    {activeDay && (
+                      <div className="p-2.5 rounded-2xl bg-[#07090C] border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-[#C59E5F] animate-pulse" />
+                          <span className="font-semibold text-zinc-300 font-mono">
+                            {activeDay.date}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-[11px] font-mono">
+                          <span>
+                            Spend: <strong className="text-[#E5C38D]">${activeDay.totalSpendUsd.toFixed(6)}</strong>
+                          </span>
+                          <span>
+                            Tokens: <strong className="text-white">{activeDay.totalTokens.toLocaleString()}</strong>
+                          </span>
+                          <span>
+                            Requests: <strong className="text-white">{activeDay.totalRequests}</strong>
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           )}
         </div>
