@@ -9,7 +9,7 @@ import {
   Terminal,
   Cpu
 } from 'lucide-react';
-import { fetchGatewayStats, fetchGatewayStatsByDay, fetchGatewayLogs, isSupabaseConfigured, type GatewayStats, type DayStats } from '../lib/supabase';
+import { fetchGatewayLogs, isSupabaseConfigured, type DayStats } from '../lib/supabase';
 import type { GatewayLog } from '../types/database';
 
 export const UsageCostsView: React.FC = () => {
@@ -18,7 +18,7 @@ export const UsageCostsView: React.FC = () => {
   const [timeDropdownOpen, setTimeDropdownOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   
-  const [liveStats, setLiveStats] = useState<GatewayStats | null>(null);
+
   const [dailyStats, setDailyStats] = useState<DayStats[]>([]);
   const [liveLogs, setLiveLogs] = useState<GatewayLog[]>([]);
   const [selectedDay, setSelectedDay] = useState<DayStats | null>(null);
@@ -26,37 +26,80 @@ export const UsageCostsView: React.FC = () => {
   useEffect(() => {
     let isMounted = true;
     const load = async () => {
-      if (!isSupabaseConfigured) return;
-      try {
-        const stats = await fetchGatewayStats(30);
-        if (isMounted) setLiveStats(stats);
-      } catch {}
+      let combinedLogs: GatewayLog[] = [];
 
+      // 1. File-based telemetry from terminal tests
       try {
-        const days = await fetchGatewayStatsByDay(14);
-        if (isMounted) {
-          setDailyStats(days);
-          if (days.length > 0) setSelectedDay(days[days.length - 1]);
+        const res = await fetch('/live-telemetry.json?t=' + Date.now());
+        if (res.ok) {
+          const fileLogs = await res.json();
+          if (Array.isArray(fileLogs)) combinedLogs.push(...fileLogs);
         }
       } catch {}
 
+      // 2. localStorage from UI playground
       try {
-        const logs = await fetchGatewayLogs(100);
-        if (isMounted && logs) setLiveLogs(logs);
+        const local = localStorage.getItem('ostraops_recent_logs');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (Array.isArray(parsed)) {
+            const ids = new Set(combinedLogs.map(l => l.request_id || l.id));
+            for (const item of parsed) {
+              if (!ids.has(item.request_id || item.id)) combinedLogs.push(item);
+            }
+          }
+        }
       } catch {}
+
+      // 3. Supabase remote logs
+      if (isSupabaseConfigured) {
+        try {
+          const remote = await fetchGatewayLogs(100);
+          if (remote && remote.length > 0) {
+            const ids = new Set(combinedLogs.map(l => l.request_id || l.id));
+            for (const item of remote) {
+              if (!ids.has(item.request_id || item.id)) combinedLogs.push(item);
+            }
+          }
+        } catch {}
+      }
+
+      if (!isMounted) return;
+      setLiveLogs(combinedLogs);
+
+      // Aggregate daily stats from combined logs
+      if (combinedLogs.length > 0) {
+        const map: Record<string, DayStats> = {};
+        for (let i = 13; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const key = d.toISOString().slice(0, 10);
+          map[key] = { date: key, totalSpendUsd: 0, totalTokens: 0, totalRequests: 0 };
+        }
+        for (const row of combinedLogs) {
+          const date = (row.created_at || new Date().toISOString()).slice(0, 10);
+          if (!map[date]) map[date] = { date, totalSpendUsd: 0, totalTokens: 0, totalRequests: 0 };
+          map[date].totalSpendUsd += (row.cost_usd || 0);
+          map[date].totalTokens += ((row.input_tokens || 0) + (row.output_tokens || 0));
+          map[date].totalRequests += 1;
+        }
+        const sorted = Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
+        setDailyStats(sorted);
+        if (sorted.length > 0) setSelectedDay(sorted[sorted.length - 1]);
+      }
     };
 
     load();
-    const interval = setInterval(load, 15000);
+    const interval = setInterval(load, 4000);
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
   }, []);
 
-  const totalSpend = liveStats ? liveStats.totalSpendUsd : 0;
-  const totalTokens = liveStats ? liveStats.totalTokens : 0;
-  const totalRequests = liveStats ? liveStats.totalRequests : 0;
+  const totalSpend = liveLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0);
+  const totalTokens = liveLogs.reduce((acc, l) => acc + (l.input_tokens || 0) + (l.output_tokens || 0), 0);
+  const totalRequests = liveLogs.length;
 
   // Real model breakdown from logs
   const modelsMap: Record<string, { count: number; spend: number; tokens: number }> = {};

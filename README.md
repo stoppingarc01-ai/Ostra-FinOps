@@ -4,219 +4,300 @@
   <img src="https://img.shields.io/badge/Hosted%20Gateway-Global%20Edge%20Proxy-0ea5e9?style=for-the-badge&logo=cloudflare" alt="Hosted Gateway" />
   <img src="https://img.shields.io/badge/Database-Supabase%20Postgres-3ECF8E?style=for-the-badge&logo=supabase" alt="Supabase Postgres" />
   <img src="https://img.shields.io/badge/Auth-Supabase%20JWT-4f46e5?style=for-the-badge&logo=jsonwebtokens" alt="Auth" />
+  <img src="https://img.shields.io/badge/Node.js-%3E%3D18.0.0-339933?style=for-the-badge&logo=node.js" alt="Node Version" />
   <img src="https://img.shields.io/badge/License-MIT-10b981?style=for-the-badge" alt="MIT License" />
   <img src="https://img.shields.io/badge/PRs-Welcome-f59e0b?style=for-the-badge" alt="PRs Welcome" />
 </p>
 
 <p align="center">
-  <b>Real-Time AI Spend Tracking, Intelligent Hosted Gateway & Budget Guardrails</b><br>
+  <b>Real-Time AI Spend Tracking, Intelligent Reverse Gateway & Hard Budget Guardrails</b><br>
   Stop runaway agent loops, prevent surprise cloud bills, and enforce sub-millisecond limits — with <b>Zero Prompt Retention</b>.
 </p>
 
 ---
 
 ## 📖 Table of Contents
-- [What is OstraOps? (In Simple Words)](#-what-is-ostraops-in-simple-words)
-- [How We Work & Core Principles](#-how-we-work--core-principles)
-- [System Architecture](#-system-architecture)
-- [Authentication & Access Control](#-authentication--access-control)
-- [Data Storage & Privacy](#-data-storage--privacy)
-- [Subscription Plans & Pricing](#-subscription-plans--pricing)
-- [Developer Integration](#-developer-integration)
-- [Contributing (For Open-Source Contributors)](#-contributing-for-open-source-contributors)
-- [Supported Model Families](#-supported-model-families)
+- [Overview & Problem Statement](#-overview--problem-statement)
+- [Feature Implementation Status Matrix](#-feature-implementation-status-matrix)
+- [Deep Technical Architecture: Concurrency & Budget Kill-Switch](#-deep-technical-architecture-concurrency--budget-kill-switch)
+  - [The Concurrency Problem (Race Conditions)](#the-concurrency-problem-race-conditions)
+  - [The 2-Phase Reservation & Reconciliation Protocol](#the-2-phase-reservation--reconciliation-protocol)
+  - [Fail-Open vs. Fail-Closed Policy](#fail-open-vs-fail-closed-policy)
+- [Auditable Privacy & Zero Prompt Retention](#-auditable-privacy--zero-prompt-retention)
+  - [What is Stored vs. What is Never Stored](#what-is-stored-vs-what-is-never-stored)
+  - [Key Hashing & Cryptographic Storage](#key-hashing--cryptographic-storage)
+- [Quickstart & Verification (Clean Environment)](#-quickstart--verification-clean-environment)
+  - [Prerequisites & Installation](#prerequisites--installation)
+  - [Running the Local Dashboard](#running-the-local-dashboard)
+  - [Verifying Live API Telemetry & Gateway](#verifying-live-api-telemetry--gateway)
+- [Supported Model Families & Rate Cards](#-supported-model-families--rate-cards)
+- [Authentication & Row Level Security (RLS)](#-authentication--row-level-security-rls)
+- [Subscription Plans & Entitlements](#-subscription-plans--entitlements)
+- [Contributing Guidelines](#-contributing-guidelines)
 - [License](#-license)
 
 ---
 
-## 💡 What is OstraOps? (In Simple Words)
+## 💡 Overview & Problem Statement
 
-When you build with frontier models like **GPT-4o, Claude 3.7 Sonnet, Gemini 2.5, or DeepSeek R1**, API costs can explode without warning:
-- An autonomous coding agent gets trapped in a recursive error loop.
+When building with frontier models like **GPT-4o, Claude 3.7 Sonnet, Gemini 2.5, Kimi k1.5, or DeepSeek R1**, API costs can explode without warning:
+- An autonomous coding agent gets trapped in a recursive error or loop condition.
 - A batch pipeline re-prompts 500k context tokens 50 times in a row.
-- Official provider billing dashboards lag behind by **2 to 8 hours**, notifying you only when money is already drained.
+- Official provider billing dashboards lag behind by **2 to 8 hours**, notifying you only after budget limits are breached.
 
-**OstraOps is your real-time circuit breaker and observability platform.**  
-It operates as a high-speed hosted gateway between your code and AI providers, measuring every input and output token the millisecond it streams. If your spending hits your predefined budget cap (e.g. $10/day), OstraOps safely pauses further calls with an immediate `429 Budget Exceeded` response — cutting off runaway expenses before your credit card is charged.
-
----
-
-## 🛡️ How We Work & Core Principles
-
-We built OstraOps on 4 foundational principles:
-
-### 1. Pre-Execution Budget Checks (Kill-Switch)
-Most FinOps tools only warn you after money is already spent. OstraOps intercepts calls *before* forwarding to upstream providers. If you are over budget, the request is halted instantly.
-
-### 2. Zero Prompt Retention (Total Privacy)
-We believe your proprietary code, customer chats, and business data must remain 100% private:
-- **No Prompt Logging:** We inspect only token usage headers, model IDs, and HTTP metadata.
-- **No Chat Storage:** Prompt text and completion messages are streamed directly to your client and never saved to any database or disk.
-- **No Model Training:** Your intellectual property is never retained or used for training.
-
-### 3. Sub-Millisecond Smart Caching
-Identical or repetitive requests (e.g. unit tests, fixed prompt templates) are served directly from an ultra-low latency edge cache, saving both response latency (<5ms) and 100% of the token cost for that request.
-
-### 4. Fail-Open Reliability
-If the monitoring layer ever experiences a transient hiccup, your production traffic is never blocked — the gateway fails open to preserve 99.99% application uptime.
+**OstraOps is your real-time circuit breaker and observability gateway.**  
+It operates as a high-speed reverse gateway proxy between your client application and upstream AI providers. It parses token usage the millisecond it streams, calculates exact financial dollar costs from built-in rate cards, and cuts off further calls with `429 Budget Exceeded` before surprise charges hit your credit card.
 
 ---
 
-## 📐 System Architecture
+## 📊 Feature Implementation Status Matrix
 
-<p align="center">
-  <img width="960" alt="OstraOps Cloud Gateway Technical Architecture Blueprint Schematic" src="./public/architecture_blueprint.jpg" />
-</p>
+To provide complete transparency between active code, work-in-progress, and future roadmap items:
 
----
-
-## 🔐 Authentication & Access Control
-
-OstraOps uses production-grade identity management:
-
-1. **User & Organization Authentication:**
-   - Powered by **Supabase Auth** with cryptographic JWTs (JSON Web Tokens).
-   - Secure password hashing (bcrypt/Argon2) and OAuth capabilities.
-   - HttpOnly cookie handling and automatic refresh token rotation.
-   - User sessions are verified on every API and dashboard route.
-
-2. **Hosted Gateway API Keys:**
-   - Applications and agent scripts connect using high-entropy OstraOps API keys (`ostra_live_...`).
-   - Keys are hashed with SHA-256 before storage in Postgres, preventing credential leaks even in internal audits.
-
----
-
-## 🗄️ Data Storage & Privacy
-
-All platform configuration and metric telemetry are securely backed by **Supabase PostgreSQL**:
-
-| Data Type | Stored in Database? | Details |
+| Capability / Feature | Status | Implementation Details |
 | :--- | :---: | :--- |
-| **User & Team Profiles** | ✅ Yes | Email, organization name, role (Admin/Member). |
-| **Spend & Token Aggregates** | ✅ Yes | Input/output token counts, model name, calculated dollar cost, timestamp. |
-| **Budget Rules & Alerts** | ✅ Yes | Daily/monthly caps, webhook URLs (Slack, Discord, Email). |
-| **Prompts & Completions** | ❌ **NEVER** | Discarded immediately after streaming. Never written to disk or database. |
-| **Embeddings & Files** | ❌ **NEVER** | Never stored or cached permanently. |
-
-### Multi-Tenant Isolation (Row Level Security)
-Every table in our PostgreSQL database enforces **Postgres Row Level Security (RLS)**. Even if an API query is crafted maliciously, the database engine guarantees that Workspace A cannot read or write Workspace B's data under any circumstances.
-
----
-
-## 💳 Subscription Plans & Pricing
-
-Transparent, developer-friendly pricing designed to scale from solo builders to enterprise engineering teams:
-
-| Tier | Price | Ideal For | Key Features |
-| :--- | :---: | :--- | :--- |
-| **Community CLI** | **$0** / forever | Solo hackers & terminal users | • Open-source CLI (`npx ostraops`)<br>• Local terminal spend calculations<br>• Multi-model pricing cheatsheet |
-| **Agent Telemetry** | **$20** / month<br>*(or $16/mo billed annually)* | Developers wanting observability only | • No proxy interception needed<br>• Real-time token velocity & health monitoring<br>• Model cost & latency benchmarking<br>• Webhook alerts (Slack, Discord, Email)<br>• Up to 3 active agent trackers |
-| **Starter Gateway** | **$35** / month<br>*(or $28/mo billed annually)* | Production apps & startup teams | • Hosted **OstraOps Gateway** edge proxy<br>• Automated hard budget caps & kill-switch<br>• In-memory smart caching (up to 1,000 queries)<br>• Multi-provider routing (OpenAI, Anthropic, Gemini, DeepSeek)<br>• Up to 5 concurrent agent connections |
-| **Pro Gateway** | **$59** / month<br>*(or $47/mo billed annually)* | Heavy autonomous agents & scaling teams | • **Everything in Starter** +<br>• **Unlimited** concurrent agents & workflows<br>• Semantic & persistent caching<br>• Multi-model automated failover & load balancing<br>• Team role permissions & audit logs<br>• Priority Discord/Slack engineering support |
-
-### 👥 Extra Developer Seats
-Need your whole engineering team on the dashboard?
-- **$5 per developer seat / month**
-- Grants team members their own login, individual spend analytics, and scoped API keys without having to share master admin credentials.
+| **Real-Time Token & Cost Calculation** | 🟢 **Live** | Client and gateway rate-card calculation across 45+ models in `src/components/IntegrationsView.tsx` and `test-api.mjs`. |
+| **Interactive FinOps Dashboard** | 🟢 **Live** | Real-time spend charts, model breakdowns, cost share, and usage logs (`src/components/OverviewView.tsx`). |
+| **Zero Prompt Retention Guarantee** | 🟢 **Live** | Strict metadata extraction pipeline; prompt bodies and completion texts are discarded immediately after streaming. |
+| **Multi-Tenant Postgres Schema & RLS** | 🟢 **Live** | Full PostgreSQL schema with Row-Level Security policies in `supabase/schema.sql`. |
+| **Live API Terminal Verification Script** | 🟢 **Live** | Runnable live tester `test-api.mjs` verifying keys, latencies, tokens, and syncing to `/live-telemetry.json`. |
+| **Pre-Flight Budget Kill-Switch (`429`)** | 🟡 **Beta** | Budget rule engine (`src/lib/budgetsService.ts`) with hard/soft thresholds and kill-switch actions. |
+| **Concurrent Budget Lease Reservation** | 🟡 **Beta** | 2-phase pessimistic reservation protocol with token estimation and post-stream delta settlement (detailed below). |
+| **Configurable Fail-Open / Fail-Closed** | 🟡 **Beta** | Explicit gateway flag: choose between 99.99% application uptime or absolute zero-overspend enforcement. |
+| **In-Memory & Edge Smart Caching** | 🟡 **Beta** | Exact-match query caching for deterministic prompts and repetitive test runs. |
+| **Semantic & Distributed Vector Caching** | 🔵 **Roadmap** | Multi-region Redis cluster with embedding similarity search for fuzzy prompt deduplication. |
 
 ---
 
-## 🚀 Developer Integration
+## ⚡ Deep Technical Architecture: Concurrency & Budget Kill-Switch
 
-Connecting your application or AI agents to OstraOps takes under 60 seconds. You do not need to rewrite your application logic:
+### The Concurrency Problem (Race Conditions)
 
-### 1. Instant Terminal Tracking (Community CLI)
-Calculate spend and compare model pricing instantly:
+A naive budget enforcement system checks `current_spend < budget_limit` when a request arrives, forwards the request, and updates the database after the response finishes. 
+
+Under concurrent traffic, this creates a critical vulnerability:
+- Suppose a workspace has **$1.00** remaining in its daily budget.
+- 50 concurrent requests arrive within 50 milliseconds.
+- Each request checks the budget: all 50 see `$1.00 remaining` and pass validation.
+- Each request costs `$0.20`.
+- **Result:** $10.00 is spent on a $1.00 budget — an **overshoot of 900%**.
+
+### The 2-Phase Reservation & Reconciliation Protocol
+
+To prevent budget overshoots under concurrent load, OstraOps employs a **2-Phase Lease Reservation Protocol**:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Agent / Client App
+    participant Gateway as OstraOps Gateway Proxy
+    participant Store as Budget & Ledger Store
+    participant Upstream as AI Provider (OpenAI/Anthropic/Gemini/Kimi)
+
+    Client->>Gateway: POST /v1/chat/completions (model, messages, max_tokens)
+    
+    rect rgb(20, 25, 35)
+    Note over Gateway,Store: Phase 1: Atomic Lease Reservation
+    Gateway->>Store: Atomic Check & Reserve Estimated Cost
+    alt Budget Exhausted
+        Store-->>Gateway: Reservation Denied (Current + Reserved >= Limit)
+        Gateway-->>Client: HTTP 429 Too Many Requests {"error": "Budget Exceeded"}
+    else Budget Available
+        Store-->>Gateway: Lease Granted (Reservation ID, Reserved Amount)
+    end
+    end
+
+    rect rgb(15, 30, 25)
+    Note over Gateway,Upstream: Phase 2: Upstream Execution & Stream
+    Gateway->>Upstream: Forward Request to Provider
+    Upstream-->>Gateway: Stream Response Chunks & Usage Tokens
+    Gateway-->>Client: Stream Response Chunks in Real Time
+    end
+
+    rect rgb(20, 25, 35)
+    Note over Gateway,Store: Phase 3: Reconciliation & Settlement
+    Gateway->>Store: Settle Lease (Actual Cost = tokens * rate)
+    Store->>Store: Finalize Spend & Release Reserved Delta
+    end
+```
+
+1. **Pre-Flight Estimation & Atomic Reservation:**
+   - Before forwarding to the upstream provider, the gateway estimates the maximum cost:
+     $$\text{Estimated Cost} = (\text{Input Tokens} \times \text{Input Rate}) + (\min(\text{max\_tokens}, \text{Default Cap}) \times \text{Output Rate})$$
+   - It performs an atomic `DECRBY` or conditional reservation on the workspace's available balance.
+   - If the remaining balance is insufficient, the request is immediately rejected with `429 Too Many Requests: Budget Exceeded` without invoking the upstream API.
+
+2. **Upstream Streaming & Token Capture:**
+   - The prompt is forwarded to the upstream provider (OpenAI, Anthropic, Google, Kimi, etc.).
+   - The gateway streams completion chunks to the client with sub-millisecond overhead.
+   - On the final chunk or completion response, the exact `usage` metadata (`prompt_tokens`, `completion_tokens`) is captured.
+
+3. **Reconciliation & Delta Settlement:**
+   - Exact cost is calculated from the model's official rate card:
+     $$\text{Actual Cost} = (\text{Actual Input Tokens} \times \text{Input Rate}) + (\text{Actual Output Tokens} \times \text{Output Rate})$$
+   - The temporary reservation is converted into finalized spend, and any unused reserved credit is immediately released back to the available pool.
+
+4. **Error Handling & Cancelled Requests:**
+   - If the upstream provider returns an error (HTTP 5xx, 401, 429), or if the client disconnects before generation begins, the reservation is automatically refunded in full.
+
+### Fail-Open vs. Fail-Closed Policy
+
+A central question in financial engineering is how the gateway behaves when the telemetry database or accounting service is unavailable or times out:
+
+| Mode | Behavior during Accounting Outage | Risk Profile | Recommended Use Case |
+| :--- | :--- | :--- | :--- |
+| **`FAIL_OPEN`** *(Default)* | Requests continue to upstream providers without budget verification. | Small risk of spending beyond budget cap during outage. | Production user-facing apps where 99.99% availability is prioritized over strict financial limits. |
+| **`FAIL_CLOSED`** | Requests are rejected with `503 Service Unavailable: Accounting Unreachable`. | Zero risk of overspend; calls are blocked if ledger is offline. | Autonomous scraping agents, background batch runners, or testing pipelines with fixed credit ceilings. |
+
+This behavior is explicitly configurable per workspace or per API key using the `x-ostraops-fail-mode: open | closed` header or via the dashboard security settings.
+
+---
+
+## 🔒 Auditable Privacy & Zero Prompt Retention
+
+OstraOps is designed from first principles for strict enterprise data privacy and regulatory compliance (GDPR, SOC2, HIPAA-adjacent environments).
+
+### What is Stored vs. What is Never Stored
+
+| Data Point | Retained in Database? | Storage Purpose & Mechanics |
+| :--- | :---: | :--- |
+| **Model ID & Provider Name** | ✅ Yes | Required for rate calculation, analytics, and quota enforcement. |
+| **Token Counts (Input & Output)** | ✅ Yes | Extracted from HTTP response headers or provider `usage` payloads. |
+| **Calculated Dollar Spend ($USD)** | ✅ Yes | Computed in real time from rate cards; stored for billing reports. |
+| **Latency & HTTP Status Code** | ✅ Yes | Used for uptime telemetry, health metrics, and alert triggers. |
+| **Timestamp & Request ID** | ✅ Yes | Correlation key for audit logs and ledger reconciliation. |
+| **Prompt Text & Message Payloads** | ❌ **NEVER** | Discarded immediately after streaming. No disk writes, no logging. |
+| **Model Completion Output** | ❌ **NEVER** | Streamed directly through socket to client; never buffered to database. |
+| **System Instructions & Embeddings** | ❌ **NEVER** | Never stored, inspected, or cached permanently. |
+| **Training Use** | ❌ **NEVER** | Zero data is ever stored, reused, or shared for machine learning training. |
+
+### Key Hashing & Cryptographic Storage
+
+1. **Virtual Gateway Keys (`ostra_live_...`):**
+   - Virtual API keys issued to agents are hashed using **SHA-256** before being saved to PostgreSQL (`supabase/schema.sql`).
+   - Plaintext keys are shown only once upon creation. Even with direct read access to the database, keys cannot be reversed.
+2. **Upstream Provider Vault Keys:**
+   - Upstream API keys stored in the Hardware Security Vault (`src/components/SecurityConsoleView.tsx`) are encrypted at rest using **AES-256-GCM** with envelope encryption.
+
+---
+
+## 🚀 Quickstart & Verification (Clean Environment)
+
+Verify that OstraOps runs cleanly on your machine in under 2 minutes:
+
+### Prerequisites & Installation
+
+- **Node.js**: `v18.0.0` or higher
+- **npm**: `v9.0.0` or higher
+
 ```bash
-npx ostraops
+# 1. Clone the repository
+git clone https://github.com/stoppingarc01-ai/Ostra-FinOps.git
+cd Ostra-FinOps
+
+# 2. Install dependencies
+npm install
+
+# 3. Verify TypeScript build
+npm run build
 ```
 
-### 2. Route Through OstraOps Hosted Gateway
-Point your existing OpenAI, LangChain, Vercel AI SDK, or Cursor configuration to your OstraOps gateway endpoint:
+### Running the Local Dashboard
 
-```typescript
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: 'https://gateway.ostraops.com/v1', // Your hosted OstraOps gateway endpoint
-  defaultHeaders: {
-    'x-ostraops-key': process.env.OSTRAOPS_API_KEY, // Scoped team or agent token
-  },
-});
-
-// Requests are automatically budget-checked and token-counted in real time
-const response = await openai.chat.completions.create({
-  model: 'gpt-4o',
-  messages: [{ role: 'user', content: 'Process customer query' }],
-});
+```bash
+# Start the local development server
+npm run dev
 ```
+
+Navigate to `http://localhost:5173` to explore the live telemetry dashboard, model catalog, and budget management console.
+
+### Verifying Live API Telemetry & Gateway
+
+The repository includes a standalone live testing script (`test-api.mjs`) that connects to upstream AI APIs, measures latency, calculates token usage, and streams real-time telemetry to `/public/live-telemetry.json` for the overview dashboard:
+
+```bash
+# Run with your Gemini or AI provider key
+node test-api.mjs <YOUR_API_KEY> [optional-model-name]
+
+# Example output:
+# ⚡ OstraOps Live Terminal API Tester
+# --------------------------------------------------
+# ✔ Key Loaded: AIza••••xxxx
+# → Sending prompt: "Namaste! Confirm in 1 sentence that you are live..."
+# ✔ SUCCESS (HTTP 200 OK)
+# Latency: 245ms
+# Tokens: 42 total (14 in, 28 out)
+# ✔ Telemetry logged to public/live-telemetry.json (Dashboard synced)
+```
+
+Open the dashboard Overview tab to see the live request appear instantly on your spend velocity chart.
 
 ---
 
-## 🤝 Contributing (For Open-Source Contributors)
+## 🌐 Supported Model Families & Rate Cards
 
-We welcome community contributions, model rate card updates, and SDK integrations! If you want to help make AI spend tracking faster, safer, and more accessible, here is how you can contribute:
+OstraOps maintains real-time rate cards and latency benchmarks across 45+ foundation models:
 
-### 🎯 What You Can Contribute
-- **Model Rate Cards:** Add new foundation models, pricing updates, or context capacity updates in `models/`.
-- **SDK Integrations:** Help write adapters or snippets for LangChain, LlamaIndex, AutoGen, CrewAI, and Vercel AI SDK.
-- **Documentation:** Improve developer tutorials, API references, or translations.
-- **Bug Fixes:** Fix UI rendering bugs, edge-case token calculation drifts, or gateway proxy headers.
+| Provider | Supported Models | Context Window | Input / Output Rate (per 1M tokens) |
+| :--- | :--- | :---: | :---: |
+| **Kimi (Moonshot AI)** | Kimi k1.5, Moonshot v1 128K, Moonshot v1 32K, Moonshot v1 8K, Kimi Latest | Up to 128k | $0.17 – $1.00 / $0.17 – $3.00 |
+| **OpenAI** | GPT-5.6, GPT-5.6-mini, GPT-5.6-nano, GPT-5.5, GPT-5.4, GPT-4o, o3-mini | Up to 512k | $0.15 – $4.50 / $0.60 – $18.00 |
+| **Anthropic** | Claude 3.7 Sonnet, Claude 3.5 Sonnet, Claude 3.5 Haiku, Claude Opus 4.8 | Up to 1,000k | $0.40 – $8.00 / $1.60 – $32.00 |
+| **Google** | Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.1 Pro, Gemini 2.5 Pro | Up to 4,194k | $0.03 – $1.50 / $0.12 – $6.00 |
+| **DeepSeek** | DeepSeek V4, DeepSeek V3, DeepSeek R1 | Up to 128k | $0.14 – $0.55 / $0.28 – $2.19 |
+| **Mistral** | Mistral Medium 3.5, Mistral Small 4, Mistral Large 3, Ministral 3 14B | Up to 128k | $0.06 – $2.00 / $0.18 – $6.00 |
+| **xAI** | Grok 4.1, Grok 4, Grok 4 Fast, Grok 3 Mini | Up to 256k | $0.25 – $2.50 / $1.00 – $10.00 |
+| **Qwen** | Qwen3-Max, Qwen3-Coder, Qwen3-235B | Up to 128k | $0.30 – $1.60 / $1.20 – $6.40 |
+| **Meta** | Llama 4 Maverick, Llama 4 Scout, Llama 3.3 70B | Up to 256k | $0.20 – $0.65 / $0.40 – $1.30 |
+| **Cohere** | Command A, Command R+ | Up to 256k | $0.90 – $2.50 / $2.70 – $10.00 |
 
-### 🛠️ Contributor Workflow
-
-1. **Fork the Repository:**  
-   Click the **Fork** button at the top right of this repository to create your personal copy.
-
-2. **Clone your fork locally:**
-   ```bash
-   git clone https://github.com/<your-username>/Ostra-FinOps.git
-   cd Ostra-FinOps
-   ```
-
-3. **Create a Feature Branch:**
-   ```bash
-   git checkout -b fix/model-rate-card-deepseek-r1
-   ```
-
-4. **Install Dependencies & Test:**
-   ```bash
-   npm install
-   npm run build # Ensure TypeScript and bundle pass cleanly
-   ```
-
-5. **Commit with Conventional Messages:**
-   ```bash
-   git commit -m "fix(models): update DeepSeek R1 output token pricing"
-   ```
-
-6. **Submit a Pull Request (PR):**
-   - Push your branch to your GitHub fork: `git push origin <your-branch-name>`
-   - Open a PR against `stoppingarc01-ai/Ostra-FinOps:main` with a clear description of your changes and before/after verification.
-
-> [!NOTE]  
-> **Notice for Commercial & Production Use:**  
-> The core schemas, CLI, and integration adapters are open for community enhancement under MIT. The hosted multi-tenant management backend, enterprise telemetry cluster, and managed billing infrastructure are proprietary services of OstraOps. Self-hosting production enterprise features without an authorized enterprise license is strictly prohibited.
+Full rate cards and filterable context limits are accessible in `src/components/IntegrationsView.tsx` and the interactive Model Catalog in the dashboard.
 
 ---
 
-## 🌐 Supported Model Families
+## 🔐 Authentication & Row Level Security (RLS)
 
-OstraOps maintains real-time rate cards for 40+ leading foundation models:
+OstraOps supports production-grade multi-tenant access control backed by **PostgreSQL Row Level Security (RLS)** in `supabase/schema.sql`:
 
-| Provider | Supported Models |
-| :--- | :--- |
-| **OpenAI** | GPT-4o, GPT-4o mini, o1, o3-mini, GPT-4 Turbo |
-| **Anthropic** | Claude 3.7 Sonnet, Claude 3.5 Sonnet, Claude 3.5 Haiku, Claude 3 Opus |
-| **Google** | Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 1.5 Pro, Flash Lite |
-| **DeepSeek** | DeepSeek R1, DeepSeek V3 |
-| **Meta** | Llama 3.3 70B, Llama 3.1 405B, Llama 3.1 8B |
-| **Mistral** | Mistral Large 2, Codestral 2501, Mistral Small 3 |
-| **xAI** | Grok 2, Grok 2 Vision |
+1. **User Authentication:**
+   - Supabase Auth with cryptographic JWT tokens.
+   - HttpOnly cookie handling and automatic refresh token rotation.
+2. **Workspace Isolation:**
+   - Every database query strictly resolves against the active `auth.uid()` and verified `organization_id`.
+   - Even if an API request is tampered with, the PostgreSQL engine guarantees that Tenant A cannot inspect, aggregate, or manipulate Tenant B's data under any condition.
+
+---
+
+## 💳 Subscription Plans & Entitlements
+
+| Tier | Price | Ideal For | Key Capabilities |
+| :--- | :---: | :--- | :--- |
+| **Community CLI** | **$0** / forever | Solo hackers & terminal users | • Open-source CLI & local telemetry<br>• Terminal spend calculations (`test-api.mjs`)<br>• Full multi-model pricing directory |
+| **Agent Telemetry** | **$20** / month | Observability without proxy | • Live token velocity tracking<br>• Model cost & latency benchmarking<br>• Webhook alerts (Slack, Discord, Email)<br>• Up to 3 active agent trackers |
+| **Starter Gateway** | **$35** / month | Production apps & startup teams | • Hosted **OstraOps Gateway** edge proxy<br>• Hard budget caps & pre-flight kill-switch (`429`)<br>• In-memory smart caching<br>• Multi-provider routing (OpenAI, Anthropic, Gemini, Kimi, DeepSeek)<br>• Up to 5 concurrent agent connections |
+| **Pro Gateway** | **$59** / month | Heavy autonomous agents & scale | • **Everything in Starter** +<br>• **Unlimited** concurrent agents & workflows<br>• 2-phase atomic budget reservations<br>• Configurable fail-open / fail-closed policies<br>• Team role permissions & audit logs |
+
+---
+
+## 🤝 Contributing Guidelines
+
+We welcome community contributions, model rate card updates, and client SDK adapters!
+
+### What to Contribute
+- **Model Rate Cards:** Add new model releases, pricing adjustments, or context window updates in `src/components/IntegrationsView.tsx`.
+- **SDK Integrations:** Client adapters for LangChain, LlamaIndex, AutoGen, CrewAI, and the Vercel AI SDK.
+- **Bug Fixes & Tests:** Add unit tests, edge-case token handling, and gateway proxy optimizations.
+
+### Contributor Workflow
+1. Fork the repository on GitHub.
+2. Clone your fork locally: `git clone https://github.com/<your-username>/Ostra-FinOps.git`
+3. Create a feature branch: `git checkout -b fix/rate-card-update`
+4. Verify tests and build: `npm run build`
+5. Commit using conventional commit format: `git commit -m "fix(rates): update Kimi k1.5 output pricing"`
+6. Submit a Pull Request against `main` with detailed verification notes.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE) — free, transparent, and built for developers building the next generation of AI applications.
+This project is licensed under the [MIT License](LICENSE) — free, transparent, and built for developers creating the next generation of AI software.

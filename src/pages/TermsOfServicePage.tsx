@@ -245,7 +245,7 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onNaviga
                 OstraOps provides enterprise-grade AI infrastructure, including:
               </p>
               <ul className="text-xs sm:text-sm list-disc list-inside space-y-1.5 text-zinc-400 pl-2">
-                <li><strong className="text-white">Intelligent Reverse Gateway Proxy:</strong> High-throughput HTTP/gRPC proxy forwarding prompts directly to upstream LLM APIs (OpenAI, Anthropic, Gemini, DeepSeek, Mistral, Groq, Ollama) with sub-millisecond overhead.</li>
+                <li><strong className="text-white">Intelligent Reverse Gateway Proxy:</strong> High-throughput HTTP/gRPC proxy forwarding prompts directly to upstream LLM APIs (OpenAI, Anthropic, Gemini, DeepSeek, Mistral, Kimi, Ollama) with sub-millisecond overhead.</li>
                 <li><strong className="text-white">Real-Time FinOps &amp; Token Telemetry Engine:</strong> Parsing and calculating token usage, latency, Time-To-First-Token (TTFT), and financial dollar cost in real time.</li>
                 <li><strong className="text-white">Virtual API Key Management:</strong> Provisioning cryptographically hashed virtual keys (<code className="text-[#E5C38D] font-mono">ostra-live-...</code>) configured with granular per-project and per-team budget limits.</li>
                 <li><strong className="text-white">Hard Budget Guardrails &amp; Circuit Breakers:</strong> Automated enforcement engines stopping runaway programmatic loops or excessive token expenditures.</li>

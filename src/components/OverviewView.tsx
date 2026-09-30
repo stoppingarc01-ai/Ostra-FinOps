@@ -398,6 +398,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                 <span className="text-[#C59E5F]">baseURL</span>: 'https://gateway.ostraops.com/v1'
               </div>
             </div>
+          ) : (
             <div className="relative w-full pt-1">
               {/* SVG Smooth Line Graph */}
               {(() => {

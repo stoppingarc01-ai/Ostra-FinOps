@@ -167,16 +167,16 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       latency: '58ms'
     },
     {
-      id: 'pv-groq',
-      provider: 'Groq & DeepSeek (Ultra-Speed)',
-      alias: 'groq-lpu-cluster-key',
-      maskedKey: 'gsk_••••••••••••••••••••••••1108',
-      models: 'DeepSeek R1 Distill, Llama 3.3 70B',
+      id: 'pv-kimi',
+      provider: 'Kimi (Moonshot AI)',
+      alias: 'kimi-moonshot-vault-key',
+      maskedKey: 'sk-••••••••••••••••••••••••8819',
+      models: 'Kimi k1.5, Moonshot v1 128K',
       storage: 'AES-256-GCM Encrypted',
       lastUsed: '45 min ago',
       createdBy: 'Admin (Owner)',
       status: 'Connected',
-      latency: '19ms'
+      latency: '34ms'
     }
   ]);
 
@@ -1844,7 +1844,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                   <option>Google Gemini API</option>
                   <option>Anthropic API</option>
                   <option>Mistral AI</option>
-                  <option>Groq & DeepSeek</option>
+                  <option>Kimi (Moonshot AI)</option>
                   <option>Cohere API</option>
                 </select>
               </div>

@@ -7,7 +7,7 @@ import {
   MistralLogo, 
   DeepSeekLogo, 
   CohereLogo, 
-  GroqLogo 
+  KimiLogo 
 } from './LLMLogos';
 import { ShieldCheck, CheckCircle2, Lock, ArrowRight } from 'lucide-react';
 
@@ -173,23 +173,23 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
       toolCallFidelity: 'Citations & Connector Schemas',
     },
     {
-      id: 'groq',
-      name: 'Groq LPU',
-      provider: 'Ultra-Fast Inference',
-      flagship: 'LPU Ultra-Low Latency',
-      models: ['llama-3.3-70b-versatile', 'mixtral-8x7b-32768'],
+      id: 'kimi',
+      name: 'Kimi',
+      provider: 'Moonshot AI',
+      flagship: 'Kimi k1.5 & Moonshot v1',
+      models: ['kimi-k1.5', 'moonshot-v1-128k', 'moonshot-v1-32k', 'moonshot-v1-8k'],
       context: '128,000 tokens',
-      inputCost: '$0.59 / 1M',
-      outputCost: '$0.79 / 1M',
-      avgLatency: '45ms',
+      inputCost: '$0.84 / 1M',
+      outputCost: '$0.84 / 1M',
+      avgLatency: '210ms',
       status: 'Rate-Limit Shielded',
-      logo: GroqLogo,
-      color: 'text-[#F55036]',
-      bgGlow: 'from-rose-500/15 via-amber-500/5 to-transparent',
-      borderColor: 'hover:border-rose-500/40',
+      logo: KimiLogo,
+      color: 'text-[#00D1B2]',
+      bgGlow: 'from-teal-500/15 via-cyan-500/5 to-transparent',
+      borderColor: 'hover:border-teal-500/40',
       floatClass: 'animate-float-4',
-      tag: '45ms Sub-Second Tier',
-      toolCallFidelity: 'Streaming Token Velocity Regulator',
+      tag: 'Long-Horizon Reasoning & 128K',
+      toolCallFidelity: 'Long Document Analysis & Multi-turn Tool Schemas',
     },
   ];
 

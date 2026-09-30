@@ -112,7 +112,7 @@ export const ModelsView: React.FC = () => {
             Compare AI Models &amp; Real Token Costs
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-            Real prices, context limits, and honest speed ratings across 40 popular foundation models. No marketing hype or hidden fees.
+            Real prices, context limits, and honest speed ratings across {CATALOG_MODELS.length} popular foundation models. No marketing hype or hidden fees.
           </p>
         </div>
 
@@ -135,8 +135,8 @@ export const ModelsView: React.FC = () => {
             <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">
               Active Models
             </span>
-            <div className="text-2xl font-black text-white font-mono mt-0.5">40</div>
-            <span className="text-[10px] font-mono text-zinc-500">Claude, GPT, Gemini &amp; more</span>
+            <div className="text-2xl font-black text-white font-mono mt-0.5">{CATALOG_MODELS.length}</div>
+            <span className="text-[10px] font-mono text-zinc-500">Claude, GPT, Kimi &amp; more</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center text-[#E5C38D]">
             <Cpu className="w-5 h-5" />
@@ -148,7 +148,7 @@ export const ModelsView: React.FC = () => {
             <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">
               AI Providers
             </span>
-            <div className="text-2xl font-black text-white font-mono mt-0.5">9</div>
+            <div className="text-2xl font-black text-white font-mono mt-0.5">{providers.length > 1 ? providers.length - 1 : 10}</div>
             <span className="text-[10px] font-mono text-zinc-500">Zero vendor lock-in</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center text-zinc-300">

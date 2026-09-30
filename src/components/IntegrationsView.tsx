@@ -159,6 +159,20 @@ export const CohereLogo: React.FC<{ className?: string }> = ({ className = "w-5 
   </svg>
 );
 
+export const KimiLogo: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className}>
+    <rect width="24" height="24" rx="6" fill="#07090C" stroke="#00D1B2" strokeWidth="1.5" />
+    <path
+      d="M7 6V18M7 12L16 6M10.5 12L17 18"
+      stroke="#00D1B2"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle cx="16" cy="6" r="1.5" fill="#E5C38D" />
+  </svg>
+);
+
 export const ProviderLogo: React.FC<{ provider: string; className?: string }> = ({
   provider,
   className = "w-5 h-5"
@@ -173,6 +187,7 @@ export const ProviderLogo: React.FC<{ provider: string; className?: string }> = 
   if (p.includes('xai') || p.includes('grok') || p === 'x') return <XAILogo className={className} />;
   if (p.includes('qwen')) return <QwenLogo className={className} />;
   if (p.includes('cohere')) return <CohereLogo className={className} />;
+  if (p.includes('kimi') || p.includes('moonshot')) return <KimiLogo className={className} />;
   return (
     <div className="w-5 h-5 rounded-md bg-white/[0.1] font-mono text-[10px] font-bold flex items-center justify-center text-zinc-300">
       {provider.slice(0, 2).toUpperCase()}
@@ -181,13 +196,13 @@ export const ProviderLogo: React.FC<{ provider: string; className?: string }> = 
 };
 
 // ============================================================
-// THE 40 PRODUCTION MODELS (Strictly Active Catalog)
+// THE PRODUCTION MODELS (Strictly Active Catalog)
 // ============================================================
 
 export interface ModelIntegration {
   id: string;
   name: string;
-  provider: 'OpenAI' | 'Anthropic' | 'Google' | 'Mistral' | 'xAI' | 'DeepSeek' | 'Qwen' | 'Meta' | 'Cohere';
+  provider: 'OpenAI' | 'Anthropic' | 'Google' | 'Mistral' | 'xAI' | 'DeepSeek' | 'Qwen' | 'Meta' | 'Cohere' | 'Kimi';
   modelId: string;
   status: 'Ready' | 'Active';
   isShowcase?: boolean;
@@ -831,6 +846,80 @@ export const CATALOG_MODELS: ModelIntegration[] = [
     tags: ['Tool Orchestration', 'API Routing', 'Multi-Lingual'],
     fallback: 'cohere-command-a',
   },
+
+  // ------------------------------------------------------------
+  // Kimi / Moonshot AI (5 Models)
+  // ------------------------------------------------------------
+  {
+    id: 'kimi-k1-5',
+    name: 'Kimi k1.5',
+    provider: 'Kimi',
+    modelId: 'kimi-k1.5',
+    status: 'Ready',
+    isShowcase: true,
+    isPopular: true,
+    isNew: true,
+    badgeLabel: 'LONG-HORIZON REASONING',
+    description: "Moonshot AI's flagship multimodal reasoning model with long-horizon thought planning, deep math, and 128k context retention.",
+    contextWindow: '128k tokens',
+    tokenCost: '$1.00 / $3.00',
+    tags: ['Multimodal', 'CoT Reasoning', 'Long Context', 'Math / Code'],
+    fallback: 'moonshot-v1-128k',
+  },
+  {
+    id: 'moonshot-v1-128k',
+    name: 'Moonshot v1 128K',
+    provider: 'Kimi',
+    modelId: 'moonshot-v1-128k',
+    status: 'Ready',
+    isPopular: true,
+    badgeLabel: '128K ULTRA-LONG',
+    description: 'Pioneering 128k long-context architecture for massive multi-document synthesis, book-length repo audits, and complex legal analysis.',
+    contextWindow: '128k tokens',
+    tokenCost: '$0.84 / $0.84',
+    tags: ['128K Tokens', 'Document Analysis', 'High Recall'],
+    fallback: 'moonshot-v1-32k',
+  },
+  {
+    id: 'moonshot-v1-32k',
+    name: 'Moonshot v1 32K',
+    provider: 'Kimi',
+    modelId: 'moonshot-v1-32k',
+    status: 'Ready',
+    badgeLabel: 'ENTERPRISE WORKHORSE',
+    description: 'High-precision balanced model for full-turn conversation logs, multi-shot agent prompts, and customer service.',
+    contextWindow: '32k tokens',
+    tokenCost: '$0.34 / $0.34',
+    tags: ['Conversational', 'Enterprise QA', '32K Context'],
+    fallback: 'moonshot-v1-8k',
+  },
+  {
+    id: 'moonshot-v1-8k',
+    name: 'Moonshot v1 8K',
+    provider: 'Kimi',
+    modelId: 'moonshot-v1-8k',
+    status: 'Ready',
+    isFastest: true,
+    description: 'Ultra-low latency, high-throughput model tuned for real-time classification, parsing, and conversational bots.',
+    contextWindow: '8k tokens',
+    tokenCost: '$0.17 / $0.17',
+    tags: ['Sub-200ms', 'JSON Mode', 'Cost-Effective'],
+    fallback: 'moonshot-v1-32k',
+  },
+  {
+    id: 'kimi-latest',
+    name: 'Kimi Latest',
+    provider: 'Kimi',
+    modelId: 'kimi-latest',
+    status: 'Ready',
+    isNew: true,
+    badgeLabel: 'CONTINUOUS FRONTIER',
+    description: 'Continuously updated frontier checkpoint from Moonshot AI with latest real-time web search integration and mathematical benchmarks.',
+    contextWindow: '128k tokens',
+    tokenCost: '$1.00 / $3.00',
+    tags: ['Frontier Web', 'Adaptive Reasoning', 'Tool Calling'],
+    fallback: 'kimi-k1-5',
+  },
 ];
 
 // Provider-specific secret formats, placeholders, and validation rules
@@ -862,6 +951,11 @@ const PROVIDER_RULES: Record<string, ProviderRule> = {
     placeholder: 'mis_xxxx... or custom key',
     minLen: 10,
     formatDescription: 'Enter valid Mistral API key or token',
+  },
+  Kimi: {
+    placeholder: 'sk-xxxx... (Moonshot / Kimi API Key)',
+    minLen: 10,
+    formatDescription: 'Enter valid Moonshot AI / Kimi API key or token',
   },
   xAI: {
     placeholder: 'xai-xxxx... or custom key',
@@ -1004,10 +1098,11 @@ export const IntegrationsView: React.FC = () => {
   };
 
   const filterProviders = [
-    { label: 'All Models', count: 40, value: 'All' },
+    { label: 'All Models', count: CATALOG_MODELS.length, value: 'All' },
     { label: 'Google Gemini', count: 8, value: 'Google' },
     { label: 'OpenAI', count: 7, value: 'OpenAI' },
     { label: 'Anthropic', count: 5, value: 'Anthropic' },
+    { label: 'Kimi (Moonshot)', count: 5, value: 'Kimi' },
     { label: 'Mistral', count: 5, value: 'Mistral' },
     { label: 'xAI (Grok)', count: 4, value: 'xAI' },
     { label: 'DeepSeek', count: 3, value: 'DeepSeek' },
@@ -2022,6 +2117,7 @@ response = client.chat.completions.create(
                       'Google',
                       'OpenAI',
                       'Anthropic',
+                      'Kimi',
                       'Mistral',
                       'xAI',
                       'DeepSeek',
@@ -2490,24 +2586,74 @@ response = client.chat.completions.create(
                         className="w-full px-3 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F] transition-all"
                       >
                         <optgroup label="Google Gemini">
-                          <option value="gemini-3.5-flash-lite">Google Gemini 3.5 Flash Lite (Verified Active)</option>
-                          <option value="gemini-3-flash-preview">Google Gemini 3 Flash Preview</option>
-                          <option value="gemini-1.5-pro">Google Gemini 1.5 Pro</option>
+                          <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Verified Active)</option>
+                          <option value="gemini-3-8-flash">Gemini 3.8 Flash</option>
+                          <option value="gemini-3-7-flash">Gemini 3.7 Flash</option>
+                          <option value="gemini-3-5-flash">Gemini 3.5 Flash</option>
+                          <option value="gemini-3-flash-preview">Gemini 3 Flash Preview</option>
+                          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                          <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                          <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                          <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                         </optgroup>
                         <optgroup label="Anthropic Claude">
+                          <option value="claude-opus-4-8">Claude Opus 4.8</option>
+                          <option value="claude-opus-4-6">Claude Opus 4.6</option>
+                          <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+                          <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
                           <option value="claude-3-7-sonnet">Claude 3.7 Sonnet</option>
                           <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+                          <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
                           <option value="claude-3-5-haiku">Claude 3.5 Haiku</option>
                         </optgroup>
                         <optgroup label="OpenAI">
-                          <option value="gpt-4o">OpenAI GPT-4o</option>
-                          <option value="gpt-4o-mini">OpenAI GPT-4o Mini</option>
-                          <option value="o3-mini">OpenAI o3-mini</option>
+                          <option value="gpt-5-6">GPT-5.6</option>
+                          <option value="gpt-5-6-mini">GPT-5.6 Mini</option>
+                          <option value="gpt-5-5">GPT-5.5</option>
+                          <option value="gpt-4o">GPT-4o</option>
+                          <option value="gpt-4o-mini">GPT-4o Mini</option>
+                          <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                          <option value="o3">o3</option>
+                          <option value="o3-mini">o3-mini</option>
+                          <option value="o4-mini">o4-mini</option>
                         </optgroup>
-                        <optgroup label="DeepSeek & Others">
+                        <optgroup label="Meta Llama">
+                          <option value="llama-4-maverick">Llama 4 Maverick</option>
+                          <option value="llama-4-scout">Llama 4 Scout</option>
+                          <option value="llama-3.3-70b">Llama 3.3 70B</option>
+                          <option value="llama-3.1-405b">Llama 3.1 405B</option>
+                          <option value="llama-3.1-70b">Llama 3.1 70B</option>
+                          <option value="llama-3.1-8b">Llama 3.1 8B</option>
+                        </optgroup>
+                        <optgroup label="DeepSeek">
                           <option value="deepseek-v3">DeepSeek V3</option>
                           <option value="deepseek-r1">DeepSeek R1</option>
-                          <option value="mistral-large-2411">Mistral Large</option>
+                          <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 Distill 70B</option>
+                        </optgroup>
+                        <optgroup label="Mistral">
+                          <option value="mistral-large-3">Mistral Large 3</option>
+                          <option value="mistral-large-2411">Mistral Large 2411</option>
+                          <option value="mistral-medium">Mistral Medium</option>
+                          <option value="mistral-small">Mistral Small</option>
+                          <option value="codestral">Codestral</option>
+                        </optgroup>
+                        <optgroup label="Cohere">
+                          <option value="command-r-plus">Command R+</option>
+                          <option value="command-r">Command R</option>
+                          <option value="command-a">Command A</option>
+                        </optgroup>
+                        <optgroup label="Kimi (Moonshot AI)">
+                          <option value="kimi-k1.5">Kimi k1.5</option>
+                          <option value="moonshot-v1-128k">Moonshot v1 128K</option>
+                          <option value="moonshot-v1-32k">Moonshot v1 32K</option>
+                          <option value="moonshot-v1-8k">Moonshot v1 8K</option>
+                          <option value="kimi-latest">Kimi Latest</option>
+                        </optgroup>
+                        <optgroup label="Amazon">
+                          <option value="nova-pro">Amazon Nova Pro</option>
+                          <option value="nova-lite">Amazon Nova Lite</option>
+                          <option value="nova-micro">Amazon Nova Micro</option>
                         </optgroup>
                       </select>
                     </div>

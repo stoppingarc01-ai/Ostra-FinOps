@@ -162,20 +162,26 @@ export const CohereLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size })
   </svg>
 );
 
-// 8. Groq Speed Lightning Mark
-export const GroqLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size }) => (
+
+// 9. Kimi / Moonshot AI Mark
+export const KimiLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
     width={size}
     height={size}
     className={className}
-    aria-label="Groq"
+    aria-label="Kimi"
   >
-    <rect width="24" height="24" rx="6" fill="#F55036" />
+    <rect width="24" height="24" rx="6" fill="#07090C" stroke="#00D1B2" strokeWidth="1.5" />
     <path
-      d="M13.5 4L6 13.5H12L10.5 20L18 10.5H12L13.5 4Z"
-      fill="white"
+      d="M7 6V18M7 12L16 6M10.5 12L17 18"
+      stroke="#00D1B2"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
+    <circle cx="16" cy="6" r="1.5" fill="#E5C38D" />
   </svg>
 );
+

@@ -17,17 +17,81 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { FeatureGate } from '../lib/entitlements';
-import { fetchGatewayLogs } from '../lib/supabase';
+import { fetchGatewayLogs, isSupabaseConfigured, type DayStats } from '../lib/supabase';
 import type { GatewayLog } from '../types/database';
 
 export const ReportsView: React.FC = () => {
   const { subscription } = useAuth();
   const [logs, setLogs] = useState<GatewayLog[]>([]);
+  const [dailyStats, setDailyStats] = useState<DayStats[]>([]);
 
   useEffect(() => {
-    fetchGatewayLogs(100)
-      .then((data) => setLogs(data || []))
-      .catch(() => setLogs([]));
+    let isMounted = true;
+    const load = async () => {
+      let combinedLogs: GatewayLog[] = [];
+
+      // 1. File-based telemetry from terminal tests
+      try {
+        const res = await fetch('/live-telemetry.json?t=' + Date.now());
+        if (res.ok) {
+          const fileLogs = await res.json();
+          if (Array.isArray(fileLogs)) combinedLogs.push(...fileLogs);
+        }
+      } catch {}
+
+      // 2. localStorage from UI playground
+      try {
+        const local = localStorage.getItem('ostraops_recent_logs');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (Array.isArray(parsed)) {
+            const ids = new Set(combinedLogs.map(l => l.request_id || l.id));
+            for (const item of parsed) {
+              if (!ids.has(item.request_id || item.id)) combinedLogs.push(item);
+            }
+          }
+        }
+      } catch {}
+
+      // 3. Supabase remote logs
+      if (isSupabaseConfigured) {
+        try {
+          const remote = await fetchGatewayLogs(100);
+          if (remote && remote.length > 0) {
+            const ids = new Set(combinedLogs.map(l => l.request_id || l.id));
+            for (const item of remote) {
+              if (!ids.has(item.request_id || item.id)) combinedLogs.push(item);
+            }
+          }
+        } catch {}
+      }
+
+      if (!isMounted) return;
+      setLogs(combinedLogs);
+
+      // Aggregate daily stats
+      if (combinedLogs.length > 0) {
+        const map: Record<string, DayStats> = {};
+        for (let i = 8; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const key = d.toISOString().slice(0, 10);
+          map[key] = { date: key, totalSpendUsd: 0, totalTokens: 0, totalRequests: 0 };
+        }
+        for (const row of combinedLogs) {
+          const date = (row.created_at || new Date().toISOString()).slice(0, 10);
+          if (!map[date]) map[date] = { date, totalSpendUsd: 0, totalTokens: 0, totalRequests: 0 };
+          map[date].totalSpendUsd += (row.cost_usd || 0);
+          map[date].totalTokens += ((row.input_tokens || 0) + (row.output_tokens || 0));
+          map[date].totalRequests += 1;
+        }
+        setDailyStats(Object.values(map).sort((a, b) => a.date.localeCompare(b.date)));
+      }
+    };
+
+    load();
+    const interval = setInterval(load, 4000);
+    return () => { isMounted = false; clearInterval(interval); };
   }, []);
 
   const totalSpend = logs.reduce((acc, l) => acc + (l.cost_usd || 0), 0);
@@ -37,13 +101,13 @@ export const ReportsView: React.FC = () => {
 
   const [activeSubTab, setActiveSubTab] = useState('Overview');
   const [timeFilter, setTimeFilter] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
-  const [hoveredPoint, setHoveredPoint] = useState<number | null>(3); // Default May 13 selected
+  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [breakdownModal, setBreakdownModal] = useState<'project' | 'model' | 'status' | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState('May 10 - May 16, 2026');
+  const [dateRange, setDateRange] = useState('Last 7 Days');
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
 
   const showToast = (msg: string) => {
@@ -93,18 +157,13 @@ export const ReportsView: React.FC = () => {
     'Custom Reports',
   ];
 
-  // Daily timeline points matching reference dashboard curve
-  const timelinePoints = [
-    { date: 'May 10', actual: 1250, forecast: 1250, budget: 5000 },
-    { date: 'May 11', actual: 1950, forecast: 1950, budget: 5000 },
-    { date: 'May 12', actual: 2680, forecast: 2680, budget: 5000 },
-    { date: 'May 13', actual: 3426.18, forecast: 4102.49, budget: 5000 },
-    { date: 'May 14', actual: null, forecast: 4620.00, budget: 5000 },
-    { date: 'May 15', actual: null, forecast: 5120.00, budget: 5000 },
-    { date: 'May 16', actual: null, forecast: 5540.00, budget: 5000 },
-    { date: 'May 17', actual: null, forecast: 5980.00, budget: 5000 },
-    { date: 'May 18', actual: null, forecast: 6420.00, budget: 5000 },
-  ];
+  // Daily timeline points from real telemetry data
+  const timelinePoints = dailyStats.map(d => ({
+    date: d.date.slice(5), // "MM-DD"
+    actual: d.totalSpendUsd,
+    forecast: d.totalSpendUsd * 1.15, // simple 15% forecast projection
+    budget: 5000,
+  }));
 
   // Mathematical curve generator for smooth cubic bezier paths
   const getSvgPath = (points: { x: number; y: number }[]) => {
@@ -135,96 +194,49 @@ export const ReportsView: React.FC = () => {
   const chartHeight = 270;
   const chartXStart = 65;
   const chartXEnd = 725;
-  const chartXStep = (chartXEnd - chartXStart) / (timelinePoints.length - 1);
+  const chartXStep = timelinePoints.length > 1 ? (chartXEnd - chartXStart) / (timelinePoints.length - 1) : (chartXEnd - chartXStart);
   const chartYZero = 240;
-  const chartYMax = 30; // $6,000 line
+  const chartYMax = 30;
+  const maxSpendVal = Math.max(...timelinePoints.map(p => Math.max(p.actual, p.forecast, p.budget)), 0.01);
 
   const getPtX = (idx: number) => chartXStart + idx * chartXStep;
-  const getPtY = (val: number) => chartYZero - (val / 6000) * (chartYZero - chartYMax);
+  const getPtY = (val: number) => chartYZero - (val / maxSpendVal) * (chartYZero - chartYMax);
 
-  const actualCoords = [
-    { x: getPtX(0), y: getPtY(1250) },
-    { x: getPtX(1), y: getPtY(1950) },
-    { x: getPtX(2), y: getPtY(2680) },
-    { x: getPtX(3), y: getPtY(3426.18) },
-  ];
-
-  const forecastCoords = [
-    { x: getPtX(3), y: getPtY(3426.18) },
-    { x: getPtX(4), y: getPtY(4620.00) },
-    { x: getPtX(5), y: getPtY(5120.00) },
-    { x: getPtX(6), y: getPtY(5540.00) },
-    { x: getPtX(7), y: getPtY(5980.00) },
-    { x: getPtX(8), y: getPtY(6420.00) },
-  ];
+  const actualCoords = timelinePoints.map((p, i) => ({ x: getPtX(i), y: getPtY(p.actual) }));
+  const forecastCoords = timelinePoints.map((p, i) => ({ x: getPtX(i), y: getPtY(p.forecast) }));
 
   const actualPathD = getSvgPath(actualCoords);
-  const actualAreaD = `${actualPathD} L ${actualCoords[actualCoords.length - 1].x.toFixed(1)},${chartYZero} L ${actualCoords[0].x.toFixed(1)},${chartYZero} Z`;
+  const actualAreaD = actualCoords.length > 0 ? `${actualPathD} L ${actualCoords[actualCoords.length - 1].x.toFixed(1)},${chartYZero} L ${actualCoords[0].x.toFixed(1)},${chartYZero} Z` : '';
   const forecastPathD = getSvgPath(forecastCoords);
   const budgetY = getPtY(5000);
 
-  const topProjects = [
-    {
-      name: 'Production',
-      code: 'PRD',
-      spend: '$1,842.35',
-      change: '+32.4%',
+  // Model breakdown computed from real logs (shown as projects)
+  const modelMap: Record<string, { spend: number; tokens: number; requests: number }> = {};
+  logs.forEach(l => {
+    const m = l.routed_model || 'Unknown';
+    if (!modelMap[m]) modelMap[m] = { spend: 0, tokens: 0, requests: 0 };
+    modelMap[m].spend += (l.cost_usd || 0);
+    modelMap[m].tokens += (l.input_tokens || 0) + (l.output_tokens || 0);
+    modelMap[m].requests += 1;
+  });
+  const topProjects = Object.entries(modelMap)
+    .sort((a, b) => b[1].spend - a[1].spend)
+    .slice(0, 5)
+    .map(([model, data]) => ({
+      name: model,
+      code: model.slice(0, 3).toUpperCase(),
+      spend: `$${data.spend.toFixed(4)}`,
+      change: `${data.requests} calls`,
       isUp: true,
-      tokens: '134.2M',
-      requests: '36,521',
-      costPer1k: '$0.0031',
-      savings: '$432.18',
-      bars: [30, 45, 60, 50, 75, 90, 85],
-    },
-    {
-      name: 'Marketing AI',
-      code: 'MKT',
-      spend: '$876.54',
-      change: '+18.7%',
-      isUp: true,
-      tokens: '62.1M',
-      requests: '18,342',
-      costPer1k: '$0.0028',
-      savings: '$162.31',
-      bars: [20, 35, 40, 55, 65, 70, 60],
-    },
-    {
-      name: 'Internal Tools',
-      code: 'INT',
-      spend: '$645.23',
-      change: '-6.3%',
-      isUp: false,
-      tokens: '48.7M',
-      requests: '14,231',
-      costPer1k: '$0.0026',
-      savings: '$98.76',
-      bars: [50, 45, 40, 35, 45, 40, 35],
-    },
-    {
-      name: 'Customer Support',
-      code: 'SUP',
-      spend: '$512.12',
-      change: '+11.9%',
-      isUp: true,
-      tokens: '38.2M',
-      requests: '12,431',
-      costPer1k: '$0.0027',
-      savings: '$72.45',
-      bars: [25, 30, 45, 50, 60, 65, 70],
-    },
-    {
-      name: 'R&D Experiments',
-      code: 'RND',
-      spend: '$341.26',
-      change: '-3.2%',
-      isUp: false,
-      tokens: '21.9M',
-      requests: '8,207',
-      costPer1k: '$0.0023',
-      savings: '$34.12',
-      bars: [30, 35, 25, 30, 25, 20, 22],
-    },
-  ];
+      tokens: data.tokens > 1_000_000 ? `${(data.tokens / 1_000_000).toFixed(1)}M` : data.tokens > 1000 ? `${(data.tokens / 1000).toFixed(1)}K` : `${data.tokens}`,
+      requests: data.requests.toLocaleString(),
+      costPer1k: data.tokens > 0 ? `$${(data.spend / (data.tokens / 1000)).toFixed(4)}` : '$0.00',
+      savings: '$0.00',
+      bars: dailyStats.slice(-7).map(d => {
+        const maxReq = Math.max(...dailyStats.slice(-7).map(s => s.totalRequests), 1);
+        return Math.round((d.totalRequests / maxReq) * 100);
+      }),
+    }));
 
   return (
     <FeatureGate feature="telemetry" subscription={subscription}>

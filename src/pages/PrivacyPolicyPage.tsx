@@ -436,7 +436,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onNavigate
               </div>
 
               <p className="text-sm">
-                When you make an inference call, OstraOps acts as an authorized proxy router forwarding your request to the upstream AI provider designated by your request routing configuration (e.g. OpenAI API, Anthropic API, Google Vertex AI / Gemini API, Groq, DeepSeek).
+                When you make an inference call, OstraOps acts as an authorized proxy router forwarding your request to the upstream AI provider designated by your request routing configuration (e.g. OpenAI API, Anthropic API, Google Vertex AI / Gemini API, Kimi (Moonshot AI), DeepSeek).
               </p>
               <p className="text-sm text-zinc-400">
                 Your relationship with upstream LLM providers is governed directly by your agreements with those respective companies. OstraOps does not claim ownership or assume provider liability for upstream model outputs, service outages, or provider-side retention policies (such as OpenAI&apos;s zero-retention enterprise opt-outs).
