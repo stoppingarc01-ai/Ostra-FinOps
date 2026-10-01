@@ -23,6 +23,31 @@ OstraOps sits between your applications and AI providers (such as OpenAI, Anthro
 
 ---
 
+## Demo Video & Showcase
+
+Experience OstraOps in action:
+
+<div align="center">
+  <img src="public/demo.gif" alt="OstraOps Demo" width="100%" />
+</div>
+
+### 🎬 Available Videos & How to Watch
+
+| Video | Description | Format / Path | Direct Link / Local Access |
+| :--- | :--- | :---: | :--- |
+| **Full Platform Walkthrough** | Complete walkthrough of real-time token tracking, virtual key provisioning, hard budget limits, and failover routing. | MP4 (1080p, ~17MB) | [▶ Watch `public/demo.mp4`](public/demo.mp4) |
+| **Cinematic Launch Showcase** | Fast-paced 22-second launch trailer highlighting the spend curve, copilot reroutes, and model protection matrix. | MP4 (1080p, ~700KB) | [▶ Watch `public/launch.mp4`](public/launch.mp4) |
+| **Animated GIF Demo** | Lightweight looping demo for quick preview in README. | GIF (600px, ~2.8MB, 15s loop) | [`public/demo.gif`](public/demo.gif) |
+
+#### How to Watch the Demo:
+- **In Browser (Local Dev Server)**: With `npm run dev` running, open:
+  - Walkthrough: [`http://localhost:5173/demo.mp4`](http://localhost:5173/demo.mp4)
+  - Launch Video: [`http://localhost:5173/launch.mp4`](http://localhost:5173/launch.mp4)
+- **In GitHub / Git Web**: Click [`public/demo.mp4`](public/demo.mp4) or [`public/launch.mp4`](public/launch.mp4) to play directly inside GitHub's native video player. The GIF [`public/demo.gif`](public/demo.gif) will render inline.
+- **In Desktop Media Player**: Open the files directly with VLC, Windows Media Player, QuickTime, or drag & drop into Chrome/Edge.
+
+---
+
 ## 1. What is OstraOps?
 
 **OstraOps** is a reverse proxy (gateway) and dashboard for managing AI costs. 
@@ -187,22 +212,135 @@ All settings are configured through environment variables. Here are the core var
 
 ## 9. How to Run Tests
 
-OstraOps comes with automated test suites verifying edge handling, model routing, failover, token accounting, and concurrent budget safety:
+OstraOps provides multiple ways to test and verify every component of the system — from automated test suites to interactive live terminal calls and UI validation.
+
+### 🧪 Overview of Testing Methods
+
+| Testing Method | Command / Action | What It Tests |
+| :--- | :--- | :--- |
+| **1. Automated Suite** | `npm test` | Edge rate limiting, 40-model matrix, failover, token cost accounting, and 50-request concurrency safety |
+| **2. Live Terminal Tester** | `node test-api.mjs <API_KEY>` | Live model request through proxy logic, exact token extraction, cost calculation, and dashboard telemetry sync |
+| **3. Manual Gateway cURL** | `npm run gateway` + `curl` | Raw HTTP endpoint validation, streaming chunks, and budget cap enforcement |
+| **4. Web Console & Playground** | `npm run dev` (`http://localhost:5173`) | UI key creation, budget sliders, live analytics, copilot suggestions, and sandbox playground |
+| **5. Build & Lint Check** | `npm run lint` && `npm run build` | Oxlint rules validation and TypeScript compiler verification |
+
+---
+
+### Method 1: Run the Automated Test Suite
+
+Run all automated verification suites with one command:
 
 ```bash
 npm test
 ```
 
-This single command runs:
-1. `self-check.ts`: Edge rate-limiting, concurrency tracking, and correlation IDs.
-2. `phase3-check.ts`: 40-model registry matrix, context window limits, and secret resolution.
-3. `phase4-check.ts`: Failover state machine, streaming resiliency, and abort signal handling.
-4. `phase5-check.ts`: Stream token extraction, cost engine accuracy, and telemetry queues.
-5. `concurrency-check.ts`: 50 simultaneous parallel requests on a tight budget limit, in-flight release upon failure, and multi-tenant isolation.
+This single command executes 5 dedicated verification suites:
+1. `self-check.ts`: Edge rate-limiting, concurrency slot tracking, and correlation IDs.
+2. `phase3-check.ts`: 40-model registry matrix across 8 providers, context window overflow clamping, and ephemeral secret resolution.
+3. `phase4-check.ts`: Failover state machine, 429/503 interceptors, streaming resiliency, and abort signal propagation.
+4. `phase5-check.ts`: Post-stream token extraction, dynamic sub-cent cost engine, and telemetry queues.
+5. `concurrency-check.ts`: 50 simultaneous parallel requests on a tight budget limit, in-flight reservation safety, and multi-tenant isolation.
 
-To run the TypeScript type check and production build:
+---
+
+### Method 2: Live Interactive Terminal Tester (`test-api.mjs`)
+
+You can test real LLM execution, token extraction, and live cost calculation directly from your terminal:
 
 ```bash
+# Provide key as argument:
+node test-api.mjs YOUR_GEMINI_API_KEY
+
+# Or run interactively (it will securely prompt you):
+node test-api.mjs
+```
+
+**What this script does:**
+1. Connects to the model provider with your masked API key.
+2. Dispatches a live test prompt and measures latency to the millisecond.
+3. Extracts total token usage (`promptTokenCount` and `candidatesTokenCount`).
+4. Computes exact sub-cent cost based on active rate cards.
+5. **Syncs live telemetry to `public/live-telemetry.json`**, so the request immediately appears on your local Web Dashboard Overview!
+
+---
+
+### Method 3: Manual Testing with the Gateway Proxy
+
+Start the gateway in your terminal:
+
+```bash
+npm run gateway
+```
+*(Runs on `http://127.0.0.1:8080`)*
+
+#### A. Health Check
+```bash
+curl http://127.0.0.1:8080/health
+```
+*Expected response: `{"status":"healthy","uptime":...}`*
+
+#### B. Test a Chat Completion
+```bash
+curl -X POST http://127.0.0.1:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ost_live_your_key_here" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [{"role": "user", "content": "Hello, world!"}],
+    "stream": false
+  }'
+```
+
+#### C. Test Streaming Response
+```bash
+curl -X POST http://127.0.0.1:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ost_live_your_key_here" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [{"role": "user", "content": "Count from 1 to 5"}],
+    "stream": true
+  }'
+```
+
+#### D. Test Budget Overspend Enforcement
+1. In the web dashboard, create a Virtual Key with a **$0.01** monthly limit.
+2. Send 2-3 requests using that key.
+3. Observe that once the hold or actual cost crosses $0.01, the gateway immediately returns `429 Budget Exceeded` without forwarding the call upstream.
+
+#### E. Test Provider Failover
+1. Point requests to a model with an active failover configured in `catalog.ts`.
+2. Simulate upstream failure or 429 rate limit.
+3. Observe in terminal logs that the gateway seamlessly retries with the fallback candidate before streaming begins.
+
+---
+
+### Method 4: Interactive Dashboard & Playground Testing
+
+Start the frontend development server:
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:5173` in your browser to test:
+- **Authentication**: Sign in with Supabase Auth or continue with demo mode.
+- **Virtual Keys Management**: Create new keys, set model access lists, and assign spend limits.
+- **Interactive Playground**: Send test queries and watch real-time token/cost meters increment.
+- **Analytics & Graphs**: View the diverging managed vs unmanaged spend curves, provider distribution, and model breakdown.
+- **Copilot Recommendations**: Inspect smart model routing suggestions to reduce bills by 40-70%.
+
+---
+
+### Method 5: Code Quality & Production Build
+
+Verify that TypeScript types and Oxlint rules pass with zero errors:
+
+```bash
+# Run the Oxlint linter
+npm run lint
+
+# Run TypeScript check and production build
 npm run build
 ```
 
