@@ -425,6 +425,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sessionStorage.clear();
       // Remove any legacy unscoped keys so they cannot pollute the next user
       localStorage.removeItem('ostraops_pending_plan');
+      localStorage.removeItem('ostraops_onboarding_completed');
       localStorage.removeItem('ostraops_avatar_url');
       localStorage.removeItem('ostraops_subscription');
       localStorage.removeItem('ostraops_recent_logs');
