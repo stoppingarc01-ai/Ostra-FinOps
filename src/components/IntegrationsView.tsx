@@ -2294,11 +2294,11 @@ response = client.chat.completions.create(
                 onClick={() => setCurrentStep(1)}
                 className={`py-3 px-4 flex items-center justify-center gap-2 border-r border-white/[0.08] transition-colors cursor-pointer ${
                   currentStep === 1
-                    ? 'bg-[#F5EFE0] text-[#E5C38D] font-bold'
+                    ? 'bg-[#C59E5F]/15 text-[#E5C38D] font-bold border-b-2 border-[#C59E5F]'
                     : 'bg-[#0B0E14] hover:bg-white/[0.04] text-zinc-400'
                 }`}
               >
-                <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]">
+                <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px]">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </div>
                 <span>Provider</span>
@@ -2309,18 +2309,18 @@ response = client.chat.completions.create(
                 onClick={() => setCurrentStep(2)}
                 className={`py-3 px-4 flex items-center justify-center gap-2 border-r border-white/[0.08] transition-colors cursor-pointer ${
                   currentStep === 2
-                    ? 'bg-[#F5EFE0] text-[#E5C38D] font-bold'
+                    ? 'bg-[#C59E5F]/15 text-[#E5C38D] font-bold border-b-2 border-[#C59E5F]'
                     : currentStep > 2
-                    ? 'bg-[#0B0E14] text-emerald-700'
+                    ? 'bg-[#0B0E14] text-emerald-400'
                     : 'bg-[#0B0E14] hover:bg-white/[0.04] text-zinc-400'
                 }`}
               >
                 <div
                   className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
                     currentStep === 2
-                      ? 'bg-[#C59E5F] text-white'
+                      ? 'bg-[#C59E5F] text-black font-extrabold'
                       : currentStep > 2
-                      ? 'bg-emerald-100 text-emerald-700'
+                      ? 'bg-emerald-500/20 text-emerald-400'
                       : 'bg-white/[0.1] text-zinc-300'
                   }`}
                 >
@@ -2337,7 +2337,7 @@ response = client.chat.completions.create(
                 disabled={!canProceedStep2 && currentStep < 3}
                 className={`py-3 px-4 flex items-center justify-center gap-2 transition-colors ${
                   currentStep === 3
-                    ? 'bg-[#F5EFE0] text-[#E5C38D] font-bold cursor-pointer'
+                    ? 'bg-[#C59E5F]/15 text-[#E5C38D] font-bold border-b-2 border-[#C59E5F] cursor-pointer'
                     : canProceedStep2
                     ? 'bg-[#0B0E14] hover:bg-white/[0.04] text-zinc-400 cursor-pointer'
                     : 'bg-[#07090C] text-zinc-500 cursor-not-allowed opacity-60'
