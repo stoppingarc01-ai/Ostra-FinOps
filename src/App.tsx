@@ -56,7 +56,7 @@ const HOMEPAGE_SECTIONS = ['#features', '#architecture', '#agents', '#developers
 const AppInner: React.FC = () => {
   const { user, profile, loading } = useAuth();
 
-  const getInitialRoute = (): AppRoute => {
+  const getRouteFromLocation = (): AppRoute => {
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
     if (path.includes('billing') || hash.includes('billing')) return 'billing';
@@ -97,7 +97,7 @@ const AppInner: React.FC = () => {
     return 'home';
   };
 
-  const [currentRoute, setCurrentRoute] = useState<AppRoute>(getInitialRoute);
+  const [currentRoute, setCurrentRoute] = useState<AppRoute>(getRouteFromLocation);
   const [navProgressKey, setNavProgressKey] = useState(0);
 
   useEffect(() => {
@@ -193,45 +193,7 @@ const AppInner: React.FC = () => {
 
   useEffect(() => {
     const handlePopState = () => {
-      const path = window.location.pathname.toLowerCase();
-      const hash = window.location.hash.toLowerCase();
-      let route: AppRoute = 'home';
-      if (hash.includes('auth-showcase') || hash.includes('auth')) route = 'auth-showcase';
-      else if (hash.includes('login')) route = 'login';
-      else if (hash.includes('signup')) route = 'signup';
-      else if (path.includes('onboarding') || hash.includes('onboarding')) {
-        const isAlreadyOnboarded =
-          localStorage.getItem('ostraops_onboarding_completed') === 'true' ||
-          (user?.id && localStorage.getItem(`ostraops_onboarding_${user.id}`) === 'true') ||
-          Boolean(profile?.onboarding_completed);
-
-        const hasForce = hash.includes('force=true') || path.includes('force=true');
-        route = (isAlreadyOnboarded && !hasForce) ? 'dashboard' : 'onboarding';
-      }
-      else if (hash.includes('forgot-password')) route = 'forgot-password';
-      else if (path.includes('settings') || hash.includes('settings')) route = 'settings';
-      else if (path.includes('team') || hash.includes('team')) route = 'team';
-      else if (path.includes('integrations') || hash.includes('integrations')) route = 'integrations';
-      else if (path.includes('reports') || hash.includes('reports')) route = 'reports';
-      else if (path.includes('usage') || hash.includes('usage') || path.includes('costs') || hash.includes('costs')) route = 'usage';
-      else if (path.includes('optimization') || hash.includes('optimization')) route = 'optimization';
-      else if (path.includes('models') || hash.includes('models')) route = 'models';
-      else if (path.includes('projects') || hash.includes('projects')) route = 'projects';
-      else if (path.includes('dashboard') || hash.includes('dashboard')) route = 'dashboard';
-      else if (path.includes('privacy') || hash.includes('privacy')) route = 'privacy';
-      else if (path.includes('terms') || hash.includes('terms')) route = 'terms';
-      else if (path.includes('cookies') || hash.includes('cookies') || path.includes('cookie') || hash.includes('cookie')) route = 'cookies';
-      else if (path.includes('refund') || hash.includes('refund')) route = 'refund';
-      else if (path.includes('about') || hash.includes('about')) route = 'about';
-      else if (path.includes('support') || hash.includes('support') || path.includes('help') || hash.includes('help')) route = 'support';
-      else if (path.includes('pricing') || hash.includes('pricing')) route = 'pricing';
-      else if (path.includes('429') || hash.includes('429') || path.includes('rate-limit') || hash.includes('rate-limit') || path.includes('quota') || hash.includes('quota')) route = '429';
-      else if (path.includes('build-error') || hash.includes('build-error') || path.includes('build') || hash.includes('build')) route = 'build-error';
-      else if (path.includes('500') || hash.includes('500') || path.includes('server-error') || hash.includes('server-error')) route = '500';
-      else if (path.includes('404') || hash.includes('404') || path.includes('not-found') || hash.includes('not-found')) route = '404';
-      else if (HOMEPAGE_SECTIONS.some(s => hash.startsWith(s))) route = 'home';
-      else if (hash && hash !== '#' && hash !== '#home' && hash !== '') route = '404';
-      setCurrentRoute(route);
+      setCurrentRoute(getRouteFromLocation());
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -240,7 +202,7 @@ const AppInner: React.FC = () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('hashchange', handlePopState);
     };
-  }, []);
+  }, [user, profile]);
 
   // Smooth scroll to section if hash present on home route
   useEffect(() => {
