@@ -17,12 +17,17 @@ import {
   Check,
   ArrowRight,
   Filter,
-  Copy
+  Copy,
+  Cpu,
+  Server,
+  UserCheck
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { getAccountDossier, type AccountDossier } from '../lib/accountIdentity';
 
 interface SupportTicket {
   id: string;
+  accountId?: string;
   subject: string;
   category: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -115,12 +120,29 @@ export const SupportPage: React.FC<{
   onNavigatePricing?: () => void;
   onNavigateDashboard?: () => void;
 }> = ({ onNavigateHome: _onNavigateHome, onNavigatePricing: _onNavigatePricing, onNavigateDashboard: _onNavigateDashboard }) => {
-  const { user } = useAuth();
+  const { user, profile, subscription, supportAccountId } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedFaq, setExpandedFaq] = useState<string | null>('faq-1');
   
   const ticketUserId = user?.id || 'guest';
+
+  // Support Account ID & Dossier Lookup States
+  const [lookupIdInput, setLookupIdInput] = useState(supportAccountId || 'OST-ACC-1000-0001');
+  const [queriedDossier, setQueriedDossier] = useState<AccountDossier | null>(() =>
+    getAccountDossier(supportAccountId, user, profile, subscription)
+  );
+  const [copiedSupportId, setCopiedSupportId] = useState(false);
+  const [copiedDossierJson, setCopiedDossierJson] = useState(false);
+  const [activeTab, setActiveTab] = useState<'helpdesk' | 'tickets' | 'lookup' | 'diagnostics' | 'status'>('helpdesk');
+
+  // Sync lookup input when supportAccountId initializes
+  useEffect(() => {
+    if (supportAccountId && (!lookupIdInput || lookupIdInput === 'OST-ACC-1000-0001')) {
+      setLookupIdInput(supportAccountId);
+      setQueriedDossier(getAccountDossier(supportAccountId, user, profile, subscription));
+    }
+  }, [supportAccountId, user, profile, subscription]);
 
   // Ticket management (strictly real user tickets, zero mock data)
   const [tickets, setTickets] = useState<SupportTicket[]>(() => {
@@ -145,7 +167,6 @@ export const SupportPage: React.FC<{
   const [ticketDescription, setTicketDescription] = useState('');
   const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
   const [ticketSuccess, setTicketSuccess] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'helpdesk' | 'tickets' | 'diagnostics' | 'status'>('helpdesk');
 
   // Diagnostics test runner
   const [diagnosticStatus, setDiagnosticStatus] = useState<'idle' | 'running' | 'completed'>('idle');
@@ -163,6 +184,30 @@ export const SupportPage: React.FC<{
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  const handleCopySupportId = () => {
+    if (supportAccountId) {
+      navigator.clipboard.writeText(supportAccountId);
+      setCopiedSupportId(true);
+      setTimeout(() => setCopiedSupportId(false), 2000);
+    }
+  };
+
+  const handleLookupAccount = (e?: React.FormEvent, customId?: string) => {
+    if (e) e.preventDefault();
+    const idToLookup = (customId || lookupIdInput).trim() || supportAccountId;
+    const res = getAccountDossier(idToLookup, user, profile, subscription);
+    setQueriedDossier(res);
+    setLookupIdInput(res.accountId);
+  };
+
+  const handleCopyDossierJson = () => {
+    if (queriedDossier) {
+      navigator.clipboard.writeText(JSON.stringify(queriedDossier, null, 2));
+      setCopiedDossierJson(true);
+      setTimeout(() => setCopiedDossierJson(false), 2000);
+    }
+  };
+
   const handleCreateTicket = (e: React.FormEvent) => {
     e.preventDefault();
     if (!ticketSubject.trim() || !ticketDescription.trim()) return;
@@ -171,6 +216,7 @@ export const SupportPage: React.FC<{
     setTimeout(() => {
       const newTicket: SupportTicket = {
         id: `OST-${Math.floor(1000 + Math.random() * 9000)}`,
+        accountId: supportAccountId,
         subject: ticketSubject.trim(),
         category: ticketCategory,
         priority: ticketPriority,
@@ -278,6 +324,7 @@ export const SupportPage: React.FC<{
             {[
               { id: 'helpdesk', label: 'Knowledge Base & FAQ', icon: HelpCircle },
               { id: 'tickets', label: `Support Tickets (${tickets.length})`, icon: MessageSquare },
+              { id: 'lookup', label: 'Account Dossier & Lookup', icon: ShieldCheck },
               { id: 'diagnostics', label: 'Live Diagnostics Runner', icon: Terminal },
               { id: 'status', label: 'System & Provider Status', icon: Activity },
             ].map((tab) => {
@@ -499,6 +546,52 @@ export const SupportPage: React.FC<{
               )}
 
               <form onSubmit={handleCreateTicket} className="space-y-4">
+                {/* Permanent Support Account ID Badge & Auto-attachment */}
+                <div className="p-3.5 rounded-xl bg-[#07090C] border border-[#C59E5F]/35 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5 font-mono uppercase tracking-wide">
+                      <ShieldCheck className="w-4 h-4 text-[#C59E5F]" />
+                      <span>Permanent Support Account ID</span>
+                    </label>
+                    <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
+                      <Check className="w-2.5 h-2.5" />
+                      <span>Verified Enclave ID</span>
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={supportAccountId}
+                      className="flex-1 bg-[#0B0E14] border border-white/[0.1] rounded-lg px-3 py-2 text-xs font-mono font-bold text-[#E5C38D] select-all cursor-default"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopySupportId}
+                      className="px-3 py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-xs font-mono text-zinc-200 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      {copiedSupportId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#C59E5F]" />}
+                      <span>{copiedSupportId ? 'Copied' : 'Copy ID'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleLookupAccount(undefined, supportAccountId);
+                        setActiveTab('lookup');
+                      }}
+                      className="px-3 py-2 rounded-lg bg-[#C59E5F]/15 hover:bg-[#C59E5F]/25 text-[#E5C38D] border border-[#C59E5F]/30 text-xs font-mono flex items-center gap-1 transition-colors cursor-pointer"
+                      title="Inspect full account dossier"
+                    >
+                      <span>View Dossier</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">
+                    This verified account ID is automatically attached to this ticket. Our engineers can immediately inspect plan entitlements, spend pacing, and active gateway proxies without requiring private keys.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-zinc-300">Category</label>
@@ -632,9 +725,23 @@ export const SupportPage: React.FC<{
                               {t.status.toUpperCase()}
                             </span>
                           </div>
-                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${priorityColors[t.priority]}`}>
-                            {t.priority.toUpperCase()}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleLookupAccount(undefined, t.accountId || supportAccountId);
+                                setActiveTab('lookup');
+                              }}
+                              className="text-[10px] font-mono text-[#E5C38D] bg-[#C59E5F]/10 hover:bg-[#C59E5F]/20 px-2 py-0.5 rounded border border-[#C59E5F]/20 cursor-pointer flex items-center gap-1 transition-colors"
+                              title="Click to view full Account Dossier"
+                            >
+                              <ShieldCheck className="w-2.5 h-2.5" />
+                              <span>{t.accountId || supportAccountId}</span>
+                            </button>
+                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${priorityColors[t.priority]}`}>
+                              {t.priority.toUpperCase()}
+                            </span>
+                          </div>
                         </div>
 
                         <div className="text-xs font-semibold text-zinc-200">{t.subject}</div>
@@ -653,6 +760,186 @@ export const SupportPage: React.FC<{
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB: ACCOUNT DOSSIER & LOOKUP */}
+        {activeTab === 'lookup' && (
+          <div className="max-w-5xl mx-auto space-y-6">
+            {/* Search Header */}
+            <div className="bg-[#0E131B] border border-white/[0.08] rounded-2xl p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-bold text-white font-sans flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-[#C59E5F]" />
+                    <span>Account Support Dossier &amp; Triage Inspector</span>
+                  </h2>
+                  <p className="text-xs text-zinc-400 mt-1">
+                    Enter any verified Support Account ID (<code className="text-[#E5C38D] font-mono">OST-ACC-XXXX-XXXX</code>) to pull instantaneous telemetry, spend pacing, plan entitlements, and active gateway proxies.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleLookupAccount(undefined, supportAccountId)}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#C59E5F]/15 hover:bg-[#C59E5F]/25 text-[#E5C38D] border border-[#C59E5F]/30 text-xs font-mono font-semibold transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
+                >
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span>Inspect My Current Account</span>
+                </button>
+              </div>
+
+              {/* Account ID Input Form */}
+              <form onSubmit={handleLookupAccount} className="flex flex-col sm:flex-row gap-3 pt-2">
+                <div className="relative flex-1">
+                  <ShieldCheck className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={lookupIdInput}
+                    onChange={(e) => setLookupIdInput(e.target.value.toUpperCase())}
+                    placeholder="Enter Support Account ID (e.g. OST-ACC-7482-9104)..."
+                    className="w-full bg-[#07090C] border border-white/[0.12] focus:border-[#C59E5F] rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono font-bold text-[#E5C38D] placeholder:text-zinc-600 focus:outline-none transition-all uppercase"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-[#C59E5F] hover:bg-[#d6af70] text-black font-bold text-xs font-mono transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-[#C59E5F]/10"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Pull Account Dossier</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Dossier Card Display */}
+            {queriedDossier && (
+              <div className="bg-[#0E131B] border border-[#C59E5F]/30 rounded-2xl p-6 sm:p-7 space-y-6 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-[#C59E5F]/[0.03] blur-[120px] pointer-events-none rounded-full" />
+
+                {/* Top Dossier Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center flex-shrink-0">
+                      <ShieldCheck className="w-6 h-6 text-[#C59E5F]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-extrabold text-white font-mono tracking-wide">
+                          {queriedDossier.accountId}
+                        </span>
+                        <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Enclave Verified</span>
+                        </span>
+                      </div>
+                      <div className="text-xs text-zinc-400 flex items-center gap-3 mt-1 font-sans">
+                        <span className="font-semibold text-zinc-200">{queriedDossier.companyName}</span>
+                        <span>•</span>
+                        <span className="font-mono text-zinc-400">{queriedDossier.email}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 self-start md:self-center">
+                    <button
+                      type="button"
+                      onClick={handleCopyDossierJson}
+                      className="px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-mono text-zinc-300 border border-white/[0.08] transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {copiedDossierJson ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedDossierJson ? 'Copied JSON' : 'Export JSON'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTicketSubject(`[${queriedDossier.accountId}] Engineering Inquiry for ${queriedDossier.companyName}`);
+                        setTicketEmail(queriedDossier.email);
+                        setActiveTab('tickets');
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#C59E5F] hover:bg-[#d6af70] text-black font-bold text-xs font-mono transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Create Ticket</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4 Grid Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Card 1: Subscription */}
+                  <div className="p-4 rounded-xl bg-[#07090C] border border-white/[0.06] space-y-1.5">
+                    <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 tracking-wider">Plan Entitlement</span>
+                    <div className="text-sm font-bold text-white font-sans">{queriedDossier.planName}</div>
+                    <div className="text-[11px] font-mono text-emerald-400 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span>Status: {queriedDossier.status.toUpperCase()}</span>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Financial Spend & Budget */}
+                  <div className="p-4 rounded-xl bg-[#07090C] border border-white/[0.06] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 tracking-wider">Spend / Budget</span>
+                      <span className="text-[10px] font-mono font-bold text-[#E5C38D]">{queriedDossier.spendPercentage}%</span>
+                    </div>
+                    <div className="text-sm font-bold text-white font-mono">
+                      ${queriedDossier.monthlySpendUsd.toFixed(2)}{' '}
+                      <span className="text-xs text-zinc-500 font-normal">/ ${queriedDossier.monthlyBudgetCapUsd.toFixed(2)}</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] rounded-full transition-all"
+                        style={{ width: `${Math.min(100, queriedDossier.spendPercentage)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Card 3: Support SLA Tier */}
+                  <div className="p-4 rounded-xl bg-[#07090C] border border-white/[0.06] space-y-1.5">
+                    <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 tracking-wider">SLA Escalation</span>
+                    <div className="text-sm font-bold text-amber-300 font-sans">{queriedDossier.slaTier}</div>
+                    <div className="text-[11px] font-mono text-zinc-400">PagerDuty On-Call Direct Routing</div>
+                  </div>
+
+                  {/* Card 4: Active Enclave Sessions */}
+                  <div className="p-4 rounded-xl bg-[#07090C] border border-white/[0.06] space-y-1.5">
+                    <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 tracking-wider">Active Sessions</span>
+                    <div className="text-sm font-bold text-white font-mono">{queriedDossier.activeSessionsCount} Devices Enrolled</div>
+                    <div className="text-[11px] font-mono text-zinc-400 truncate">{queriedDossier.lastActive}</div>
+                  </div>
+                </div>
+
+                {/* Hardware & Enclave Specification */}
+                <div className="p-4 rounded-xl bg-[#07090C] border border-white/[0.06] space-y-2">
+                  <div className="text-xs font-bold text-zinc-300 font-mono flex items-center gap-2">
+                    <Cpu className="w-4 h-4 text-[#C59E5F]" />
+                    <span>Primary Enclave Hardware &amp; Client Telemetry</span>
+                  </div>
+                  <div className="text-xs font-mono text-zinc-400 bg-[#0B0E14] p-3 rounded-lg border border-white/[0.04]">
+                    {queriedDossier.primaryHardware}
+                  </div>
+                </div>
+
+                {/* Connected Upstream Model Gateways */}
+                <div className="space-y-2">
+                  <span className="text-[11px] font-mono uppercase font-bold text-zinc-400 tracking-wider block">
+                    Authorized Model Upstream Gateways ({queriedDossier.connectedProviders.length})
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {queriedDossier.connectedProviders.map((prov) => (
+                      <span
+                        key={prov}
+                        className="px-3 py-1.5 rounded-lg bg-[#07090C] border border-white/[0.08] text-xs font-mono text-zinc-200 flex items-center gap-1.5"
+                      >
+                        <Server className="w-3 h-3 text-[#C59E5F]" />
+                        <span>{prov}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

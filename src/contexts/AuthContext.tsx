@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -32,6 +32,7 @@ import {
   subscribeToUserSubscription,
   PLAN_METADATA
 } from '../lib/subscriptionService';
+import { getOrGenerateSupportAccountId } from '../lib/accountIdentity';
 
 export type { Profile, UserSubscription };
 
@@ -53,6 +54,7 @@ interface AuthContextType {
   organization: Organization | null;
   orgRole: OrgRole | null;
   subscription: UserSubscription | null;
+  supportAccountId: string;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
@@ -635,6 +637,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const supportAccountId = useMemo(() => {
+    return getOrGenerateSupportAccountId(user?.id || user?.uid, user?.email || profile?.email);
+  }, [user?.id, user?.uid, user?.email, profile?.email]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -644,6 +650,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         organization,
         orgRole,
         subscription,
+        supportAccountId,
         loading,
         signIn,
         signUp,

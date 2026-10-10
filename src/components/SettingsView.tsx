@@ -18,7 +18,8 @@ import {
   Building,
   Sparkles,
   Loader2,
-  ShieldCheck
+  ShieldCheck,
+  Copy
 } from 'lucide-react';
 import { SecurityConsoleView } from './SecurityConsoleView';
 import { PreferencesView } from './PreferencesView';
@@ -31,7 +32,8 @@ interface SettingsViewProps {
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) => {
-  const { user, profile, subscription, updateProfile, deleteAccount } = useAuth();
+  const { user, profile, subscription, updateProfile, deleteAccount, supportAccountId } = useAuth();
+  const [copiedSupportId, setCopiedSupportId] = useState(false);
 
   // Main Sections: general | billing | account | security
   const [activeSection, setActiveSection] = useState<'general' | 'billing' | 'account' | 'security'>('account');
@@ -478,6 +480,39 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                         Photo update enabled. Auto-compressed & synced to Firestore.
                       </span>
                     </div>
+                  </div>
+
+                  {/* Permanent Support Account ID Card */}
+                  <div className="p-4 rounded-2xl bg-[#0B0E14] border border-[#C59E5F]/35 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center flex-shrink-0">
+                        <ShieldCheck className="w-5 h-5 text-[#C59E5F]" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 tracking-wider">Permanent Support Account ID</span>
+                          <span className="text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Verified Enclave</span>
+                        </div>
+                        <div className="text-base font-mono font-extrabold text-[#E5C38D] tracking-wide select-all mt-0.5">
+                          {supportAccountId}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (supportAccountId) {
+                          navigator.clipboard.writeText(supportAccountId);
+                          setCopiedSupportId(true);
+                          showToast('Support Account ID copied to clipboard');
+                          setTimeout(() => setCopiedSupportId(false), 2000);
+                        }
+                      }}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#07090C] hover:bg-white/[0.06] border border-white/[0.1] text-xs font-mono text-zinc-200 hover:text-white transition-colors cursor-pointer self-start sm:self-center"
+                    >
+                      {copiedSupportId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#C59E5F]" />}
+                      <span>{copiedSupportId ? 'Copied' : 'Copy Account ID'}</span>
+                    </button>
                   </div>
 
                   {/* 2-Columns: Full Name & Email Address (Uneditable & Locked) */}

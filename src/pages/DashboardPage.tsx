@@ -21,7 +21,10 @@ import {
   X,
   LogOut,
   Loader2,
-  HelpCircle
+  HelpCircle,
+  Copy,
+  Check,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { OverviewView } from '../components/OverviewView';
@@ -54,12 +57,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onNavigateSupport,
   initialTab,
 }) => {
-  const { user, profile, subscription, signOut } = useAuth();
+  const { user, profile, subscription, signOut, supportAccountId } = useAuth();
   const [activeTab, setActiveTab] = useState(initialTab || 'dashboard');
   const [tabProgressKey, setTabProgressKey] = useState(0);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [copiedAccountId, setCopiedAccountId] = useState(false);
   const isExpanded = sidebarHovered || mobileSidebarOpen;
+
+  const handleCopyAccountId = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (supportAccountId) {
+      navigator.clipboard.writeText(supportAccountId);
+      setCopiedAccountId(true);
+      setTimeout(() => setCopiedAccountId(false), 2000);
+    }
+  };
 
   // Sync activeTab when initialTab changes
   useEffect(() => {
@@ -310,6 +323,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <div className="text-[10px] text-zinc-500 font-mono truncate">
                   {displayEmail}
                 </div>
+                <div className="flex items-center gap-1 text-[9px] font-mono text-[#E5C38D] pt-0.5 truncate">
+                  <span className="font-semibold">{supportAccountId}</span>
+                  <button
+                    onClick={handleCopyAccountId}
+                    title="Copy Support Account ID"
+                    className="hover:text-white cursor-pointer"
+                  >
+                    {copiedAccountId ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
+                  </button>
+                </div>
               </div>
             </div>
             <div className={`overflow-hidden transition-all duration-300 ${
@@ -363,6 +386,27 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 placeholder="Search anything... ⌘K"
                 className="w-44 lg:w-56 pl-8 pr-3 py-1.5 text-xs bg-[#0F131A] border border-white/[0.1] rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] transition-colors"
               />
+            </div>
+
+            {/* Permanent Support Account ID Badge */}
+            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0B0E14] border border-[#C59E5F]/35 text-xs font-mono shadow-xs group">
+              <div className="flex items-center gap-1.5 text-zinc-400">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#C59E5F]" />
+                <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Acc ID:</span>
+              </div>
+              <span className="font-bold text-[#E5C38D] tracking-wide select-all">{supportAccountId}</span>
+              <button
+                type="button"
+                onClick={handleCopyAccountId}
+                title="Copy Permanent Support Account ID"
+                className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+              >
+                {copiedAccountId ? (
+                  <Check className="w-3 h-3 text-emerald-400" />
+                ) : (
+                  <Copy className="w-3 h-3 group-hover:text-[#E5C38D]" />
+                )}
+              </button>
             </div>
 
             {/* Real-time Date Range Selector */}
