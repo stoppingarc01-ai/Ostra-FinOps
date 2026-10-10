@@ -46,6 +46,14 @@ const DEFAULT_FALLBACK_CHAINS: Record<string, string[]> = {
   // GLM (wireAdapter: 'openai_chat')
   'glm-4-plus': ['glm-4-air', 'glm-4-flash'],
   'glm-zero-preview': ['deepseek-reasoner', 'glm-4-plus'],
+
+  // NVIDIA Nemotron (wireAdapter: 'openai_chat')
+  'nvidia/nemotron-3-ultra-550b-moe': ['nvidia/nemotron-3-super-120b-moe', 'nvidia/nemotron-3-nano-omni', 'gpt-4o', 'deepseek-chat'],
+  'nemotron-3-ultra': ['nemotron-3-super', 'nemotron-3-nano-omni', 'gpt-4o', 'deepseek-chat'],
+  'nvidia/nemotron-3-super-120b-moe': ['nvidia/nemotron-3-nano-omni', 'gpt-4o-mini', 'deepseek-chat'],
+  'nemotron-3-super': ['nemotron-3-nano-omni', 'gpt-4o-mini', 'deepseek-chat'],
+  'nvidia/nemotron-3-nano-omni': ['nvidia/nemotron-3-super-120b-moe', 'gpt-4o-mini'],
+  'nemotron-3-nano-omni': ['nemotron-3-super', 'gpt-4o-mini'],
 };
 
 /**

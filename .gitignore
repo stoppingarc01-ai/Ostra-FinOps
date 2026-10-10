@@ -51,6 +51,7 @@ scratch/
 # Testing & Code Coverage
 coverage/
 .nyc_output/
+brag-output*/
 
 # IDEs and Editor Configs
 .vscode/*

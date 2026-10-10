@@ -18,6 +18,7 @@ import {
   Cpu,
   X
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskStatus = 'todo' | 'in_progress' | 'completed';
@@ -134,24 +135,27 @@ export const CalendarView: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
 
-  // Tasks state with LocalStorage persistence & initial mock data
+  const { user } = useAuth();
+  const userId = user?.id || 'guest';
+
+  // Tasks state with LocalStorage persistence scoped per user
   const [tasks, setTasks] = useState<CalendarTask[]>(() => {
     try {
-      const saved = localStorage.getItem('ostraops_calendar_tasks');
+      const saved = localStorage.getItem(`ostraops_calendar_tasks_${userId}`);
       return saved ? JSON.parse(saved) : INITIAL_TASKS;
     } catch {
       return INITIAL_TASKS;
     }
   });
 
-  // Save to localStorage
+  // Save to localStorage scoped per user
   useEffect(() => {
     try {
-      localStorage.setItem('ostraops_calendar_tasks', JSON.stringify(tasks));
+      localStorage.setItem(`ostraops_calendar_tasks_${userId}`, JSON.stringify(tasks));
     } catch {
       // Ignored
     }
-  }, [tasks]);
+  }, [tasks, userId]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);

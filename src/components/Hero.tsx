@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, Terminal, Copy, Check, ShieldCheck, Zap, Layers, ChevronDown } from 'lucide-react';
 import { HeroDashboard3D } from './HeroDashboard3D';
-import { AnthropicLogo, OpenAILogo, GeminiLogo, MetaLlamaLogo, DeepSeekLogo, MistralLogo } from './LLMLogos';
+import { AnthropicLogo, OpenAILogo, GeminiLogo, MetaLlamaLogo, DeepSeekLogo, MistralLogo, NvidiaLogo } from './LLMLogos';
 
 interface HeroProps {
   onNavigateToPricing?: () => void;
@@ -18,6 +18,12 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
       status: 'Protected • 310ms',
       Logo: AnthropicLogo,
       iconBg: 'bg-charcoal-900 text-white',
+    },
+    {
+      name: 'Nemotron-3 Ultra 550B',
+      status: 'Protected • 240ms',
+      Logo: NvidiaLogo,
+      iconBg: 'bg-[#76B900]/20 text-[#76B900] border border-[#76B900]/30',
     },
     {
       name: 'GPT-4o & o3-mini',

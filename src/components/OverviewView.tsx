@@ -35,7 +35,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   onNavigateToBudgets,
   onNavigateToBilling,
 }) => {
-  const { user, subscription } = useAuth();
+  const { user, organization, subscription } = useAuth();
   const entitlements = getPlanEntitlements(subscription);
 
   const [timeframe, setTimeframe] = useState('Last 7 days');
@@ -51,41 +51,27 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
   useEffect(() => {
     let isMounted = true;
+    const userId = user?.id || 'guest';
+    const orgId = organization?.id;
 
     const loadRealData = async () => {
       let combinedLogs: GatewayLog[] = [];
 
-      // 1. Check local file telemetry (/live-telemetry.json from terminal tests)
+      // 1. User-isolated recent logs (from playground or gateway tests performed by this account)
       try {
-        const res = await fetch('/live-telemetry.json?t=' + Date.now());
-        if (res.ok) {
-          const fileLogs = await res.json();
-          if (Array.isArray(fileLogs)) {
-            combinedLogs.push(...fileLogs);
-          }
-        }
-      } catch {}
-
-      // 2. Check localStorage (ostraops_recent_logs from UI playground)
-      try {
-        const local = localStorage.getItem('ostraops_recent_logs');
+        const local = localStorage.getItem(`ostraops_recent_logs_${userId}`);
         if (local) {
           const parsed = JSON.parse(local);
           if (Array.isArray(parsed)) {
-            const existingIds = new Set(combinedLogs.map(l => l.request_id || l.id));
-            for (const item of parsed) {
-              if (!existingIds.has(item.request_id || item.id)) {
-                combinedLogs.push(item);
-              }
-            }
+            combinedLogs.push(...parsed);
           }
         }
       } catch {}
 
-      // 3. Check Supabase Telemetry Logs
-      if (isSupabaseConfigured) {
+      // 2. Organization-isolated Supabase Telemetry Logs
+      if (isSupabaseConfigured && orgId) {
         try {
-          const remoteLogs = await fetchGatewayLogs(100);
+          const remoteLogs = await fetchGatewayLogs(100, orgId);
           if (remoteLogs && remoteLogs.length > 0) {
             const existingIds = new Set(combinedLogs.map(l => l.request_id || l.id));
             for (const item of remoteLogs) {
@@ -141,7 +127,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       isMounted = false;
       clearInterval(interval);
     };
-  }, [user?.uid]);
+  }, [user?.uid, organization?.id]);
 
   // Compute live spend / tokens / requests strictly from real logs
   const totalSpend = liveLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0);

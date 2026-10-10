@@ -10,14 +10,18 @@ import {
   Cpu
 } from 'lucide-react';
 import { fetchGatewayLogs, isSupabaseConfigured, type DayStats } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import type { GatewayLog } from '../types/database';
 
 export const UsageCostsView: React.FC = () => {
+  const { user, organization } = useAuth();
+  const userId = user?.id || 'guest';
+  const orgId = organization?.id;
+
   const [metricMode, setMetricMode] = useState<'spend' | 'tokens' | 'requests'>('spend');
   const [timeRange, setTimeRange] = useState('Last 7 Days');
   const [timeDropdownOpen, setTimeDropdownOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  
 
   const [dailyStats, setDailyStats] = useState<DayStats[]>([]);
   const [liveLogs, setLiveLogs] = useState<GatewayLog[]>([]);
@@ -28,33 +32,21 @@ export const UsageCostsView: React.FC = () => {
     const load = async () => {
       let combinedLogs: GatewayLog[] = [];
 
-      // 1. File-based telemetry from terminal tests
+      // 1. User-isolated local logs from playground / gateway tests
       try {
-        const res = await fetch('/live-telemetry.json?t=' + Date.now());
-        if (res.ok) {
-          const fileLogs = await res.json();
-          if (Array.isArray(fileLogs)) combinedLogs.push(...fileLogs);
-        }
-      } catch {}
-
-      // 2. localStorage from UI playground
-      try {
-        const local = localStorage.getItem('ostraops_recent_logs');
+        const local = localStorage.getItem(`ostraops_recent_logs_${userId}`);
         if (local) {
           const parsed = JSON.parse(local);
           if (Array.isArray(parsed)) {
-            const ids = new Set(combinedLogs.map(l => l.request_id || l.id));
-            for (const item of parsed) {
-              if (!ids.has(item.request_id || item.id)) combinedLogs.push(item);
-            }
+            combinedLogs.push(...parsed);
           }
         }
       } catch {}
 
-      // 3. Supabase remote logs
-      if (isSupabaseConfigured) {
+      // 2. Organization-isolated Supabase remote logs
+      if (isSupabaseConfigured && orgId) {
         try {
-          const remote = await fetchGatewayLogs(100);
+          const remote = await fetchGatewayLogs(100, orgId);
           if (remote && remote.length > 0) {
             const ids = new Set(combinedLogs.map(l => l.request_id || l.id));
             for (const item of remote) {
@@ -95,7 +87,7 @@ export const UsageCostsView: React.FC = () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [userId, orgId]);
 
   const totalSpend = liveLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0);
   const totalTokens = liveLogs.reduce((acc, l) => acc + (l.input_tokens || 0) + (l.output_tokens || 0), 0);

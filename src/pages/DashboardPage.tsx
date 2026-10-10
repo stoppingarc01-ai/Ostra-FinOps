@@ -20,11 +20,12 @@ import {
   Menu,
   X,
   LogOut,
-  Loader2
+  Loader2,
+  HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { OverviewView } from '../components/OverviewView';
-import { OstraLogo } from '../components/OstraBrand';
+import { OstraIcon } from '../components/OstraBrand';
 
 // Code-split sub-tabs so initial console load is fast and responsive
 const ProjectsView = React.lazy(() => import('../components/ProjectsView').then((m) => ({ default: m.ProjectsView })));
@@ -43,18 +44,22 @@ const DashboardHomeView = React.lazy(() => import('../components/DashboardHomeVi
 interface DashboardPageProps {
   onNavigateHome: () => void;
   onNavigatePricing: () => void;
+  onNavigateSupport?: () => void;
   initialTab?: string;
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   onNavigateHome,
   onNavigatePricing,
+  onNavigateSupport,
   initialTab,
 }) => {
   const { user, profile, subscription, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState(initialTab || 'dashboard');
   const [tabProgressKey, setTabProgressKey] = useState(0);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
+  const isExpanded = sidebarHovered || mobileSidebarOpen;
 
   // Sync activeTab when initialTab changes
   useEffect(() => {
@@ -124,37 +129,53 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       )}
 
       {/* ============================================================ */}
-      {/* LEFT SIDEBAR                                                 */}
+      {/* LEFT SIDEBAR (Collapsed icon-rail that expands smoothly on hover) */}
       {/* ============================================================ */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-[#07090C] border-r border-white/[0.08] flex flex-col justify-between py-5 px-4 transition-transform duration-300 ease-in-out ${
-          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        onMouseEnter={() => setSidebarHovered(true)}
+        onMouseLeave={() => setSidebarHovered(false)}
+        className={`fixed top-0 left-0 z-50 h-screen bg-[#07090C]/95 backdrop-blur-xl border-r border-white/[0.08] flex flex-col justify-between py-5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none ${
+          mobileSidebarOpen
+            ? 'translate-x-0 w-64 px-4 shadow-[8px_0_36px_rgba(0,0,0,0.8)]'
+            : '-translate-x-full lg:translate-x-0 ' +
+              (isExpanded
+                ? 'w-64 px-4 shadow-[8px_0_36px_rgba(0,0,0,0.7)] border-r-white/[0.12]'
+                : 'w-[72px] px-2.5 shadow-[2px_0_12px_rgba(0,0,0,0.3)]')
         }`}
       >
-        <div className="space-y-6 overflow-y-auto pr-1">
+        <div className="space-y-6 overflow-y-auto overflow-x-hidden pr-0.5 scrollbar-none">
           
           {/* Top Logo & App Header */}
-          <div className="flex items-center justify-between px-2">
+          <div className={`flex items-center transition-all duration-300 ${isExpanded ? 'justify-between px-2' : 'justify-center px-0'}`}>
             <button
               onClick={onNavigateHome}
-              className="flex items-center gap-3 text-left group cursor-pointer"
+              className="flex items-center group cursor-pointer overflow-hidden"
+              title={!isExpanded ? "OstraOps Home" : undefined}
             >
-              <OstraLogo
-                iconClassName="w-8 h-8 group-hover:scale-105 transition-transform duration-200"
-                textClassName="text-xl font-bold tracking-tight text-white font-sans"
-                variant="gold"
-                showTagline={true}
-                taglineType="control"
-              />
+              <div className="shrink-0 flex items-center justify-center w-8 h-8">
+                <OstraIcon className="w-8 h-8 group-hover:scale-105 transition-transform duration-200" variant="gold" />
+              </div>
+              <div className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap text-left ${
+                isExpanded ? 'max-w-[160px] opacity-100 ml-3' : 'max-w-0 opacity-0 ml-0 pointer-events-none'
+              }`}>
+                <span className="font-sans font-bold tracking-tight text-white text-lg block leading-tight">
+                  OstraOps
+                </span>
+                <span className="font-mono text-[8px] tracking-[0.2em] uppercase text-[#A4AFB3] font-medium block">
+                  CONTROL / OBSERVE
+                </span>
+              </div>
             </button>
 
             {/* Mobile close button */}
-            <button
-              onClick={() => setMobileSidebarOpen(false)}
-              className="lg:hidden p-1.5 rounded-lg text-zinc-400 hover:bg-white/[0.08]"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {isExpanded && (
+              <button
+                onClick={() => setMobileSidebarOpen(false)}
+                className="lg:hidden p-1.5 rounded-lg text-zinc-400 hover:bg-white/[0.08]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
 
           {/* Navigation Links */}
@@ -169,26 +190,31 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     setActiveTab(item.id);
                     setMobileSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                  title={!isExpanded ? item.label : undefined}
+                  className={`w-full flex items-center rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer group ${
                     isActive
                       ? 'bg-[#C59E5F]/15 text-[#E5C38D] border border-[#C59E5F]/30 font-semibold shadow-xs'
-                      : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white'
-                  }`}
+                      : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white border border-transparent'
+                  } ${isExpanded ? 'px-3 py-2 justify-start' : 'px-0 py-2.5 justify-center'}`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center shrink-0 w-6 h-6">
                     <Icon
-                      className={`w-4 h-4 ${
-                        isActive ? 'text-[#E5C38D]' : 'text-zinc-500'
+                      className={`w-4 h-4 transition-colors ${
+                        isActive ? 'text-[#E5C38D]' : 'text-zinc-500 group-hover:text-zinc-200'
                       }`}
                     />
-                    <span>{item.label}</span>
                   </div>
 
-                  {item.badge && (
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#C59E5F]/20 text-[#E5C38D] border border-[#C59E5F]/30 font-mono">
-                      {item.badge}
-                    </span>
-                  )}
+                  <div className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center justify-between whitespace-nowrap ${
+                    isExpanded ? 'max-w-[180px] opacity-100 ml-3 flex-1' : 'max-w-0 opacity-0 ml-0 pointer-events-none'
+                  }`}>
+                    <span className="truncate">{item.label}</span>
+                    {item.badge && (
+                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#C59E5F]/20 text-[#E5C38D] border border-[#C59E5F]/30 font-mono ml-2 shrink-0">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
                 </button>
               );
             })}
@@ -198,74 +224,105 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         {/* Sidebar Footer: Current Plan + User Profile */}
         <div className="space-y-3 pt-3 border-t border-white/[0.08]">
           {/* Current Plan Box */}
-          <div className="p-3.5 rounded-2xl bg-[#0D1016] border border-white/[0.08] space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-mono">
-                {subscription?.plan_name || 'HOSTED GATEWAY'}
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                Active
-              </span>
-            </div>
-
-            {/* Quota Progress Bar */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[11px]">
-                <span className="text-zinc-400 font-medium">Monthly Proxy Quota</span>
-                <span className="font-bold text-white font-mono">
-                  {subscription?.quota_usage_percent ?? 2.4}%
+          <div className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isExpanded ? 'max-h-56 opacity-100 mb-2' : 'max-h-0 opacity-0 pointer-events-none mb-0'
+          }`}>
+            <div className="p-3.5 rounded-2xl bg-[#0D1016] border border-white/[0.08] space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-mono">
+                  {subscription?.plan_name || 'HOSTED GATEWAY'}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  Active
                 </span>
               </div>
-              <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, subscription?.quota_usage_percent ?? 2.4)}%` }}
-                />
-              </div>
-            </div>
 
-            <button
-              onClick={onNavigatePricing}
-              className="w-full text-center py-1 text-[11px] font-bold text-[#E5C38D] hover:text-white flex items-center justify-center gap-1 group cursor-pointer transition-colors"
-            >
-              <span>Manage Plan</span>
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-            </button>
+              {/* Quota Progress Bar */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-zinc-400 font-medium">Monthly Proxy Quota</span>
+                  <span className="font-bold text-white font-mono">
+                    {subscription?.quota_usage_percent ?? 2.4}%
+                  </span>
+                </div>
+                <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, subscription?.quota_usage_percent ?? 2.4)}%` }}
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={onNavigatePricing}
+                className="w-full text-center py-1 text-[11px] font-bold text-[#E5C38D] hover:text-white flex items-center justify-center gap-1 group cursor-pointer transition-colors"
+              >
+                <span>Manage Plan</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
           </div>
+
+          {/* Support Center Link */}
+          <button
+            onClick={() => onNavigateSupport ? onNavigateSupport() : (window.location.hash = '#support')}
+            title={!isExpanded ? "Support & Helpdesk" : undefined}
+            className={`w-full flex items-center rounded-xl text-xs font-medium text-zinc-400 hover:text-[#E5C38D] hover:bg-white/[0.04] transition-all cursor-pointer border border-transparent hover:border-[#C59E5F]/20 ${
+              isExpanded ? 'px-3 py-2 justify-start' : 'px-0 py-2.5 justify-center'
+            }`}
+          >
+            <div className="flex items-center justify-center shrink-0 w-6 h-6">
+              <HelpCircle className="w-4 h-4 text-[#C59E5F]" />
+            </div>
+            <div className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap ${
+              isExpanded ? 'max-w-[170px] opacity-100 ml-3' : 'max-w-0 opacity-0 ml-0 pointer-events-none'
+            }`}>
+              <span>Support &amp; Helpdesk</span>
+            </div>
+          </button>
 
           {/* User Profile Card */}
           <div 
             onClick={() => setActiveTab('settings')}
-            className="flex items-center justify-between p-2 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer group"
+            title={!isExpanded ? `${displayName} - Settings` : undefined}
+            className={`flex items-center rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer group ${
+              isExpanded ? 'p-2 justify-between' : 'p-1.5 justify-center'
+            }`}
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center">
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
                   alt={displayName}
-                  className="w-8 h-8 rounded-full object-cover border border-[#C59E5F]/30 shadow-2xs"
+                  className="w-8 h-8 rounded-full object-cover border border-[#C59E5F]/30 shadow-2xs shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-[#18181B] border border-[#C59E5F]/30 text-[#E5C38D] text-xs font-bold flex items-center justify-center font-mono">
+                <div className="w-8 h-8 rounded-full bg-[#18181B] border border-[#C59E5F]/30 text-[#E5C38D] text-xs font-bold flex items-center justify-center font-mono shrink-0">
                   {initials}
                 </div>
               )}
-              <div className="text-left">
-                <div className="text-xs font-bold text-white leading-tight group-hover:text-[#E5C38D] transition-colors">
+              <div className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] text-left whitespace-nowrap ${
+                isExpanded ? 'max-w-[120px] opacity-100 ml-2.5' : 'max-w-0 opacity-0 ml-0 pointer-events-none'
+              }`}>
+                <div className="text-xs font-bold text-white leading-tight group-hover:text-[#E5C38D] transition-colors truncate">
                   {displayName}
                 </div>
-                <div className="text-[10px] text-zinc-500 font-mono truncate max-w-[110px]">
+                <div className="text-[10px] text-zinc-500 font-mono truncate">
                   {displayEmail}
                 </div>
               </div>
             </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); signOut(); onNavigateHome(); }}
-              className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.08] transition-colors"
-              title="Sign out"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
+            <div className={`overflow-hidden transition-all duration-300 ${
+              isExpanded ? 'opacity-100 max-w-[32px]' : 'opacity-0 max-w-0 pointer-events-none'
+            }`}>
+              <button
+                onClick={(e) => { e.stopPropagation(); signOut(); onNavigateHome(); }}
+                className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.08] transition-colors"
+                title="Sign out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -273,7 +330,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       {/* ============================================================ */}
       {/* MAIN CONTENT AREA                                            */}
       {/* ============================================================ */}
-      <main className="flex-1 flex flex-col min-w-0 pb-16">
+      <main className="flex-1 flex flex-col min-w-0 pb-16 lg:pl-[72px]">
         
         {/* Top Header Bar */}
         <header className="sticky top-0 z-30 bg-[#07090C]/90 backdrop-blur-md border-b border-white/[0.08] px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">

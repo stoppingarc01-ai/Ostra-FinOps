@@ -14,14 +14,11 @@
   "dependencies": {
     "@dietrichgebert/ponytail": "^4.9.0",
     "@supabase/supabase-js": "^2.116.0",
-    "@tanstack/react-virtual": "^3.14.13",
-    "clsx": "^2.1.1",
     "firebase": "^12.19.0",
     "framer-motion": "^13.2.0",
     "lucide-react": "^1.45.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "tailwind-merge": "^3.6.0"
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

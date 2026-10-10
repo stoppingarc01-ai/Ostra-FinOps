@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OstraOps — Cinematic Launch & Recording</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- GSAP Animation Engine -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: #07090C;
+      color: #FFFFFF;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Fixed UI Controls (Hidden during screen recording) */
+    .controls-panel {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 99999;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: rgba(11, 15, 15, 0.9);
+      padding: 8px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(212, 175, 124, 0.3);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      transition: opacity 0.3s ease;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #FFF4DB 0%, #D4AF7C 50%, #AA824B 100%);
+      color: #0B0F0F;
+      box-shadow: 0 0 16px rgba(212, 175, 124, 0.35);
+    }
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 24px rgba(212, 175, 124, 0.55);
+    }
+
+    .btn-dark {
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFF;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .btn-dark:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    /* 16:9 1080p Master Stage */
+    .stage-wrapper {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #07090C;
+    }
+
+    #stage {
+      width: 1920px;
+      height: 1080px;
+      position: relative;
+      background-color: #07090C;
+      overflow: hidden;
+      transform-origin: center center;
+    }
+
+    /* Ambient Lighting and Grid */
+    .ambient-glow {
+      position: absolute;
+      width: 1300px;
+      height: 800px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(212, 175, 124, 0.13) 0%, rgba(7, 9, 12, 0) 65%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 80px 80px;
+      z-index: 1;
+    }
+
+    /* Typography & Utilities */
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .outfit { font-family: 'Outfit', sans-serif; }
+
+    .gold-gradient {
+      background: linear-gradient(135deg, #FFF4DB 0%, #EAD2A8 25%, #D4AF7C 55%, #AA824B 85%, #7E5927 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    /* Scene Container */
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      opacity: 0;
+      visibility: hidden;
+      padding: 0 120px;
+    }
+
+    /* SCENE 1 */
+    .s1-ticker {
+      font-size: 26px;
+      letter-spacing: 0.25em;
+      color: rgba(212, 175, 124, 0.7);
+      margin-bottom: 28px;
+    }
+
+    .s1-headline {
+      font-size: 84px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    /* SCENE 2 */
+    .cards-row {
+      display: flex;
+      gap: 36px;
+      margin-top: 50px;
+    }
+
+    .problem-card {
+      width: 480px;
+      height: 270px;
+      background: rgba(11, 15, 15, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 44px 36px;
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .problem-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.6), transparent);
+    }
+
+    .problem-card .tag {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: #EF4444;
+      text-transform: uppercase;
+    }
+
+    .problem-card h3 {
+      font-size: 34px;
+      font-weight: 800;
+      color: #FFF;
+      line-height: 1.2;
+    }
+
+    .problem-card p {
+      font-size: 16px;
+      color: #A1A1AA;
+      line-height: 1.5;
+    }
+
+    /* SCENE 3 */
+    .brand-mark-svg {
+      width: 150px;
+      height: 150px;
+      margin-bottom: 36px;
+      filter: drop-shadow(0 0 45px rgba(212, 175, 124, 0.45));
+    }
+
+    .reveal-sub {
+      font-size: 26px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #A1A1AA;
+      margin-top: 20px;
+    }
+
+    /* SCENE 4 */
+    .chart-panel {
+      width: 1280px;
+      height: 640px;
+      background: rgba(11, 15, 15, 0.92);
+      border: 1px solid rgba(212, 175, 124, 0.35);
+      border-radius: 28px;
+      padding: 48px;
+      box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.85), 0 0 35px -5px rgba(212, 175, 124, 0.25);
+      backdrop-filter: blur(24px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .stats-pills {
+      display: flex;
+      gap: 16px;
+    }
+
+    .pill {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 12px 22px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 15px;
+    }
+
+    .chart-container {
+      flex: 1;
+      width: 100%;
+      position: relative;
+    }
+
+    /* SCENE 5 */
+    .provider-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      width: 1280px;
+      margin-top: 36px;
+    }
+
+    .provider-card {
+      background: rgba(11, 15, 15, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 28px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .provider-meta h4 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #FFF;
+      margin-bottom: 6px;
+    }
+
+    .protected-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #00A678;
+      font-size: 14px;
+      font-weight: 700;
+      background: rgba(0, 166, 120, 0.12);
+      padding: 8px 16px;
+      border-radius: 9999px;
+      border: 1px solid rgba(0, 166, 120, 0.35);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00A678;
+      box-shadow: 0 0 10px #00A678;
+    }
+
+    /* SCENE 6 */
+    .url-chip {
+      margin-top: 28px;
+      font-size: 20px;
+      color: #D4AF7C;
+      letter-spacing: 0.1em;
+      background: rgba(212, 175, 124, 0.08);
+      padding: 12px 30px;
+      border-radius: 9999px;
+      border: 1px solid rgba(212, 175, 124, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Screen Recorder & Timeline Controls -->
+  <div class="controls-panel" id="controlsPanel">
+    <button class="btn btn-dark" id="playBtn">▶ Replay</button>
+    <button class="btn btn-dark" id="pauseBtn">⏸ Pause</button>
+    <button class="btn btn-gold" id="recordBtn">⏺ Record 24s (4K 60fps)</button>
+  </div>
+
+  <div class="stage-wrapper">
+    <div id="stage">
+      
+      <!-- Ambient Visuals -->
+      <div class="ambient-glow" id="ambientGlow"></div>
+      <div class="grid-overlay"></div>
+
+      <!-- SCENE 1: THE HOOK (0s - 3s) -->
+      <div class="scene" id="scene1">
+        <div class="s1-ticker mono" id="hookTicker">$3,580/mo • 128K TOKENS • RUNAWAY API SPEND</div>
+        <h1 class="s1-headline outfit">
+          AI IS MOVING FAST.<br>
+          <span class="gold-gradient">YOUR COSTS AREN'T UNDER CONTROL.</span>
+        </h1>
+      </div>
+
+      <!-- SCENE 2: THE PROBLEM (3s - 6s) -->
+      <div class="scene" id="scene2">
+        <div class="mono" style="color: #EF4444; font-size: 16px; letter-spacing: 0.2em; margin-bottom: 8px;">CRITICAL FINOPS DEFICIT</div>
+        <h2 class="outfit" style="font-size: 60px; font-weight: 800; text-align: center;">THE MULTI-MODEL DILEMMA</h2>
+        
+        <div class="cards-row">
+          <div class="problem-card" id="card1">
+            <span class="tag mono">01 // VISIBILITY</span>
+            <h3 class="outfit">Rising AI Costs</h3>
+            <p>Autonomous agent loops consuming millions of tokens with zero granular attribution.</p>
+          </div>
+          <div class="problem-card" id="card2">
+            <span class="tag mono">02 // ARCHITECTURE</span>
+            <h3 class="outfit">Fragmented Keys</h3>
+            <p>Scattered keys across OpenAI, Anthropic, and Gemini with zero unified audit telemetry.</p>
+          </div>
+          <div class="problem-card" id="card3">
+            <span class="tag mono">03 // GOVERNANCE</span>
+            <h3 class="outfit">No Budget Caps</h3>
+            <p>Bills arrive 30 days late. No real-time gateway circuit breakers to halt runaway loops.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 3: BRAND REVEAL (6s - 9.5s) -->
+      <div class="scene" id="scene3">
+        <svg class="brand-mark-svg" viewBox="0 0 100 100" fill="none">
+          <defs>
+            <linearGradient id="goldSpec" x1="15%" y1="10%" x2="85%" y2="90%">
+              <stop offset="0%" stop-color="#FFF4DB" />
+              <stop offset="25%" stop-color="#EAD2A8" />
+              <stop offset="55%" stop-color="#D4AF7C" />
+              <stop offset="85%" stop-color="#AA824B" />
+              <stop offset="100%" stop-color="#7E5927" />
+            </linearGradient>
+            <radialGradient id="sphereSpec" cx="38%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#FFFDF7" />
+              <stop offset="35%" stop-color="#EAD2A8" />
+              <stop offset="70%" stop-color="#D4AF7C" />
+              <stop offset="100%" stop-color="#765223" />
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="48" r="11" fill="url(#sphereSpec)" />
+          <path d="M 18,52 C 18,34 32,20 50,20 C 66,20 78,30 84,42 C 76,33 64,28 50,28 C 38,28 27,37 26,51 Z" fill="url(#goldSpec)" />
+          <path d="M 23,60 C 27,74 38,82 52,82 C 68,82 81,72 85,57 C 83,67 71,75 56,75 C 42,75 31,69 27,61 Z" fill="url(#goldSpec)" />
+          <path d="M 6,70 C 24,62 50,47 88,38 C 93,37 96,37 96,38 C 96,39 88,43 82,47 C 52,58 24,71 6,70 Z" fill="url(#goldSpec)" />
+        </svg>
+
+        <h1 class="outfit" style="font-size: 84px; font-weight: 900; letter-spacing: -0.02em;">
+          INTRODUCING <span class="gold-gradient">OSTRAOPS</span>
+        </h1>
+        <p class="reveal-sub mono">AI COST GOVERNANCE & OPERATIONS</p>
+      </div>
+
+      <!-- SCENE 4: SPEND CHART DIVERGENCE (9.5s - 14.5s) -->
+      <div class="scene" id="scene4">
+        <div class="chart-panel">
+          <div class="chart-header">
+            <div>
+              <div class="mono" style="color: #D4AF7C; font-size: 14px; margin-bottom: 4px; letter-spacing: 0.1em;">TELEMETRY CONTROL PLANE</div>
+              <h2 class="outfit" style="font-size: 36px; font-weight: 800;">Real-Time Spend Governance</h2>
+            </div>
+            <div class="stats-pills mono">
+              <div class="pill"><span style="color:#A1A1AA">Unmanaged:</span> <span style="color:#EF4444; font-weight:700;">$3,580/mo</span></div>
+              <div class="pill"><span style="color:#A1A1AA">Ostra Managed:</span> <span style="color:#D4AF7C; font-weight:700;">$1,620/mo</span></div>
+              <div class="pill" style="border-color: rgba(0, 166, 120, 0.4);"><span style="color:#00A678; font-weight:700;">↓ 54.7% SAVED</span></div>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <svg viewBox="0 0 1180 430" style="width: 100%; height: 100%; overflow: visible;">
+              <!-- Grid Lines -->
+              <line x1="50" y1="380" x2="1130" y2="380" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+              <line x1="50" y1="210" x2="1130" y2="210" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4 4" />
+              <line x1="50" y1="50" x2="1130" y2="50" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4 4" />
+
+              <!-- Unmanaged Spend Line -->
+              <path id="unmanagedLine" d="M 50,380 C 400,370 750,260 1130,50" fill="none" stroke="#EF4444" stroke-width="4" stroke-dasharray="1300" stroke-dashoffset="1300" />
+              <!-- Ostra Managed Locked Line -->
+              <path id="managedLine" d="M 50,380 C 400,340 780,230 1130,210" fill="none" stroke="#D4AF7C" stroke-width="6" stroke-dasharray="1300" stroke-dashoffset="1300" />
+              
+              <circle id="managedDot" cx="1130" cy="210" r="9" fill="#D4AF7C" opacity="0" />
+              <circle id="unmanagedDot" cx="1130" cy="50" r="9" fill="#EF4444" opacity="0" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 5: PROVIDER GRID (14.5s - 19s) -->
+      <div class="scene" id="scene5">
+        <div class="mono" style="color: #D4AF7C; font-size: 15px; margin-bottom: 12px; letter-spacing: 0.25em;">ZERO PROMPT STORAGE • SUB-MS GATEWAY</div>
+        <h2 class="outfit" style="font-size: 58px; font-weight: 800; margin-bottom: 24px;">Universal Model Governance</h2>
+
+        <div class="provider-grid">
+          <div class="provider-card">
+            <div class="provider-meta">
+              <h4 class="outfit">Claude 3.7 Sonnet</h4>
+              <span class="mono" style="color:#71717A; font-size: 14px;">Anthropic • 310ms</span>
+            </div>
+            <div class="protected-badge"><div class="pulse-dot"></div>Protected</div>
+          </div>
+          <div class="provider-card">
+            <div class="provider-meta">
+              <h4 class="outfit">GPT-4o & o3-mini</h4>
+              <span class="mono" style="color:#71717A; font-size: 14px;">OpenAI • 280ms</span>
+            </div>
+            <div class="protected-badge"><div class="pulse-dot"></div>Protected</div>
+          </div>
+          <div class="provider-card">
+            <div class="provider-meta">
+              <h4 class="outfit">Gemini 2.5 Pro</h4>
+              <span class="mono" style="color:#71717A; font-size: 14px;">Google DeepMind • 190ms</span>
+            </div>
+            <div class="protected-badge"><div class="pulse-dot"></div>Protected</div>
+          </div>
+          <div class="provider-card">
+            <div class="provider-meta">
+              <h4 class="outfit">DeepSeek R1 / V3</h4>
+              <span class="mono" style="color:#71717A; font-size: 14px;">Reasoning • 420ms</span>
+            </div>
+            <div class="protected-badge"><div class="pulse-dot"></div>Protected</div>
+          </div>
+          <div class="provider-card">
+            <div class="provider-meta">
+              <h4 class="outfit">Mistral Large 2</h4>
+              <span class="mono" style="color:#71717A; font-size: 14px;">Mistral AI • 220ms</span>
+            </div>
+            <div class="protected-badge"><div class="pulse-dot"></div>Protected</div>
+          </div>
+          <div class="provider-card">
+            <div class="provider-meta">
+              <h4 class="outfit">Llama 3.3 70B</h4>
+              <span class="mono" style="color:#71717A; font-size: 14px;">vLLM / Ollama • Local</span>
+            </div>
+            <div class="protected-badge"><div class="pulse-dot"></div>Protected</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 6: OUTRO (19s - 24s) -->
+      <div class="scene" id="scene6">
+        <svg class="brand-mark-svg" viewBox="0 0 100 100" fill="none" style="width: 130px; height: 130px; margin-bottom: 24px;">
+          <circle cx="50" cy="48" r="11" fill="url(#sphereSpec)" />
+          <path d="M 18,52 C 18,34 32,20 50,20 C 66,20 78,30 84,42 C 76,33 64,28 50,28 C 38,28 27,37 26,51 Z" fill="url(#goldSpec)" />
+          <path d="M 23,60 C 27,74 38,82 52,82 C 68,82 81,72 85,57 C 83,67 71,75 56,75 C 42,75 31,69 27,61 Z" fill="url(#goldSpec)" />
+          <path d="M 6,70 C 24,62 50,47 88,38 C 93,37 96,37 96,38 C 96,39 88,43 82,47 C 52,58 24,71 6,70 Z" fill="url(#goldSpec)" />
+        </svg>
+        <h1 class="outfit" style="font-size: 76px; font-weight: 900; line-height: 1.1; text-align: center;">
+          TAKE CONTROL OF YOUR AI SPEND.
+        </h1>
+        <div class="url-chip mono">github.com/stoppingarc01-ai/Ostra-FinOps</div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Responsive Canvas Resizing for any display window
+    function resizeStage() {
+      const stage = document.getElementById('stage');
+      const scaleX = window.innerWidth / 1920;
+      const scaleY = window.innerHeight / 1080;
+      const scale = Math.min(scaleX, scaleY);
+      stage.style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', resizeStage);
+    resizeStage();
+
+    // Master GSAP Timeline (24 Seconds @ 60 FPS)
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+    // Scene 1: The Hook (0s - 3s)
+    tl.to("#scene1", { autoAlpha: 1, duration: 0.4 })
+      .from("#hookTicker", { y: -20, opacity: 0, duration: 0.6 })
+      .from(".s1-headline", { scale: 0.94, opacity: 0, duration: 0.8 }, "-=0.3")
+      .to("#scene1", { autoAlpha: 0, scale: 1.04, duration: 0.4, delay: 1.6 });
+
+    // Scene 2: The Problem (3s - 6s)
+    tl.to("#scene2", { autoAlpha: 1, duration: 0.4 })
+      .from("#card1", { y: 60, opacity: 0, duration: 0.6 })
+      .from("#card2", { y: 60, opacity: 0, duration: 0.6 }, "-=0.4")
+      .from("#card3", { y: 60, opacity: 0, duration: 0.6 }, "-=0.4")
+      .to("#scene2", { autoAlpha: 0, y: -40, duration: 0.4, delay: 1.4 });
+
+    // Scene 3: Brand Reveal (6s - 9.5s)
+    tl.to("#scene3", { autoAlpha: 1, duration: 0.5 })
+      .from("#scene3 .brand-mark-svg", { scale: 0.7, opacity: 0, rotation: -20, duration: 1, ease: "back.out(1.7)" })
+      .from("#scene3 h1", { y: 30, opacity: 0, duration: 0.8 }, "-=0.5")
+      .from(".reveal-sub", { opacity: 0, letterSpacing: "0.15em", duration: 0.8 }, "-=0.4")
+      .to("#ambientGlow", { scale: 1.35, opacity: 0.85, duration: 1.5 }, "-=1")
+      .to("#scene3", { autoAlpha: 0, scale: 0.96, duration: 0.4, delay: 1.2 });
+
+    // Scene 4: Spend Chart (9.5s - 14.5s)
+    tl.to("#scene4", { autoAlpha: 1, duration: 0.4 })
+      .from(".chart-panel", { y: 70, scale: 0.95, opacity: 0, duration: 0.8 })
+      .to("#unmanagedLine", { strokeDashoffset: 0, duration: 1.8, ease: "power2.inOut" }, "-=0.2")
+      .to("#managedLine", { strokeDashoffset: 0, duration: 1.8, ease: "power2.inOut" }, "-=1.8")
+      .to(["#managedDot", "#unmanagedDot"], { opacity: 1, scale: 1.4, duration: 0.4, stagger: 0.1 }, "-=0.2")
+      .to("#scene4", { autoAlpha: 0, duration: 0.4, delay: 1.4 });
+
+    // Scene 5: Provider Matrix (14.5s - 19s)
+    tl.to("#scene5", { autoAlpha: 1, duration: 0.4 })
+      .from(".provider-card", { x: 70, opacity: 0, stagger: 0.12, duration: 0.6, ease: "power2.out" }, "-=0.2")
+      .to("#scene5", { autoAlpha: 0, y: -30, duration: 0.4, delay: 1.6 });
+
+    // Scene 6: Outro (19s - 24s)
+    tl.to("#scene6", { autoAlpha: 1, duration: 0.6 })
+      .from("#scene6 .brand-mark-svg", { scale: 0.85, opacity: 0, duration: 0.8 })
+      .from("#scene6 h1", { y: 25, opacity: 0, duration: 0.8 }, "-=0.4")
+      .from(".url-chip", { y: 15, opacity: 0, duration: 0.6 }, "-=0.3");
+
+    // Controls Logic
+    document.getElementById('playBtn').addEventListener('click', () => tl.restart());
+    document.getElementById('pauseBtn').addEventListener('click', () => {
+      if (tl.paused()) {
+        tl.resume();
+        document.getElementById('pauseBtn').textContent = '⏸ Pause';
+      } else {
+        tl.pause();
+        document.getElementById('pauseBtn').textContent = '▶ Resume';
+      }
+    });
+
+    // 4K 60fps Recording Trigger (Auto-hides button during capture)
+    document.getElementById('recordBtn').addEventListener('click', async () => {
+      const controls = document.getElementById('controlsPanel');
+      controls.style.opacity = '0';
+      controls.style.pointerEvents = 'none';
+
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { frameRate: 60, width: 3840, height: 2160 },
+          audio: true
+        });
+        
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm',
+          videoBitsPerSecond: 25000000 // 25 Mbps high quality
+        });
+        
+        const chunks = [];
+        mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'ostraops-launch-4k.webm';
+          a.click();
+          controls.style.opacity = '1';
+          controls.style.pointerEvents = 'auto';
+        };
+
+        mediaRecorder.start();
+        tl.restart();
+
+        // 24.5s safe capture buffer
+        setTimeout(() => {
+          mediaRecorder.stop();
+          stream.getTracks().forEach(track => track.stop());
+        }, 24500);
+
+      } catch (err) {
+        console.error('Recording cancelled or not supported:', err);
+        controls.style.opacity = '1';
+        controls.style.pointerEvents = 'auto';
+      }
+    });
+  </script>
+</body>
+</html>

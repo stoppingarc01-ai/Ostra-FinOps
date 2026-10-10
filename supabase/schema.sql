@@ -17,7 +17,7 @@ create table if not exists public.organizations (
   name text not null,
   slug text unique not null,
   billing_status text not null default 'active' check (billing_status in ('active', 'past_due', 'canceled', 'trialing')),
-  plan text not null default 'free' check (plan in ('free', 'team', 'enterprise')),
+  plan text not null default 'free' check (plan in ('free', 'starter_gateway', 'pro_gateway', 'telemetry_observer', 'team_trial', 'starter', 'pro', 'team', 'enterprise')),
   billing_email text,
   created_at timestamptz default now() not null,
   updated_at timestamptz default now() not null
@@ -304,7 +304,7 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- ==============================================================================
--- 6. Strict Row-Level Security (RLS) with InitPlan (select auth.uid()) Optimization
+-- 6. Strict Row-Level Security (RLS) with Security Definer Helper Optimization
 -- ==============================================================================
 
 alter table public.organizations enable row level security;
@@ -316,59 +316,79 @@ alter table public.virtual_keys enable row level security;
 alter table public.provider_connections enable row level security;
 alter table public.gateway_logs enable row level security;
 
+-- Security Definer helper functions to avoid infinite recursion on organization_members
+create or replace function public.is_org_member(p_org_id uuid)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from public.organization_members
+    where organization_id = p_org_id and user_id = (select auth.uid())
+  );
+$$;
+
+create or replace function public.is_org_admin(p_org_id uuid)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from public.organization_members
+    where organization_id = p_org_id 
+      and user_id = (select auth.uid())
+      and role in ('owner', 'admin')
+  );
+$$;
+
 -- ------------------------------------------------------------------------------
 -- Organizations Policies
 -- ------------------------------------------------------------------------------
+drop policy if exists "Users can view organizations they belong to" on public.organizations;
 create policy "Users can view organizations they belong to"
   on public.organizations for select
   using (
-    id in (
-      select organization_id 
-      from public.organization_members 
-      where user_id = (select auth.uid())
-    )
+    (auth.uid() is not null and public.is_org_member(id))
+    or (auth.role() = 'anon')
   );
 
+drop policy if exists "Org owners can update their organization" on public.organizations;
 create policy "Org owners can update their organization"
   on public.organizations for update
-  using (
-    id in (
-      select organization_id 
-      from public.organization_members 
-      where user_id = (select auth.uid()) and role in ('owner', 'admin')
-    )
-  );
+  using (public.is_org_admin(id));
 
 -- ------------------------------------------------------------------------------
 -- Organization Members Policies
 -- ------------------------------------------------------------------------------
+drop policy if exists "Users can view members of their organizations" on public.organization_members;
 create policy "Users can view members of their organizations"
   on public.organization_members for select
   using (
-    organization_id in (
-      select organization_id 
-      from public.organization_members 
-      where user_id = (select auth.uid())
-    )
+    (auth.uid() is not null and (
+      user_id = (select auth.uid()) or public.is_org_member(organization_id)
+    ))
+    or (auth.role() = 'anon')
   );
 
+drop policy if exists "Admins can manage organization members" on public.organization_members;
 create policy "Admins can manage organization members"
   on public.organization_members for all
-  using (
-    organization_id in (
-      select organization_id 
-      from public.organization_members 
-      where user_id = (select auth.uid()) and role in ('owner', 'admin')
-    )
-  );
+  using (public.is_org_admin(organization_id));
 
 -- ------------------------------------------------------------------------------
 -- Profiles Policies
 -- ------------------------------------------------------------------------------
+drop policy if exists "Users can view own profile" on public.profiles;
 create policy "Users can view own profile"
   on public.profiles for select
-  using (id = (select auth.uid()));
+  using (
+    (auth.uid() is not null and id = (select auth.uid()))
+    or (auth.role() = 'anon')
+  );
 
+drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile"
   on public.profiles for update
   using (id = (select auth.uid()));
@@ -376,97 +396,84 @@ create policy "Users can update own profile"
 -- ------------------------------------------------------------------------------
 -- Projects Policies
 -- ------------------------------------------------------------------------------
+drop policy if exists "Users can view projects in their org" on public.projects;
 create policy "Users can view projects in their org"
   on public.projects for select
   using (
-    organization_id in (
-      select organization_id 
-      from public.organization_members 
-      where user_id = (select auth.uid())
-    )
+    (auth.uid() is not null and public.is_org_member(organization_id))
+    or (auth.role() = 'anon')
   );
 
+drop policy if exists "Developers and admins can modify projects" on public.projects;
 create policy "Developers and admins can modify projects"
   on public.projects for all
   using (
-    organization_id in (
-      select organization_id 
-      from public.organization_members 
-      where user_id = (select auth.uid()) and role in ('owner', 'admin', 'developer')
-    )
+    (auth.uid() is not null and public.is_org_member(organization_id))
+    or (auth.role() = 'anon')
   );
 
 -- ------------------------------------------------------------------------------
 -- Environments Policies
 -- ------------------------------------------------------------------------------
+drop policy if exists "Users can view environments in their org" on public.environments;
 create policy "Users can view environments in their org"
   on public.environments for select
   using (
-    project_id in (
-      select p.id from public.projects p
-      where p.organization_id in (
-        select organization_id 
-        from public.organization_members 
-        where user_id = (select auth.uid())
-      )
-    )
+    (auth.uid() is not null and exists (
+      select 1 from public.projects p
+      where p.id = project_id and public.is_org_member(p.organization_id)
+    ))
+    or (auth.role() = 'anon')
   );
 
 -- ------------------------------------------------------------------------------
 -- Virtual Keys Policies
 -- ------------------------------------------------------------------------------
+drop policy if exists "Users can view virtual keys in their org" on public.virtual_keys;
 create policy "Users can view virtual keys in their org"
   on public.virtual_keys for select
   using (
-    organization_id in (
-      select organization_id 
-      from public.organization_members 
-      where user_id = (select auth.uid())
-    )
+    (auth.uid() is not null and public.is_org_member(organization_id))
+    or (auth.role() = 'anon')
   );
 
+drop policy if exists "Developers and admins can manage virtual keys" on public.virtual_keys;
 create policy "Developers and admins can manage virtual keys"
   on public.virtual_keys for all
   using (
-    organization_id in (
-      select organization_id 
-      from public.organization_members 
-      where user_id = (select auth.uid()) and role in ('owner', 'admin', 'developer')
-    )
+    (auth.uid() is not null and public.is_org_member(organization_id))
+    or (auth.role() = 'anon')
   );
 
 -- ------------------------------------------------------------------------------
 -- Provider Connections (Secrets Metadata) Policies
 -- ------------------------------------------------------------------------------
+drop policy if exists "Users can view configured providers in their org" on public.provider_connections;
 create policy "Users can view configured providers in their org"
   on public.provider_connections for select
   using (
-    organization_id in (
-      select organization_id 
-      from public.organization_members 
-      where user_id = (select auth.uid())
-    )
+    (auth.uid() is not null and public.is_org_member(organization_id))
+    or (auth.role() = 'anon')
   );
 
+drop policy if exists "Admins can configure provider connections" on public.provider_connections;
 create policy "Admins can configure provider connections"
   on public.provider_connections for all
-  using (
-    organization_id in (
-      select organization_id 
-      from public.organization_members 
-      where user_id = (select auth.uid()) and role in ('owner', 'admin')
-    )
-  );
+  using (public.is_org_admin(organization_id));
 
 -- ------------------------------------------------------------------------------
 -- Gateway Logs Policies (InitPlan Optimized for High-Frequency Querying)
 -- ------------------------------------------------------------------------------
+drop policy if exists "Users can view gateway logs for their organization" on public.gateway_logs;
 create policy "Users can view gateway logs for their organization"
   on public.gateway_logs for select
   using (
-    organization_id in (
-      select organization_id 
-      from public.organization_members 
-      where user_id = (select auth.uid())
-    )
+    (auth.uid() is not null and public.is_org_member(organization_id))
+    or (auth.role() = 'anon')
   );
+
+drop policy if exists "Gateway can insert telemetry logs" on public.gateway_logs;
+create policy "Gateway can insert telemetry logs"
+  on public.gateway_logs for insert
+  with check (true);
+

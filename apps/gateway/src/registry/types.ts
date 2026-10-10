@@ -8,7 +8,8 @@ export type Provider =
   | 'grok'
   | 'kimi'
   | 'qwen'
-  | 'glm';
+  | 'glm'
+  | 'nvidia';
 
 export interface ModelSpec {
   id: string;

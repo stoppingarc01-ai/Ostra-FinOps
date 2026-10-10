@@ -7,7 +7,8 @@ import {
   MistralLogo, 
   DeepSeekLogo, 
   CohereLogo, 
-  KimiLogo 
+  KimiLogo,
+  NvidiaLogo
 } from './LLMLogos';
 import { ShieldCheck, CheckCircle2, Lock, ArrowRight } from 'lucide-react';
 
@@ -191,6 +192,25 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
       tag: 'Long-Horizon Reasoning & 128K',
       toolCallFidelity: 'Long Document Analysis & Multi-turn Tool Schemas',
     },
+    {
+      id: 'nvidia',
+      name: 'NVIDIA Nemotron',
+      provider: 'NVIDIA NIM & TensorRT-LLM',
+      flagship: 'Nemotron-3 Ultra (550B MoE)',
+      models: ['nemotron-3-ultra-550b', 'nemotron-3-super-120b', 'nemotron-3-nano-omni'],
+      context: '256,000 tokens',
+      inputCost: '$1.80 / 1M',
+      outputCost: '$5.40 / 1M',
+      avgLatency: '240ms',
+      status: 'Intra-Family Protected',
+      logo: NvidiaLogo,
+      color: 'text-[#76B900]',
+      bgGlow: 'from-[#76B900]/15 via-emerald-500/5 to-transparent',
+      borderColor: 'hover:border-[#76B900]/40',
+      floatClass: 'animate-float-1',
+      tag: '550B MoE • TensorRT-LLM Armed',
+      toolCallFidelity: 'NeMo Guardrails & Native TensorRT Function Calling',
+    },
   ];
 
   const selected = models.find((m) => m.id === activeModelId) || models[0];
@@ -217,7 +237,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
         </div>
 
         {/* 3D Floating Logos Orbit Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 mb-10 perspective-1200">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 sm:gap-4 mb-10 perspective-1200">
           {models.map((m) => {
             const LogoComponent = m.logo;
             const isSelected = m.id === activeModelId;

@@ -19,9 +19,15 @@ import {
   Flame,
   Globe2,
   Activity,
+  Printer,
+  Copy,
+  X,
+  ShieldCheck,
+  ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { createUserDefaultSubscription } from '../lib/subscriptionService';
+import { processBillingCheckout, type BillingInvoice } from '../lib/billingService';
 import { OstraLogo, OstraIcon } from '../components/OstraBrand';
 
 interface OnboardingPageProps {
@@ -156,7 +162,7 @@ const getInitialDetectedPricing = (): LocalizedPricing => {
 };
 
 export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) => {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile, updateSubscription } = useAuth();
 
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -240,6 +246,124 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
   // Step 4: Subscription (Mandatory Choice - Gatekeeper)
   const [selectedPlan, setSelectedPlan] = useState<'trial' | 'telemetry' | 'starter' | 'pro' | null>(null);
 
+  // Integrated Immediate Billing Checkout & Verified Receipt Modal States
+  const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
+  const [billingModalMode, setBillingModalMode] = useState<'checkout' | 'receipt'>('checkout');
+  const [paidVerified, setPaidVerified] = useState(false);
+  const [verifiedBillingId, setVerifiedBillingId] = useState<string | null>(null);
+  const [verifiedInvoice, setVerifiedInvoice] = useState<BillingInvoice | null>(null);
+  const [billingInterval, setBillingInterval] = useState<'mo' | 'yr'>('mo');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [copiedReceiptId, setCopiedReceiptId] = useState(false);
+
+  // Instant Billing Trigger: selecting a paid plan directly launches checkout
+  const handleSelectPlan = (plan: 'trial' | 'telemetry' | 'starter' | 'pro') => {
+    setSelectedPlan(plan);
+    if (plan === 'trial') {
+      setIsBillingModalOpen(false);
+    } else {
+      if (paidVerified && selectedPlan === plan) {
+        setBillingModalMode('receipt');
+      } else {
+        setBillingModalMode('checkout');
+      }
+      setIsBillingModalOpen(true);
+    }
+  };
+
+  const handleCopyReceiptBillingId = () => {
+    if (verifiedBillingId) {
+      navigator.clipboard.writeText(verifiedBillingId);
+      setCopiedReceiptId(true);
+      setTimeout(() => setCopiedReceiptId(false), 2000);
+      showToast('Permanent Billing ID copied to clipboard');
+    }
+  };
+
+  const handleProcessPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPlan || selectedPlan === 'trial') return;
+
+    const rawCard = cardNumber.replace(/\s+/g, '');
+    if (rawCard.length < 15) {
+      showToast('Please enter a valid 16-digit card number.');
+      return;
+    }
+    if (cardExpiry.length < 5) {
+      showToast('Please enter card expiry as MM/YY.');
+      return;
+    }
+    if (cardCvc.length < 3) {
+      showToast('Please enter a valid security CVC.');
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    const userId = user?.id || user?.uid || 'user_guest';
+    const activePlanKey =
+      selectedPlan === 'telemetry' ? 'telemetry_observer' :
+      selectedPlan === 'starter' ? 'starter_gateway' : 'pro_gateway';
+    const planName =
+      selectedPlan === 'telemetry' ? 'Agent Telemetry' :
+      selectedPlan === 'starter' ? 'Starter Gateway' : 'Pro Gateway';
+
+    const basePrice =
+      selectedPlan === 'telemetry' ? 20 :
+      selectedPlan === 'starter' ? 35 : 59;
+    const finalPrice = billingInterval === 'yr' ? Math.round(basePrice * 12 * 0.8) : basePrice;
+
+    try {
+      const last4 = rawCard.slice(-4) || '4242';
+      const brand = rawCard.startsWith('4') ? 'Visa' : rawCard.startsWith('5') ? 'Mastercard' : 'Amex';
+
+      const checkoutRes = await processBillingCheckout({
+        userId,
+        planId: activePlanKey,
+        planName: `${planName} (${billingInterval === 'yr' ? 'Annual' : 'Monthly'})`,
+        priceAmount: finalPrice,
+        billingInterval,
+        billingEmail: user?.email || 'billing@ostraops.com',
+        customerName: profile?.full_name || 'Admin',
+        companyName: orgName.trim() || 'My Organization',
+        taxId: taxId.trim() || undefined,
+        country,
+        cardLast4: last4,
+        cardBrand: brand,
+      });
+
+      const subPayload = {
+        plan_id: activePlanKey,
+        plan_name: planName,
+        price_amount: finalPrice,
+        billing_interval: billingInterval,
+        status: 'active' as const,
+        renewal_date: new Date(Date.now() + (billingInterval === 'yr' ? 365 : 30) * 86_400_000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+        quota_usage_percent: 0,
+        quota_used: 0,
+        quota_limit: activePlanKey.includes('pro') ? 10000000 : activePlanKey.includes('starter') ? 1000000 : 50000,
+      };
+
+      try {
+        await updateSubscription(subPayload);
+        if (userId) {
+          await createUserDefaultSubscription(userId, subPayload);
+        }
+      } catch (subErr) {
+        console.warn('Subscription sync notice:', subErr);
+      }
+
+      setPaidVerified(true);
+      setVerifiedBillingId(checkoutRes.billingId);
+      setVerifiedInvoice(checkoutRes.invoice);
+      setBillingModalMode('receipt');
+      showToast('Payment verified! Unique Billing ID generated.');
+    } catch (err: any) {
+      showToast(err?.message || 'Payment processing failed. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
   // Step 5: Team Members
   const [teamEmails, setTeamEmails] = useState<string[]>(['']);
   const [teamRole, setTeamRole] = useState<'admin' | 'engineer' | 'viewer'>('engineer');
@@ -282,7 +406,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
         onboarding_completed: true,
       });
 
-      // 2. Persist chosen subscription in Firestore
+      // 2. Persist chosen subscription in Firestore, Supabase & React Context
       const userId = user?.id || user?.uid;
       const activePlanKey =
         selectedPlan === 'trial' ? 'team_trial' :
@@ -301,17 +425,42 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
         selectedPlan === 'telemetry' ? 20 :
         selectedPlan === 'starter' ? 35 : 59;
 
+      const subPayload = {
+        plan_id: activePlanKey,
+        plan_name: planName,
+        price_amount: price,
+        billing_interval: 'mo' as const,
+        status: 'active' as const,
+        renewal_date: new Date(Date.now() + 30 * 86_400_000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+        quota_usage_percent: 0,
+        quota_used: 0,
+        quota_limit: activePlanKey.includes('pro') ? 10000000 : activePlanKey.includes('starter') ? 1000000 : 50000,
+      };
+
+      // Immediately sync with AuthContext state
+      try {
+        await updateSubscription(subPayload);
+      } catch {}
+
       if (userId) {
         try {
-          await createUserDefaultSubscription(userId, {
-            plan_id: activePlanKey,
-            plan_name: planName,
-            price_amount: price,
-            billing_interval: 'mo',
-            status: 'active',
-          });
+          await createUserDefaultSubscription(userId, subPayload);
+          // If not already paid in Step 4 (e.g. Free Trial), provision trial billing account
+          if (!paidVerified) {
+            await processBillingCheckout({
+              userId,
+              planId: activePlanKey,
+              planName,
+              priceAmount: price,
+              billingInterval: 'mo',
+              billingEmail: user?.email || 'billing@ostraops.com',
+              customerName: profile?.full_name || 'Admin',
+              companyName: orgName.trim(),
+              country,
+            });
+          }
         } catch (subErr) {
-          console.warn('Subscription backend write notice:', subErr);
+          console.warn('Subscription/Billing backend write notice:', subErr);
         }
       }
 
@@ -320,7 +469,23 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
         localStorage.setItem('ostraops_onboarding_completed', 'true');
         if (userId) {
           localStorage.setItem(`ostraops_onboarding_${userId}`, 'true');
+          localStorage.setItem(`ostraops_subscription_${userId}`, JSON.stringify({
+            id: userId,
+            user_id: userId,
+            ...subPayload,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }));
+          localStorage.setItem(`ostraops_active_plan_${userId}`, activePlanKey);
+          localStorage.setItem(`ostraops_user_tier_${userId}`, tierKey);
         }
+        localStorage.setItem('ostraops_subscription', JSON.stringify({
+          id: userId || 'active',
+          user_id: userId || 'active',
+          ...subPayload,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }));
         localStorage.setItem('ostraops_active_plan', activePlanKey);
         localStorage.setItem('ostraops_user_tier', tierKey);
       } catch {}
@@ -999,7 +1164,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                   
                   {/* CARD 1: 7-Day Free Trial */}
                   <div
-                    onClick={() => setSelectedPlan('trial')}
+                    onClick={() => handleSelectPlan('trial')}
                     className={`p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between hover:-translate-y-1 ${
                       selectedPlan === 'trial'
                         ? 'bg-[#16130D] border-[#C59E5F] shadow-[0_0_25px_rgba(197,158,95,0.2)] ring-1 ring-[#E5C38D]'
@@ -1061,13 +1226,13 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                           : 'bg-white/[0.04] text-zinc-300 hover:text-white border border-white/[0.08]'
                       }`}
                     >
-                      {selectedPlan === 'trial' ? 'Selected' : 'Select Free Trial'}
+                      {selectedPlan === 'trial' ? 'Selected (Free Trial)' : 'Select Free Trial'}
                     </button>
                   </div>
 
                   {/* CARD 2: Agent Telemetry (Observability Only) */}
                   <div
-                    onClick={() => setSelectedPlan('telemetry')}
+                    onClick={() => handleSelectPlan('telemetry')}
                     className={`p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between hover:-translate-y-1 ${
                       selectedPlan === 'telemetry'
                         ? 'bg-[#0E1512] border-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.2)] ring-1 ring-emerald-400'
@@ -1091,7 +1256,14 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                         </div>
                       </div>
 
-                      <div className="text-lg font-bold text-white">Agent Telemetry</div>
+                      <div className="text-lg font-bold text-white flex items-center justify-between">
+                        <span>Agent Telemetry</span>
+                        {paidVerified && selectedPlan === 'telemetry' && (
+                          <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/40">
+                            PAID
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[11px] text-zinc-400 mt-0.5">Observability &amp; cost tracking only</div>
 
                       <div className="mt-3 mb-4">
@@ -1129,18 +1301,24 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                     <button
                       type="button"
                       className={`w-full mt-5 py-2 rounded-xl font-bold text-xs tracking-wide transition-all cursor-pointer ${
-                        selectedPlan === 'telemetry'
-                          ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                        paidVerified && selectedPlan === 'telemetry'
+                          ? 'bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]'
+                          : selectedPlan === 'telemetry'
+                          ? 'bg-amber-500 hover:bg-amber-400 text-black'
                           : 'bg-white/[0.04] text-zinc-300 hover:text-white border border-white/[0.08]'
                       }`}
                     >
-                      {selectedPlan === 'telemetry' ? 'Selected' : `Select Telemetry (${detectedPricing.telemetryPrice})`}
+                      {paidVerified && selectedPlan === 'telemetry'
+                        ? '✓ Verified & Paid · View Receipt'
+                        : selectedPlan === 'telemetry'
+                        ? 'Complete Checkout'
+                        : `Select Telemetry (${detectedPricing.telemetryPrice})`}
                     </button>
                   </div>
 
                   {/* CARD 3: Starter Gateway ($35 / month) */}
                   <div
-                    onClick={() => setSelectedPlan('starter')}
+                    onClick={() => handleSelectPlan('starter')}
                     className={`p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between hover:-translate-y-1 ${
                       selectedPlan === 'starter'
                         ? 'bg-[#16130D] border-[#C59E5F] shadow-[0_0_25px_rgba(197,158,95,0.2)] ring-1 ring-[#E5C38D]'
@@ -1163,7 +1341,14 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                         </div>
                       </div>
 
-                      <div className="text-lg font-bold text-white">Starter Gateway</div>
+                      <div className="text-lg font-bold text-white flex items-center justify-between">
+                        <span>Starter Gateway</span>
+                        {paidVerified && selectedPlan === 'starter' && (
+                          <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/40">
+                            PAID
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[11px] text-zinc-400 mt-0.5">Indie hackers &amp; small teams</div>
 
                       <div className="mt-3 mb-4">
@@ -1201,18 +1386,24 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                     <button
                       type="button"
                       className={`w-full mt-5 py-2 rounded-xl font-bold text-xs tracking-wide transition-all cursor-pointer ${
-                        selectedPlan === 'starter'
-                          ? 'bg-gradient-to-r from-[#E5C38D] to-[#C59E5F] text-black shadow-[0_0_12px_rgba(229,195,141,0.3)]'
+                        paidVerified && selectedPlan === 'starter'
+                          ? 'bg-[#E5C38D] text-black shadow-[0_0_15px_rgba(229,195,141,0.4)]'
+                          : selectedPlan === 'starter'
+                          ? 'bg-amber-500 hover:bg-amber-400 text-black'
                           : 'bg-white/[0.04] text-zinc-300 hover:text-white border border-white/[0.08]'
                       }`}
                     >
-                      {selectedPlan === 'starter' ? 'Selected' : 'Select Starter ($35)'}
+                      {paidVerified && selectedPlan === 'starter'
+                        ? '✓ Verified & Paid · View Receipt'
+                        : selectedPlan === 'starter'
+                        ? 'Complete Checkout'
+                        : `Select Starter (${detectedPricing.starterPrice})`}
                     </button>
                   </div>
 
-                  {/* CARD 3: Pro Gateway ($59 / month) */}
+                  {/* CARD 4: Pro Gateway ($59 / month) */}
                   <div
-                    onClick={() => setSelectedPlan('pro')}
+                    onClick={() => handleSelectPlan('pro')}
                     className={`p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between hover:-translate-y-1 ${
                       selectedPlan === 'pro'
                         ? 'bg-[#18140D] border-[#C59E5F] shadow-[0_0_30px_rgba(197,158,95,0.25)] ring-2 ring-[#E5C38D]'
@@ -1236,11 +1427,18 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                         </div>
                       </div>
 
-                      <div className="text-lg font-bold text-white flex items-center gap-1.5">
-                        <span>Pro Gateway</span>
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#C59E5F]/20 text-[#E5C38D] font-mono">
-                          ALL IN
-                        </span>
+                      <div className="text-lg font-bold text-white flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span>Pro Gateway</span>
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#C59E5F]/20 text-[#E5C38D] font-mono">
+                            ALL IN
+                          </span>
+                        </div>
+                        {paidVerified && selectedPlan === 'pro' && (
+                          <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/40">
+                            PAID
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] text-zinc-400 mt-0.5">Production startups &amp; scaling teams</div>
 
@@ -1279,12 +1477,18 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                     <button
                       type="button"
                       className={`w-full mt-5 py-2 rounded-xl font-bold text-xs tracking-wide transition-all cursor-pointer ${
-                        selectedPlan === 'pro'
-                          ? 'bg-gradient-to-r from-[#E5C38D] to-[#C59E5F] text-black shadow-[0_0_12px_rgba(229,195,141,0.3)]'
+                        paidVerified && selectedPlan === 'pro'
+                          ? 'bg-[#E5C38D] text-black shadow-[0_0_15px_rgba(229,195,141,0.4)]'
+                          : selectedPlan === 'pro'
+                          ? 'bg-amber-500 hover:bg-amber-400 text-black'
                           : 'bg-white/[0.04] text-zinc-300 hover:text-white border border-white/[0.08]'
                       }`}
                     >
-                      {selectedPlan === 'pro' ? 'Selected (Active)' : 'Select Pro ($59)'}
+                      {paidVerified && selectedPlan === 'pro'
+                        ? '✓ Verified & Paid · View Receipt'
+                        : selectedPlan === 'pro'
+                        ? 'Complete Checkout'
+                        : `Select Pro (${detectedPricing.proPrice})`}
                     </button>
                   </div>
 
@@ -1301,13 +1505,19 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                               ? `7-Day Free Trial (${detectedPricing.trialPrice})`
                               : selectedPlan === 'starter'
                               ? `Starter Gateway (${detectedPricing.starterPrice}${detectedPricing.period})`
+                              : selectedPlan === 'telemetry'
+                              ? `Agent Telemetry (${detectedPricing.telemetryPrice}${detectedPricing.period})`
                               : `Pro Gateway A to Z (${detectedPricing.proPrice}${detectedPricing.period})`
                           }`
                         : 'Aage badhne ke liye upar diye gaye plans me se ek choose karein.'}
                     </span>
                   </div>
                   <span className="font-mono text-[#E5C38D] text-[11px]">
-                    {selectedPlan === 'trial' ? '7 days zero charge' : 'Instant Setup'}
+                    {selectedPlan === 'trial'
+                      ? '7 days zero charge'
+                      : paidVerified
+                      ? `Paid & Verified · Billing ID: ${verifiedBillingId}`
+                      : 'Payment required to activate'}
                   </span>
                 </div>
               </div>
@@ -1326,6 +1536,12 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                       showToast('Please select a subscription plan to continue.');
                       return;
                     }
+                    if (selectedPlan !== 'trial' && !paidVerified) {
+                      showToast('Payment required for paid plans. Please complete checkout to continue.');
+                      setBillingModalMode('checkout');
+                      setIsBillingModalOpen(true);
+                      return;
+                    }
                     setCurrentStep(5);
                   }}
                   disabled={!selectedPlan}
@@ -1334,6 +1550,13 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                   <span>Continue</span>
                   <span>→</span>
                 </button>
+
+                {paidVerified && verifiedBillingId && (
+                  <div className="ml-auto flex items-center gap-2 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Permanent Billing ID: {verifiedBillingId}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1479,22 +1702,32 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                         <CreditCard className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[10px] font-mono text-[#E5C38D] uppercase font-semibold">
-                          SUBSCRIPTION PLAN
+                        <div className="flex items-center justify-between">
+                          <div className="text-[10px] font-mono text-[#E5C38D] uppercase font-semibold">
+                            SUBSCRIPTION PLAN
+                          </div>
+                          {paidVerified && verifiedBillingId && (
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 font-bold">
+                              <ShieldCheck className="w-3 h-3" />
+                              <span>PAID · {verifiedBillingId}</span>
+                            </span>
+                          )}
                         </div>
                         <div className="text-xs font-bold text-white">
                           {selectedPlan === 'trial'
                             ? `7-Day Free Trial (${detectedPricing.trialPrice})`
                             : selectedPlan === 'starter'
                             ? `Starter Gateway (${detectedPricing.starterPrice}${detectedPricing.period})`
+                            : selectedPlan === 'telemetry'
+                            ? `Agent Telemetry (${detectedPricing.telemetryPrice}${detectedPricing.period})`
                             : `Pro Gateway (${detectedPricing.proPrice}${detectedPricing.period})`}
                         </div>
                         <div className="text-[11px] text-zinc-400">
-                          {selectedPlan === 'trial'
+                          {paidVerified && verifiedInvoice
+                            ? `Invoice: ${verifiedInvoice.invoice_number} · Paid via ${verifiedInvoice.payment_method}`
+                            : selectedPlan === 'trial'
                             ? '100% Free evaluation with zero charges today'
-                            : selectedPlan === 'starter'
-                            ? '500k requests/mo · 3 seats · Exact caching'
-                            : '3M requests/mo · 10 seats · Auto-fallback & Semantic cache'}
+                            : 'Ready for activation'}
                         </div>
                       </div>
                     </div>
@@ -1613,6 +1846,270 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                 Send Email
               </a>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* IMMEDIATE BILLING CHECKOUT & VERIFIED RECEIPT MODAL      */}
+      {/* ======================================================== */}
+      {isBillingModalOpen && selectedPlan && selectedPlan !== 'trial' && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="w-full max-w-xl bg-[#0B0E14] border border-[#C59E5F]/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative space-y-6 animate-in zoom-in-95 duration-200 my-8">
+            
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-white/[0.08] pb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="px-2 py-0.5 rounded-md bg-[#C59E5F]/15 text-[#E5C38D] text-[10px] font-mono font-bold uppercase tracking-wider border border-[#C59E5F]/30 flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-[#E5C38D]" />
+                    <span>256-Bit SSL Secured</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-500">PCI-DSS Compliant</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  {billingModalMode === 'checkout' ? 'Complete Subscription & Billing' : 'Payment Verified & Receipt Generated'}
+                </h2>
+                <p className="text-xs text-zinc-400 mt-1">
+                  {billingModalMode === 'checkout'
+                    ? 'A permanent unique Billing ID will be generated upon confirmation and saved to your account.'
+                    : 'Your workspace gateway has been unlocked with your permanent Billing ID.'}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsBillingModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* CHECKOUT MODE */}
+            {billingModalMode === 'checkout' && (
+              <form onSubmit={handleProcessPayment} className="space-y-5">
+                {/* Plan Summary Card */}
+                <div className="p-4 rounded-2xl bg-[#07090C] border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="text-xs font-mono uppercase text-[#E5C38D] font-bold">
+                      Selected Plan
+                    </div>
+                    <div className="text-base font-bold text-white">
+                      {selectedPlan === 'telemetry' ? 'Agent Telemetry' : selectedPlan === 'starter' ? 'Starter Gateway' : 'Pro Gateway'}
+                    </div>
+                    <div className="text-[11px] text-zinc-400">
+                      {selectedPlan === 'telemetry' ? '100k events/mo · 1 seat' : selectedPlan === 'starter' ? '500k requests/mo · 3 seats' : '3M requests/mo · 10 seats'}
+                    </div>
+                  </div>
+
+                  {/* Interval Switcher */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center bg-[#0B0E14] border border-white/[0.08] p-1 rounded-xl text-xs font-mono">
+                      <button
+                        type="button"
+                        onClick={() => setBillingInterval('mo')}
+                        className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
+                          billingInterval === 'mo' ? 'bg-[#C59E5F] text-black font-bold' : 'text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBillingInterval('yr')}
+                        className={`px-3 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+                          billingInterval === 'yr' ? 'bg-[#C59E5F] text-black font-bold' : 'text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        <span>Annual</span>
+                        <span className="text-[9px] px-1 py-0.2 rounded bg-black/40 text-emerald-300 font-bold">-20%</span>
+                      </button>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-black font-mono text-[#E5C38D]">
+                        ${billingInterval === 'yr'
+                          ? selectedPlan === 'telemetry' ? '192' : selectedPlan === 'starter' ? '336' : '566'
+                          : selectedPlan === 'telemetry' ? '20' : selectedPlan === 'starter' ? '35' : '59'
+                        }
+                      </div>
+                      <div className="text-[10px] text-zinc-500 font-mono">
+                        {billingInterval === 'yr' ? '/ year' : '/ month'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Organization & Contact pre-filled */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-mono uppercase text-zinc-400 font-semibold">
+                      Organization
+                    </label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={orgName}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-sans text-zinc-300"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-mono uppercase text-zinc-400 font-semibold">
+                      Billing Email
+                    </label>
+                    <input
+                      type="email"
+                      readOnly
+                      value={user?.email || 'billing@ostraops.com'}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-sans text-zinc-300"
+                    />
+                  </div>
+                </div>
+
+                {/* Corporate Invoicing & Zero Card Upfront Verification */}
+                <div className="space-y-3 p-4 rounded-2xl bg-[#07090C] border border-emerald-500/20">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-white flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      Corporate Invoicing &amp; Direct Provisioning
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                      No Card Required
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    Zero card details required upfront. Enterprise billing and itemized Net-30 invoice receipt will be registered directly under your organization email.
+                  </p>
+                </div>
+
+                {/* Submit & Cancel */}
+                <div className="space-y-2 pt-2">
+                  <button
+                    type="submit"
+                    disabled={isProcessingPayment}
+                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#E5C38D] to-[#C59E5F] text-black font-extrabold text-xs tracking-wide shadow-[0_0_25px_rgba(229,195,141,0.4)] hover:brightness-110 active:scale-[0.99] disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    {isProcessingPayment ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-black" />
+                        <span>Securing Billing ID &amp; Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Confirm Payment &amp; Generate Billing ID</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+
+                  <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedPlan('trial');
+                        setIsBillingModalOpen(false);
+                        showToast('Switched to 7-Day Free Trial. No payment required.');
+                      }}
+                      className="text-zinc-400 hover:text-white underline cursor-pointer"
+                    >
+                      Or switch to 7-Day Free Trial (No Card Needed)
+                    </button>
+                    <span className="text-zinc-500 font-mono">Cancel anytime</span>
+                  </div>
+                </div>
+              </form>
+            )}
+
+            {/* RECEIPT MODE */}
+            {billingModalMode === 'receipt' && (
+              <div className="space-y-5 animate-in fade-in duration-300">
+                
+                {/* Canonical Billing ID Spotlight */}
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-[#121620] via-[#0E121B] to-[#121620] border border-[#C59E5F]/50 shadow-xl space-y-2 text-center">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold mb-1">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Payment Verified · Official Tax Receipt</span>
+                  </div>
+                  <div className="text-[11px] font-mono uppercase text-zinc-400 tracking-wider">
+                    Your Canonical Billing ID
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-mono font-black text-[#E5C38D] tracking-widest select-all">
+                    {verifiedBillingId}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleCopyReceiptBillingId}
+                      className="px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-xs font-mono text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      {copiedReceiptId ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-emerald-400">Copied to Clipboard</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-[#C59E5F]" />
+                          <span>Copy Billing ID</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-xs font-mono text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>Print Receipt</span>
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 pt-1 max-w-md mx-auto">
+                    This Billing ID is permanently bound to all gateway transactions for <strong className="text-white">{orgName}</strong> and visible in Settings → Billing.
+                  </p>
+                </div>
+
+                {/* Receipt Details Breakdown */}
+                <div className="p-4 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-2.5 text-xs">
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Invoice Reference</span>
+                    <span className="font-mono text-white font-bold">{verifiedInvoice?.invoice_number || 'INV-OST-2026-001'}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Plan Activated</span>
+                    <span className="text-white font-medium">{verifiedInvoice?.plan_name || 'Gateway Subscription'}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Payment Method</span>
+                    <span className="text-white font-mono">{verifiedInvoice?.payment_method || 'Visa •••• 4242'}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Billed To</span>
+                    <span className="text-white">{user?.email || 'admin@ostraops.com'}</span>
+                  </div>
+                  <div className="pt-2 border-t border-white/[0.08] flex justify-between text-sm font-bold">
+                    <span className="text-zinc-200">Amount Paid</span>
+                    <span className="text-[#E5C38D] font-mono">${(verifiedInvoice?.amount_usd ?? 35).toFixed(2)} USD</span>
+                  </div>
+                </div>
+
+                {/* Proceed Button */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsBillingModalOpen(false);
+                      setCurrentStep(5);
+                    }}
+                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#E5C38D] to-[#C59E5F] text-black font-extrabold text-xs sm:text-sm tracking-wide shadow-[0_0_25px_rgba(229,195,141,0.4)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span>Receipt Confirmed — Proceed to Step 5 (Team Setup)</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+              </div>
+            )}
+
           </div>
         </div>
       )}

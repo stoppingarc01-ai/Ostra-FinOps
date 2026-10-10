@@ -11,11 +11,13 @@ export const PROVIDER_DEFAULT_ENDPOINTS: Record<string, string> = {
   qwen: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions',
   glm: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
   kimi: 'https://api.moonshot.cn/v1/chat/completions',
+  nvidia: 'https://integrate.api.nvidia.com/v1/chat/completions',
 };
 
 export interface DispatcherOptions {
   secretResolver?: ISecretResolver;
   orgId?: string;
+  directApiKey?: string;
   fetchFn?: typeof fetch;
   timeoutMs?: number;
   customEndpoints?: Record<string, string>;
@@ -64,9 +66,9 @@ export function createUpstreamDispatcher(options?: DispatcherOptions): UpstreamD
       throw new Error(`Unsupported provider endpoint for: ${provider}`);
     }
 
-    // 1. Resolve Provider Key from Vault / Secrets
-    let apiKey: string | null = null;
-    if (secretResolver && orgId) {
+    // 1. Resolve Provider Key from Direct Key > Vault / Secrets > Environment
+    let apiKey: string | null = options?.directApiKey || null;
+    if (!apiKey && secretResolver && orgId) {
       apiKey = await secretResolver.resolveProviderKey(orgId, provider);
     }
     if (!apiKey) {
@@ -98,12 +100,39 @@ export function createUpstreamDispatcher(options?: DispatcherOptions): UpstreamD
 
     try {
       const isStreaming = payload.stream === true;
-      const res = await fetchImpl(endpoint, {
+      const wirePayload = { ...payload };
+      if (provider === 'nvidia') {
+        const requestedModel = String(wirePayload.model || targetModel.id);
+        if (requestedModel.includes('nemotron-3-ultra')) {
+          wirePayload.model = 'nvidia/nemotron-3-ultra-550b-a55b';
+        } else if (requestedModel.includes('nemotron-3-super')) {
+          wirePayload.model = 'nvidia/nemotron-3-super-120b-a12b';
+        } else if (requestedModel.includes('nemotron-3-nano') || requestedModel.includes('nano-omni')) {
+          wirePayload.model = 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning';
+        } else if (!requestedModel.startsWith('nvidia/')) {
+          wirePayload.model = 'nvidia/llama-3.1-nemotron-70b-instruct';
+        }
+        if (!wirePayload.max_tokens) wirePayload.max_tokens = 512;
+        if (wirePayload.temperature === undefined) wirePayload.temperature = 0.6;
+      }
+
+      let res = await fetchImpl(endpoint, {
         method: 'POST',
         headers,
-        body: JSON.stringify(payload),
+        body: JSON.stringify(wirePayload),
         signal: timeoutController.signal,
       });
+
+      // If specific preview model ID returns 404, fallback to NVIDIA's universal live Nemotron NIM
+      if (res.status === 404 && provider === 'nvidia' && wirePayload.model !== 'nvidia/llama-3.1-nemotron-70b-instruct') {
+        wirePayload.model = 'nvidia/llama-3.1-nemotron-70b-instruct';
+        res = await fetchImpl(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(wirePayload),
+          signal: timeoutController.signal,
+        });
+      }
 
       clearTimeout(timer);
       signal.removeEventListener('abort', onAbort);

@@ -60,6 +60,17 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
     const start = Date.now();
     const url = req.url || '';
 
+    // Universal Cross-Origin Resource Sharing (CORS) headers for browsers & dev tools
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, x-api-key, X-Request-ID, x-upstream-key, Idempotency-Key, x-idempotency-key, x-ostraops-cache');
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
     // Liveness Probe
     if (req.method === 'GET' && (url === '/healthz' || url === '/health' || url === '/v1/health')) {
       res.writeHead(200, {
@@ -271,9 +282,11 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
           // 3. Resolve Target Model & Create Upstream Dispatcher
           // ------------------------------------------------------------------
           const modelSpec = getModelSpec(requestedModelId) || MODEL_CATALOG['gpt-4o-mini'];
+          const directApiKey = (req.headers['x-upstream-key'] as string) || ctx.rawApiKey;
           const dispatcher = createUpstreamDispatcher({
             secretResolver,
             orgId: ctx.virtualKey.organizationId,
+            directApiKey,
           });
 
           const accumulator = new StreamTokenAccumulator(ctx.body);

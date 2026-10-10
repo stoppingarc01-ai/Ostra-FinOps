@@ -201,6 +201,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
           >
             About Us
           </button>
+          <button
+            onClick={() => onNavigate('support')}
+            className={`relative py-1 transition-all cursor-pointer ${
+              currentRoute === 'support'
+                ? 'text-[#E5C38D] font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#C59E5F] after:rounded-full'
+                : 'hover:text-white'
+            }`}
+          >
+            Support
+          </button>
         </nav>
 
         {/* Right CTA — changes based on auth state */}
@@ -297,6 +307,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
               className={`text-left py-1 ${currentRoute === 'about' ? 'text-[#E5C38D] font-bold' : 'hover:text-white'}`}
             >
               About Us
+            </button>
+            <button
+              onClick={() => { onNavigate('support'); setMobileMenuOpen(false); }}
+              className={`text-left py-1 ${currentRoute === 'support' ? 'text-[#E5C38D] font-bold' : 'hover:text-white'}`}
+            >
+              Support Center
             </button>
             {user && (
               <button

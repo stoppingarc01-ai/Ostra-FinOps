@@ -141,6 +141,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
     }
   }, [profile, user]);
 
+  // Listen for deep-linked tabs in URL hash (e.g. #settings?tab=billing or #settings/billing)
+  useEffect(() => {
+    const handleHash = () => {
+      const h = window.location.hash.toLowerCase();
+      if (h.includes('tab=billing') || h.includes('/billing') || h.includes('billing')) {
+        if (!h.startsWith('#billing') || h.includes('settings')) {
+          setActiveSection('billing');
+        }
+      } else if (h.includes('tab=security') || h.includes('/security')) {
+        setActiveSection('security');
+        setActiveSubTab('security');
+      } else if (h.includes('tab=general') || h.includes('/general')) {
+        setActiveSection('general');
+        setActiveSubTab('preferences');
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
   // Toast & UI
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);

@@ -37,15 +37,20 @@ export interface DayStats {
  * Aggregate KPIs from gateway_logs over the last N days.
  * Returns null when Supabase is unconfigured.
  */
-export async function fetchGatewayStats(days = 7): Promise<GatewayStats | null> {
+export async function fetchGatewayStats(days = 7, orgId?: string): Promise<GatewayStats | null> {
   if (!isSupabaseConfigured) return null;
   try {
     const since = new Date(Date.now() - days * 86_400_000).toISOString();
-    const { data, error } = await supabase
+    let query = supabase
       .from('gateway_logs')
       .select('cost_usd, input_tokens, output_tokens, routed_model')
       .gte('created_at', since);
 
+    if (orgId) {
+      query = query.eq('organization_id', orgId);
+    }
+
+    const { data, error } = await query;
     if (error || !data) return null;
 
     const byModel: Record<string, number> = {};
@@ -70,15 +75,20 @@ export async function fetchGatewayStats(days = 7): Promise<GatewayStats | null> 
  * Per-day spend/tokens/requests for chart rendering.
  * Returns empty array when Supabase is unconfigured.
  */
-export async function fetchGatewayStatsByDay(days = 7): Promise<DayStats[]> {
+export async function fetchGatewayStatsByDay(days = 7, orgId?: string): Promise<DayStats[]> {
   if (!isSupabaseConfigured) return [];
   try {
     const since = new Date(Date.now() - days * 86_400_000).toISOString();
-    const { data, error } = await supabase
+    let query = supabase
       .from('gateway_logs')
       .select('cost_usd, input_tokens, output_tokens, created_at')
       .gte('created_at', since);
 
+    if (orgId) {
+      query = query.eq('organization_id', orgId);
+    }
+
+    const { data, error } = await query;
     if (error || !data) return [];
 
     const map: Record<string, DayStats> = {};
@@ -96,17 +106,22 @@ export async function fetchGatewayStatsByDay(days = 7): Promise<DayStats[]> {
 }
 
 /**
- * Fetch live gateway telemetry logs from Supabase
+ * Fetch live gateway telemetry logs from Supabase scoped to organization
  */
-export async function fetchGatewayLogs(limit = 50): Promise<GatewayLog[]> {
+export async function fetchGatewayLogs(limit = 50, orgId?: string): Promise<GatewayLog[]> {
   if (!isSupabaseConfigured) return [];
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('gateway_logs')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(limit);
 
+    if (orgId) {
+      query = query.eq('organization_id', orgId);
+    }
+
+    const { data, error } = await query;
     if (error) {
       console.warn('[Supabase] Telemetry query notice:', error.message);
       return [];

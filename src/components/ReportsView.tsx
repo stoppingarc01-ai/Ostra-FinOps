@@ -21,7 +21,9 @@ import { fetchGatewayLogs, isSupabaseConfigured, type DayStats } from '../lib/su
 import type { GatewayLog } from '../types/database';
 
 export const ReportsView: React.FC = () => {
-  const { subscription } = useAuth();
+  const { user, organization, subscription } = useAuth();
+  const userId = user?.id || 'guest';
+  const orgId = organization?.id;
   const [logs, setLogs] = useState<GatewayLog[]>([]);
   const [dailyStats, setDailyStats] = useState<DayStats[]>([]);
 
@@ -30,33 +32,19 @@ export const ReportsView: React.FC = () => {
     const load = async () => {
       let combinedLogs: GatewayLog[] = [];
 
-      // 1. File-based telemetry from terminal tests
+      // 1. User-isolated recent logs
       try {
-        const res = await fetch('/live-telemetry.json?t=' + Date.now());
-        if (res.ok) {
-          const fileLogs = await res.json();
-          if (Array.isArray(fileLogs)) combinedLogs.push(...fileLogs);
-        }
-      } catch {}
-
-      // 2. localStorage from UI playground
-      try {
-        const local = localStorage.getItem('ostraops_recent_logs');
+        const local = localStorage.getItem(`ostraops_recent_logs_${userId}`);
         if (local) {
           const parsed = JSON.parse(local);
-          if (Array.isArray(parsed)) {
-            const ids = new Set(combinedLogs.map(l => l.request_id || l.id));
-            for (const item of parsed) {
-              if (!ids.has(item.request_id || item.id)) combinedLogs.push(item);
-            }
-          }
+          if (Array.isArray(parsed)) combinedLogs.push(...parsed);
         }
       } catch {}
 
-      // 3. Supabase remote logs
-      if (isSupabaseConfigured) {
+      // 2. Organization-isolated Supabase remote logs
+      if (isSupabaseConfigured && orgId) {
         try {
-          const remote = await fetchGatewayLogs(100);
+          const remote = await fetchGatewayLogs(100, orgId);
           if (remote && remote.length > 0) {
             const ids = new Set(combinedLogs.map(l => l.request_id || l.id));
             for (const item of remote) {
@@ -86,13 +74,15 @@ export const ReportsView: React.FC = () => {
           map[date].totalRequests += 1;
         }
         setDailyStats(Object.values(map).sort((a, b) => a.date.localeCompare(b.date)));
+      } else {
+        setDailyStats([]);
       }
     };
 
     load();
     const interval = setInterval(load, 4000);
     return () => { isMounted = false; clearInterval(interval); };
-  }, []);
+  }, [userId, orgId]);
 
   const totalSpend = logs.reduce((acc, l) => acc + (l.cost_usd || 0), 0);
   const totalTokens = logs.reduce((acc, l) => acc + (l.input_tokens || 0) + (l.output_tokens || 0), 0);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   User as UserIcon,
   Mail,
@@ -28,6 +28,11 @@ interface SignupPageProps {
 
 export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
   const { signUp, signInWithGoogle, signInWithGithub, updateProfile } = useAuth();
+
+  useEffect(() => {
+    // Preload heavy onboarding module in background so post-signup navigation is immediate
+    import('./OnboardingPage').catch(() => {});
+  }, []);
 
   const [authMode, setAuthMode] = useState<'email' | 'phone'>('email');
 

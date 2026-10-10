@@ -13,6 +13,7 @@ import {
   reauthenticateWithPopup,
   EmailAuthProvider,
   reauthenticateWithCredential,
+  updatePassword,
   type User as FirebaseUser
 } from 'firebase/auth';
 import {
@@ -22,12 +23,14 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { Profile, Organization, OrgRole, UserSubscription } from '../types/database';
 import {
   getUserSubscription,
   createUserDefaultSubscription,
   updateUserSubscription,
-  subscribeToUserSubscription
+  subscribeToUserSubscription,
+  PLAN_METADATA
 } from '../lib/subscriptionService';
 
 export type { Profile, UserSubscription };
@@ -57,6 +60,7 @@ interface AuthContextType {
   signInWithGithub: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ error: Error | null }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
   updateSubscription: (updates: Partial<UserSubscription>) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
@@ -239,6 +243,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Sync and isolate user subscription in Firestore
       let userSub = await getUserSubscription(userId);
+      const chosenPlan = localStorage.getItem(`ostraops_active_plan_${userId}`) || localStorage.getItem('ostraops_active_plan');
+      if (userSub && userSub.plan_id === 'free' && chosenPlan && chosenPlan !== 'free') {
+        const meta = PLAN_METADATA[chosenPlan] || { name: 'Starter Gateway', price: 35 };
+        userSub = {
+          ...userSub,
+          plan_id: chosenPlan,
+          plan_name: meta.name,
+          price_amount: meta.price,
+        };
+        try {
+          localStorage.setItem(`ostraops_subscription_${userId}`, JSON.stringify(userSub));
+          localStorage.setItem('ostraops_subscription', JSON.stringify(userSub));
+        } catch {}
+      }
       if (!userSub) {
         userSub = await createUserDefaultSubscription(userId);
       }
@@ -246,7 +264,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.warn('Could not sync Firestore profile or subscription:', e);
       try {
-        const raw = localStorage.getItem('ostraops_subscription');
+        const raw = localStorage.getItem(`ostraops_subscription_${fbUser.uid}`) || localStorage.getItem('ostraops_subscription');
         if (raw) {
           setSubscription(JSON.parse(raw));
         }
@@ -311,7 +329,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       if (fullName) {
-        await updateAuthProfile(cred.user, { displayName: fullName }).catch(() => {});
+        updateAuthProfile(cred.user, { displayName: fullName }).catch(() => {});
       }
       const authUser: AuthUser = {
         id: cred.user.uid,
@@ -321,7 +339,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       setUser(authUser);
       setSession({ user: authUser });
-      await syncOrCreateUserDocs(cred.user, fullName);
+
+      // Fast optimistic profile setup so navigation to onboarding is immediate
+      const orgId = `org_${cred.user.uid.slice(0, 8)}`;
+      const optOrg: Organization = {
+        id: orgId,
+        name: `${fullName || 'My'}'s Workspace`,
+        slug: `workspace-${cred.user.uid.slice(0, 6)}`,
+        billing_status: 'active',
+        plan: 'free',
+        billing_email: email,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      const optProfile: Profile = {
+        id: cred.user.uid,
+        org_id: orgId,
+        full_name: fullName || null,
+        email: email,
+        phone: null,
+        job_title: null,
+        company_name: null,
+        company_website: null,
+        avatar_url: null,
+        timezone: 'Asia/Kolkata',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setProfile(optProfile);
+      setOrganization(optOrg);
+      setOrgRole('owner');
+
+      // Sync Firestore documents asynchronously in the background without blocking the user
+      syncOrCreateUserDocs(cred.user, fullName).catch((err) => {
+        console.warn('Background Firestore sync note:', err);
+      });
+
       return { error: null };
     } catch (err) {
       return { error: formatFirebaseError(err) };
@@ -368,8 +421,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSubscription(null);
     try {
       sessionStorage.clear();
+      // Remove any legacy unscoped keys so they cannot pollute the next user
       localStorage.removeItem('ostraops_pending_plan');
       localStorage.removeItem('ostraops_avatar_url');
+      localStorage.removeItem('ostraops_subscription');
+      localStorage.removeItem('ostraops_recent_logs');
+      localStorage.removeItem('ostraops_connected_integrations');
+      localStorage.removeItem('ostraops_active_plan');
+      localStorage.removeItem('ostraops_user_tier');
+      localStorage.removeItem('ostraops_calendar_tasks');
+      localStorage.removeItem('ostraops_support_tickets');
     } catch {}
   };
 
@@ -377,7 +438,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await sendPasswordResetEmail(auth, email);
       return { error: null };
-    } catch (err) {
+    } catch (err: any) {
+      // If user registered with Supabase or Firebase has domain mismatch, also try Supabase
+      if (isSupabaseConfigured) {
+        try {
+          const { error: sbErr } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/#login`,
+          });
+          if (!sbErr) return { error: null };
+        } catch {}
+      }
+      return { error: formatFirebaseError(err) };
+    }
+  };
+
+  const changePassword = async (currentPwd: string, newPwd: string) => {
+    if (!auth.currentUser || !auth.currentUser.email) {
+      return { error: new Error('You must be signed in to update your password.') };
+    }
+    try {
+      // Re-authenticate user before allowing sensitive master password rotation
+      const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPwd);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      await updatePassword(auth.currentUser, newPwd);
+      return { error: null };
+    } catch (err: any) {
       return { error: formatFirebaseError(err) };
     }
   };
@@ -429,15 +514,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // 1. Immediately update React state
     setSubscription((prev) => (prev ? { ...prev, ...updates } : (updates as UserSubscription)));
 
-    // 2. Persist to localStorage immediately
+    // 2. Persist to localStorage scoped to user
+    const uid = user?.id || 'guest';
     try {
       if (updates.plan_id) {
+        localStorage.setItem(`ostraops_active_plan_${uid}`, updates.plan_id);
         localStorage.setItem('ostraops_active_plan', updates.plan_id);
-        localStorage.setItem('ostraops_user_tier', 'team');
       }
-      const raw = localStorage.getItem('ostraops_subscription');
+      const raw = localStorage.getItem(`ostraops_subscription_${uid}`) || localStorage.getItem('ostraops_subscription');
       const current = raw ? JSON.parse(raw) : {};
-      localStorage.setItem('ostraops_subscription', JSON.stringify({ ...current, ...updates }));
+      const merged = { ...current, ...updates };
+      localStorage.setItem(`ostraops_subscription_${uid}`, JSON.stringify(merged));
+      localStorage.setItem('ostraops_subscription', JSON.stringify(merged));
     } catch {}
 
     // 3. Attempt async Firestore write if user is authenticated without blocking caller
@@ -563,6 +651,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithGithub,
         signOut,
         resetPassword,
+        changePassword,
         updateProfile,
         updateSubscription,
         refreshProfile,

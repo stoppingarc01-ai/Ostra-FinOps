@@ -21,21 +21,31 @@ export const DEFAULT_SUBSCRIPTION: Omit<UserSubscription, 'id' | 'user_id' | 'cr
 export const PLAN_METADATA: Record<string, { name: string; price: number }> = {
   free: { name: 'Community Free', price: 0 },
   community: { name: 'Community Free', price: 0 },
-  telemetry_observer: { name: 'Agent Telemetry', price: 20 },
+  starter: { name: 'Starter Gateway', price: 35 },
   starter_gateway: { name: 'Starter Gateway', price: 35 },
+  pro: { name: 'Pro Gateway', price: 59 },
   pro_gateway: { name: 'Pro Gateway', price: 59 },
+  telemetry: { name: 'Agent Telemetry', price: 20 },
+  telemetry_observer: { name: 'Agent Telemetry', price: 20 },
+  trial: { name: '7-Day Free Trial', price: 0 },
+  team_trial: { name: '7-Day Free Trial', price: 0 },
   team_scale: { name: 'Starter Gateway', price: 35 }, // backward compat
   solo_pro: { name: 'Starter Gateway', price: 35 },    // backward compat
+  team: { name: 'Starter Gateway', price: 35 },
+  enterprise: { name: 'Pro Gateway', price: 59 },
 };
 
 /**
  * Fetch subscription record for a specific user from Supabase / Firestore with resilient localStorage fallback.
  */
 export const getUserSubscription = async (userId: string): Promise<UserSubscription | null> => {
+  if (!userId) return null;
   // Check local cache first for instant UI responsiveness
   let cachedSub: UserSubscription | null = null;
+  let cachedPlanKey: string | null = null;
   try {
-    const raw = localStorage.getItem('ostraops_subscription');
+    cachedPlanKey = localStorage.getItem(`ostraops_active_plan_${userId}`) || localStorage.getItem('ostraops_active_plan');
+    const raw = localStorage.getItem(`ostraops_subscription_${userId}`) || localStorage.getItem('ostraops_subscription');
     if (raw) {
       cachedSub = JSON.parse(raw);
     }
@@ -57,13 +67,36 @@ export const getUserSubscription = async (userId: string): Promise<UserSubscript
           .eq('id', data.org_id)
           .maybeSingle();
 
-        if (orgData?.plan) {
-          const planKey = orgData.plan.toLowerCase();
-          const meta = PLAN_METADATA[planKey] || { name: 'Starter Gateway', price: 35 };
+        if (orgData) {
+          const dbPlan = orgData.plan ? orgData.plan.toLowerCase() : 'free';
+
+          // Critical safeguard: If user already has an active chosen plan in local state (e.g. starter_gateway),
+          // but Supabase org is still on the initial signup default 'free', sync user's chosen plan to Supabase!
+          const chosenPlanKey = (cachedSub?.plan_id && cachedSub.plan_id !== 'free')
+            ? cachedSub.plan_id
+            : (cachedPlanKey && cachedPlanKey !== 'free')
+            ? cachedPlanKey
+            : null;
+
+          if (dbPlan === 'free' && chosenPlanKey) {
+            try {
+              await supabase
+                .from('organizations')
+                .update({ plan: chosenPlanKey })
+                .eq('id', data.org_id);
+            } catch {}
+
+            if (cachedSub) {
+              return cachedSub;
+            }
+          }
+
+          const effectivePlan = (dbPlan !== 'free' ? dbPlan : chosenPlanKey) || 'free';
+          const meta = PLAN_METADATA[effectivePlan] || { name: 'Starter Gateway', price: 35 };
           const sub: UserSubscription = {
             id: userId,
             user_id: userId,
-            plan_id: planKey,
+            plan_id: effectivePlan,
             plan_name: meta.name,
             price_amount: meta.price,
             billing_interval: 'mo',
@@ -71,11 +104,16 @@ export const getUserSubscription = async (userId: string): Promise<UserSubscript
             renewal_date: new Date(Date.now() + 30 * 86_400_000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
             quota_usage_percent: 0,
             quota_used: 0,
-            quota_limit: planKey === 'pro_gateway' ? 10000000 : planKey === 'starter_gateway' ? 1000000 : 50000,
+            quota_limit: effectivePlan.includes('pro') ? 10000000 : effectivePlan.includes('starter') ? 1000000 : 50000,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           };
-          try { localStorage.setItem('ostraops_subscription', JSON.stringify(sub)); } catch {}
+          try {
+            localStorage.setItem(`ostraops_subscription_${userId}`, JSON.stringify(sub));
+            localStorage.setItem(`ostraops_active_plan_${userId}`, sub.plan_id);
+            localStorage.setItem('ostraops_subscription', JSON.stringify(sub));
+            localStorage.setItem('ostraops_active_plan', sub.plan_id);
+          } catch {}
           return sub;
         }
       }
@@ -96,7 +134,10 @@ export const getUserSubscription = async (userId: string): Promise<UserSubscript
         data.plan_name = 'Starter Gateway';
         data.price_amount = 35;
       }
-      try { localStorage.setItem('ostraops_subscription', JSON.stringify(data)); } catch {}
+      try {
+        localStorage.setItem(`ostraops_subscription_${userId}`, JSON.stringify(data));
+        localStorage.setItem(`ostraops_active_plan_${userId}`, data.plan_id);
+      } catch {}
       return data;
     }
   } catch (err) {
@@ -141,6 +182,8 @@ export const createUserDefaultSubscription = async (
   };
 
   try {
+    localStorage.setItem(`ostraops_subscription_${userId}`, JSON.stringify(newSub));
+    localStorage.setItem(`ostraops_active_plan_${userId}`, newSub.plan_id);
     localStorage.setItem('ostraops_subscription', JSON.stringify(newSub));
     localStorage.setItem('ostraops_active_plan', newSub.plan_id);
   } catch {}
@@ -186,11 +229,11 @@ export const updateUserSubscription = async (
   };
 
   try {
-    const current = localStorage.getItem('ostraops_subscription');
+    const current = localStorage.getItem(`ostraops_subscription_${userId}`);
     const merged = current ? { ...JSON.parse(current), ...payload } : payload;
-    localStorage.setItem('ostraops_subscription', JSON.stringify(merged));
+    localStorage.setItem(`ostraops_subscription_${userId}`, JSON.stringify(merged));
     if (updates.plan_id) {
-      localStorage.setItem('ostraops_active_plan', updates.plan_id);
+      localStorage.setItem(`ostraops_active_plan_${userId}`, updates.plan_id);
     }
   } catch {}
 
@@ -229,6 +272,10 @@ export const subscribeToUserSubscription = (
   userId: string,
   callback: (subscription: UserSubscription | null) => void
 ): (() => void) => {
+  if (!userId) {
+    callback(null);
+    return () => {};
+  }
   const subRef = doc(db, 'subscriptions', userId);
   return onSnapshot(
     subRef,
@@ -238,7 +285,7 @@ export const subscribeToUserSubscription = (
       } else {
         // Fall back to localStorage
         try {
-          const raw = localStorage.getItem('ostraops_subscription');
+          const raw = localStorage.getItem(`ostraops_subscription_${userId}`);
           if (raw) callback(JSON.parse(raw));
           else callback(null);
         } catch {
@@ -248,7 +295,7 @@ export const subscribeToUserSubscription = (
     },
     () => {
       try {
-        const raw = localStorage.getItem('ostraops_subscription');
+        const raw = localStorage.getItem(`ostraops_subscription_${userId}`);
         if (raw) callback(JSON.parse(raw));
         else callback(null);
       } catch {

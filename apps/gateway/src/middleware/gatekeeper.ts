@@ -41,6 +41,13 @@ const BASELINE_INPUT_RATES: Record<string, number> = {
   'moonshot-v1-32k': 0.34 / 1_000_000,
   'moonshot-v1-8k': 0.17 / 1_000_000,
   'kimi-latest': 1.0 / 1_000_000,
+  // NVIDIA Nemotron-3 family
+  'nvidia/nemotron-3-ultra-550b-moe': 1.8 / 1_000_000,
+  'nemotron-3-ultra': 1.8 / 1_000_000,
+  'nvidia/nemotron-3-super-120b-moe': 0.6 / 1_000_000,
+  'nemotron-3-super': 0.6 / 1_000_000,
+  'nvidia/nemotron-3-nano-omni': 0.15 / 1_000_000,
+  'nemotron-3-nano-omni': 0.15 / 1_000_000,
 };
 
 /**

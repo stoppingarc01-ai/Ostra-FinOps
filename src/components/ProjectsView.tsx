@@ -494,6 +494,7 @@ export const ProjectsView: React.FC = () => {
                     <option value="GPT-4o">GPT-4o</option>
                     <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
                     <option value="Claude 3.7 Sonnet">Claude 3.7 Sonnet</option>
+                    <option value="Nemotron-3 Ultra (550B MoE)">Nemotron-3 Ultra (550B MoE)</option>
                     <option value="Gemini 1.5 Pro">Gemini 1.5 Pro</option>
                     <option value="DeepSeek-V3">DeepSeek-V3</option>
                   </select>
@@ -510,6 +511,8 @@ export const ProjectsView: React.FC = () => {
                   >
                     <option value="Claude 3.5 Haiku">Claude 3.5 Haiku</option>
                     <option value="GPT-4o-mini">GPT-4o-mini</option>
+                    <option value="Nemotron-3 Super (120B MoE)">Nemotron-3 Super (120B MoE)</option>
+                    <option value="Nemotron-3 Nano Omni">Nemotron-3 Nano Omni</option>
                     <option value="Gemini 1.5 Flash">Gemini 1.5 Flash</option>
                   </select>
                 </div>

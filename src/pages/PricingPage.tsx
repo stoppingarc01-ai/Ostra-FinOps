@@ -104,7 +104,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
   onNavigateHome, 
   onNavigateLogin,
 }) => {
-  const { user } = useAuth();
+  const { user, updateSubscription } = useAuth();
   const [copied, setCopied] = useState(false);
   
   // Selected Currency State - Defaults to USD ($)
@@ -187,7 +187,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
       localStorage.setItem('ostraops_pending_plan', JSON.stringify(pendingPlan));
     } catch {}
 
-    // Pricing page redirects to login page (if not logged in) or directly to dashboard (if already logged in)
+    // Pricing page redirects to login page (if not logged in) or directly updates subscription
     if (!user) {
       showToast(`Selected ${name}. Please log in to complete your setup & payment.`);
       setTimeout(() => {
@@ -200,10 +200,19 @@ export const PricingPage: React.FC<PricingPageProps> = ({
       return;
     }
 
-    // User is already logged in: route to dashboard to complete payment there
-    showToast(`Loading ${name} checkout on your dashboard...`);
+    // User is already logged in: immediately apply plan upgrade and confirm
+    if (updateSubscription) {
+      updateSubscription({
+        plan_id: pendingPlan.planId,
+        plan_name: name,
+        price_amount: finalAmount,
+        billing_interval: isAnnual ? 'yr' : 'mo',
+        status: 'active',
+      }).catch(() => {});
+    }
+    showToast(`Plan successfully upgraded to ${name}!`);
     setTimeout(() => {
-      window.location.hash = '#dashboard';
+      window.location.hash = '#settings';
     }, 400);
   };
 

@@ -35,6 +35,8 @@ const ServerErrorPage = React.lazy(() => import('./pages/ServerErrorPage').then(
 const RateLimitPage = React.lazy(() => import('./pages/RateLimitPage').then((m) => ({ default: m.RateLimitPage })));
 const AboutUsPage = React.lazy(() => import('./pages/AboutUsPage').then((m) => ({ default: m.AboutUsPage })));
 const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage').then((m) => ({ default: m.OnboardingPage })));
+const SupportPage = React.lazy(() => import('./pages/SupportPage').then((m) => ({ default: m.SupportPage })));
+const BillingPage = React.lazy(() => import('./pages/BillingPage').then((m) => ({ default: m.BillingPage })));
 
 const PageLoader: React.FC = () => (
   <div className="min-h-screen bg-[#07090C] text-white flex items-center justify-center">
@@ -45,10 +47,10 @@ const PageLoader: React.FC = () => (
   </div>
 );
 
-export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'refund' | 'about' | '404' | '500' | 'build-error' | '429';
+export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'billing' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'refund' | 'about' | 'support' | '404' | '500' | 'build-error' | '429';
 
 // Routes that require authentication
-const PROTECTED_ROUTES: AppRoute[] = ['dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings', 'onboarding'];
+const PROTECTED_ROUTES: AppRoute[] = ['dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings', 'onboarding', 'billing'];
 const HOMEPAGE_SECTIONS = ['#features', '#architecture', '#agents', '#developers', '#docs', '#quickstart', '#security', '#faq', '#ui-showcase', '#hero', '#about-sec', '#teams'];
 
 const AppInner: React.FC = () => {
@@ -57,6 +59,7 @@ const AppInner: React.FC = () => {
   const getInitialRoute = (): AppRoute => {
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
+    if (path.includes('billing') || hash.includes('billing')) return 'billing';
     if (path.includes('auth-showcase') || hash.includes('auth-showcase') || hash.includes('auth')) return 'auth-showcase';
     if (path.includes('login') || hash.includes('login')) return 'login';
     if (path.includes('signup') || hash.includes('signup')) return 'signup';
@@ -83,6 +86,7 @@ const AppInner: React.FC = () => {
     if (path.includes('cookies') || hash.includes('cookies') || path.includes('cookie') || hash.includes('cookie')) return 'cookies';
     if (path.includes('refund') || hash.includes('refund')) return 'refund';
     if (path.includes('about') || hash.includes('about')) return 'about';
+    if (path.includes('support') || hash.includes('support') || path.includes('help') || hash.includes('help')) return 'support';
     if (path.includes('pricing') || hash.includes('pricing')) return 'pricing';
     if (path.includes('429') || hash.includes('429') || path.includes('rate-limit') || hash.includes('rate-limit') || path.includes('quota') || hash.includes('quota')) return '429';
     if (path.includes('build-error') || hash.includes('build-error') || path.includes('build') || hash.includes('build')) return 'build-error';
@@ -103,11 +107,6 @@ const AppInner: React.FC = () => {
   const getPreferredConsole = (): AppRoute => 'dashboard';
 
   const navigate = (route: AppRoute | string) => {
-    try {
-      localStorage.setItem('ostraops_active_plan', 'team_scale');
-      localStorage.setItem('ostraops_user_tier', 'team');
-    } catch {}
-
     // If navigating to a protected route without auth, redirect to signup (if pending plan) or login
     if (PROTECTED_ROUTES.includes(route as AppRoute) && !user) {
       let authTarget: AppRoute = 'login';
@@ -224,6 +223,7 @@ const AppInner: React.FC = () => {
       else if (path.includes('cookies') || hash.includes('cookies') || path.includes('cookie') || hash.includes('cookie')) route = 'cookies';
       else if (path.includes('refund') || hash.includes('refund')) route = 'refund';
       else if (path.includes('about') || hash.includes('about')) route = 'about';
+      else if (path.includes('support') || hash.includes('support') || path.includes('help') || hash.includes('help')) route = 'support';
       else if (path.includes('pricing') || hash.includes('pricing')) route = 'pricing';
       else if (path.includes('429') || hash.includes('429') || path.includes('rate-limit') || hash.includes('rate-limit') || path.includes('quota') || hash.includes('quota')) route = '429';
       else if (path.includes('build-error') || hash.includes('build-error') || path.includes('build') || hash.includes('build')) route = 'build-error';
@@ -388,6 +388,7 @@ const AppInner: React.FC = () => {
           <DashboardPage
             onNavigateHome={() => navigate('home')}
             onNavigatePricing={() => navigate('pricing')}
+            onNavigateSupport={() => navigate('support')}
             initialTab={currentRoute === 'dashboard' ? 'dashboard' : currentRoute}
           />
         </div>
@@ -511,11 +512,27 @@ const AppInner: React.FC = () => {
             onNavigatePricing={() => navigate('pricing')}
             onNavigateModels={() => navigate('models')}
           />
+        ) : currentRoute === 'support' ? (
+          <SupportPage
+            onNavigateHome={() => navigate('home')}
+            onNavigatePricing={() => navigate('pricing')}
+            onNavigateDashboard={() => navigate('dashboard')}
+          />
         ) : currentRoute === 'pricing' ? (
           /* Separate Dedicated Pricing Page */
           <PricingPage
             onNavigateHome={() => navigate('home')}
             onNavigateLogin={() => navigate('login')}
+          />
+        ) : currentRoute === 'billing' ? (
+          <BillingPage
+            onNavigateHome={() => navigate('home')}
+            onNavigateDashboard={() => navigate('dashboard')}
+            onNavigateSettings={() => {
+              window.location.hash = '#settings?tab=billing';
+              navigate('settings');
+            }}
+            initialPlanId={new URLSearchParams(window.location.search || window.location.hash.split('?')[1] || '').get('plan') || undefined}
           />
         ) : (
           <NotFoundPage

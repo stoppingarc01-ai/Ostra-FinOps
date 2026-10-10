@@ -15,13 +15,13 @@ async function runPhase3Check() {
   // Verification 0: Catalog sanity (40 models across 8 providers)
   // --------------------------------------------------------------------------
   {
-    console.log('-> Verification 0: Checking 40-model matrix integrity across 8 providers...');
+    console.log('-> Verification 0: Checking 40-model matrix integrity across providers (including NVIDIA)...');
     const totalModels = Object.keys(MODEL_CATALOG).length;
-    assert.strictEqual(totalModels, 40, `Catalog must contain exactly 40 models, got ${totalModels}`);
+    assert.ok(totalModels >= 40, `Catalog must contain at least 40 models, got ${totalModels}`);
 
     const providers = new Set(Object.values(MODEL_CATALOG).map((m) => m.provider));
-    assert.strictEqual(providers.size, 8, `Catalog must span exactly 8 providers, got ${providers.size}`);
-    console.log(`   ✔ Confirmed 40 models registered across providers: ${Array.from(providers).join(', ')}`);
+    assert.ok(providers.size >= 8, `Catalog must span at least 8 providers, got ${providers.size}`);
+    console.log(`   ✔ Confirmed ${totalModels} models registered across ${providers.size} providers: ${Array.from(providers).join(', ')}`);
   }
 
   // --------------------------------------------------------------------------

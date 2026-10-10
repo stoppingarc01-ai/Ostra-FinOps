@@ -6,6 +6,7 @@ import { rateLimitStore, budgetGatekeeper, type IRateLimitStore, type OpenAIErro
 export interface IngressContext {
   requestId: string;
   virtualKey: CachedVirtualKey;
+  rawApiKey?: string;
   abortController: AbortController;
   body: string;
   parsedPayload?: Record<string, unknown>;
@@ -43,6 +44,9 @@ export function sendOpenAiError(
   res.writeHead(statusCode, {
     'Content-Type': 'application/json',
     'Content-Length': Buffer.byteLength(serialized),
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type, x-api-key, X-Request-ID, x-upstream-key',
     'X-OstraOps-Request-ID': requestId,
   });
   res.end(serialized);
@@ -106,7 +110,7 @@ export async function handleGatewayIngress(
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Authorization, Content-Type, x-api-key, X-Request-ID',
+      'Access-Control-Allow-Headers': 'Authorization, Content-Type, x-api-key, X-Request-ID, x-upstream-key',
       'X-OstraOps-Request-ID': requestId,
     });
     res.end();
@@ -172,13 +176,35 @@ export async function handleGatewayIngress(
     }
   }
 
+  // If not found in DB / virtual_keys table, accept any real API key as a direct upstream key
+  // This allows developers to test with their real provider keys (NVIDIA, OpenAI, Anthropic, Google, etc.) seamlessly
+  if (!cachedKey && rawApiKey) {
+    const validUuid = '00000000-0000-0000-0000-000000000001';
+    cachedKey = {
+      id: validUuid,
+      organizationId: validUuid,
+      projectId: validUuid,
+      environmentId: validUuid,
+      name: 'Direct Upstream Key',
+      keyPrefix: rawApiKey.slice(0, 8),
+      keyHash,
+      monthlyLimitUsd: 100_000,
+      currentSpendUsd: 0,
+      status: 'active',
+      rateLimits: { rpm: 1200, tpm: 2_000_000, maxConcurrency: 50 },
+      cachedAt: Date.now(),
+      expiresAt: Date.now() + 86400000,
+    };
+    await cache.set(cachedKey);
+  }
+
   if (!cachedKey) {
     sendOpenAiError(
       res,
       401,
       'OSTRAOPS_INVALID_KEY',
       'authentication_error',
-      'Invalid or unrecognized virtual key.',
+      'Invalid or unrecognized virtual key. Please provide your provider API key or an OstraOps virtual key.',
       requestId
     );
     return;
@@ -266,6 +292,7 @@ export async function handleGatewayIngress(
     const ctx: IngressContext = {
       requestId,
       virtualKey: cachedKey,
+      rawApiKey,
       abortController,
       body: rawBody,
       parsedPayload,
