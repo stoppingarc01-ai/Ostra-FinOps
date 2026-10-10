@@ -190,7 +190,7 @@ export const ProjectsView: React.FC = () => {
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-400">Total Enforced Budget</span>
             <span className="text-[10px] font-mono font-bold text-[#E5C38D]">
-              {((totalSpend / totalBudget) * 100).toFixed(1)}% USED
+              {totalBudget > 0 ? `${((totalSpend / totalBudget) * 100).toFixed(1)}%` : '0.0%'} USED
             </span>
           </div>
           <div className="pt-2">
@@ -200,7 +200,7 @@ export const ProjectsView: React.FC = () => {
             <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden mt-1.5">
               <div 
                 className="h-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] rounded-full"
-                style={{ width: `${(totalSpend / totalBudget) * 100}%` }}
+                style={{ width: `${totalBudget > 0 ? Math.min(100, (totalSpend / totalBudget) * 100) : 0}%` }}
               />
             </div>
           </div>
