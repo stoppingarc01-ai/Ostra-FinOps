@@ -278,7 +278,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
   const [auditFilter, setAuditFilter] = useState<'All' | 'Authentication' | 'API' | 'Members' | 'Tokens' | 'Settings'>('All');
   const [auditSearch, setAuditSearch] = useState('');
 
-  const auditEvents = [
+  const [auditEvents, setAuditEvents] = useState([
     {
       id: 'aud-1',
       category: 'Tokens',
@@ -339,7 +339,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       ip: '103.21.244.18',
       type: 'webhook'
     }
-  ];
+  ]);
 
   const filteredAuditEvents = auditEvents.filter((item) => {
     if (auditFilter !== 'All' && item.category !== auditFilter) return false;

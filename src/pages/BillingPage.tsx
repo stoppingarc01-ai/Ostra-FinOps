@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import {
-  CreditCard,
-  Lock,
   ArrowRight,
   ArrowLeft,
   Copy,
@@ -9,6 +7,8 @@ import {
   Building,
   Loader2,
   BadgeCheck,
+  ShieldCheck,
+  CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { OstraIcon } from '../components/OstraBrand';
@@ -49,12 +49,6 @@ export const BillingPage: React.FC<BillingPageProps> = ({
   const [billingEmail, setBillingEmail] = useState(profile?.email || user?.email || 'billing@acme.ai');
   const [country, setCountry] = useState(profile?.country || 'United States');
   const [taxId, setTaxId] = useState('');
-  
-  // Card Form State
-  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
-  const [cardExpiry, setCardExpiry] = useState('12/28');
-  const [cardCvc, setCardCvc] = useState('984');
-  const [cardName, setCardName] = useState(profile?.full_name || 'Chief Technology Officer');
 
   // Checkout Status
   const [isProcessing, setIsProcessing] = useState(false);
@@ -143,11 +137,11 @@ export const BillingPage: React.FC<BillingPageProps> = ({
         priceAmount: totalDue,
         billingInterval,
         billingEmail: billingEmail.trim(),
-        customerName: cardName.trim() || companyName.trim() || profile?.full_name || 'Admin',
+        customerName: profile?.full_name || companyName.trim() || 'Admin',
         companyName: companyName.trim() || 'Organization',
         taxId: taxId.trim(),
         country,
-        cardLast4: cardNumber ? cardNumber.replace(/\D/g, '').slice(-4) || '4242' : '4242',
+        cardLast4: 'INV-CORP',
         cardBrand: 'Corporate Invoicing',
       });
 

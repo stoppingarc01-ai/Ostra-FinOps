@@ -284,20 +284,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
     e.preventDefault();
     if (!selectedPlan || selectedPlan === 'trial') return;
 
-    const rawCard = cardNumber.replace(/\s+/g, '');
-    if (rawCard.length < 15) {
-      showToast('Please enter a valid 16-digit card number.');
-      return;
-    }
-    if (cardExpiry.length < 5) {
-      showToast('Please enter card expiry as MM/YY.');
-      return;
-    }
-    if (cardCvc.length < 3) {
-      showToast('Please enter a valid security CVC.');
-      return;
-    }
-
     setIsProcessingPayment(true);
     const userId = user?.id || user?.uid || 'user_guest';
     const activePlanKey =
@@ -313,9 +299,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
     const finalPrice = billingInterval === 'yr' ? Math.round(basePrice * 12 * 0.8) : basePrice;
 
     try {
-      const last4 = rawCard.slice(-4) || '4242';
-      const brand = rawCard.startsWith('4') ? 'Visa' : rawCard.startsWith('5') ? 'Mastercard' : 'Amex';
-
       const checkoutRes = await processBillingCheckout({
         userId,
         planId: activePlanKey,
@@ -325,10 +308,10 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
         billingEmail: user?.email || 'billing@ostraops.com',
         customerName: profile?.full_name || 'Admin',
         companyName: orgName.trim() || 'My Organization',
-        taxId: taxId.trim() || undefined,
+        taxId: undefined,
         country,
-        cardLast4: last4,
-        cardBrand: brand,
+        cardLast4: 'INV-CORP',
+        cardBrand: 'Corporate Invoicing',
       });
 
       const subPayload = {
