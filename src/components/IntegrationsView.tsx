@@ -20,7 +20,6 @@ import {
   EyeOff,
   AlertTriangle,
   RefreshCw,
-  Lock,
   Play,
   Trash2,
   Terminal,
@@ -2421,10 +2420,10 @@ response = client.chat.completions.create(
             if (e.target === e.currentTarget) handleCloseWizard();
           }}
         >
-          <div className="relative w-full max-w-2xl flex items-center justify-center">
+          <div className="relative w-full max-w-3xl flex items-center justify-center">
             <div className="mac-window-ambient-glow" />
             <div
-              className={`flex flex-col w-full max-h-[88vh] bg-[#07090C] border border-[#C59E5F]/35 rounded-[24px] mac-window-frame overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              className={`flex flex-col w-full max-h-[92vh] bg-[#07090C] border border-white/[0.12] rounded-[24px] mac-window-frame overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-2xl ${
                 isClosingWizard ? 'mac-window-leave' : 'mac-window-enter'
               }`}
             >
@@ -2462,15 +2461,15 @@ response = client.chat.completions.create(
 
                 <div className="h-4 w-px bg-white/[0.1] hidden sm:block mx-0.5" />
 
-                <div className="w-7 h-7 rounded-lg bg-[#FAF3E0] border border-[#EEDDB8] flex items-center justify-center flex-shrink-0">
-                  <Zap className="w-4 h-4 text-[#C59E5F]" />
+                <div className="w-8 h-8 rounded-xl bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D] flex-shrink-0">
+                  <Zap className="w-4 h-4" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm sm:text-base font-bold text-white font-sans tracking-tight">
-                      Connect Upstream Model &amp; Provider
+                      Connect Upstream Provider
                     </h3>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#18181B] text-white uppercase tracking-wider">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#C59E5F]/20 text-[#E5C38D] border border-[#C59E5F]/30 uppercase tracking-wider">
                       STEP {currentStep} OF 3
                     </span>
                   </div>
@@ -2491,73 +2490,76 @@ response = client.chat.completions.create(
               </div>
             </div>
 
-            {/* 3 Step Tabs Navigation Bar */}
-            <div className="flex-shrink-0 grid grid-cols-3 border-b border-white/[0.08] text-xs font-mono">
-              {/* Step 1 Tab */}
-              <button
-                onClick={() => setCurrentStep(1)}
-                className={`py-3 px-4 flex items-center justify-center gap-2 border-r border-white/[0.08] transition-colors cursor-pointer ${
-                  currentStep === 1
-                    ? 'bg-[#C59E5F]/15 text-[#E5C38D] font-bold border-b-2 border-[#C59E5F]'
-                    : 'bg-[#0B0E14] hover:bg-white/[0.04] text-zinc-400'
-                }`}
-              >
-                <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px]">
-                  <Check className="w-2.5 h-2.5 stroke-[3]" />
-                </div>
-                <span>Provider</span>
-              </button>
+            {/* Modern Segmented Step Stepper */}
+            <div className="flex-shrink-0 px-5 py-3 border-b border-white/[0.08] bg-[#07090C] flex items-center justify-between text-xs font-sans">
+              <div className="flex items-center gap-2 w-full">
+                {/* Step 1 Tab */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(1)}
+                  className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    currentStep === 1
+                      ? 'bg-[#C59E5F]/15 text-[#E5C38D] border border-[#C59E5F]/40 font-bold shadow-xs'
+                      : currentStep > 1
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/15'
+                      : 'bg-[#0B0E14] text-zinc-400 border border-white/[0.06]'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                    currentStep > 1 ? 'bg-emerald-500 text-black' : currentStep === 1 ? 'bg-[#C59E5F] text-black' : 'bg-zinc-800 text-zinc-400'
+                  }`}>
+                    {currentStep > 1 ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : '1'}
+                  </div>
+                  <span className="font-semibold text-xs truncate">Provider</span>
+                </button>
 
-              {/* Step 2 Tab */}
-              <button
-                onClick={() => setCurrentStep(2)}
-                className={`py-3 px-4 flex items-center justify-center gap-2 border-r border-white/[0.08] transition-colors cursor-pointer ${
-                  currentStep === 2
-                    ? 'bg-[#C59E5F]/15 text-[#E5C38D] font-bold border-b-2 border-[#C59E5F]'
-                    : currentStep > 2
-                    ? 'bg-[#0B0E14] text-emerald-400'
-                    : 'bg-[#0B0E14] hover:bg-white/[0.04] text-zinc-400'
-                }`}
-              >
-                <div
-                  className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                <div className={`h-px w-4 sm:w-6 transition-colors ${currentStep >= 2 ? 'bg-[#C59E5F]/40' : 'bg-white/[0.08]'}`} />
+
+                {/* Step 2 Tab */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(2)}
+                  className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     currentStep === 2
-                      ? 'bg-[#C59E5F] text-black font-extrabold'
+                      ? 'bg-[#C59E5F]/15 text-[#E5C38D] border border-[#C59E5F]/40 font-bold shadow-xs'
                       : currentStep > 2
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'bg-white/[0.1] text-zinc-300'
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : 'bg-[#0B0E14] text-zinc-400 border border-white/[0.06]'
                   }`}
                 >
-                  {currentStep > 2 ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : '2'}
-                </div>
-                <span>Credentials</span>
-              </button>
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                    currentStep > 2 ? 'bg-emerald-500 text-black' : currentStep === 2 ? 'bg-[#C59E5F] text-black' : 'bg-zinc-800 text-zinc-400'
+                  }`}>
+                    {currentStep > 2 ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : '2'}
+                  </div>
+                  <span className="font-semibold text-xs truncate">Credentials &amp; Routing</span>
+                </button>
 
-              {/* Step 3 Tab */}
-              <button
-                onClick={() => {
-                  if (canProceedStep2) setCurrentStep(3);
-                }}
-                disabled={!canProceedStep2 && currentStep < 3}
-                className={`py-3 px-4 flex items-center justify-center gap-2 transition-colors ${
-                  currentStep === 3
-                    ? 'bg-[#C59E5F]/15 text-[#E5C38D] font-bold border-b-2 border-[#C59E5F] cursor-pointer'
-                    : canProceedStep2
-                    ? 'bg-[#0B0E14] hover:bg-white/[0.04] text-zinc-400 cursor-pointer'
-                    : 'bg-[#07090C] text-zinc-500 cursor-not-allowed opacity-60'
-                }`}
-              >
-                <div
-                  className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                <div className={`h-px w-4 sm:w-6 transition-colors ${currentStep >= 3 ? 'bg-[#C59E5F]/40' : 'bg-white/[0.08]'}`} />
+
+                {/* Step 3 Tab */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (canProceedStep2) setCurrentStep(3);
+                  }}
+                  disabled={!canProceedStep2 && currentStep < 3}
+                  className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-2 transition-all ${
                     currentStep === 3
-                      ? 'bg-[#C59E5F] text-white'
-                      : 'bg-white/[0.06] text-zinc-400'
+                      ? 'bg-[#C59E5F]/15 text-[#E5C38D] border border-[#C59E5F]/40 font-bold shadow-xs cursor-pointer'
+                      : canProceedStep2
+                      ? 'bg-[#0B0E14] text-zinc-300 border border-white/[0.06] hover:bg-white/[0.04] cursor-pointer'
+                      : 'bg-[#0B0E14] text-zinc-600 border border-white/[0.04] cursor-not-allowed opacity-50'
                   }`}
                 >
-                  3
-                </div>
-                <span>Gateway Snippet</span>
-              </button>
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                    currentStep === 3 ? 'bg-[#C59E5F] text-black' : 'bg-zinc-800 text-zinc-500'
+                  }`}>
+                    3
+                  </div>
+                  <span className="font-semibold text-xs truncate">Gateway Snippet</span>
+                </button>
+              </div>
             </div>
 
             {/* Modal Body Content */}
@@ -2623,34 +2625,63 @@ response = client.chat.completions.create(
               )}
 
               {/* ============================================================ */}
-              {/* STEP 2: CREDENTIALS (Matching user reference layout exactly) */}
+              {/* STEP 2: CREDENTIALS (Ultra-Modern High-End Redesign)         */}
               {/* ============================================================ */}
               {currentStep === 2 && (
                 <div className="space-y-4">
                   
+                  {/* Provider Header Status Card */}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#0B0E14] border border-white/[0.08]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center p-2 shrink-0">
+                        <ProviderLogo provider={activeProvider} className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono font-bold uppercase text-[#E5C38D]">{activeProvider}</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold">
+                            Direct Gateway Route
+                          </span>
+                        </div>
+                        <div className="text-xs text-zinc-400 mt-0.5 font-sans">
+                          Vault upstream secret and bind production target model
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(1)}
+                      className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 hover:text-white text-xs font-medium border border-white/[0.08] transition-all cursor-pointer"
+                    >
+                      Change Provider
+                    </button>
+                  </div>
+
                   {/* Field 1: Connection Name */}
-                  <div>
-                    <label className="text-xs font-bold text-zinc-300 block mb-1.5 font-mono uppercase tracking-wide">
-                      Connection Name
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-200 font-sans flex items-center justify-between">
+                      <span>Connection Label</span>
+                      <span className="text-[10px] text-zinc-500 font-mono">Workspace identifier</span>
                     </label>
                     <input
                       type="text"
                       value={connectionName}
                       onChange={(e) => setConnectionName(e.target.value)}
                       placeholder="e.g. Production Anthropic Cluster"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F] transition-all"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-sans text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]/30 transition-all"
                     />
                   </div>
 
                   {/* Field 2: Upstream API Key / Secret with Security Badge */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-bold text-zinc-300 font-mono uppercase tracking-wide">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-zinc-200 font-sans flex items-center gap-1.5">
+                        <Key className="w-3.5 h-3.5 text-[#E5C38D]" />
                         Upstream API Key / Secret
                       </label>
-                      <div className="flex items-center gap-1 text-[11px] font-mono text-emerald-700">
-                        <Lock className="w-3 h-3 text-emerald-600" />
-                        <span>Encrypted with AES-256-GCM</span>
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400">
+                        <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                        <span>AES-256-GCM Hardware Vault</span>
                       </div>
                     </div>
 
@@ -2665,50 +2696,56 @@ response = client.chat.completions.create(
                         }}
                         onBlur={() => setKeyTouched(true)}
                         placeholder={
-                          PROVIDER_RULES[activeProvider]?.placeholder || 'Enter upstream secret key...'
+                          PROVIDER_RULES[activeProvider]?.placeholder || 'Paste API key, proxy secret, or service token...'
                         }
                         className={`w-full px-3.5 py-2.5 pr-10 rounded-xl bg-[#0B0E14] text-xs font-mono transition-all focus:outline-none ${
                           keyTouched && !keyValidation.valid
-                            ? 'border-2 border-rose-500/80 bg-rose-950/20 text-rose-200 focus:border-rose-400'
+                            ? 'border border-rose-500/80 bg-rose-950/20 text-rose-200 focus:border-rose-400'
                             : keyTouched && keyValidation.valid
                             ? 'border border-emerald-500/80 text-emerald-200 focus:border-emerald-400'
-                            : 'border border-white/[0.08] text-white focus:border-[#C59E5F]'
+                            : 'border border-white/[0.08] text-white focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F]/30'
                         }`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 cursor-pointer"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white cursor-pointer p-1"
                         title={showApiKey ? 'Hide Key' : 'Show Key'}
                       >
                         {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
 
-                    {/* Validation Error Message */}
+                    {/* Validation Message */}
                     {keyTouched && !keyValidation.valid && (
-                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-400 font-mono animate-in fade-in duration-150">
-                        <AlertTriangle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
+                      <div className="flex items-center gap-1.5 text-xs text-rose-400 font-sans">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                         <span>{keyValidation.message}</span>
                       </div>
                     )}
                     {keyTouched && keyValidation.valid && (
-                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-400 font-mono animate-in fade-in duration-150">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                        <span>Valid {activeProvider} API Key format</span>
+                      <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-sans">
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                        <span>Valid {activeProvider} credential format</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Field 3: Target Model Identifier Pills */}
-                  <div>
-                    <label className="text-xs font-bold text-zinc-300 block mb-1.5 font-mono uppercase tracking-wide">
-                      Target Model Identifier
-                    </label>
+                  {/* Field 3: Target Model Routing (Clean Curated Selector) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-zinc-200 font-sans flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5 text-[#E5C38D]" />
+                        Target Model Routing
+                      </label>
+                      <span className="text-[10px] font-mono text-zinc-400">
+                        Selected: <strong className="text-[#E5C38D]">{effectiveModelIdentifier}</strong>
+                      </span>
+                    </div>
 
-                    {/* Model Pills from this Provider */}
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {providerModels.map((m) => {
+                    {/* Primary Model Cards Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {providerModels.slice(0, 4).map((m) => {
                         const isSelected = targetModelId === m.modelId && !customModelId;
                         return (
                           <button
@@ -2719,92 +2756,145 @@ response = client.chat.completions.create(
                               setCustomModelId('');
                               setFallbackModelId(m.fallback);
                             }}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all duration-150 cursor-pointer ${
+                            className={`p-3 rounded-xl text-left transition-all cursor-pointer flex items-center justify-between border ${
                               isSelected
-                                ? 'bg-[#12161F] text-[#E5C38D] border border-[#C59E5F] font-bold shadow-[0_0_12px_rgba(197,158,95,0.25)] scale-[1.02]'
-                                : 'bg-[#0B0E14] text-zinc-300 border border-white/[0.08] hover:border-[#D6BA84] hover:bg-white/[0.04] hover:scale-[1.01]'
+                                ? 'bg-[#12161F] border-[#C59E5F] text-white shadow-[0_0_15px_rgba(197,158,95,0.2)] ring-1 ring-[#C59E5F]'
+                                : 'bg-[#0B0E14] border-white/[0.08] text-zinc-300 hover:border-white/[0.2] hover:bg-white/[0.03]'
                             }`}
                           >
-                            {m.modelId}
+                            <div className="min-w-0 pr-2">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold font-sans text-white truncate">{m.name}</span>
+                                {m.isPopular && (
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-[#C59E5F]/20 text-[#E5C38D] shrink-0">
+                                    TOP
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[10px] font-mono text-zinc-400 mt-0.5 truncate">
+                                {m.modelId}
+                              </div>
+                            </div>
+                            <div className="text-right text-[10px] font-mono shrink-0">
+                              <div className="text-[#E5C38D] font-bold">{m.tokenCost}</div>
+                              <div className="text-zinc-500">{m.contextWindow}</div>
+                            </div>
                           </button>
                         );
                       })}
                     </div>
 
-                    {/* Custom Model ID Input */}
-                    <input
-                      type="text"
-                      value={customModelId}
-                      onChange={(e) => setCustomModelId(e.target.value)}
-                      placeholder="Or enter custom model ID (e.g. meta-llama/Llama-3.3-70B-Instruct, custom-lora-v1)"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] transition-all"
-                    />
+                    {/* More Models Dropdown / Custom Model ID */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      {providerModels.length > 4 ? (
+                        <select
+                          value={providerModels.some(m => m.modelId === targetModelId) ? targetModelId : ''}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              setTargetModelId(e.target.value);
+                              setCustomModelId('');
+                              const found = providerModels.find(m => m.modelId === e.target.value);
+                              if (found) setFallbackModelId(found.fallback);
+                            }
+                          }}
+                          className="w-full px-3 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-zinc-300 focus:outline-none focus:border-[#C59E5F] transition-all"
+                        >
+                          <option value="">Choose other {activeProvider} models ({providerModels.length - 4} more)...</option>
+                          {providerModels.slice(4).map(m => (
+                            <option key={m.id} value={m.modelId}>
+                              {m.name} ({m.modelId})
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="text-[11px] font-mono text-zinc-500 flex items-center px-1">
+                          Standard models active above
+                        </div>
+                      )}
+
+                      <input
+                        type="text"
+                        value={customModelId}
+                        onChange={(e) => setCustomModelId(e.target.value)}
+                        placeholder="Or enter custom model ID (fine-tune, LoRA)..."
+                        className="w-full px-3 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] transition-all"
+                      />
+                    </div>
                   </div>
 
-                  {/* Field 4: Test Upstream Handshake Button */}
-                  <div>
+                  {/* Field 4: Pre-Flight Health Verification Card */}
+                  <div className="p-3.5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-bold font-sans text-white flex items-center gap-1.5">
+                        <Zap className="w-3.5 h-3.5 text-[#E5C38D]" />
+                        Pre-Flight Verification
+                      </div>
+                      <p className="text-[11px] text-zinc-400 font-sans mt-0.5">
+                        Ping upstream provider endpoint to test authentication before vaulting.
+                      </p>
+                    </div>
                     <button
                       type="button"
                       onClick={handleTestHandshake}
                       disabled={handshakeState === 'testing' || !canProceedStep2}
-                      className={`w-full py-2.5 px-4 rounded-xl border text-xs font-semibold font-mono flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      className={`px-4 py-2 rounded-xl text-xs font-bold font-sans shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                         !canProceedStep2
-                          ? 'bg-white/[0.04] text-zinc-500 border-white/[0.08] cursor-not-allowed opacity-60'
+                          ? 'bg-white/[0.04] text-zinc-500 border border-white/[0.08] cursor-not-allowed opacity-60'
                           : handshakeState === 'success'
-                          ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs'
                           : handshakeState === 'failed'
-                          ? 'bg-rose-950/40 border-rose-500/50 text-rose-300 hover:bg-rose-900/30'
-                          : 'bg-[#0B0E14] border-white/[0.08] hover:border-[#C59E5F] text-zinc-200 hover:bg-white/[0.04]'
+                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                          : 'bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] hover:opacity-95 shadow-xs'
                       }`}
                     >
                       {handshakeState === 'testing' ? (
                         <>
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#C59E5F]" />
-                          <span>Pinging Upstream Endpoint...</span>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Verifying...</span>
                         </>
                       ) : handshakeState === 'success' ? (
                         <>
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Handshake Successful • {handshakeLatency}ms Latency • Verified</span>
+                          <span>Verified ({handshakeLatency}ms)</span>
                         </>
                       ) : handshakeState === 'failed' ? (
                         <>
                           <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
-                          <span>Handshake Failed • Click to Retry</span>
+                          <span>Retry Ping</span>
                         </>
                       ) : (
                         <>
-                          <Zap className="w-3.5 h-3.5 text-[#C59E5F]" />
-                          <span>Test Upstream Handshake</span>
+                          <Zap className="w-3.5 h-3.5 fill-current" />
+                          <span>Test Handshake</span>
                         </>
                       )}
                     </button>
                   </div>
 
-                  {/* Field 5 & 6: 2 Columns (Monthly Spend Limit & Budget Fallback Model) */}
+                  {/* Field 5 & 6: Optional Governance Guardrails */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="text-[11px] font-bold text-zinc-400 block mb-1 font-mono uppercase">
-                        Monthly Spend Limit (Optional)
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-medium text-zinc-400 block font-sans">
+                        Monthly Spend Cap (Optional)
                       </label>
                       <input
                         type="text"
                         value={monthlySpendLimit}
                         onChange={(e) => setMonthlySpendLimit(e.target.value)}
-                        placeholder="$ e.g. 500"
+                        placeholder="$ e.g. 500.00"
                         className="w-full px-3 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F]"
                       />
                     </div>
 
-                    <div>
-                      <label className="text-[11px] font-bold text-zinc-400 block mb-1 font-mono uppercase">
-                        Budget Fallback Model (Optional)
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-medium text-zinc-400 block font-sans">
+                        Budget Fallback Candidate (Optional)
                       </label>
                       <input
                         type="text"
                         value={fallbackModelId}
                         onChange={(e) => setFallbackModelId(e.target.value)}
-                        placeholder="e.g. gemini-3.5-flash-lite, gpt-5.4-mini"
+                        placeholder="e.g. gpt-4o-mini, claude-3-5-haiku"
                         className="w-full px-3 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F]"
                       />
                     </div>
@@ -2935,12 +3025,12 @@ response = client.chat.completions.create(
                   type="button"
                   onClick={handleProceedToStep3}
                   disabled={!canProceedStep2}
-                  className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 shadow-md ${
                     !canProceedStep2
-                      ? 'bg-zinc-800 text-zinc-500 border border-white/[0.06] cursor-not-allowed opacity-60'
+                      ? 'bg-zinc-800 text-zinc-500 border border-white/[0.06] cursor-not-allowed opacity-50'
                       : handshakeState === 'success'
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-md'
-                      : 'bg-[#C59E5F] hover:bg-[#B38D4F] text-white cursor-pointer shadow-xs hover:shadow-md'
+                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white cursor-pointer hover:shadow-lg hover:scale-[1.01]'
+                      : 'bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] font-extrabold cursor-pointer hover:opacity-95 hover:shadow-lg hover:scale-[1.01]'
                   }`}
                 >
                   {handshakeState === 'testing' ? (
@@ -2950,13 +3040,13 @@ response = client.chat.completions.create(
                     </>
                   ) : handshakeState === 'success' ? (
                     <>
-                      <span>Connect & Generate Snippet</span>
+                      <span>Connect &amp; Generate Snippet</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   ) : (
                     <>
-                      <Zap className="w-3.5 h-3.5" />
-                      <span>Verify Key & Continue</span>
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                      <span>Verify Key &amp; Continue</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
