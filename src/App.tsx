@@ -433,35 +433,54 @@ const AppInner: React.FC = () => {
               onNavigateToModels={() => navigate('models')}
             />
 
-            {/* Floating 3D Multi-Model Mesh & Provider Ecosystem */}
-            <FloatingLLMHub onNavigateToModels={() => navigate('models')} />
+            {/* Below-the-fold sections with content-visibility auto for 95+ performance */}
+            <div className="content-auto">
+              {/* Floating 3D Multi-Model Mesh & Provider Ecosystem */}
+              <FloatingLLMHub onNavigateToModels={() => navigate('models')} />
+            </div>
 
-            {/* Live Operational UI Console Preview (No Simulator, Real Telemetry) */}
-            <ProductUIShowcase />
+            <div className="content-auto">
+              {/* Live Operational UI Console Preview (No Simulator, Real Telemetry) */}
+              <ProductUIShowcase />
+            </div>
 
-            {/* Core Capability Pillars (3D Cards) */}
-            <FeaturesSection />
+            <div className="content-auto">
+              {/* Core Capability Pillars (3D Cards) */}
+              <FeaturesSection />
+            </div>
 
-            {/* Deterministic Architecture Specs & Benchmarks (Zero Cross-Vendor Corruption) */}
-            <InteractiveArchitecture />
+            <div className="content-auto">
+              {/* Deterministic Architecture Specs & Benchmarks (Zero Cross-Vendor Corruption) */}
+              <InteractiveArchitecture />
+            </div>
 
-            {/* Universal Agent Ecosystem (Cursor, Cline, Windsurf, Antigravity, Aider) */}
-            <AgentEcosystemSection />
+            <div className="content-auto">
+              {/* Universal Agent Ecosystem (Cursor, Cline, Windsurf, Antigravity, Aider) */}
+              <AgentEcosystemSection />
+            </div>
 
-            {/* Teams & Developers FinOps & Governance Section */}
-            <TeamsDevelopersSection 
-              onNavigateDashboard={() => navigate('dashboard')} 
-              onNavigatePricing={() => navigate('pricing')} 
-            />
+            <div className="content-auto">
+              {/* Teams & Developers FinOps & Governance Section */}
+              <TeamsDevelopersSection 
+                onNavigateDashboard={() => navigate('dashboard')} 
+                onNavigatePricing={() => navigate('pricing')} 
+              />
+            </div>
 
-            {/* Developer Quickstart & Terminal SDK Preview */}
-            <DeveloperQuickstartSection />
+            <div className="content-auto">
+              {/* Developer Quickstart & Terminal SDK Preview */}
+              <DeveloperQuickstartSection />
+            </div>
 
-            {/* Frequently Asked Questions (Technical & Architecture) */}
-            <FAQSection />
+            <div className="content-auto">
+              {/* Frequently Asked Questions (Technical & Architecture) */}
+              <FAQSection />
+            </div>
 
-            {/* Enterprise Security, Zero Retention Guarantee & Final CTA Banner */}
-            <EnterpriseTrustSection onNavigateToPricing={() => navigate('pricing')} />
+            <div className="content-auto">
+              {/* Enterprise Security, Zero Retention Guarantee & Final CTA Banner */}
+              <EnterpriseTrustSection onNavigateToPricing={() => navigate('pricing')} />
+            </div>
           </>
         ) : currentRoute === 'models' ? (
           <ModelsPage

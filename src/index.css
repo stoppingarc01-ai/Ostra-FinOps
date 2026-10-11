@@ -892,4 +892,10 @@ aside[class*="bg-[#F"] {
   animation: mac-glow-pulse 4s ease-in-out infinite;
 }
 
+/* Core Web Vitals: Skip layout & render until element approaches viewport */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 750px;
+}
+
 
