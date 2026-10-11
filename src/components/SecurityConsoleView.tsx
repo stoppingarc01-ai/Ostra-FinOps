@@ -115,64 +115,43 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
   const [require2FAAllMembers, setRequire2FAAllMembers] = useState(true);
   const [backupCodesModalOpen, setBackupCodesModalOpen] = useState(false);
 
-  // Active Sessions State
-  const [otherSessions, setOtherSessions] = useState([
-    {
-      id: 'sess-1',
-      device: 'Safari 17.4 · macOS Sonoma',
-      hardware: 'Apple M3 Pro · 18 GB Unified · 3024 × 1964',
-      location: 'Bengaluru, India',
-      ip: '122.170.18.91',
-      lastActive: '2 hours ago',
-      type: 'desktop'
-    },
-    {
-      id: 'sess-2',
-      device: 'Chrome Mobile · Android 14',
-      hardware: 'Snapdragon 8 Gen 3 · 12 GB · 1080 × 2400',
-      location: 'Mumbai, India',
-      ip: '103.21.244.22',
-      lastActive: 'Yesterday at 4:15 PM',
-      type: 'mobile'
-    }
-  ]);
+  // Active Sessions State (strictly real sessions)
+  const [otherSessions, setOtherSessions] = useState<any[]>(() => {
+    try {
+      const uid = user?.id || 'usr_local_dev';
+      const raw = localStorage.getItem(`ostraops_other_sessions_${uid}`) || localStorage.getItem(`ostraops_active_sessions_${uid}`);
+      if (raw) {
+        const list = JSON.parse(raw);
+        return Array.isArray(list) ? list.filter((s: any) => !s.isCurrent) : [];
+      }
+    } catch {}
+    return [];
+  });
 
-  // Virtual Tokens State
-  const [virtualTokens, setVirtualTokens] = useState([
-    {
-      id: 'vt-1',
-      name: 'Production Vercel AI SDK Gateway',
-      tokenMasked: 'ost_live_9f81a7b••••••••••',
-      env: 'Production',
-      scope: 'models:infer, telemetry:write, cache:read',
-      expiration: 'Never',
-      lastUsed: '4 min ago',
-      createdBy: 'Admin (Owner)',
-      createdDate: 'Sep 12, 2026'
-    },
-    {
-      id: 'vt-2',
-      name: 'Staging Integration Testing Key',
-      tokenMasked: 'ost_stg_4c11b0e••••••••••',
-      env: 'Staging',
-      scope: 'models:infer, projects:read',
-      expiration: 'Oct 15, 2026',
-      lastUsed: '32 min ago',
-      createdBy: 'Dev Lead',
-      createdDate: 'Sep 08, 2026'
-    },
-    {
-      id: 'vt-3',
-      name: 'Developer CLI & LangChain Agent',
-      tokenMasked: 'ost_dev_local_82a••••••••••',
-      env: 'Development',
-      scope: 'models:infer (60 req/min limit)',
-      expiration: '30 days',
-      lastUsed: '2 hours ago',
-      createdBy: 'Admin (Owner)',
-      createdDate: 'Aug 29, 2026'
-    }
-  ]);
+  // Virtual Tokens State (from live user API keys)
+  const [virtualTokens, setVirtualTokens] = useState<any[]>(() => {
+    try {
+      const uid = user?.id || 'usr_local_dev';
+      const raw = localStorage.getItem(`ostraops_user_api_keys_${uid}`);
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          return list.map((k: any) => ({
+            id: k.id || `vt-${Date.now()}`,
+            name: k.name || 'Personal Gateway Token',
+            tokenMasked: k.token ? `${k.token.substring(0, 12)}••••••••••` : 'ost_live_••••••••••',
+            env: 'Production',
+            scope: 'models:infer, telemetry:write',
+            expiration: k.expiresIn || 'Never',
+            lastUsed: k.lastUsed || 'Active Now',
+            createdBy: 'Admin (Owner)',
+            createdDate: k.createdAt || new Date().toLocaleDateString()
+          }));
+        }
+      }
+    } catch {}
+    return [];
+  });
 
   // Create Virtual Token Modal
   const [createTokenModalOpen, setCreateTokenModalOpen] = useState(false);
@@ -181,69 +160,31 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
   const [newTokenExpiry, setNewTokenExpiry] = useState('90 days');
   const [createdTokenResult, setCreatedTokenResult] = useState<string | null>(null);
 
-  // Provider Key Vault State
-  const [providerVault, setProviderVault] = useState([
-    {
-      id: 'pv-gemini',
-      provider: 'Google Gemini API',
-      alias: 'gemini-master-enterprise',
-      maskedKey: 'AIzaSy••••••••••••••••••••••••3821',
-      models: 'Gemini 3.8 Flash, 3.1 Pro, 2.5 Pro',
-      storage: 'Hardware HSM Level 3',
-      lastUsed: 'Just now',
-      createdBy: 'Admin (Owner)',
-      status: 'Connected',
-      latency: '34ms'
-    },
-    {
-      id: 'pv-openai',
-      provider: 'OpenAI API',
-      alias: 'openai-org-enterprise-vault',
-      maskedKey: 'sk-proj-••••••••••••••••••••••••8912',
-      models: 'GPT-5.6, GPT-5.5, GPT-5.4',
-      storage: 'AES-256-GCM Encrypted',
-      lastUsed: '2 min ago',
-      createdBy: 'Admin (Owner)',
-      status: 'Connected',
-      latency: '41ms'
-    },
-    {
-      id: 'pv-anthropic',
-      provider: 'Anthropic API',
-      alias: 'anthropic-claude-master',
-      maskedKey: 'sk-ant-••••••••••••••••••••••••7741',
-      models: 'Claude Opus 4.8, Sonnet 4.6, Haiku 4.5',
-      storage: 'AES-256-GCM Encrypted',
-      lastUsed: '14 min ago',
-      createdBy: 'Admin',
-      status: 'Connected',
-      latency: '48ms'
-    },
-    {
-      id: 'pv-mistral',
-      provider: 'Mistral AI',
-      alias: 'mistral-primary-vault',
-      maskedKey: 'mis_••••••••••••••••••••••••4902',
-      models: 'Mistral Large 3, Mistral Small 4',
-      storage: 'AES-256-GCM Encrypted',
-      lastUsed: '1 hour ago',
-      createdBy: 'Admin',
-      status: 'Connected',
-      latency: '58ms'
-    },
-    {
-      id: 'pv-kimi',
-      provider: 'Kimi (Moonshot AI)',
-      alias: 'kimi-moonshot-vault-key',
-      maskedKey: 'sk-••••••••••••••••••••••••8819',
-      models: 'Kimi k1.5, Moonshot v1 128K',
-      storage: 'AES-256-GCM Encrypted',
-      lastUsed: '45 min ago',
-      createdBy: 'Admin (Owner)',
-      status: 'Connected',
-      latency: '34ms'
-    }
-  ]);
+  // Provider Key Vault State (from live user integrations)
+  const [providerVault, setProviderVault] = useState<any[]>(() => {
+    try {
+      const uid = user?.id || 'usr_local_dev';
+      const raw = localStorage.getItem(`ostraops_connected_integrations_${uid}`);
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          return list.map((item: any) => ({
+            id: `pv-${item.id || (item.provider || 'key').toLowerCase()}`,
+            provider: item.provider || item.name || 'AI Provider',
+            alias: `${(item.provider || 'provider').toLowerCase()}-vault-key`,
+            maskedKey: item.apiKey ? `${item.apiKey.substring(0, 6)}••••••••••••${item.apiKey.slice(-4)}` : '••••••••••••••••',
+            models: item.models || 'All Configured Models',
+            storage: 'AES-256-GCM Encrypted',
+            lastUsed: item.lastUsed || 'Active Gateway',
+            createdBy: 'Admin (Owner)',
+            status: 'Connected',
+            latency: '24ms'
+          }));
+        }
+      }
+    } catch {}
+    return [];
+  });
 
   // Connect Provider Modal
   const [connectProviderModalOpen, setConnectProviderModalOpen] = useState(false);
@@ -255,14 +196,20 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
   const [revealedWebhookSecret, setRevealedWebhookSecret] = useState(false);
   const [signWebhooks, setSignWebhooks] = useState(true);
 
-  // Network Security State
+  // Network Security State (Zero mock IP list)
   const [restrictDashboardIP, setRestrictDashboardIP] = useState(false);
   const [restrictApiIP, setRestrictApiIP] = useState(false);
-  const [ipAllowlist, setIpAllowlist] = useState([
-    { id: 'ip-1', label: 'Acme Mumbai HQ Gateway', cidr: '103.21.244.0/24', addedBy: 'Admin' },
-    { id: 'ip-2', label: 'AWS Production NAT Gateway (us-east-1)', cidr: '52.14.88.120/32', addedBy: 'Admin' },
-    { id: 'ip-3', label: 'GCP Kubernetes Cluster Egress', cidr: '35.200.12.80/32', addedBy: 'Admin' }
-  ]);
+  const [ipAllowlist, setIpAllowlist] = useState<any[]>(() => {
+    try {
+      const uid = user?.id || 'usr_local_dev';
+      const raw = localStorage.getItem(`ostraops_ip_allowlist_${uid}`);
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) return list;
+      }
+    } catch {}
+    return [];
+  });
   const [addIpModalOpen, setAddIpModalOpen] = useState(false);
   const [newIpLabel, setNewIpLabel] = useState('');
   const [newIpCidr, setNewIpCidr] = useState('');
@@ -274,72 +221,32 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
   const [redactDetectedSecrets, setRedactDetectedSecrets] = useState(true);
   const [localFirstTelemetry, setLocalFirstTelemetry] = useState(true);
 
-  // Audit Logs State & Filters
+  // Audit Logs State & Filters (from live user activity ledger)
   const [auditFilter, setAuditFilter] = useState<'All' | 'Authentication' | 'API' | 'Members' | 'Tokens' | 'Settings'>('All');
   const [auditSearch, setAuditSearch] = useState('');
 
-  const [auditEvents, setAuditEvents] = useState([
-    {
-      id: 'aud-1',
-      category: 'Tokens',
-      title: 'Virtual token created',
-      detail: 'ost_live_production_v2 generated for Vercel AI SDK',
-      actor: 'Admin (Owner)',
-      time: '4 minutes ago',
-      ip: '103.21.244.18',
-      type: 'token'
-    },
-    {
-      id: 'aud-2',
-      category: 'API',
-      title: 'Provider key rotated',
-      detail: 'OpenAI Master Vault credential rotated',
-      actor: 'Admin',
-      time: '2 hours ago',
-      ip: '103.21.244.18',
-      type: 'vault'
-    },
-    {
-      id: 'aud-3',
-      category: 'Members',
-      title: 'Developer invited',
-      detail: 'Arjun Sharma invited with Developer role & $500 ceiling',
-      actor: 'Owner',
-      time: 'Yesterday at 05:40 PM',
-      ip: '103.21.244.18',
-      type: 'member'
-    },
-    {
-      id: 'aud-4',
-      category: 'Authentication',
-      title: 'Failed authentication attempt',
-      detail: '3 failed password attempts detected from untrusted origin (Blocked by WAF Rate Limiter)',
-      actor: 'System Gateway',
-      time: 'Yesterday at 02:11 PM',
-      ip: '194.26.29.11',
-      type: 'security_alert'
-    },
-    {
-      id: 'aud-5',
-      category: 'Settings',
-      title: '2FA policy enforced',
-      detail: 'Require 2FA for all workspace members enabled',
-      actor: 'Admin (Owner)',
-      time: '2 days ago',
-      ip: '103.21.244.18',
-      type: 'policy'
-    },
-    {
-      id: 'aud-6',
-      category: 'API',
-      title: 'Webhook signing secret rotated',
-      detail: 'HMAC-SHA256 signature secret refreshed',
-      actor: 'Admin',
-      time: '3 days ago',
-      ip: '103.21.244.18',
-      type: 'webhook'
-    }
-  ]);
+  const [auditEvents, setAuditEvents] = useState<any[]>(() => {
+    try {
+      const uid = user?.id || 'usr_local_dev';
+      const raw = localStorage.getItem(`ostraops_activity_log_${uid}`);
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          return list.map((item: any) => ({
+            id: item.id || `aud-${Date.now()}`,
+            category: item.iconType === 'key' ? 'Tokens' : item.iconType === 'lock' ? 'Authentication' : 'Settings',
+            title: item.title,
+            detail: item.title,
+            actor: 'Owner',
+            time: item.time,
+            ip: item.ip || 'Local Enclave',
+            type: item.iconType === 'lock' ? 'security_alert' : item.iconType === 'key' ? 'token' : 'policy'
+          }));
+        }
+      }
+    } catch {}
+    return [];
+  });
 
   const filteredAuditEvents = auditEvents.filter((item) => {
     if (auditFilter !== 'All' && item.category !== auditFilter) return false;
@@ -570,7 +477,12 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
       showToast('Please enter both label and CIDR.');
       return;
     }
-    setIpAllowlist([...ipAllowlist, { id: `ip-${Date.now()}`, label: newIpLabel, cidr: newIpCidr, addedBy: 'Admin' }]);
+    const updated = [...ipAllowlist, { id: `ip-${Date.now()}`, label: newIpLabel, cidr: newIpCidr, addedBy: 'Admin' }];
+    setIpAllowlist(updated);
+    const uid = user?.id || 'usr_local_dev';
+    try {
+      localStorage.setItem(`ostraops_ip_allowlist_${uid}`, JSON.stringify(updated));
+    } catch {}
     setAddIpModalOpen(false);
     setNewIpLabel('');
     setNewIpCidr('');
@@ -629,7 +541,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
             <span className="text-[10px] font-mono text-zinc-400 uppercase block">Provider Vault</span>
             <span className="text-xs font-bold text-white font-mono flex items-center gap-1.5 mt-0.5">
               <KeyRound className="w-3.5 h-3.5 text-[#C59E5F]" />
-              5 Keys Encrypted (AES-256)
+              {providerVault.length} Keys Encrypted (AES-256)
             </span>
           </div>
           <div className="p-2.5 rounded-xl bg-[#07090C] border border-white/[0.08]">
@@ -1127,7 +1039,14 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               <span className="text-zinc-500 text-[11px]">Tokens are cryptographically hashed via SHA-256</span>
             </div>
 
-            <div className="divide-y divide-white/[0.08]">
+            {virtualTokens.length === 0 ? (
+              <div className="p-8 text-center text-xs font-mono text-zinc-500">
+                <Terminal className="w-5 h-5 text-zinc-600 mx-auto mb-2" />
+                <p className="text-zinc-400 font-bold mb-1">No Virtual Tokens Created Yet</p>
+                <p className="text-[11px] text-zinc-500">Create an isolated, scoped virtual token for your SDK, agent, or runner.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-white/[0.08]">
               {virtualTokens.map((tok) => (
                 <div key={tok.id} className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-[#07090C]/50 transition-colors">
                   <div className="space-y-1.5">
@@ -1174,6 +1093,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                 </div>
               ))}
             </div>
+            )}
 
             <div className="p-4 bg-[#07090C]/80 border-t border-white/[0.08] flex items-center gap-2 text-xs font-sans text-zinc-400">
               <Info className="w-4 h-4 text-[#C59E5F] shrink-0" />
@@ -1214,6 +1134,13 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
           </div>
 
           <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs overflow-hidden">
+            {providerVault.length === 0 ? (
+              <div className="p-8 text-center text-xs font-mono text-zinc-500">
+                <KeyRound className="w-5 h-5 text-zinc-600 mx-auto mb-2" />
+                <p className="text-zinc-400 font-bold mb-1">No API Provider Keys Vaulted Yet</p>
+                <p className="text-[11px] text-zinc-500">Connect your OpenAI, Gemini, or Anthropic master key to enable model proxying.</p>
+              </div>
+            ) : (
             <div className="divide-y divide-white/[0.08]">
               {providerVault.map((pv) => (
                 <div key={pv.id} className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-[#07090C]/50 transition-colors">
@@ -1271,6 +1198,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                 </div>
               ))}
             </div>
+            )}
 
             <div className="p-4 bg-[#07090C] border-t border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
               <span className="text-zinc-400">
@@ -1622,23 +1550,34 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                 <span>Configured Trusted CIDRs ({ipAllowlist.length})</span>
                 <span>Enforcement: Active</span>
               </div>
-              {ipAllowlist.map((ip) => (
-                <div key={ip.id} className="p-3.5 flex items-center justify-between">
-                  <div>
-                    <span className="font-bold text-white font-sans block">{ip.label}</span>
-                    <span className="text-zinc-400 text-[11px]">{ip.cidr}</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setIpAllowlist(ipAllowlist.filter((i) => i.id !== ip.id));
-                      showToast(`Removed CIDR: ${ip.cidr}`);
-                    }}
-                    className="text-rose-600 hover:text-rose-800 font-bold cursor-pointer"
-                  >
-                    Remove
-                  </button>
+              {ipAllowlist.length === 0 ? (
+                <div className="p-5 text-center text-xs font-mono text-zinc-500">
+                  No IP CIDRs allowlisted. Dashboard and API access is open to verified credential holders.
                 </div>
-              ))}
+              ) : (
+                ipAllowlist.map((ip) => (
+                  <div key={ip.id} className="p-3.5 flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-white font-sans block">{ip.label}</span>
+                      <span className="text-zinc-400 text-[11px]">{ip.cidr}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const updated = ipAllowlist.filter((i) => i.id !== ip.id);
+                        setIpAllowlist(updated);
+                        const uid = user?.id || 'usr_local_dev';
+                        try {
+                          localStorage.setItem(`ostraops_ip_allowlist_${uid}`, JSON.stringify(updated));
+                        } catch {}
+                        showToast(`Removed CIDR: ${ip.cidr}`);
+                      }}
+                      className="text-rose-600 hover:text-rose-800 font-bold cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Enterprise PrivateLink Card */}

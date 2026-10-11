@@ -95,8 +95,18 @@ export function getAccountDossier(
         }
       } catch {}
     }
-    if (connectedProviders.length === 0) {
-      connectedProviders = ['Direct Gateway Bridge'];
+    // Read real active sessions count if available
+    let activeSessionsCount = 1;
+    if (uid) {
+      try {
+        const rawSessions = localStorage.getItem(`ostraops_active_sessions_${uid}`);
+        if (rawSessions) {
+          const parsed = JSON.parse(rawSessions);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            activeSessionsCount = parsed.length;
+          }
+        }
+      } catch {}
     }
 
     // Read real projects spend if available
@@ -148,7 +158,7 @@ export function getAccountDossier(
       monthlyBudgetCapUsd: Number(budgetCap.toFixed(2)),
       spendPercentage: budgetCap > 0 ? Math.min(100, Math.round((monthlySpend / budgetCap) * 100)) : 0,
       connectedProviders,
-      activeSessionsCount: 1,
+      activeSessionsCount,
       primaryHardware,
       slaTier: planId.includes('pro') ? 'Enterprise 15m' : 'Priority 1h',
       createdDate,
@@ -156,24 +166,23 @@ export function getAccountDossier(
     };
   }
 
-  // Lookup for other specific ID: use realistic deterministic details without mocking company
-  const numSeed = parseInt(targetAccountId.replace(/\D/g, '').slice(-4), 10) || 5420;
+  // Lookup for other specific ID: return clean unlinked dossier without mock data
   return {
     accountId: targetAccountId.toUpperCase(),
-    userId: `usr_live_${numSeed}`,
-    email: `member-${numSeed}@workspace.cloud`,
-    companyName: 'Cloud AI Workspace',
-    planId: 'starter_gateway',
-    planName: 'Starter Gateway',
+    userId: 'unregistered',
+    email: 'No email linked',
+    companyName: 'External Enclave',
+    planId: 'free',
+    planName: 'Free Gateway',
     status: 'active',
     monthlySpendUsd: 0,
-    monthlyBudgetCapUsd: 100,
+    monthlyBudgetCapUsd: 0,
     spendPercentage: 0,
-    connectedProviders: ['Gateway Bridge'],
-    activeSessionsCount: 1,
-    primaryHardware: 'Web Browser · Cloud Gateway',
-    slaTier: 'Priority 1h',
-    createdDate: new Date().toLocaleDateString(),
-    lastActive: 'Active Now'
+    connectedProviders: [],
+    activeSessionsCount: 0,
+    primaryHardware: 'None detected',
+    slaTier: 'Standard 4h',
+    createdDate: 'N/A',
+    lastActive: 'No telemetry record'
   };
 }

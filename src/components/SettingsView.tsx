@@ -818,7 +818,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                           type="text"
                           readOnly
                           value={fullName || 'Verified Member'}
-                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-sans text-zinc-300 cursor-not-allowed select-none"
+                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-sans text-zinc-300 cursor-not-allowed select-none"
                         />
                         <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
@@ -839,7 +839,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                           type="email"
                           readOnly
                           value={emailAddress}
-                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-mono text-zinc-300 cursor-not-allowed select-none"
+                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-mono text-zinc-300 cursor-not-allowed select-none"
                         />
                         <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
@@ -863,7 +863,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                           type="text"
                           readOnly
                           value={phoneNumber || 'Not specified'}
-                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-mono text-zinc-300 cursor-not-allowed select-none"
+                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-mono text-zinc-300 cursor-not-allowed select-none"
                         />
                         <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
@@ -884,7 +884,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                           type="text"
                           readOnly
                           value={jobTitle || profile?.role || 'Developer'}
-                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-sans text-zinc-300 cursor-not-allowed select-none"
+                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-sans text-zinc-300 cursor-not-allowed select-none"
                         />
                         <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
@@ -907,7 +907,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                         type="text"
                         readOnly
                         value={companyName || 'Registered Organization'}
-                        className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-sans text-zinc-300 cursor-not-allowed select-none"
+                        className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-sans text-zinc-300 cursor-not-allowed select-none"
                       />
                       <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
@@ -929,7 +929,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                         type="text"
                         readOnly
                         value={companyWebsite || 'None specified'}
-                        className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-[#E8E2D5] text-xs font-mono text-zinc-300 cursor-not-allowed select-none"
+                        className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-[#07090C] border border-white/[0.08] text-xs font-mono text-zinc-300 cursor-not-allowed select-none"
                       />
                       <Lock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
