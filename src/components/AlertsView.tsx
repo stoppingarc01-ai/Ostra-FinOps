@@ -54,8 +54,15 @@ export const AlertsView: React.FC = () => {
   // Sub-tab view: 'feed' (Incidents list) or 'rules' (Guardrail configurations)
   const [viewTab, setViewTab] = useState<'feed' | 'rules'>('feed');
 
-  // Real alerts initialized to empty array (no mock incidents)
-  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
+  // Real alerts initialized with local cache fallback
+  const [alerts, setAlerts] = useState<SystemAlert[]>(() => {
+    try {
+      const raw = localStorage.getItem(`ostraops_alerts_${userId}`);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const [rules, setRules] = useState<AlertRule[]>(() =>
     DEFAULT_ALERT_RULES.map((r, idx) => ({
@@ -91,7 +98,7 @@ export const AlertsView: React.FC = () => {
   // Real-time Firestore Sync
   useEffect(() => {
     const unsubscribe = subscribeToUserAlerts(userId, (liveAlerts: SystemAlert[]) => {
-      if (liveAlerts && liveAlerts.length > 0) {
+      if (liveAlerts) {
         setAlerts(liveAlerts);
       }
     });
@@ -132,6 +139,104 @@ export const AlertsView: React.FC = () => {
     showToast('Rule removed');
   };
 
+  const handleSimulateAlert = async () => {
+    const sampleScenarios = [
+      {
+        title: 'TPM Limit Breach: GPT-4o Agent Burst',
+        category: 'ratelimit' as AlertCategory,
+        severity: 'critical' as AlertSeverity,
+        service: 'OpenAI Gateway Proxy',
+        description: 'Autonomous multi-agent loop generated 420k tokens/min, exceeding the provisioned 350k TPM rate limit. Automated exponential backoff applied.',
+        metric_value: '420,150 TPM (Threshold: 350,000 TPM)',
+        threshold: 'TPM > 90% of model quota',
+        impact: '3 incoming requests queued for 850ms, zero token loss.',
+        channel: '#alerts-prod-ai (Slack)',
+      },
+      {
+        title: 'Daily Budget 90% Threshold Warning',
+        category: 'cost' as AlertCategory,
+        severity: 'warning' as AlertSeverity,
+        service: 'OstraOps Cost Engine',
+        description: 'Customer workspace daily burn reached $48.20 out of the allocated $50.00 daily guardrail limit.',
+        metric_value: '$48.20 / $50.00 (96.4%)',
+        threshold: 'Spend > 90% Daily Cap',
+        impact: 'Budget warning dispatched to workspace owner via email & webhook.',
+        channel: 'billing@workspace (Email)',
+      },
+      {
+        title: 'Provider 503 Outage: Auto-Failover to Claude 3.5',
+        category: 'provider' as AlertCategory,
+        severity: 'critical' as AlertSeverity,
+        service: 'Circuit Breaker Failover',
+        description: 'Primary upstream model endpoint returned 4 consecutive HTTP 503 Service Unavailable errors. Automated zero-downtime failover rerouted traffic to Anthropic Claude 3.5 Sonnet.',
+        metric_value: '4 errors in 2.1s',
+        threshold: 'Consecutive 5xx errors > 3',
+        impact: 'Zero end-user downtime. Traffic rerouted seamlessly in 18ms.',
+        channel: '#alerts-prod-ai (Slack)',
+      },
+      {
+        title: 'P99 Latency SLA Spike Detected',
+        category: 'latency' as AlertCategory,
+        severity: 'warning' as AlertSeverity,
+        service: 'Hosted Edge Gateway',
+        description: 'P99 model response latency exceeded 2250ms over a 5-minute rolling window.',
+        metric_value: 'P99 = 2,280ms',
+        threshold: 'P99 > 2000ms for 5 mins',
+        impact: 'Model queue throttled, TTFT normalized within 4 minutes.',
+        channel: '#dev-oncall (PagerDuty)',
+      },
+      {
+        title: 'Heuristic Prompt Injection Attempt Blocked',
+        category: 'security' as AlertCategory,
+        severity: 'critical' as AlertSeverity,
+        service: 'SoloGuard Security Console',
+        description: 'Adversarial system prompt leak payload detected in request headers from IP 198.51.100.42. Request dropped at edge.',
+        metric_value: 'Threat Score: 0.94',
+        threshold: 'Risk Score > 0.85',
+        impact: 'Malicious query aborted, downstream agent protected.',
+        channel: 'security-alerts@workspace',
+      },
+    ];
+
+    const scenario = sampleScenarios[Math.floor(Math.random() * sampleScenarios.length)];
+    const newAlert: SystemAlert = {
+      id: `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+      user_id: userId,
+      title: scenario.title,
+      category: scenario.category,
+      severity: scenario.severity,
+      status: 'active',
+      timestamp: new Date().toISOString(),
+      service: scenario.service,
+      description: scenario.description,
+      metric_value: scenario.metric_value,
+      threshold: scenario.threshold,
+      impact: scenario.impact,
+      channel: scenario.channel,
+      trace_id: `ost_sim_${Math.random().toString(16).substring(2, 8)}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    setAlerts((prev) => [newAlert, ...prev]);
+    showToast(`Test alert generated: ${newAlert.title}`);
+
+    try {
+      await createAlert(userId, newAlert);
+    } catch {}
+  };
+
+  const handleClearResolved = () => {
+    setAlerts((prev) => {
+      const remaining = prev.filter((a) => a.status !== 'resolved');
+      try {
+        localStorage.setItem(`ostraops_alerts_${userId}`, JSON.stringify(remaining));
+      } catch {}
+      return remaining;
+    });
+    showToast('Resolved alerts cleared');
+  };
+
   const handleTestTriggerRule = async (rule: AlertRule) => {
     const newAlert: SystemAlert = {
       id: `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -152,7 +257,7 @@ export const AlertsView: React.FC = () => {
       updated_at: new Date().toISOString(),
     };
 
-    setAlerts([newAlert, ...alerts]);
+    setAlerts((prev) => [newAlert, ...prev]);
     showToast(`Test alert generated for "${rule.name}"!`);
 
     try {
@@ -295,13 +400,36 @@ export const AlertsView: React.FC = () => {
             </button>
           </div>
 
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-[#C59E5F] hover:bg-[#D4AF37] text-black text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5 text-black" />
-            <span>New Alert Rule</span>
-          </button>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            {resolvedCount > 0 && (
+              <button
+                onClick={handleClearResolved}
+                className="px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white text-xs font-medium transition-all border border-white/[0.06] flex items-center gap-1.5 cursor-pointer shrink-0"
+                title="Clear resolved alerts"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Clear Resolved</span>
+              </button>
+            )}
+
+            <button
+              onClick={handleSimulateAlert}
+              className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-white text-xs font-bold transition-all border border-white/[0.1] flex items-center gap-1.5 cursor-pointer shrink-0"
+              title="Simulate a real-time system alert"
+            >
+              <Play className="w-3.5 h-3.5 text-[#C59E5F]" />
+              <span>Simulate Alert</span>
+            </button>
+
+            <button
+              onClick={() => setCreateModalOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-[#C59E5F] hover:bg-[#D4AF37] text-black text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5 text-black" />
+              <span>New Alert Rule</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -493,14 +621,23 @@ export const AlertsView: React.FC = () => {
           {/* Alerts Feed List */}
           <div className="space-y-3">
             {filteredAlerts.length === 0 ? (
-              <div className="p-12 text-center rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-3">
+              <div className="p-12 text-center rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-3.5">
                 <div className="w-12 h-12 mx-auto rounded-full bg-white/[0.06] text-zinc-500 flex items-center justify-center border border-white/[0.08]">
                   <CheckCircle2 className="w-6 h-6 text-emerald-400" />
                 </div>
-                <h3 className="text-sm font-bold text-white">No matching alerts found</h3>
-                <p className="text-xs text-zinc-400">
-                  Your gateway guardrails are healthy with no active triggers matching this filter.
+                <h3 className="text-sm font-bold text-white">No active incidents recorded</h3>
+                <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                  Your model proxy and guardrail thresholds are healthy with zero active breaches. Click below to simulate an alert and test real-time handling.
                 </p>
+                <div className="pt-2">
+                  <button
+                    onClick={handleSimulateAlert}
+                    className="px-4 py-2 rounded-xl bg-[#C59E5F] hover:bg-[#D4AF37] text-black text-xs font-bold transition-all shadow-md inline-flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5" />
+                    <span>Trigger Test Incident</span>
+                  </button>
+                </div>
               </div>
             ) : (
               filteredAlerts.map((alert) => {

@@ -157,8 +157,18 @@ export const subscribeToUserAlerts = (
     return onSnapshot(
       q,
       (snap) => {
-        const list = snap.docs.map((d) => d.data() as SystemAlert);
-        callback(list);
+        if (!snap.empty) {
+          const list = snap.docs.map((d) => d.data() as SystemAlert);
+          list.sort((a, b) => new Date(b.created_at || b.timestamp).getTime() - new Date(a.created_at || a.timestamp).getTime());
+          callback(list);
+        } else {
+          try {
+            const raw = localStorage.getItem(`ostraops_alerts_${userId}`);
+            callback(raw ? JSON.parse(raw) : []);
+          } catch {
+            callback([]);
+          }
+        }
       },
       () => {
         try {
