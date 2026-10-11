@@ -208,6 +208,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
         price_amount: finalAmount,
         billing_interval: isAnnual ? 'yr' : 'mo',
         status: 'active',
+        renewal_date: new Date(Date.now() + (isAnnual ? 365 : 30) * 86_400_000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
       }).catch(() => {});
     }
     showToast(`Plan successfully upgraded to ${name}!`);

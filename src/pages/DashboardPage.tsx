@@ -27,6 +27,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { getPlanEntitlements } from '../lib/entitlements';
 import { OverviewView } from '../components/OverviewView';
 import { OstraIcon } from '../components/OstraBrand';
 
@@ -58,6 +59,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   initialTab,
 }) => {
   const { user, profile, subscription, signOut, supportAccountId } = useAuth();
+  const entitlements = getPlanEntitlements(subscription);
   const [activeTab, setActiveTab] = useState(initialTab || 'dashboard');
   const [tabProgressKey, setTabProgressKey] = useState(0);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -242,11 +244,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           }`}>
             <div className="p-3.5 rounded-2xl bg-[#0D1016] border border-white/[0.08] space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-mono">
-                  {subscription?.plan_name || 'HOSTED GATEWAY'}
+                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-mono truncate max-w-[110px]" title={entitlements.name}>
+                  {entitlements.name}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                  Active
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                  entitlements.isTrialExpired
+                    ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                    : entitlements.isTrial
+                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                    : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                }`}>
+                  {entitlements.isTrialExpired ? 'Expired' : entitlements.isTrial ? `${entitlements.trialDaysRemaining}d Left` : 'Active'}
                 </span>
               </div>
 
@@ -524,6 +532,47 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {/* Top Micro Progress Bar on Tab Transition */}
         <div key={`tab-prog-${tabProgressKey}`} className="route-progress-bar" />
+
+        {/* Trial Status Banner */}
+        {entitlements.isTrial && (
+          <div className="px-6 lg:px-8 pt-4">
+            {entitlements.isTrialExpired ? (
+              <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-rose-200">
+                <div className="flex items-center gap-2.5">
+                  <span className="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                  </span>
+                  <div className="text-xs">
+                    <strong className="text-white">Your 7-day free trial has concluded.</strong> Gateway proxy routing is paused. As per our Zero-Billing Guarantee, your account has not been automatically charged.
+                  </div>
+                </div>
+                <button
+                  onClick={onNavigatePricing}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white font-bold text-xs shrink-0 cursor-pointer shadow-sm transition-all"
+                >
+                  Select Plan to Reactivate
+                </button>
+              </div>
+            ) : (
+              <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-amber-200">
+                <div className="flex items-center gap-2.5">
+                  <span className="p-1 rounded-lg bg-amber-500/20 text-amber-400 shrink-0">
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </span>
+                  <div className="text-xs">
+                    <strong className="text-white">7-Day Free Trial Active:</strong> You have <span className="font-bold text-amber-300 font-mono">{entitlements.trialDaysRemaining} day{entitlements.trialDaysRemaining === 1 ? '' : 's'}</span> remaining with full Hosted Gateway privileges (concludes {subscription?.renewal_date}).
+                  </div>
+                </div>
+                <button
+                  onClick={onNavigatePricing}
+                  className="px-3 py-1 rounded-lg bg-[#C59E5F] hover:bg-[#D4AF7C] text-black font-bold text-[11px] shrink-0 cursor-pointer shadow-xs transition-all"
+                >
+                  Manage Plan
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Dashboard / Content Container */}
         <div key={activeTab} className="tab-transition-enter px-6 lg:px-8 pt-6 space-y-6 max-w-[1600px] mx-auto w-full">

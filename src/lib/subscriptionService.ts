@@ -2,6 +2,7 @@ import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 import { supabase, isSupabaseConfigured } from './supabase';
 import type { UserSubscription } from '../types/database';
+import { checkTrialExpiration } from './entitlements';
 
 /**
  * Default subscription preset for newly signed-up users (Community Free)
@@ -40,6 +41,21 @@ export const PLAN_METADATA: Record<string, { name: string; price: number }> = {
  */
 export const getUserSubscription = async (userId: string): Promise<UserSubscription | null> => {
   if (!userId) return null;
+
+  const enforceTrialExpiry = (sub: UserSubscription): UserSubscription => {
+    const trialInfo = checkTrialExpiration(sub);
+    if (trialInfo.isTrial && trialInfo.isExpired) {
+      if (sub.status !== 'past_due' && sub.status !== 'canceled') {
+        sub.status = 'past_due';
+        try {
+          localStorage.setItem(`ostraops_subscription_${userId}`, JSON.stringify(sub));
+          localStorage.setItem('ostraops_subscription', JSON.stringify(sub));
+        } catch {}
+      }
+    }
+    return sub;
+  };
+
   // Check local cache first for instant UI responsiveness
   let cachedSub: UserSubscription | null = null;
   let cachedPlanKey: string | null = null;
@@ -87,12 +103,13 @@ export const getUserSubscription = async (userId: string): Promise<UserSubscript
             } catch {}
 
             if (cachedSub) {
-              return cachedSub;
+              return enforceTrialExpiry(cachedSub);
             }
           }
 
           const effectivePlan = (dbPlan !== 'free' ? dbPlan : chosenPlanKey) || 'free';
-          const meta = PLAN_METADATA[effectivePlan] || { name: 'Starter Gateway', price: 35 };
+          const isTrial = effectivePlan.includes('trial');
+          const meta = PLAN_METADATA[effectivePlan] || { name: isTrial ? '7-Day Free Trial' : 'Starter Gateway', price: isTrial ? 0 : 35 };
           const sub: UserSubscription = {
             id: userId,
             user_id: userId,
@@ -100,11 +117,11 @@ export const getUserSubscription = async (userId: string): Promise<UserSubscript
             plan_name: meta.name,
             price_amount: meta.price,
             billing_interval: 'mo',
-            status: 'active',
-            renewal_date: new Date(Date.now() + 30 * 86_400_000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+            status: isTrial ? 'trialing' : 'active',
+            renewal_date: new Date(Date.now() + (isTrial ? 7 : 30) * 86_400_000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
             quota_usage_percent: 0,
             quota_used: 0,
-            quota_limit: effectivePlan.includes('pro') ? 10000000 : effectivePlan.includes('starter') ? 1000000 : 50000,
+            quota_limit: effectivePlan.includes('pro') ? 10000000 : (effectivePlan.includes('starter') || isTrial) ? 1000000 : 50000,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           };
@@ -114,7 +131,7 @@ export const getUserSubscription = async (userId: string): Promise<UserSubscript
             localStorage.setItem('ostraops_subscription', JSON.stringify(sub));
             localStorage.setItem('ostraops_active_plan', sub.plan_id);
           } catch {}
-          return sub;
+          return enforceTrialExpiry(sub);
         }
       }
     } catch (err) {
@@ -138,7 +155,7 @@ export const getUserSubscription = async (userId: string): Promise<UserSubscript
         localStorage.setItem(`ostraops_subscription_${userId}`, JSON.stringify(data));
         localStorage.setItem(`ostraops_active_plan_${userId}`, data.plan_id);
       } catch {}
-      return data;
+      return enforceTrialExpiry(data);
     }
   } catch (err) {
     console.warn('Firestore subscription query note (using local cache):', err);
@@ -150,7 +167,7 @@ export const getUserSubscription = async (userId: string): Promise<UserSubscript
       cachedSub.plan_name = 'Starter Gateway';
       cachedSub.price_amount = 35;
     }
-    return cachedSub;
+    return enforceTrialExpiry(cachedSub);
   }
 
   return {
@@ -172,10 +189,15 @@ export const createUserDefaultSubscription = async (
   const now = new Date().toISOString();
   const defaultPlan = { ...DEFAULT_SUBSCRIPTION };
 
+  const isTrial = overrides?.plan_id?.toLowerCase().includes('trial');
   const newSub: UserSubscription = {
     id: userId,
     user_id: userId,
     ...defaultPlan,
+    ...(isTrial ? {
+      status: 'trialing' as const,
+      renewal_date: new Date(Date.now() + 7 * 86_400_000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+    } : {}),
     ...overrides,
     created_at: now,
     updated_at: now,

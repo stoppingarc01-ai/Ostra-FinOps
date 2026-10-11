@@ -408,16 +408,17 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
         selectedPlan === 'telemetry' ? 20 :
         selectedPlan === 'starter' ? 35 : 59;
 
+      const isTrial = selectedPlan === 'trial' || activePlanKey.includes('trial');
       const subPayload = {
         plan_id: activePlanKey,
-        plan_name: planName,
+        plan_name: isTrial ? '7-Day Free Trial' : planName,
         price_amount: price,
         billing_interval: 'mo' as const,
-        status: 'active' as const,
-        renewal_date: new Date(Date.now() + 30 * 86_400_000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+        status: isTrial ? ('trialing' as const) : ('active' as const),
+        renewal_date: new Date(Date.now() + (isTrial ? 7 : 30) * 86_400_000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
         quota_usage_percent: 0,
         quota_used: 0,
-        quota_limit: activePlanKey.includes('pro') ? 10000000 : activePlanKey.includes('starter') ? 1000000 : 50000,
+        quota_limit: activePlanKey.includes('pro') ? 10000000 : activePlanKey.includes('starter') || isTrial ? 1000000 : 50000,
       };
 
       // Immediately sync with AuthContext state
