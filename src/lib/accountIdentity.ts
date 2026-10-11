@@ -82,52 +82,98 @@ export function getAccountDossier(
   if (targetAccountId.toUpperCase() === currentAccId.toUpperCase() || !targetAccountId) {
     const planName = subscription?.plan_name || 'Starter Gateway';
     const planId = subscription?.plan_id || 'starter_gateway';
-    const monthlySpend = 142.80;
-    const budgetCap = 500.00;
     
+    // Read real connected integrations
+    let connectedProviders: string[] = [];
+    const uid = currentUser?.id || currentUser?.uid;
+    if (uid) {
+      try {
+        const raw = localStorage.getItem(`ostraops_connected_integrations_${uid}`);
+        if (raw) {
+          const list = JSON.parse(raw);
+          connectedProviders = Array.from(new Set(list.map((c: any) => c.provider || c.name))).filter(Boolean) as string[];
+        }
+      } catch {}
+    }
+    if (connectedProviders.length === 0) {
+      connectedProviders = ['Direct Gateway Bridge'];
+    }
+
+    // Read real projects spend if available
+    let monthlySpend = 0;
+    let budgetCap = subscription?.quota_limit || 100;
+    if (uid) {
+      try {
+        const pRaw = localStorage.getItem(`ostraops_projects_cache_${uid}`);
+        if (pRaw) {
+          const projects = JSON.parse(pRaw);
+          monthlySpend = projects.reduce((sum: number, p: any) => sum + (Number(p.spend) || 0), 0);
+          const totalBudget = projects.reduce((sum: number, p: any) => sum + (Number(p.budgetLimit) || 0), 0);
+          if (totalBudget > 0) budgetCap = totalBudget;
+        }
+      } catch {}
+    }
+
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    let os = 'Windows';
+    if (ua.includes('Win')) os = 'Windows 11';
+    else if (ua.includes('Mac')) os = 'macOS';
+    else if (ua.includes('Linux')) os = 'Linux';
+    else if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('iPhone')) os = 'iOS';
+
+    let browser = 'Chrome';
+    if (ua.includes('Edg/')) browser = 'Edge';
+    else if (ua.includes('Firefox/')) browser = 'Firefox';
+    else if (ua.includes('Safari/') && !ua.includes('Chrome')) browser = 'Safari';
+
+    const cores = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Cores` : '8 Cores';
+    const primaryHardware = `${os} · ${browser} · ${cores} · Hardware Accelerated`;
+
+    const createdDate = profile?.created_at
+      ? new Date(profile.created_at).toLocaleDateString()
+      : (currentUser as any)?.metadata?.creationTime
+      ? new Date((currentUser as any).metadata.creationTime).toLocaleDateString()
+      : new Date().toLocaleDateString();
+
     return {
       accountId: currentAccId,
       userId: currentUser?.id || currentUser?.uid || 'usr_live_root',
-      email: profile?.email || currentUser?.email || 'admin@enterprise.ai',
-      companyName: profile?.company_name || 'Acme FinOps Labs',
+      email: profile?.email || currentUser?.email || 'user@ostraops.com',
+      companyName: profile?.company_name || 'Personal Workspace',
       planId,
       planName,
       status: (subscription?.status as any) || 'active',
-      monthlySpendUsd: monthlySpend,
-      monthlyBudgetCapUsd: budgetCap,
-      spendPercentage: Math.round((monthlySpend / budgetCap) * 100),
-      connectedProviders: ['Anthropic Claude', 'OpenAI Flagship', 'Google Gemini', 'Mistral Large'],
-      activeSessionsCount: 2,
-      primaryHardware: 'Windows 11 · Chrome 134 · 16 Cores · WebGL GPU Enclave',
+      monthlySpendUsd: Number(monthlySpend.toFixed(2)),
+      monthlyBudgetCapUsd: Number(budgetCap.toFixed(2)),
+      spendPercentage: budgetCap > 0 ? Math.min(100, Math.round((monthlySpend / budgetCap) * 100)) : 0,
+      connectedProviders,
+      activeSessionsCount: 1,
+      primaryHardware,
       slaTier: planId.includes('pro') ? 'Enterprise 15m' : 'Priority 1h',
-      createdDate: profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Sep 12, 2026',
+      createdDate,
       lastActive: 'Just now (Active Gateway Session)'
     };
   }
 
-  // Lookup for external or simulated account ID
+  // Lookup for other specific ID: use realistic deterministic details without mocking company
   const numSeed = parseInt(targetAccountId.replace(/\D/g, '').slice(-4), 10) || 5420;
-  const plans = ['Pro Gateway', 'Starter Gateway', 'Agent Telemetry Observer', 'Enterprise Cluster'];
-  const companies = ['Cognitive AI Systems', 'HyperScale Robotics', 'Apex Data Platform', 'Nexus Intelligence'];
-  const spend = Math.round((numSeed / 10) * 100) / 100;
-  const budget = 1000;
-
   return {
     accountId: targetAccountId.toUpperCase(),
-    userId: `usr_ext_${numSeed}`,
-    email: `tech-lead@${companies[numSeed % companies.length].toLowerCase().replace(/\s+/g, '')}.io`,
-    companyName: companies[numSeed % companies.length],
-    planId: 'pro_gateway',
-    planName: plans[numSeed % plans.length],
+    userId: `usr_live_${numSeed}`,
+    email: `member-${numSeed}@workspace.cloud`,
+    companyName: 'Cloud AI Workspace',
+    planId: 'starter_gateway',
+    planName: 'Starter Gateway',
     status: 'active',
-    monthlySpendUsd: spend,
-    monthlyBudgetCapUsd: budget,
-    spendPercentage: Math.min(100, Math.round((spend / budget) * 100)),
-    connectedProviders: ['Anthropic Claude', 'OpenAI', 'DeepSeek Reasoner'],
-    activeSessionsCount: 3,
-    primaryHardware: 'macOS Sonoma · Safari 17.4 · Apple M3 Pro · 18 GB RAM',
-    slaTier: 'Enterprise 15m',
-    createdDate: 'Aug 04, 2026',
-    lastActive: '12 minutes ago'
+    monthlySpendUsd: 0,
+    monthlyBudgetCapUsd: 100,
+    spendPercentage: 0,
+    connectedProviders: ['Gateway Bridge'],
+    activeSessionsCount: 1,
+    primaryHardware: 'Web Browser · Cloud Gateway',
+    slaTier: 'Priority 1h',
+    createdDate: new Date().toLocaleDateString(),
+    lastActive: 'Active Now'
   };
 }

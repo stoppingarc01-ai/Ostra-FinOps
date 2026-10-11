@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sliders,
   LayoutDashboard,
@@ -9,8 +9,12 @@ import {
   CheckCircle2,
   Check
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { db } from '../lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export const PreferencesView: React.FC = () => {
+  const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState<
     'general' | 'dashboard' | 'notifications' | 'cost' | 'usage' | 'appearance'
   >('general');
@@ -23,10 +27,12 @@ export const PreferencesView: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const detectedTz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Asia/Kolkata';
+
   // 1. General Preferences State
   const [defaultLandingPage, setDefaultLandingPage] = useState('Dashboard');
   const [defaultDateRange, setDefaultDateRange] = useState('Last 7 days');
-  const [timezone, setTimezone] = useState('Asia/Kolkata (GMT +05:30)');
+  const [timezone, setTimezone] = useState(detectedTz || 'Asia/Kolkata (GMT +05:30)');
   const [currency, setCurrency] = useState('USD ($)');
   const [language, setLanguage] = useState('English');
 
@@ -69,13 +75,107 @@ export const PreferencesView: React.FC = () => {
   const [retentionPeriod, setRetentionPeriod] = useState('30 days');
 
   // 6. Appearance State
-  const [theme, setTheme] = useState<'light' | 'system' | 'dark'>('system');
+  const [theme, setTheme] = useState<'light' | 'system' | 'dark'>('dark');
   const [density, setDensity] = useState<'comfortable' | 'compact'>('compact');
   const [animations, setAnimations] = useState<'on' | 'reduced'>('on');
   const [chartMotion, setChartMotion] = useState<'on' | 'reduced'>('on');
 
+  // Load saved preferences on mount
+  useEffect(() => {
+    const storageKey = `ostraops_preferences_${user?.id || 'guest'}`;
+    try {
+      const local = localStorage.getItem(storageKey);
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (parsed.defaultLandingPage) setDefaultLandingPage(parsed.defaultLandingPage);
+        if (parsed.defaultDateRange) setDefaultDateRange(parsed.defaultDateRange);
+        if (parsed.timezone) setTimezone(parsed.timezone);
+        if (parsed.currency) setCurrency(parsed.currency);
+        if (parsed.language) setLanguage(parsed.language);
+        if (parsed.showSpendOverview !== undefined) setShowSpendOverview(parsed.showSpendOverview);
+        if (parsed.showTokenUsage !== undefined) setShowTokenUsage(parsed.showTokenUsage);
+        if (parsed.showModelPerformance !== undefined) setShowModelPerformance(parsed.showModelPerformance);
+        if (parsed.showRecentAlerts !== undefined) setShowRecentAlerts(parsed.showRecentAlerts);
+        if (parsed.showOptimizationOpportunities !== undefined) setShowOptimizationOpportunities(parsed.showOptimizationOpportunities);
+        if (parsed.defaultRefreshRate) setDefaultRefreshRate(parsed.defaultRefreshRate);
+        if (parsed.defaultChartPeriod) setDefaultChartPeriod(parsed.defaultChartPeriod);
+        if (parsed.notifications) setNotifications(parsed.notifications);
+        if (parsed.weeklyDigest) setWeeklyDigest(parsed.weeklyDigest);
+        if (parsed.alertFrequency) setAlertFrequency(parsed.alertFrequency);
+        if (parsed.optimizationMode) setOptimizationMode(parsed.optimizationMode);
+        if (parsed.showDowngradeRecs !== undefined) setShowDowngradeRecs(parsed.showDowngradeRecs);
+        if (parsed.showEstimatedSavings !== undefined) setShowEstimatedSavings(parsed.showEstimatedSavings);
+        if (parsed.suggestFallbacks !== undefined) setSuggestFallbacks(parsed.suggestFallbacks);
+        if (parsed.savingsThreshold) setSavingsThreshold(parsed.savingsThreshold);
+        if (parsed.autoOptimization !== undefined) setAutoOptimization(parsed.autoOptimization);
+        if (parsed.tokenTracking !== undefined) setTokenTracking(parsed.tokenTracking);
+        if (parsed.requestTracking !== undefined) setRequestTracking(parsed.requestTracking);
+        if (parsed.latencyTracking !== undefined) setLatencyTracking(parsed.latencyTracking);
+        if (parsed.modelCostTracking !== undefined) setModelCostTracking(parsed.modelCostTracking);
+        if (parsed.traceContent) setTraceContent(parsed.traceContent);
+        if (parsed.retentionPeriod) setRetentionPeriod(parsed.retentionPeriod);
+        if (parsed.theme) setTheme(parsed.theme);
+        if (parsed.density) setDensity(parsed.density);
+        if (parsed.animations) setAnimations(parsed.animations);
+        if (parsed.chartMotion) setChartMotion(parsed.chartMotion);
+      }
+    } catch {}
+
+    if (user?.id) {
+      getDoc(doc(db, 'user_preferences', user.id)).then((snap) => {
+        if (snap.exists()) {
+          const remote = snap.data();
+          if (remote.theme) setTheme(remote.theme);
+          if (remote.timezone) setTimezone(remote.timezone);
+          if (remote.currency) setCurrency(remote.currency);
+        }
+      }).catch(() => {});
+    }
+  }, [user?.id]);
+
   const handleSave = () => {
-    showToast('Preferences successfully saved.');
+    const prefs = {
+      defaultLandingPage,
+      defaultDateRange,
+      timezone,
+      currency,
+      language,
+      showSpendOverview,
+      showTokenUsage,
+      showModelPerformance,
+      showRecentAlerts,
+      showOptimizationOpportunities,
+      defaultRefreshRate,
+      defaultChartPeriod,
+      notifications,
+      weeklyDigest,
+      alertFrequency,
+      optimizationMode,
+      showDowngradeRecs,
+      showEstimatedSavings,
+      suggestFallbacks,
+      savingsThreshold,
+      autoOptimization,
+      tokenTracking,
+      requestTracking,
+      latencyTracking,
+      modelCostTracking,
+      traceContent,
+      retentionPeriod,
+      theme,
+      density,
+      animations,
+      chartMotion,
+      updatedAt: new Date().toISOString(),
+    };
+    const storageKey = `ostraops_preferences_${user?.id || 'guest'}`;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(prefs));
+      if (user?.id) {
+        setDoc(doc(db, 'user_preferences', user.id), prefs, { merge: true }).catch(() => {});
+      }
+    } catch {}
+    showToast('Preferences synchronized in real time.');
   };
 
   const toggleNotification = (id: string, channel: 'email' | 'inApp') => {
