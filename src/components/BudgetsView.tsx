@@ -4,10 +4,14 @@ import {
   Plus,
   CheckCircle2,
   X,
-  Trash2
+  Trash2,
+  Zap,
+  RotateCcw,
+  ShieldAlert
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { FeatureGate } from '../lib/entitlements';
+import { createAlert } from '../lib/alertsService';
 import {
   fetchUserBudgets,
   subscribeToUserBudgets,
@@ -19,7 +23,8 @@ import {
   type RateLimitTier,
   type BudgetScope,
   type BudgetPeriod,
-  type BudgetBreachAction
+  type BudgetBreachAction,
+  type BudgetStatus
 } from '../lib/budgetsService';
 
 export const BudgetsView: React.FC = () => {
@@ -62,6 +67,138 @@ export const BudgetsView: React.FC = () => {
 
     return () => unsub();
   }, [userId]);
+
+  const handleDeployDefaults = async () => {
+    setIsSubmitting(true);
+    try {
+      const b1 = await createBudget(userId, {
+        name: 'Autonomous Agent Daily Spend Cap',
+        scope: 'organization',
+        target_name: 'Agent Fleet (Global)',
+        limit_amount: 25,
+        current_spend: 0,
+        currency: 'USD',
+        period: 'daily',
+        action_on_breach: 'hard_block',
+        notify_threshold_percent: 85,
+        status: 'active',
+      });
+      const b2 = await createBudget(userId, {
+        name: 'Global Monthly AI Circuit Breaker',
+        scope: 'organization',
+        target_name: 'Production Workspace',
+        limit_amount: 100,
+        current_spend: 0,
+        currency: 'USD',
+        period: 'monthly',
+        action_on_breach: 'hard_block',
+        notify_threshold_percent: 90,
+        status: 'active',
+      });
+      setBudgets((prev) => [...prev, b1, b2]);
+      showToast('Deployed 2 production budget guardrails!');
+    } catch {
+      showToast('Failed to deploy starter guardrails.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSimulateSpend = async (budgetId: string, amount: number) => {
+    const target = budgets.find((b) => b.id === budgetId);
+    if (!target) return;
+
+    const newSpend = Math.max(0, (target.current_spend || 0) + amount);
+    const isBreached = newSpend >= target.limit_amount;
+    const isWarning = !isBreached && target.limit_amount > 0 && newSpend >= target.limit_amount * (target.notify_threshold_percent / 100);
+
+    const nextStatus: BudgetStatus = isBreached ? 'breached' : isWarning ? 'warning' : 'active';
+
+    setBudgets((prev) =>
+      prev.map((b) => (b.id === budgetId ? { ...b, current_spend: newSpend, status: nextStatus } : b))
+    );
+
+    if (isBreached) {
+      showToast(`🛑 Kill-Switch Engaged! "${target.name}" reached $${newSpend.toFixed(2)}. HTTP 429 Cutoff Active.`);
+      try {
+        await createAlert(userId, {
+          id: `ALT-KILLSWITCH-${Date.now()}`,
+          user_id: userId,
+          title: `🛑 Hard Kill-Switch Engaged: ${target.name}`,
+          category: 'cost',
+          severity: 'critical',
+          status: 'active',
+          timestamp: new Date().toISOString(),
+          service: 'Circuit Breaker Proxy',
+          description: `Budget limit ($${target.limit_amount}) reached by autonomous agent burst. Reverse proxy terminated all outbound model requests with HTTP 429 Too Many Requests.`,
+          metric_value: `$${newSpend.toFixed(2)} / $${target.limit_amount} (100%)`,
+          threshold: `Spend >= $${target.limit_amount}`,
+          impact: 'Hard block cutoff engaged. Zero token charges allowed until limit reset.',
+          channel: 'billing@workspace (Email & Webhook)',
+          trace_id: `ost_kill_${Math.random().toString(16).substring(2, 8)}`,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      } catch {}
+    } else if (isWarning) {
+      showToast(`⚠️ Budget Warning: "${target.name}" reached $${newSpend.toFixed(2)} (${Math.round((newSpend / target.limit_amount) * 100)}%).`);
+    } else {
+      showToast(`Simulated +$${amount.toFixed(2)} agent spend on "${target.name}". Total: $${newSpend.toFixed(2)}`);
+    }
+
+    try {
+      await updateBudget(userId, budgetId, { current_spend: newSpend, status: nextStatus });
+    } catch {}
+  };
+
+  const handleTriggerKillSwitch = async (budgetId: string) => {
+    const target = budgets.find((b) => b.id === budgetId);
+    if (!target) return;
+    const breachSpend = target.limit_amount + 2.50;
+
+    setBudgets((prev) =>
+      prev.map((b) => (b.id === budgetId ? { ...b, current_spend: breachSpend, status: 'breached' } : b))
+    );
+
+    showToast(`🛑 Circuit Breaker Cutoff Triggered! Runaway agent loop halted with HTTP 429.`);
+
+    try {
+      await createAlert(userId, {
+        id: `ALT-KILLSWITCH-${Date.now()}`,
+        user_id: userId,
+        title: `🛑 Hard Kill-Switch: Runaway Loop Halted on ${target.name}`,
+        category: 'cost',
+        severity: 'critical',
+        status: 'active',
+        timestamp: new Date().toISOString(),
+        service: 'OstraOps Circuit Breaker',
+        description: `Simulated runaway loop hit $${breachSpend.toFixed(2)} / $${target.limit_amount}. Circuit breaker engaged, dropping subsequent tokens.`,
+        metric_value: `$${breachSpend.toFixed(2)} / $${target.limit_amount} (EXCEEDED)`,
+        threshold: `Spend >= $${target.limit_amount}`,
+        impact: 'Automated 429 circuit breaker engaged. Runaway loop terminated.',
+        channel: 'billing@workspace (Email & Webhook)',
+        trace_id: `ost_kill_${Math.random().toString(16).substring(2, 8)}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      await updateBudget(userId, budgetId, { current_spend: breachSpend, status: 'breached' });
+    } catch {}
+  };
+
+  const handleResetSpend = async (budgetId: string) => {
+    const target = budgets.find((b) => b.id === budgetId);
+    if (!target) return;
+
+    setBudgets((prev) =>
+      prev.map((b) => (b.id === budgetId ? { ...b, current_spend: 0, status: 'active' } : b))
+    );
+
+    showToast(`Spend reset to $0.00. "${target.name}" is now active.`);
+
+    try {
+      await updateBudget(userId, budgetId, { current_spend: 0, status: 'active' });
+    } catch {}
+  };
 
   const handleToggleStatus = async (budgetId: string) => {
     const target = budgets.find((b) => b.id === budgetId);
@@ -179,13 +316,35 @@ export const BudgetsView: React.FC = () => {
             </div>
 
             {activeSubTab === 'budgets' && (
-              <button
-                onClick={() => setCreateModalOpen(true)}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#C59E5F] to-[#AA824B] hover:from-[#D4AF7C] hover:to-[#C59E5F] text-black font-semibold text-xs transition-all shadow-md cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Budget Limit</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {budgets.length > 0 ? (
+                  <button
+                    onClick={() => handleTriggerKillSwitch(budgets[0].id)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-300 font-semibold text-xs transition-all border border-red-500/30 cursor-pointer"
+                    title="Simulate Runaway Agent Loop & Test Circuit Breaker"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-red-400" />
+                    <span>Test Kill-Switch</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleDeployDefaults}
+                    disabled={isSubmitting}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-zinc-200 font-semibold text-xs transition-all border border-white/[0.1] cursor-pointer"
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5 text-[#C59E5F]" />
+                    <span>Deploy Guardrails</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setCreateModalOpen(true)}
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#C59E5F] to-[#AA824B] hover:from-[#D4AF7C] hover:to-[#C59E5F] text-black font-semibold text-xs transition-all shadow-md cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Budget Limit</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -230,13 +389,13 @@ export const BudgetsView: React.FC = () => {
               <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs">
                 <span className="text-xs font-medium text-zinc-400">Cap Breaches</span>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <span className={`text-2xl font-black font-mono ${warningCount > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  <span className={`text-2xl font-black font-mono ${warningCount > 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}`}>
                     {warningCount}
                   </span>
                   <span className="text-xs text-zinc-500 font-mono">breaches</span>
                 </div>
                 <span className="text-[11px] text-zinc-500 font-mono mt-2 block">
-                  {warningCount === 0 ? 'All budgets within thresholds' : 'Automated action triggered'}
+                  {warningCount === 0 ? 'All budgets within thresholds' : '🛑 Kill-switch circuit breaker engaged'}
                 </span>
               </div>
             </div>
@@ -247,30 +406,58 @@ export const BudgetsView: React.FC = () => {
                 <Wallet className="w-12 h-12 text-[#C59E5F] mb-3" />
                 <h3 className="text-base font-bold text-white mb-1">No Budget Caps Configured</h3>
                 <p className="text-xs text-zinc-400 max-w-sm mb-5">
-                  Protect your API credentials from recursive loops. Create a daily or monthly limit to automatically freeze traffic when crossed.
+                  Protect your API credentials from recursive loops. Deploy starter safety limits to automatically freeze traffic when crossed.
                 </p>
-                <button
-                  onClick={() => setCreateModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#C59E5F] text-black font-semibold text-xs cursor-pointer shadow-md"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Create First Budget Limit</span>
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleDeployDefaults}
+                    disabled={isSubmitting}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-white font-semibold text-xs cursor-pointer border border-white/[0.1]"
+                  >
+                    <ShieldAlert className="w-4 h-4 text-[#C59E5F]" />
+                    <span>Deploy Starter Guardrails</span>
+                  </button>
+                  <button
+                    onClick={() => setCreateModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#C59E5F] text-black font-semibold text-xs cursor-pointer shadow-md"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create Custom Budget</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {budgets.map((b) => {
                   const pct = b.limit_amount > 0 ? Math.min(100, Math.round(((b.current_spend || 0) / b.limit_amount) * 100)) : 0;
+                  const isBreached = b.status === 'breached' || pct >= 100;
+                  const isWarning = b.status === 'warning' || (pct >= 85 && !isBreached);
+
                   return (
-                    <div key={b.id} className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-xs flex flex-col justify-between space-y-4">
+                    <div
+                      key={b.id}
+                      className={`p-5 rounded-2xl bg-[#0B0E14] border transition-all flex flex-col justify-between space-y-4 ${
+                        isBreached
+                          ? 'border-red-500/50 bg-gradient-to-b from-red-500/[0.06] to-transparent shadow-[0_0_20px_rgba(239,68,68,0.1)]'
+                          : isWarning
+                          ? 'border-amber-500/40 bg-gradient-to-b from-amber-500/[0.04] to-transparent'
+                          : 'border-white/[0.08] shadow-xs'
+                      }`}
+                    >
                       <div className="flex items-center justify-between">
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-white/[0.06] text-zinc-300 font-bold border border-white/[0.08]">
                           {b.scope} • {b.period}
                         </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase font-mono ${
-                          b.status === 'paused' ? 'bg-zinc-800 text-zinc-400' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase font-mono tracking-wider ${
+                          isBreached
+                            ? 'bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse'
+                            : isWarning
+                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                            : b.status === 'paused'
+                            ? 'bg-zinc-800 text-zinc-400'
+                            : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                         }`}>
-                          {b.status}
+                          {isBreached ? '🛑 429 CUTOFF ACTIVE' : b.status}
                         </span>
                       </div>
 
@@ -281,19 +468,63 @@ export const BudgetsView: React.FC = () => {
 
                       <div>
                         <div className="flex items-baseline justify-between text-xs font-mono mb-1.5">
-                          <span className="text-white font-bold text-base">${(b.current_spend || 0).toFixed(2)} / ${b.limit_amount}</span>
-                          <span className="text-zinc-400">{pct}%</span>
+                          <span className="text-white font-bold text-base">
+                            ${(b.current_spend || 0).toFixed(2)} <span className="text-zinc-500 text-xs">/ ${b.limit_amount}</span>
+                          </span>
+                          <span className={isBreached ? 'text-red-400 font-bold' : isWarning ? 'text-amber-400 font-bold' : 'text-zinc-400'}>
+                            {pct}%
+                          </span>
                         </div>
-                        <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
-                          <div className="h-full bg-[#C59E5F] rounded-full" style={{ width: `${pct}%` }} />
+                        <div className="h-2 w-full bg-white/[0.08] rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${
+                              isBreached ? 'bg-red-500' : isWarning ? 'bg-amber-500' : 'bg-[#C59E5F]'
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
                         </div>
                       </div>
 
-                      <div className="p-2.5 rounded-xl bg-[#07090C] border border-white/[0.08] text-[11px] font-mono text-zinc-400 flex items-center justify-between">
-                        <span>On limit breach:</span>
+                      <div className={`p-2.5 rounded-xl border text-[11px] font-mono flex items-center justify-between ${
+                        isBreached
+                          ? 'bg-red-500/10 border-red-500/30 text-red-300'
+                          : 'bg-[#07090C] border-white/[0.08] text-zinc-400'
+                      }`}>
+                        <span>Circuit Breaker:</span>
                         <span className="font-bold text-white">
-                          {b.action_on_breach === 'hard_block' ? '🛑 Hard Block 429' : '🔔 Alert Only'}
+                          {isBreached ? '🛑 Drop Outbound Requests (HTTP 429)' : b.action_on_breach === 'hard_block' ? '🛑 Hard Block 429' : '🔔 Alert Only'}
                         </span>
+                      </div>
+
+                      {/* Interactive Spend Simulation & Kill-Switch Testing */}
+                      <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-1.5">
+                        <div className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">
+                          Test Spend Intelligence:
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleSimulateSpend(b.id, 10)}
+                            className="flex-1 py-1 px-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-[11px] font-mono text-zinc-200 hover:text-white transition-colors cursor-pointer border border-white/[0.08]"
+                            title="Simulate +$10 Agent Spend"
+                          >
+                            +$10 Spend
+                          </button>
+                          <button
+                            onClick={() => handleTriggerKillSwitch(b.id)}
+                            className="py-1 px-2.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-300 text-[11px] font-mono font-semibold transition-colors cursor-pointer border border-red-500/30 flex items-center gap-1"
+                            title="Simulate Runaway Loop & Trigger Kill-Switch"
+                          >
+                            <Zap className="w-3 h-3 text-red-400" />
+                            <span>Kill-Switch</span>
+                          </button>
+                          <button
+                            onClick={() => handleResetSpend(b.id)}
+                            className="p-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors cursor-pointer border border-white/[0.06]"
+                            title="Reset Spend to $0"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">

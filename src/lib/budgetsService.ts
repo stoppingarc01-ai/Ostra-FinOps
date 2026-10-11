@@ -115,8 +115,17 @@ export const subscribeToUserBudgets = (
     return onSnapshot(
       q,
       (snap) => {
-        const list = snap.docs.map((d) => d.data() as BudgetLimit);
-        callback(list);
+        if (!snap.empty) {
+          const list = snap.docs.map((d) => d.data() as BudgetLimit);
+          callback(list);
+        } else {
+          try {
+            const raw = localStorage.getItem(`ostraops_budgets_${userId}`);
+            callback(raw ? JSON.parse(raw) : []);
+          } catch {
+            callback([]);
+          }
+        }
       },
       () => {
         try {
