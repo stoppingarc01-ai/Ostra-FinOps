@@ -104,6 +104,16 @@ export function normalizePlanTier(planId?: string | null, subscription?: UserSub
     return 'starter_gateway'; // Full gateway access during 7-day trial
   }
 
+  // If a paid 30-day subscription is canceled or past_due and renewal date has passed, downgrade to free
+  if (subscription?.status === 'canceled' || subscription?.status === 'past_due') {
+    if (subscription.renewal_date && subscription.renewal_date !== 'Perpetual') {
+      const expTime = new Date(subscription.renewal_date).getTime();
+      if (!isNaN(expTime) && expTime < Date.now()) {
+        return 'free';
+      }
+    }
+  }
+
   if (clean.includes('telemetry')) return 'telemetry_observer';
   if (clean.includes('starter') || clean.includes('team_scale') || clean.includes('solo_pro')) return 'starter_gateway';
   if (clean.includes('pro') || clean.includes('enterprise')) return 'pro_gateway';
