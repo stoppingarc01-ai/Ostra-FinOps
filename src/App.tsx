@@ -78,6 +78,7 @@ const AppInner: React.FC = () => {
     if (path.includes('reports') || hash.includes('reports')) return 'reports';
     if (path.includes('usage') || hash.includes('usage') || path.includes('costs') || hash.includes('costs')) return 'usage';
     if (path.includes('optimization') || hash.includes('optimization')) return 'optimization';
+    if (path.includes('playground') || hash.includes('playground')) return 'dashboard';
     if (path.includes('models') || hash.includes('models')) return 'models';
     if (path.includes('projects') || hash.includes('projects')) return 'projects';
     if (path.includes('dashboard') || hash.includes('dashboard')) return 'dashboard';

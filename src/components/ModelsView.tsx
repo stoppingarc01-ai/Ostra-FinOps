@@ -16,8 +16,11 @@ import {
   Minimize2
 } from 'lucide-react';
 import { CATALOG_MODELS, ProviderLogo, type ModelIntegration } from './IntegrationsView';
+import { PlaygroundView } from './PlaygroundView';
 
 export const ModelsView: React.FC = () => {
+  const [viewMode, setViewMode] = useState<'catalog' | 'playground'>('catalog');
+  const [playgroundModelId, setPlaygroundModelId] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<string>('All');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -25,6 +28,14 @@ export const ModelsView: React.FC = () => {
   const [activeDetailModel, setActiveDetailModel] = useState<ModelIntegration | null>(null);
   const [isClosingDetail, setIsClosingDetail] = useState(false);
   const [isDetailMaximized, setIsDetailMaximized] = useState(false);
+
+  const handleOpenInPlayground = (modelId: string) => {
+    setPlaygroundModelId(modelId);
+    setViewMode('playground');
+    if (activeDetailModel) {
+      handleCloseDetail();
+    }
+  };
 
   const handleCloseDetail = () => {
     setIsClosingDetail(true);
@@ -140,31 +151,60 @@ export const ModelsView: React.FC = () => {
 
   return (
     <div className="space-y-8 select-none text-zinc-100">
-      {/* 1. Page Header */}
+      {/* 1. Page Header with Tab Switcher */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
         <div>
-          <p className="text-xs font-semibold text-[#E5C38D] uppercase tracking-wider mb-1 font-mono">
-            Model Directory &amp; Pricing
-          </p>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-semibold text-[#E5C38D] uppercase tracking-wider font-mono">
+              Model Hub &amp; Testing
+            </span>
+            <span className="text-zinc-600">•</span>
+            <span className="text-xs font-mono text-zinc-400">46 Models Supported</span>
+          </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-sans">
-            Compare AI Models &amp; Real Token Costs
+            {viewMode === 'playground' ? 'AI Sandbox & Model Playground' : 'Compare AI Models & Real Token Costs'}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-            Real prices, context limits, and honest speed ratings across {CATALOG_MODELS.length} popular foundation models. No marketing hype or hidden fees.
+            {viewMode === 'playground'
+              ? 'Interactively test prompts, simulate streaming tokens, inspect TTFT latency, and verify sub-cent cost tracking in real time.'
+              : `Real prices, context limits, and honest speed ratings across ${CATALOG_MODELS.length} popular foundation models. No marketing hype or hidden fees.`}
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="px-3.5 py-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-right">
-            <span className="text-[10px] uppercase font-mono text-zinc-500 font-bold block">
-              Catalog
-            </span>
-            <span className="text-sm font-extrabold text-[#E5C38D] font-mono">
-              {filteredModels.length} Models Available
-            </span>
-          </div>
+        {/* View Mode Switcher */}
+        <div className="flex items-center gap-2 bg-[#0B0E14] p-1.5 rounded-2xl border border-white/[0.08] self-start md:self-auto shadow-subtle">
+          <button
+            type="button"
+            onClick={() => setViewMode('catalog')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              viewMode === 'catalog'
+                ? 'bg-white/[0.1] text-white shadow-xs border border-white/[0.1]'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-[#E5C38D]" />
+            <span>Model Directory ({filteredModels.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setViewMode('playground')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              viewMode === 'playground'
+                ? 'bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] font-extrabold shadow-sm'
+                : 'text-[#E5C38D] hover:bg-[#C59E5F]/10'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5 fill-current" />
+            <span>⚡ AI Playground</span>
+          </button>
         </div>
       </div>
+
+      {viewMode === 'playground' ? (
+        <PlaygroundView initialModelId={playgroundModelId} />
+      ) : (
+        <>
 
       {/* 2. Top Stats Overview Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -390,21 +430,36 @@ export const ModelsView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Action Button: View Specs Modal */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleOpenDetail(model);
-                }}
-                className="w-full py-2.5 px-3 rounded-xl bg-white/[0.06] hover:bg-gradient-to-r hover:from-[#C59E5F] hover:to-[#E5C38D] hover:text-[#07090C] text-zinc-200 border border-white/[0.1] hover:border-transparent text-xs font-semibold font-sans transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs group/btn"
-              >
-                <span>View Full Model Details</span>
-                <ArrowRight className="w-3.5 h-3.5 text-[#E5C38D] group-hover/btn:text-[#07090C] transition-colors" />
-              </button>
+              {/* Action Buttons: Test Live in Playground & Specs */}
+              <div className="grid grid-cols-2 gap-2 mt-auto">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleOpenInPlayground(model.modelId);
+                  }}
+                  className="py-2.5 px-3 rounded-xl bg-[#C59E5F]/15 hover:bg-gradient-to-r hover:from-[#C59E5F] hover:to-[#E5C38D] hover:text-[#07090C] text-[#E5C38D] border border-[#C59E5F]/30 hover:border-transparent text-xs font-bold font-sans transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs group/btn"
+                >
+                  <Zap className="w-3.5 h-3.5 fill-current" />
+                  <span>Test Live</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleOpenDetail(model);
+                  }}
+                  className="py-2.5 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-semibold font-sans transition-all flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                >
+                  <span>Specs</span>
+                  <ArrowRight className="w-3 h-3 text-zinc-400" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
+      )}
+      </>
       )}
 
       {/* 5. Clean Model Details Modal (MacBook Style Window & React Portal) */}
@@ -582,7 +637,15 @@ export const ModelsView: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="border-t border-white/[0.08] p-4 bg-[#07090C] flex justify-end">
+            <div className="border-t border-white/[0.08] p-4 bg-[#07090C] flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleOpenInPlayground(activeDetailModel.modelId)}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] hover:from-[#B38D4F] hover:to-[#D4AF7C] text-[#07090C] text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+              >
+                <Zap className="w-3.5 h-3.5 fill-current" />
+                <span>Launch in Playground</span>
+              </button>
               <button
                 type="button"
                 onClick={handleCloseDetail}

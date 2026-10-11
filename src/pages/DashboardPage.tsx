@@ -24,7 +24,8 @@ import {
   HelpCircle,
   Copy,
   Check,
-  ShieldCheck
+  ShieldCheck,
+  Zap
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPlanEntitlements } from '../lib/entitlements';
@@ -43,6 +44,7 @@ const OptimizationView = React.lazy(() => import('../components/OptimizationView
 const CalendarView = React.lazy(() => import('../components/CalendarView').then((m) => ({ default: m.CalendarView })));
 const AlertsView = React.lazy(() => import('../components/AlertsView').then((m) => ({ default: m.AlertsView })));
 const BudgetsView = React.lazy(() => import('../components/BudgetsView').then((m) => ({ default: m.BudgetsView })));
+const PlaygroundView = React.lazy(() => import('../components/PlaygroundView').then((m) => ({ default: m.PlaygroundView })));
 const DashboardHomeView = React.lazy(() => import('../components/DashboardHomeView').then((m) => ({ default: m.DashboardHomeView })));
 
 interface DashboardPageProps {
@@ -60,7 +62,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 }) => {
   const { user, profile, subscription, signOut, supportAccountId } = useAuth();
   const entitlements = getPlanEntitlements(subscription);
-  const [activeTab, setActiveTab] = useState(initialTab || 'dashboard');
+  const resolveInitialTab = () => {
+    if (initialTab) return initialTab;
+    const h = typeof window !== 'undefined' ? window.location.hash.toLowerCase() : '';
+    if (h.includes('playground')) return 'playground';
+    if (h.includes('budgets')) return 'budgets';
+    if (h.includes('alerts')) return 'alerts';
+    if (h.includes('models')) return 'models';
+    if (h.includes('usage')) return 'usage';
+    if (h.includes('integrations')) return 'integrations';
+    if (h.includes('projects')) return 'projects';
+    if (h.includes('settings')) return 'settings';
+    return 'dashboard';
+  };
+  const [activeTab, setActiveTab] = useState(resolveInitialTab);
   const [tabProgressKey, setTabProgressKey] = useState(0);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
@@ -76,9 +91,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     }
   };
 
-  // Sync activeTab when initialTab changes
+  // Sync activeTab when initialTab or hash changes
   useEffect(() => {
-    setActiveTab(initialTab || 'dashboard');
+    if (initialTab) {
+      setActiveTab(initialTab);
+    } else {
+      const h = window.location.hash.toLowerCase();
+      if (h.includes('playground')) setActiveTab('playground');
+    }
   }, [initialTab]);
 
   useEffect(() => {
@@ -121,6 +141,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     { id: 'dashboard', label: 'Gateway Overview', icon: LayoutDashboard },
     { id: 'projects', label: 'API Keys & Projects', icon: FolderKanban },
     { id: 'integrations', label: 'API Key Vault', icon: Cable },
+    { id: 'playground', label: 'AI Playground', icon: Zap, badge: 'HOT' },
     { id: 'models', label: 'Models & Routing', icon: Cpu },
     { id: 'usage', label: 'Usage & Costs', icon: Receipt },
     { id: 'budgets', label: 'Budgets & Limits', icon: Wallet },
@@ -584,7 +605,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
             }
           >
-            {activeTab === 'alerts' ? (
+            {activeTab === 'playground' ? (
+              <PlaygroundView />
+            ) : activeTab === 'alerts' ? (
               <AlertsView />
             ) : activeTab === 'budgets' ? (
               <BudgetsView />
