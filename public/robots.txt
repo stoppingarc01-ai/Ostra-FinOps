@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /billing
+Disallow: /projects
+Disallow: /optimization
+Disallow: /usage
+Disallow: /reports
+Disallow: /integrations
+Disallow: /team
+Disallow: /onboarding
+
+Sitemap: https://ostraops.vercel.app/sitemap.xml
