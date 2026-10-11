@@ -813,9 +813,8 @@ export const HeroDashboard3D: React.FC<HeroDashboard3DProps> = ({
       </div>
 
       {/* ============================================================ */}
-      {/* LEFT SIDEBAR (Matching Screenshot Exactly)                    */}
-      {/* ============================================================ */}
-      <aside className="w-full lg:w-56 shrink-0 bg-[#090C10] border-b lg:border-b-0 lg:border-r border-white/[0.08] p-4 flex flex-col justify-between">
+      {/* LEFT SIDEBAR (Desktop Only - hidden on mobile to maximize viewport speed) */}
+      <aside className="hidden lg:flex w-56 shrink-0 bg-[#090C10] border-r border-white/[0.08] p-4 flex-col justify-between">
         
         {/* Top: Logo & Navigation */}
         <div className="space-y-6">

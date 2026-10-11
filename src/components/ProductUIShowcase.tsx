@@ -101,11 +101,11 @@ export const ProductUIShowcase: React.FC = () => {
 
           {/* Video Container Aspect Ratio 16:9 */}
           <div className="relative aspect-video w-full bg-gradient-to-br from-charcoal-950 via-charcoal-900 to-black flex items-center justify-center overflow-hidden">
-            {/* HTML5 Video element */}
+            {/* HTML5 Video element with preload none for fast mobile loading */}
             <video
               ref={videoRef}
               src="/demo.mp4"
-              poster="/demo_poster.jpg"
+              preload="none"
               onTimeUpdate={handleTimeUpdate}
               onEnded={() => setIsPlaying(false)}
               onError={() => setHasVideoError(true)}
@@ -166,16 +166,18 @@ export const ProductUIShowcase: React.FC = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={togglePlay}
-                    className="p-1.5 rounded-lg hover:text-white hover:bg-charcoal-800 transition-colors cursor-pointer"
+                    className="p-1.5 rounded-lg hover:text-white hover:bg-charcoal-800 transition-colors cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
                     title={isPlaying ? 'Pause' : 'Play'}
+                    aria-label={isPlaying ? 'Pause video walkthrough' : 'Play video walkthrough'}
                   >
                     {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
                   </button>
 
                   <button
                     onClick={toggleMute}
-                    className="p-1.5 rounded-lg hover:text-white hover:bg-charcoal-800 transition-colors cursor-pointer"
+                    className="p-1.5 rounded-lg hover:text-white hover:bg-charcoal-800 transition-colors cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
                     title={isMuted ? 'Unmute' : 'Mute'}
+                    aria-label={isMuted ? 'Unmute video audio' : 'Mute video audio'}
                   >
                     {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                   </button>
@@ -188,8 +190,9 @@ export const ProductUIShowcase: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={toggleFullscreen}
-                    className="p-1.5 rounded-lg hover:text-white hover:bg-charcoal-800 transition-colors cursor-pointer"
+                    className="p-1.5 rounded-lg hover:text-white hover:bg-charcoal-800 transition-colors cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
                     title="Fullscreen"
+                    aria-label="Toggle fullscreen mode for video walkthrough"
                   >
                     <Maximize className="w-4 h-4" />
                   </button>

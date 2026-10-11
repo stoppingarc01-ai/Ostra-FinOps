@@ -74,20 +74,20 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
 
   return (
     <section className="relative pt-12 pb-16 md:pt-16 md:pb-24 overflow-hidden select-none">
-      {/* 3D Warm Ambient Radial Aura behind Hero */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-br from-[#C59E5F]/15 via-[#E5C38D]/10 to-transparent blur-[160px] pointer-events-none -z-10" />
+      {/* 3D Warm Ambient Radial Aura behind Hero - optimized for mobile GPU */}
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[320px] h-[320px] sm:w-[1000px] sm:h-[600px] bg-gradient-to-br from-[#C59E5F]/15 via-[#E5C38D]/10 to-transparent blur-3xl sm:blur-[160px] pointer-events-none -z-10" />
 
-      {/* Secondary warm glow on the sides */}
-      <div className="absolute top-48 left-[5%] w-[450px] h-[450px] bg-gradient-to-tr from-[#C59E5F]/10 via-[#9C7938]/5 to-transparent blur-[140px] pointer-events-none -z-10" />
-      <div className="absolute top-48 right-[5%] w-[450px] h-[450px] bg-gradient-to-bl from-[#E5C38D]/10 via-[#C59E5F]/5 to-transparent blur-[140px] pointer-events-none -z-10" />
+      {/* Secondary warm glow on the sides - desktop only */}
+      <div className="hidden sm:block absolute top-48 left-[5%] w-[450px] h-[450px] bg-gradient-to-tr from-[#C59E5F]/10 via-[#9C7938]/5 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="hidden sm:block absolute top-48 right-[5%] w-[450px] h-[450px] bg-gradient-to-bl from-[#E5C38D]/10 via-[#C59E5F]/5 to-transparent blur-[140px] pointer-events-none -z-10" />
 
-      {/* Floating gold particles */}
-      <div className="hero-particle top-[15%] left-[20%]" style={{ animationDelay: '0s' }} />
-      <div className="hero-particle top-[30%] left-[12%]" style={{ animationDelay: '1.5s', width: 3, height: 3 }} />
-      <div className="hero-particle top-[60%] left-[25%]" style={{ animationDelay: '3s', width: 5, height: 5, opacity: 0.3 }} />
-      <div className="hero-particle top-[20%] left-[70%]" style={{ animationDelay: '2s', width: 3, height: 3 }} />
-      <div className="hero-particle top-[45%] left-[85%]" style={{ animationDelay: '4s' }} />
-      <div className="hero-particle top-[70%] left-[75%]" style={{ animationDelay: '1s', width: 6, height: 6, opacity: 0.25 }} />
+      {/* Floating gold particles - desktop only to save mobile compositor cycles */}
+      <div className="hidden sm:block hero-particle top-[15%] left-[20%]" style={{ animationDelay: '0s' }} />
+      <div className="hidden sm:block hero-particle top-[30%] left-[12%]" style={{ animationDelay: '1.5s', width: 3, height: 3 }} />
+      <div className="hidden sm:block hero-particle top-[60%] left-[25%]" style={{ animationDelay: '3s', width: 5, height: 5, opacity: 0.3 }} />
+      <div className="hidden sm:block hero-particle top-[20%] left-[70%]" style={{ animationDelay: '2s', width: 3, height: 3 }} />
+      <div className="hidden sm:block hero-particle top-[45%] left-[85%]" style={{ animationDelay: '4s' }} />
+      <div className="hidden sm:block hero-particle top-[70%] left-[75%]" style={{ animationDelay: '1s', width: 6, height: 6, opacity: 0.25 }} />
 
       <div className="max-w-[1540px] mx-auto px-4 sm:px-6 lg:px-8">
         
@@ -191,7 +191,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
         {/* ============================================================ */}
         {/* Full-Width Desktop Dashboard Application Showcase            */}
         {/* ============================================================ */}
-        <div className="mt-12 sm:mt-16 w-full max-w-[1440px] mx-auto relative">
+        <div className="mt-12 sm:mt-16 w-full max-w-[1440px] mx-auto relative content-auto">
           <HeroDashboard3D 
             standaloneWindow={true} 
             onNavigatePricing={onNavigateToPricing} 
