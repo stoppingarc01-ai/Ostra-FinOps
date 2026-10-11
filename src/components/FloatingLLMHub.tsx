@@ -237,15 +237,21 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
         </div>
 
         {/* 3D Floating Logos Orbit Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 sm:gap-4 mb-10 perspective-1200">
+        <div role="tablist" aria-label="Supported AI model providers" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 sm:gap-4 mb-10 perspective-1200">
           {models.map((m) => {
             const LogoComponent = m.logo;
             const isSelected = m.id === activeModelId;
             return (
-              <div
+              <button
+                type="button"
+                role="tab"
+                id={`tab-${m.id}`}
+                aria-selected={isSelected}
+                aria-controls={`panel-${m.id}`}
+                aria-label={`Select ${m.name} provider (${m.avgLatency} latency)`}
                 key={m.id}
                 onClick={() => setActiveModelId(m.id)}
-                className={`group relative cursor-pointer p-4 rounded-2xl bg-[#0B0E14] border transition-all duration-300 transform preserve-3d ${
+                className={`group relative cursor-pointer p-4 rounded-2xl bg-[#0B0E14] border transition-all duration-300 transform preserve-3d text-left ${
                   m.floatClass
                 } ${
                   isSelected
@@ -256,7 +262,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
                 {/* 3D Glass Light reflection */}
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
 
-                <div className="flex flex-col items-center text-center gap-2 relative z-10">
+                <div className="flex flex-col items-center text-center gap-2 relative z-10 w-full">
                   {/* Floating Logo Squircle */}
                   <div
                     className={`w-12 h-12 rounded-xl flex items-center justify-center p-2.5 transition-transform duration-300 group-hover:scale-110 shadow-xs ${
@@ -269,11 +275,11 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
                   </div>
 
                   {/* Brand & Flagship */}
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 w-full">
                     <span className="text-xs font-bold text-zinc-100 block truncate">
                       {m.name}
                     </span>
-                    <span className="text-[10px] text-zinc-500 font-mono block">
+                    <span className="text-[10px] text-zinc-400 font-mono block">
                       {m.avgLatency}
                     </span>
                   </div>
@@ -283,7 +289,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
                     <span className="w-1.5 h-1.5 rounded-full bg-[#C59E5F] mt-1 shadow-[0_0_8px_#C59E5F]" />
                   )}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

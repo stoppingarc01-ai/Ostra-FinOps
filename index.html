@@ -2,15 +2,57 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%2523FFF3D6'/><stop offset='50%25' stop-color='%2523D4AF7C'/><stop offset='100%25' stop-color='%25239E743A'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='%25230B0F0F'/><circle cx='50' cy='46' r='11' fill='url(%2523g)'/><path d='M16 63 C18 42, 34 22, 54 18 C72 14, 86 24, 88 38 C80 32, 68 28, 54 30 C38 33, 26 46, 24 63 Z' fill='url(%2523g)'/><path d='M8 65 L92 41 C82 56, 68 76, 50 82 C34 86, 20 80, 16 63 Z' fill='url(%2523g)'/></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google-site-verification" content="S5x6BzOCns0V5Q5DGuiBF-2DygZlG8QxJzztYmwkjfY" />
     <title>Ostra — The AI Infrastructure for Builders</title>
+    
+    <!-- SEO Primary Meta Tags -->
+    <meta name="description" content="OstraOps is the enterprise AI FinOps control plane & smart gateway proxy. Enforce token budgets, eliminate runaway API costs, and automate provider failovers in real time." />
+    <meta name="keywords" content="AI FinOps, LLM Gateway, Token Budget, Spend Management, OpenAI Proxy, Anthropic Proxy, AI Infrastructure" />
+    <meta name="author" content="OstraOps Technologies" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://ostraops.vercel.app/" />
+    <meta name="theme-color" content="#07090C" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ostraops.vercel.app/" />
+    <meta property="og:title" content="Ostra — The AI Infrastructure for Builders" />
+    <meta property="og:description" content="Real-time LLM cost observability, virtual key governance, and automated kill-switches for OpenAI, Anthropic, and open-source AI infrastructure." />
+    <meta property="og:image" content="https://ostraops.vercel.app/architecture_blueprint.jpg" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://ostraops.vercel.app/" />
+    <meta name="twitter:title" content="Ostra — The AI Infrastructure for Builders" />
+    <meta name="twitter:description" content="Real-time LLM cost observability, virtual key governance, and automated kill-switches." />
+    <meta name="twitter:image" content="https://ostraops.vercel.app/architecture_blueprint.jpg" />
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%2523FFF3D6'/><stop offset='50%25' stop-color='%2523D4AF7C'/><stop offset='100%25' stop-color='%25239E743A'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='%25230B0F0F'/><circle cx='50' cy='46' r='11' fill='url(%2523g)'/><path d='M16 63 C18 42, 34 22, 54 18 C72 14, 86 24, 88 38 C80 32, 68 28, 54 30 C38 33, 26 46, 24 63 Z' fill='url(%2523g)'/><path d='M8 65 L92 41 C82 56, 68 76, 50 82 C34 86, 20 80, 16 63 Z' fill='url(%2523g)'/></svg>" />
+
+    <!-- Google Fonts Optimized Asynchronous Loading with Font Display Swap -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..800;1,6..72,400..800&family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..800;1,400..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
+    </noscript>
+
+    <!-- Structured Data (JSON-LD) for Google Search Engine Rich Snippets -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "OstraOps",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "All",
+      "description": "Enterprise AI FinOps control plane & smart gateway proxy. Enforce token budgets, eliminate runaway API costs, and automate provider failovers.",
+      "url": "https://ostraops.vercel.app"
+    }
+    </script>
   </head>
-  <body class="bg-[#FAF8F5] text-charcoal-800 antialiased selection:bg-ostraGold-500/20 selection:text-charcoal-900">
+  <body class="bg-[#07090C] text-zinc-100 antialiased selection:bg-[#C59E5F]/20 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

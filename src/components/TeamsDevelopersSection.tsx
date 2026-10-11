@@ -398,6 +398,7 @@ export const TeamsDevelopersSection: React.FC<TeamsDevelopersSectionProps> = ({
               <input
                 type="text"
                 placeholder="Search teams, members, projects..."
+                aria-label="Search teams, members, and projects"
                 className="w-full bg-transparent text-white placeholder:text-zinc-500 focus:outline-none text-xs font-sans"
               />
             </div>
@@ -408,6 +409,7 @@ export const TeamsDevelopersSection: React.FC<TeamsDevelopersSectionProps> = ({
                 onClick={() => showToast('All 6 squads operational. No security violations detected.')}
                 className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer relative"
                 title="System Notifications"
+                aria-label="View system notifications"
               >
                 <Bell className="w-4 h-4" />
                 <span className="w-1.5 h-1.5 rounded-full bg-[#C59E5F] absolute top-1 right-1" />
@@ -688,6 +690,7 @@ export const TeamsDevelopersSection: React.FC<TeamsDevelopersSectionProps> = ({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Filter teams, members, IDs..."
+                    aria-label="Filter teams, members, and IDs"
                     className="w-full pl-9 pr-8 py-1.5 rounded-xl bg-[#0B0E14] border border-white/[0.1] text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] font-sans"
                   />
                   <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2" />

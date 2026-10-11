@@ -96,6 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
         <button 
           onClick={() => onNavigate('home')} 
           className="flex items-center gap-3 group text-left cursor-pointer"
+          aria-label="OstraOps - Return to Homepage"
         >
           <OstraLogo
             iconClassName="w-8 h-8 group-hover:scale-105 transition-transform duration-300"
@@ -244,8 +245,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
                 </div>
                 <button
                   onClick={handleSignOut}
-                  className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+                  className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer"
                   title="Sign out"
+                  aria-label="Sign out of account"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -255,13 +257,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
             <>
               <button
                 onClick={() => onNavigate('login')}
-                className="text-[14px] font-medium text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                className="text-[14px] font-medium text-zinc-300 hover:text-white transition-colors cursor-pointer py-2 px-3"
+                aria-label="Log in to OstraOps"
               >
                 Log in
               </button>
               <button
                 onClick={() => onNavigate('signup')}
-                className="btn-primary-glow group inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] text-[13.5px] font-bold shadow-md cursor-pointer hover:opacity-95"
+                className="btn-primary-glow group inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] text-[13.5px] font-bold shadow-md cursor-pointer hover:opacity-95 min-h-[40px]"
+                aria-label="Get Started with OstraOps free trial"
               >
                 <span>Get Started</span>
                 <ArrowRight className="w-3.5 h-3.5 text-[#07090C] group-hover:translate-x-0.5 transition-transform" />
@@ -273,8 +277,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-zinc-300 hover:text-white"
-          aria-label="Toggle menu"
+          className="md:hidden p-2 text-zinc-300 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
+          aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={mobileMenuOpen}
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>

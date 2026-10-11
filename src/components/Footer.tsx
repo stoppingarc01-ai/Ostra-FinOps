@@ -50,8 +50,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 href="https://x.com/Team_Ostraops"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-[#E5C38D]/40 text-zinc-300 hover:text-white transition-all duration-200 group/x"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-[#E5C38D]/40 text-zinc-300 hover:text-white transition-all duration-200 group/x min-h-[38px]"
                 title="Follow @Team_Ostraops on X"
+                aria-label="Follow @Team_Ostraops on X (formerly Twitter)"
               >
                 <XIcon className="w-3.5 h-3.5 text-zinc-300 group-hover/x:text-[#E5C38D] transition-colors" />
                 <span className="font-mono text-[11px] font-medium tracking-tight">@Team_Ostraops</span>
@@ -62,8 +63,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 href="https://github.com/stoppingarc01-ai/Ostra-FinOps"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-[#E5C38D]/40 text-zinc-300 hover:text-white transition-all duration-200 group/gh"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-[#E5C38D]/40 text-zinc-300 hover:text-white transition-all duration-200 group/gh min-h-[38px]"
                 title="Star OstraOps on GitHub"
+                aria-label="Star OstraOps open-source repository on GitHub"
               >
                 <GithubIcon className="w-3.5 h-3.5 text-zinc-300 group-hover/gh:text-[#E5C38D] transition-colors" />
                 <span className="font-mono text-[11px] font-medium tracking-tight">GitHub</span>

@@ -134,10 +134,12 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
 
           {/* Terminal Command Quick Copy Badge */}
           <div className="animate-text-reveal-delay-4 pt-1 flex flex-wrap items-center justify-center gap-3 text-xs text-zinc-400">
-            <div 
+            <button 
+              type="button"
               onClick={copyCommand}
-              className="terminal-badge inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] hover:border-[#C59E5F]/40 cursor-pointer font-mono text-zinc-200 transition-colors shadow-2xs group"
-              title="Click to copy"
+              className="terminal-badge inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] hover:border-[#C59E5F]/40 cursor-pointer font-mono text-zinc-200 transition-colors shadow-2xs group min-h-[40px]"
+              title="Click to copy install command"
+              aria-label="Copy terminal install command: npx ostraops"
             >
               <Terminal className="w-3.5 h-3.5 text-[#C59E5F]" />
               <span className="font-semibold text-zinc-100">npx ostraops</span>
@@ -146,7 +148,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
               ) : (
                 <Copy className="w-3.5 h-3.5 text-zinc-500 ml-1 group-hover:text-zinc-200 transition-colors" />
               )}
-            </div>
+            </button>
             <span className="text-[11px] text-zinc-400 font-mono">
               Run via npx • Zero complex setup
             </span>
@@ -211,12 +213,14 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                 idx % 4 === 2 ? 'animate-float-3' : 'animate-float-4';
 
               return (
-                <div
+                <button
+                  type="button"
                   key={provider.name}
                   onClick={onNavigateToModels}
-                  className={`${floatClass} hover-pause preserve-3d group relative flex items-center cursor-pointer transition-transform duration-300 hover:scale-105`}
+                  className={`${floatClass} hover-pause preserve-3d group relative flex items-center cursor-pointer transition-transform duration-300 hover:scale-105 border-0 bg-transparent p-0 text-left`}
                   style={{ animationDelay: `${idx * 0.4}s` }}
                   title={`${provider.name} (${provider.status})`}
+                  aria-label={`View models and pricing details for ${provider.name}`}
                 >
                   {/* Floating 3D Pill — expands smoothly on hover */}
                   <div className="flex items-center rounded-2xl bg-[#0B0E14]/90 backdrop-blur-md border border-white/[0.1] shadow-xl transition-all duration-300 group-hover:border-[#C59E5F]/50 group-hover:shadow-[0_0_20px_rgba(197,158,95,0.15)] p-1.5 sm:p-2">
@@ -238,7 +242,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>

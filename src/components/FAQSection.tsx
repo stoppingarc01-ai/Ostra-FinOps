@@ -149,12 +149,14 @@ export const FAQSection: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search topics (e.g. latency, Cursor, tool calling, SQLite, circuit breaker)..."
+              aria-label="Search frequently asked questions"
               className="w-full pl-11 pr-14 py-3.5 rounded-2xl bg-[#0B0E14] border border-white/[0.1] text-sm text-zinc-100 placeholder:text-zinc-500 shadow-xl focus:outline-none focus:border-[#C59E5F] focus:ring-1 focus:ring-[#C59E5F] transition-all font-sans"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-400 hover:text-white cursor-pointer px-2 py-1 rounded bg-white/[0.06]"
+                aria-label="Clear FAQ search filter"
               >
                 Clear
               </button>
@@ -168,6 +170,7 @@ export const FAQSection: React.FC = () => {
                 <button
                   key={c.id}
                   onClick={() => setActiveCategory(c.id)}
+                  aria-label={`Filter by category: ${c.label}`}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     activeCategory === c.id
                       ? 'bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] font-bold shadow-md scale-100'
@@ -180,11 +183,11 @@ export const FAQSection: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400">
-              <button onClick={expandAll} className="hover:text-[#E5C38D] transition-colors cursor-pointer">
+              <button onClick={expandAll} aria-label="Expand all FAQ answers" className="hover:text-[#E5C38D] transition-colors cursor-pointer">
                 Expand all
               </button>
               <span className="text-zinc-600">•</span>
-              <button onClick={collapseAll} className="hover:text-[#E5C38D] transition-colors cursor-pointer">
+              <button onClick={collapseAll} aria-label="Collapse all FAQ answers" className="hover:text-[#E5C38D] transition-colors cursor-pointer">
                 Collapse all
               </button>
             </div>
@@ -221,6 +224,7 @@ export const FAQSection: React.FC = () => {
                   {/* Question Accordion Button */}
                   <button
                     onClick={() => toggleItem(item.id)}
+                    aria-expanded={isOpen}
                     className="w-full px-6 py-4 sm:py-5 flex items-center justify-between gap-4 text-left cursor-pointer transition-colors"
                   >
                     <span className={`text-sm sm:text-base font-bold font-display leading-snug transition-colors ${
