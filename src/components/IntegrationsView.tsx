@@ -1011,11 +1011,10 @@ export const PROVIDER_RULES: Record<string, ProviderRule> = {
     placeholder: 'sk-proj-... or sk-...',
   },
   Anthropic: {
-    pattern: /^sk-ant-(api03-|admin-)?[A-Za-z0-9_-]{30,}$/,
-    minLen: 40,
-    prefix: 'sk-ant-',
-    formatDescription: 'Must start with "sk-ant-" (e.g. sk-ant-api03-...)',
-    placeholder: 'sk-ant-api03-...',
+    pattern: /^[A-Za-z0-9_-]{16,}$/,
+    minLen: 16,
+    formatDescription: 'Anthropic API key, proxy token, or custom secret (16+ characters)',
+    placeholder: 'sk-ant-api03-... or custom Anthropic API key...',
   },
   DeepSeek: {
     pattern: /^sk-[a-fA-F0-9]{32,}$/,
@@ -1339,8 +1338,16 @@ export const IntegrationsView: React.FC = () => {
 
     const rule = PROVIDER_RULES[providerName];
     if (!rule) {
-      if (trimmed.length < 24) {
-        return { valid: false, message: 'API key is too short. Minimum 24 characters required.' };
+      if (trimmed.length < 16) {
+        return { valid: false, message: 'API key is too short. Minimum 16 characters required.' };
+      }
+      return { valid: true, message: '' };
+    }
+
+    // Anthropic keys do not strictly need to start with "sk-ant-" (support proxies, Bedrock, and custom keys)
+    if (providerName === 'Anthropic') {
+      if (trimmed.length < 16) {
+        return { valid: false, message: 'Anthropic key is too short. Minimum 16 characters required.' };
       }
       return { valid: true, message: '' };
     }
