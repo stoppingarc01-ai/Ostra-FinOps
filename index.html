@@ -30,10 +30,22 @@
 
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%2523FFF3D6'/><stop offset='50%25' stop-color='%2523D4AF7C'/><stop offset='100%25' stop-color='%25239E743A'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='%25230B0F0F'/><circle cx='50' cy='46' r='11' fill='url(%2523g)'/><path d='M16 63 C18 42, 34 22, 54 18 C72 14, 86 24, 88 38 C80 32, 68 28, 54 30 C38 33, 26 46, 24 63 Z' fill='url(%2523g)'/><path d='M8 65 L92 41 C82 56, 68 76, 50 82 C34 86, 20 80, 16 63 Z' fill='url(%2523g)'/></svg>" />
 
-    <!-- Google Fonts Optimized Loading with Display Swap -->
+    <!-- Google Fonts Optimized Asynchronous Loading with Display Swap -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
+    </noscript>
+
+    <!-- Critical CSS for Instant First Contentful Paint -->
+    <style>
+      :root { color-scheme: dark; }
+      body { background-color: #07090C; color: #f4f4f5; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+      .gold-gradient-text { background: linear-gradient(135deg, #9E743A 0%, #D4AF7C 45%, #E8CA9B 85%, #AA824B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+      .pre-glow { position: absolute; top: 2.5rem; left: 50%; transform: translateX(-50%); width: 320px; height: 320px; background: radial-gradient(circle, rgba(197, 158, 95, 0.15) 0%, rgba(229, 195, 141, 0.05) 50%, transparent 70%); filter: blur(48px); pointer-events: none; z-index: 0; }
+    </style>
 
     <!-- Structured Data (JSON-LD) for Google Search Engine Rich Snippets -->
     <script type="application/ld+json">
@@ -49,7 +61,118 @@
     </script>
   </head>
   <body class="bg-[#07090C] text-zinc-100 antialiased selection:bg-[#C59E5F]/20 selection:text-white">
-    <div id="root"></div>
+    <div id="root">
+      <!-- Critical Pre-rendered Shell for Instant Sub-second Mobile FCP & LCP -->
+      <div class="min-h-screen bg-[#07090C] text-zinc-100 flex flex-col font-sans selection:bg-[#C59E5F]/20 selection:text-white">
+        <!-- Static Navbar Header -->
+        <header class="w-full border-b border-white/[0.06] bg-[#07090C]/80 backdrop-blur-md sticky top-0 z-50">
+          <div class="max-w-[1540px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#12171F] to-[#0A0D12] border border-[#C59E5F]/30 flex items-center justify-center shadow-xs">
+                <svg viewBox="0 0 100 100" class="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="gold-shell-g" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#FFF3D6" />
+                      <stop offset="50%" stop-color="#D4AF7C" />
+                      <stop offset="100%" stop-color="#9E743A" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="50" cy="46" r="11" fill="url(#gold-shell-g)" />
+                  <path d="M16 63 C18 42, 34 22, 54 18 C72 14, 86 24, 88 38 C80 32, 68 28, 54 30 C38 33, 26 46, 24 63 Z" fill="url(#gold-shell-g)" />
+                  <path d="M8 65 L92 41 C82 56, 68 76, 50 82 C34 86, 20 80, 16 63 Z" fill="url(#gold-shell-g)" />
+                </svg>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-base font-bold tracking-tight text-white font-display">Ostra<span class="gold-gradient-text">Ops</span></span>
+                <span class="text-[9px] text-[#C59E5F]/80 font-mono tracking-wider uppercase -mt-1">v2.4 Core</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <a href="https://github.com/stoppingarc01-ai/Ostra-FinOps" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-zinc-300">
+                GitHub
+              </a>
+              <a href="#ui-showcase" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] text-xs font-bold shadow-md shadow-[#C59E5F]/20">
+                Launch Console
+              </a>
+            </div>
+          </div>
+        </header>
+
+        <!-- Static Hero Shell -->
+        <main class="relative pt-12 pb-16 md:pt-16 md:pb-24 overflow-hidden flex-1">
+          <div class="pre-glow"></div>
+          <div class="max-w-[1540px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="max-w-4xl mx-auto text-center space-y-6 flex flex-col items-center">
+              <!-- Eyebrow badge -->
+              <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-[#C59E5F]/30 text-xs font-semibold text-[#E5C38D] uppercase tracking-wider font-mono">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#C59E5F]"></span>
+                <span>AI Cost &amp; Budget Management</span>
+              </div>
+
+              <!-- Main 3D Headline (LCP target element) -->
+              <h1 class="text-4xl sm:text-6xl lg:text-[64px] font-extrabold text-white leading-[1.08] tracking-[-0.035em] font-display max-w-4xl">
+                <span class="block">Control Your AI Spend.</span>
+                <span class="gold-gradient-text block font-extrabold">
+                  Before The Bill Arrives.
+                </span>
+              </h1>
+
+              <!-- Sub-headline description -->
+              <p class="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-2xl font-normal">
+                OstraOps tracks every token, calculates exact costs in real time, and lets you set hard budget caps so runaway scripts or autonomous loops never drain your credit card.
+              </p>
+
+              <!-- Primary Action Buttons -->
+              <div class="flex flex-wrap items-center justify-center gap-3.5 pt-2">
+                <a href="#pricing" class="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] text-[15px] font-bold shadow-lg shadow-[#C59E5F]/20">
+                  <span>View Plans &amp; Pricing</span>
+                </a>
+                <a href="#ui-showcase" class="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-white/[0.04] border border-white/[0.1] text-zinc-300 text-[15px] font-semibold">
+                  <span>Explore Platform</span>
+                </a>
+              </div>
+
+              <!-- Terminal Command Quick Copy Badge -->
+              <div class="pt-1 flex flex-wrap items-center justify-center gap-3 text-xs text-zinc-400">
+                <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] font-mono text-zinc-200">
+                  <span class="font-semibold text-zinc-100">npx ostraops</span>
+                </div>
+                <span class="text-[11px] text-zinc-400 font-mono">
+                  Run via npx • Zero complex setup
+                </span>
+              </div>
+
+              <!-- 3 Value Badges Strip -->
+              <div class="pt-4 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-left border-t border-white/[0.08] w-full max-w-2xl">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D] text-xs font-bold">✓</div>
+                  <div>
+                    <div class="text-xs font-bold text-zinc-100 font-display">Hard Cap Limits</div>
+                    <div class="text-[10px] text-zinc-400">Immediate HTTP 429 when cap hit</div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D] text-xs font-bold">✓</div>
+                  <div>
+                    <div class="text-xs font-bold text-zinc-100 font-display">Deterministic</div>
+                    <div class="text-[10px] text-zinc-400">Intra-family tool schema parity</div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D] text-xs font-bold">✓</div>
+                  <div>
+                    <div class="text-xs font-bold text-zinc-100 font-display">Zero Overhead</div>
+                    <div class="text-[10px] text-zinc-400">Sub-millisecond local proxy proxying</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
