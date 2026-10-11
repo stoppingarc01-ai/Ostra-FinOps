@@ -863,7 +863,7 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
               {/* Connected OAuth Providers */}
               <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-5 shadow-xs space-y-3">
                 <h4 className="text-xs font-bold text-white uppercase font-mono tracking-wider">
-                  Connected SSO Providers
+                  Connected Identity &amp; SSO
                 </h4>
                 
                 <div className="space-y-2">
@@ -874,11 +874,18 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                       </div>
                       <div>
                         <span className="text-xs font-bold text-white block">Google Workspace</span>
-                        <span className="text-[10px] font-mono text-zinc-400">lead-admin@acmecorp.com</span>
+                        <span className="text-[10px] font-mono text-zinc-400">
+                          {user?.email?.endsWith('@gmail.com') ? user.email : (user?.email || 'unlinked')}
+                        </span>
                       </div>
                     </div>
-                    <span className="text-[11px] font-mono text-zinc-400 hover:text-rose-600 font-bold cursor-pointer" onClick={() => showToast('Google SSO verified')}>
-                      Connected
+                    <span 
+                      className={`text-[11px] font-mono font-bold cursor-pointer ${
+                        user?.email?.endsWith('@gmail.com') ? 'text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'
+                      }`} 
+                      onClick={() => showToast(user?.email?.endsWith('@gmail.com') ? 'Google account verified' : 'OAuth SSO configured via Firebase Auth')}
+                    >
+                      {user?.email?.endsWith('@gmail.com') ? 'Connected' : 'Available'}
                     </span>
                   </div>
 
@@ -888,12 +895,14 @@ export const SecurityConsoleView: React.FC<SecurityConsoleViewProps> = ({ onNavi
                         GH
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-white block">GitHub Enterprise</span>
-                        <span className="text-[10px] font-mono text-zinc-400">@lead-architect</span>
+                        <span className="text-xs font-bold text-white block">Workspace Developer Auth</span>
+                        <span className="text-[10px] font-mono text-zinc-400">
+                          {user?.email ? `@${user.email.split('@')[0]}` : '@workspace-dev'}
+                        </span>
                       </div>
                     </div>
-                    <span className="text-[11px] font-mono text-zinc-400 hover:text-rose-600 font-bold cursor-pointer" onClick={() => showToast('GitHub SSO verified')}>
-                      Connected
+                    <span className="text-[11px] font-mono text-emerald-400 font-bold cursor-pointer" onClick={() => showToast('Primary workspace identity active')}>
+                      Active
                     </span>
                   </div>
                 </div>

@@ -32,7 +32,20 @@ export const SoloGuardView: React.FC<SoloGuardViewProps> = ({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [activePkgTab, setActivePkgTab] = useState<'npm' | 'npx' | 'pnpm' | 'brew'>('npm');
   const [activeEnvTab, setActiveEnvTab] = useState<'env' | 'bash' | 'powershell' | 'cursor'>('env');
-  const [localToken, setLocalToken] = useState('ost_solo_9a8f27e4b1c6d3e820f7');
+  const [localToken, setLocalToken] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('ostraops_solo_local_token');
+      if (saved && saved.startsWith('ost_solo_')) return saved;
+    } catch {}
+    const chars = 'abcdef0123456789';
+    let rand = '';
+    for (let i = 0; i < 20; i++) {
+      rand += chars[Math.floor(Math.random() * chars.length)];
+    }
+    const token = `ost_solo_${rand}`;
+    try { localStorage.setItem('ostraops_solo_local_token', token); } catch {}
+    return token;
+  });
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success'>('idle');
   const [testResponse, setTestResponse] = useState<string | null>(null);
   const [sessionCap, setSessionCap] = useState<number>(15);

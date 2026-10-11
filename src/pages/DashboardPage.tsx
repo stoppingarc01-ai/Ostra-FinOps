@@ -115,14 +115,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const initials = displayName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
   const firstName = displayName.split(' ')[0];
 
-  const sidebarNavItems = [
+  const sidebarNavItems: Array<{ id: string; label: string; icon: any; badge?: string }> = [
     { id: 'dashboard', label: 'Gateway Overview', icon: LayoutDashboard },
     { id: 'projects', label: 'API Keys & Projects', icon: FolderKanban },
     { id: 'integrations', label: 'API Key Vault', icon: Cable },
     { id: 'models', label: 'Models & Routing', icon: Cpu },
     { id: 'usage', label: 'Usage & Costs', icon: Receipt },
     { id: 'budgets', label: 'Budgets & Limits', icon: Wallet },
-    { id: 'alerts', label: 'Gateway Alerts', icon: Bell, badge: '3' },
+    { id: 'alerts', label: 'Gateway Alerts', icon: Bell },
     { id: 'optimization', label: 'Optimization', icon: Sparkles },
     { id: 'reports', label: 'Reports & Export', icon: FileBarChart2 },
     { id: 'team', label: 'Team Seats', icon: Users },

@@ -128,7 +128,7 @@ export const SupportPage: React.FC<{
   const ticketUserId = user?.id || 'guest';
 
   // Support Account ID & Dossier Lookup States
-  const [lookupIdInput, setLookupIdInput] = useState(supportAccountId || 'OST-ACC-1000-0001');
+  const [lookupIdInput, setLookupIdInput] = useState(supportAccountId || '');
   const [queriedDossier, setQueriedDossier] = useState<AccountDossier | null>(() =>
     getAccountDossier(supportAccountId, user, profile, subscription)
   );
@@ -138,7 +138,7 @@ export const SupportPage: React.FC<{
 
   // Sync lookup input when supportAccountId initializes
   useEffect(() => {
-    if (supportAccountId && (!lookupIdInput || lookupIdInput === 'OST-ACC-1000-0001')) {
+    if (supportAccountId && !lookupIdInput) {
       setLookupIdInput(supportAccountId);
       setQueriedDossier(getAccountDossier(supportAccountId, user, profile, subscription));
     }

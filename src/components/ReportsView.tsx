@@ -106,35 +106,36 @@ export const ReportsView: React.FC = () => {
   };
 
   const handleExportFineTuningJsonl = () => {
-    const sampleJsonl = [
-      JSON.stringify({
-        messages: [
-          { role: "system", content: "You are an autonomous FinOps engineer optimized via OstraOps Gateway." },
-          { role: "user", content: "Analyze high token velocity spike across claude-3-7-sonnet." },
-          { role: "assistant", content: "Detected 42,000 token burst in loopback daemon session sess_prod_01. Applied hard circuit breaker at $15.00 limit." }
-        ],
-        metadata: { source: "ostraops_gateway", provider: "anthropic", model: "claude-3-7-sonnet", verified: true }
-      }),
-      JSON.stringify({
-        messages: [
-          { role: "system", content: "You are an autonomous FinOps engineer optimized via OstraOps Gateway." },
-          { role: "user", content: "Optimize prompt cache ratio for deterministic OpenAI queries." },
-          { role: "assistant", content: "Enabled in-memory response cache. Cache hit latency dropped from 840ms to 0.8ms at $0.00 cost." }
-        ],
-        metadata: { source: "ostraops_gateway", provider: "openai", model: "gpt-4o", verified: true }
-      })
-    ].join('\n');
+    if (logs.length === 0) {
+      showToast('No gateway traces recorded yet to export as JSONL.');
+      return;
+    }
+    const realJsonl = logs.map(l => JSON.stringify({
+      messages: [
+        { role: "user", content: `Gateway Trace ${l.request_id || l.id}: routed to ${l.routed_model || 'default'}` },
+        { role: "assistant", content: `Execution latency: ${l.latency_ms || 0}ms. Token count: ${(l.output_tokens || 0)}. Cost: $${(l.cost_usd || 0).toFixed(6)}.` }
+      ],
+      metadata: {
+        source: "ostraops_gateway",
+        request_id: l.request_id || l.id,
+        model: l.routed_model,
+        latency_ms: l.latency_ms,
+        cost_usd: l.cost_usd,
+        timestamp: l.created_at,
+        verified: true
+      }
+    })).join('\n');
 
-    const blob = new Blob([sampleJsonl], { type: 'application/x-jsonl;charset=utf-8;' });
+    const blob = new Blob([realJsonl], { type: 'application/x-jsonl;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'ostraops_finetuning_dataset.jsonl';
+    a.download = `ostraops_traces_${Date.now()}.jsonl`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('Downloaded fine-tuning dataset in OpenAI JSONL format!');
+    showToast(`Downloaded ${logs.length} gateway traces in OpenAI fine-tuning JSONL format!`);
   };
 
   const subTabs = [
@@ -209,6 +210,87 @@ export const ReportsView: React.FC = () => {
     modelMap[m].tokens += (l.input_tokens || 0) + (l.output_tokens || 0);
     modelMap[m].requests += 1;
   });
+
+  const palette = ['#C59E5F', '#8E6B2C', '#B5996B', '#3B82F6', '#10B981', '#8C8275'];
+
+  const projectDistribution = Object.entries(modelMap).map(([name, data], idx) => {
+    const pct = totalSpend > 0 ? (data.spend / totalSpend) * 100 : 0;
+    return {
+      name: `Endpoint: ${name}`,
+      val: `$${data.spend.toFixed(2)}`,
+      pct: Number(pct.toFixed(1)),
+      color: palette[idx % palette.length],
+      count: `${data.requests.toLocaleString()} reqs`,
+    };
+  });
+
+  const modelDistribution = Object.entries(modelMap).map(([name, data], idx) => {
+    const pct = totalSpend > 0 ? (data.spend / totalSpend) * 100 : 0;
+    return {
+      name,
+      val: `$${data.spend.toFixed(2)}`,
+      pct: Number(pct.toFixed(1)),
+      color: palette[idx % palette.length],
+      count: `${data.tokens > 1000 ? (data.tokens / 1000).toFixed(1) + 'k' : data.tokens} tokens`,
+    };
+  });
+
+  const successCount = logs.filter(l => !l.error_code || l.status_code === 200).length;
+  const blockedCount = logs.filter(l => l.error_code === 'GUARDRAIL_BLOCKED' || l.error_code === 'BUDGET_EXCEEDED').length;
+  const failedCount = logs.filter(l => l.error_code && l.error_code !== 'GUARDRAIL_BLOCKED' && l.error_code !== 'BUDGET_EXCEEDED').length;
+  const rateLimitCount = logs.filter(l => l.error_code === 'RATE_LIMIT').length;
+
+  const statusDistribution = [
+    { name: 'Successful (200 OK)', val: `${successCount.toLocaleString()} reqs`, pct: totalRequests > 0 ? Number(((successCount / totalRequests) * 100).toFixed(1)) : 100, color: '#10B981', count: 'Standard response' },
+    { name: 'Blocked (Guardrails)', val: `${blockedCount.toLocaleString()} reqs`, pct: totalRequests > 0 ? Number(((blockedCount / totalRequests) * 100).toFixed(1)) : 0, color: '#C59E5F', count: 'Policy enforced' },
+    { name: 'Failed / 5xx', val: `${failedCount.toLocaleString()} reqs`, pct: totalRequests > 0 ? Number(((failedCount / totalRequests) * 100).toFixed(1)) : 0, color: '#EF4444', count: 'Auto-retried' },
+    { name: 'Rate Limits', val: `${rateLimitCount.toLocaleString()} reqs`, pct: totalRequests > 0 ? Number(((rateLimitCount / totalRequests) * 100).toFixed(1)) : 0, color: '#F59E0B', count: 'Failover triggered' },
+  ];
+
+  const renderDonutSlices = (items: { pct: number; color: string }[]) => {
+    if (items.length === 0 || items.every(i => i.pct <= 0)) {
+      return <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3.6" />;
+    }
+    let currentOffset = 0;
+    return (
+      <>
+        <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3.6" />
+        {items.map((it, idx) => {
+          if (it.pct <= 0) return null;
+          const offset = currentOffset;
+          currentOffset += it.pct;
+          return (
+            <circle
+              key={idx}
+              cx="18"
+              cy="18"
+              r="15.9155"
+              fill="none"
+              stroke={it.color}
+              strokeWidth="3.8"
+              strokeDasharray={`${it.pct} 100`}
+              strokeDashoffset={-offset}
+            />
+          );
+        })}
+      </>
+    );
+  };
+
+  const now = new Date();
+  const formatRangeDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+  const d7 = new Date(); d7.setDate(now.getDate() - 7);
+  const d30 = new Date(); d30.setDate(now.getDate() - 30);
+  const dMtd = new Date(now.getFullYear(), now.getMonth(), 1);
+  const dYtd = new Date(now.getFullYear(), 0, 1);
+
+  const dynamicDateOptions = [
+    { label: `${formatRangeDate(d7)} – ${formatRangeDate(now)}`, sub: 'Last 7 Days (Default)' },
+    { label: `${formatRangeDate(dMtd)} – ${formatRangeDate(now)}`, sub: 'Month-to-Date (MTD)' },
+    { label: `${formatRangeDate(d30)} – ${formatRangeDate(now)}`, sub: 'Rolling 30 Days' },
+    { label: `${formatRangeDate(dYtd)} – ${formatRangeDate(now)}`, sub: 'Year-to-Date (YTD)' },
+  ];
+
   const topProjects = Object.entries(modelMap)
     .sort((a, b) => b[1].spend - a[1].spend)
     .slice(0, 5)
@@ -267,12 +349,7 @@ export const ReportsView: React.FC = () => {
 
             {dateDropdownOpen && (
               <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#0B0E14] border border-white/[0.12] shadow-2xl p-1.5 z-40 space-y-1 font-mono text-xs">
-                {[
-                  { label: 'May 10 - May 16, 2026', sub: 'Last 7 Days (Default)' },
-                  { label: 'May 01 - May 16, 2026', sub: 'Month-to-Date (MTD)' },
-                  { label: 'Apr 16 - May 16, 2026', sub: 'Rolling 30 Days' },
-                  { label: 'Jan 01 - May 16, 2026', sub: 'Year-to-Date (YTD)' }
-                ].map((item) => (
+                {dynamicDateOptions.map((item) => (
                   <button
                     key={item.label}
                     onClick={() => {
@@ -515,7 +592,7 @@ export const ReportsView: React.FC = () => {
                   }}
                 >
                   <div className="font-bold text-white border-b border-white/[0.08] pb-1 flex items-center justify-between gap-4">
-                    <span>{timelinePoints[hoveredPoint].date}, 2026</span>
+                    <span>{timelinePoints[hoveredPoint].date}, {new Date().getFullYear()}</span>
                     <span className="text-[10px] text-zinc-500 font-normal">Telemetry Audit</span>
                   </div>
                   <div className="space-y-1 text-[11px]">
@@ -734,23 +811,13 @@ export const ReportsView: React.FC = () => {
                 {/* Hero Donut Chart */}
                 <div className="relative w-36 h-36 mx-auto my-4 flex items-center justify-center">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3.6" />
-                    {/* Production 42.6% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#18181B" strokeWidth="3.8" strokeDasharray="42.6 100" strokeDashoffset="0" />
-                    {/* Marketing 20.2% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#C59E5F" strokeWidth="3.8" strokeDasharray="20.2 100" strokeDashoffset="-42.6" />
-                    {/* Internal 14.9% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#8E6B2C" strokeWidth="3.8" strokeDasharray="14.9 100" strokeDashoffset="-62.8" />
-                    {/* Support 11.8% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#B5996B" strokeWidth="3.8" strokeDasharray="11.8 100" strokeDashoffset="-77.7" />
-                    {/* R&D 7.9% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#8C8275" strokeWidth="3.8" strokeDasharray="7.9 100" strokeDashoffset="-89.5" />
-                    {/* Other 2.6% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#D4CABE" strokeWidth="3.8" strokeDasharray="2.6 100" strokeDashoffset="-97.4" />
+                    {renderDonutSlices(projectDistribution)}
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
                     <span className="text-sm font-extrabold text-white font-mono tracking-tight">${totalSpend.toFixed(2)}</span>
-                    <span className="text-[10px] text-zinc-500 font-medium font-mono mt-0.5">Total Spend</span>
+                    <span className="text-[10px] text-zinc-500 font-medium font-mono mt-0.5">
+                      {projectDistribution.length > 0 ? `${projectDistribution.length} Routes` : '0 Routes'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -775,21 +842,13 @@ export const ReportsView: React.FC = () => {
                 {/* Hero Donut Chart */}
                 <div className="relative w-36 h-36 mx-auto my-4 flex items-center justify-center">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3.6" />
-                    {/* GPT-4o 45.0% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#18181B" strokeWidth="3.8" strokeDasharray="45.0 100" strokeDashoffset="0" />
-                    {/* Claude Sonnet 26.1% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#C59E5F" strokeWidth="3.8" strokeDasharray="26.1 100" strokeDashoffset="-45.0" />
-                    {/* Gemini 14.9% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#8E6B2C" strokeWidth="3.8" strokeDasharray="14.9 100" strokeDashoffset="-71.1" />
-                    {/* GPT-4 Turbo 9.5% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#B5996B" strokeWidth="3.8" strokeDasharray="9.5 100" strokeDashoffset="-86.0" />
-                    {/* Other 4.5% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#D4CABE" strokeWidth="3.8" strokeDasharray="4.5 100" strokeDashoffset="-95.5" />
+                    {renderDonutSlices(modelDistribution)}
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
                     <span className="text-sm font-extrabold text-white font-mono tracking-tight">${totalSpend.toFixed(2)}</span>
-                    <span className="text-[10px] text-zinc-500 font-medium font-mono mt-0.5">Total Spend</span>
+                    <span className="text-[10px] text-zinc-500 font-medium font-mono mt-0.5">
+                      {modelDistribution.length > 0 ? `${modelDistribution.length} Models` : '0 Models'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -814,18 +873,10 @@ export const ReportsView: React.FC = () => {
                 {/* Hero Donut Chart */}
                 <div className="relative w-36 h-36 mx-auto my-4 flex items-center justify-center">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3.6" />
-                    {/* Successful 91.5% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#18181B" strokeWidth="3.8" strokeDasharray="91.5 100" strokeDashoffset="0" />
-                    {/* Blocked / Guardrails 4.8% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#C59E5F" strokeWidth="3.8" strokeDasharray="4.8 100" strokeDashoffset="-91.5" />
-                    {/* Failed 2.4% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#8E6B2C" strokeWidth="3.8" strokeDasharray="2.4 100" strokeDashoffset="-96.3" />
-                    {/* Other 1.3% */}
-                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#D4CABE" strokeWidth="3.8" strokeDasharray="1.3 100" strokeDashoffset="-98.7" />
+                    {renderDonutSlices(statusDistribution)}
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                    <span className="text-sm font-extrabold text-white font-mono tracking-tight">89,732</span>
+                    <span className="text-sm font-extrabold text-white font-mono tracking-tight">{totalRequests.toLocaleString()}</span>
                     <span className="text-[10px] text-zinc-500 font-medium font-mono mt-0.5">Total Requests</span>
                   </div>
                 </div>
@@ -871,7 +922,13 @@ export const ReportsView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04] font-mono">
-                  {topProjects.map((row, i) => (
+                  {topProjects.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-zinc-500 font-mono text-xs">
+                        No telemetry calls recorded for projects yet. Requests routed through the gateway appear here in real-time.
+                      </td>
+                    </tr>
+                  ) : topProjects.map((row, i) => (
                     <tr key={i} className="hover:bg-[#07090C] transition-colors">
                       <td className="py-3 font-bold text-white">
                         <div className="flex items-center gap-2">
@@ -1021,116 +1078,94 @@ export const ReportsView: React.FC = () => {
             </div>
           </div>
 
-          {/* CARD 2: TELEMETRY INSIGHTS (3 Items) */}
+          {/* CARD 2: TELEMETRY INSIGHTS (Dynamic from Live Telemetry) */}
           <div className="p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-white tracking-tight font-sans">
                 Telemetry Insights
               </h3>
-              <span className="text-[10px] font-mono text-zinc-500">LIVE</span>
+              <span className="text-[10px] font-mono text-zinc-500">{logs.length > 0 ? 'LIVE' : 'STANDBY'}</span>
             </div>
 
             <div className="space-y-3">
-              {/* Insight 1 */}
-              <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
-                <div className="text-xs font-bold text-white">
-                  Spend Spike Detected
+              {logs.length === 0 ? (
+                <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
+                  <div className="text-xs font-bold text-white">Gateway In Standby</div>
+                  <p className="text-[11px] text-zinc-400 leading-snug">
+                    Point your agent or SDK to the gateway endpoint to stream real-time insights and spend pacing.
+                  </p>
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-snug">
-                  Production endpoint spend increased by <span className="font-semibold text-white">42%</span> compared to last week.
-                </p>
-                <button 
-                  onClick={() => showToast('Opening Production traffic drilldown')}
-                  className="text-[10px] font-bold text-white hover:text-[#E5C38D] font-mono block pt-1"
-                >
-                  View Details →
-                </button>
-              </div>
+              ) : (
+                <>
+                  <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
+                    <div className="text-xs font-bold text-white">Active Traffic Velocity</div>
+                    <p className="text-[11px] text-zinc-400 leading-snug">
+                      Logged <span className="font-semibold text-white">{totalRequests.toLocaleString()}</span> requests across {projectDistribution.length} routed endpoints.
+                    </p>
+                    <button 
+                      onClick={() => showToast(`Total routed calls: ${totalRequests}`)}
+                      className="text-[10px] font-bold text-white hover:text-[#E5C38D] font-mono block pt-1"
+                    >
+                      View Details →
+                    </button>
+                  </div>
 
-              {/* Insight 2 */}
-              <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
-                <div className="text-xs font-bold text-white">
-                  Optimization Opportunity
-                </div>
-                <p className="text-[11px] text-zinc-400 leading-snug">
-                  You can save <span className="font-bold text-white font-mono">$742.18 (17%)</span> by applying prompt caching to Sonnet 3.5.
-                </p>
-                <button 
-                  onClick={() => showToast('Routing optimization rules ready')}
-                  className="text-[10px] font-bold text-white hover:text-[#E5C38D] font-mono block pt-1"
-                >
-                  View Recommendations →
-                </button>
-              </div>
+                  <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
+                    <div className="text-xs font-bold text-white">Realized Total Spend</div>
+                    <p className="text-[11px] text-zinc-400 leading-snug">
+                      Total cumulative spend is <span className="font-bold text-white font-mono">${totalSpend.toFixed(4)} USD</span>.
+                    </p>
+                    <button 
+                      onClick={() => showToast(`Unit rate: $${avgCostPer1K.toFixed(4)}/1K`)}
+                      className="text-[10px] font-bold text-white hover:text-[#E5C38D] font-mono block pt-1"
+                    >
+                      View Recommendations →
+                    </button>
+                  </div>
 
-              {/* Insight 3 */}
-              <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
-                <div className="text-xs font-bold text-white">
-                  Model Efficiency
-                </div>
-                <p className="text-[11px] text-zinc-400 leading-snug">
-                  GPT-4o unit rate is high. Consider intra-family failover to Haiku for classification calls.
-                </p>
-                <button 
-                  onClick={() => showToast('Opening Model Analysis')}
-                  className="text-[10px] font-bold text-white hover:text-[#E5C38D] font-mono block pt-1"
-                >
-                  View Model Analysis →
-                </button>
-              </div>
+                  <div className="p-3.5 rounded-2xl bg-[#07090C] border border-white/[0.08] space-y-1.5">
+                    <div className="text-xs font-bold text-white">Failover &amp; Health SLA</div>
+                    <p className="text-[11px] text-zinc-400 leading-snug">
+                      Success rate is <span className="font-bold text-emerald-400">{totalRequests > 0 ? ((successCount / totalRequests) * 100).toFixed(1) : '100'}%</span> with zero undetected anomalies.
+                    </p>
+                    <button 
+                      onClick={() => showToast('Opening Model Analysis')}
+                      className="text-[10px] font-bold text-white hover:text-[#E5C38D] font-mono block pt-1"
+                    >
+                      View Model Analysis →
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
-          {/* CARD 3: TOP COST DRIVERS */}
+          {/* CARD 3: TOP COST DRIVERS (Live computed) */}
           <div className="p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-white tracking-tight font-sans">
                 Top Cost Drivers
               </h3>
-              <span className="text-[10px] font-mono text-zinc-500">MTD</span>
+              <span className="text-[10px] font-mono text-zinc-500">LIVE</span>
             </div>
 
-            <div className="space-y-2 font-mono text-xs">
-              <div className="flex items-center justify-between p-2 rounded-xl bg-[#07090C]">
-                <span className="text-zinc-300">High Token Usage</span>
-                <div className="text-right">
-                  <span className="font-bold text-white">$1,842.35</span>
-                  <span className="text-[10px] text-zinc-400 ml-1.5">↑ 42%</span>
-                </div>
+            {topProjects.length === 0 ? (
+              <div className="p-4 rounded-2xl bg-[#07090C] border border-white/[0.08] text-center text-xs text-zinc-500 font-mono">
+                No cost drivers incurred. Zero charges on active gateway.
               </div>
-
-              <div className="flex items-center justify-between p-2 rounded-xl bg-[#07090C]">
-                <span className="text-zinc-300">Large Context Windows</span>
-                <div className="text-right">
-                  <span className="font-bold text-white">$876.54</span>
-                  <span className="text-[10px] text-zinc-400 ml-1.5">↑ 18%</span>
-                </div>
+            ) : (
+              <div className="space-y-2 font-mono text-xs">
+                {topProjects.map((p, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-[#07090C]">
+                    <span className="text-zinc-300 truncate max-w-[130px]">{p.name}</span>
+                    <div className="text-right">
+                      <span className="font-bold text-white">{p.spend}</span>
+                      <span className="text-[10px] text-zinc-400 ml-1.5">{p.change}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-
-              <div className="flex items-center justify-between p-2 rounded-xl bg-[#07090C]">
-                <span className="text-zinc-300">Inefficient Prompts</span>
-                <div className="text-right">
-                  <span className="font-bold text-white">$645.23</span>
-                  <span className="text-[10px] text-zinc-400 ml-1.5">↑ 12%</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-2 rounded-xl bg-[#07090C]">
-                <span className="text-zinc-300">Retry &amp; Failures</span>
-                <div className="text-right">
-                  <span className="font-bold text-white">$512.12</span>
-                  <span className="text-[10px] text-zinc-400 ml-1.5">↑ 9%</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-2 rounded-xl bg-[#07090C]">
-                <span className="text-zinc-300">Model Choice</span>
-                <div className="text-right">
-                  <span className="font-bold text-white">$452.11</span>
-                  <span className="text-[10px] text-zinc-400 ml-1.5">↑ 7%</span>
-                </div>
-              </div>
-            </div>
+            )}
 
             <button 
               onClick={() => showToast('Opening deep cost attribution report')}
@@ -1157,7 +1192,7 @@ export const ReportsView: React.FC = () => {
                   Export Executive PDF Report
                 </h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  May 10 - May 16, 2026 Telemetry Audit
+                  {dateRange} Telemetry Audit
                 </p>
               </div>
               <button
@@ -1175,7 +1210,7 @@ export const ReportsView: React.FC = () => {
                 </div>
                 <div className="text-[11px] text-zinc-400 space-y-1">
                   <div>✓ Executive Spend &amp; Quota Pacing Summary</div>
-                  <div>✓ Upstream LLM Breakdown (GPT-4o, Claude, Gemini)</div>
+                  <div>✓ Upstream LLM Breakdown ({projectDistribution.length > 0 ? projectDistribution.map(p => p.name).join(', ') : 'All Active Models'})</div>
                   <div>✓ Project Endpoints &amp; Failover Recovery Logs</div>
                   <div>✓ Prompt Caching Efficiency &amp; Recommendations</div>
                 </div>
@@ -1248,7 +1283,7 @@ export const ReportsView: React.FC = () => {
                 <label className="font-bold text-zinc-200 block">Destination Channel</label>
                 <input
                   type="email"
-                  defaultValue="finops-alerts@acmecorp.com"
+                  defaultValue={user?.email || 'developer@workspace.com'}
                   placeholder="name@company.com or Slack Webhook"
                   className="w-full px-3 py-2 text-xs bg-[#07090C] border border-white/[0.08] rounded-xl text-white font-mono focus:outline-none focus:border-ostraGold-500"
                 />
@@ -1305,7 +1340,7 @@ export const ReportsView: React.FC = () => {
                     : 'Gateway Traffic & Reliability Breakdown'}
                 </h3>
                 <p className="text-xs text-zinc-400 font-mono mt-0.5">
-                  Telemetry window: May 10 – May 16, 2026
+                  Telemetry window: {dateRange}
                 </p>
               </div>
               <button
@@ -1328,50 +1363,48 @@ export const ReportsView: React.FC = () => {
 
             {/* Full Detailed Items Table */}
             <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-              {(breakdownModal === 'project' ? [
-                { name: 'Production Core', val: '$1,842.35', pct: 42.6, color: '#18181B', count: '36,521 reqs' },
-                { name: 'Marketing AI Engine', val: '$876.54', pct: 20.2, color: '#C59E5F', count: '18,342 reqs' },
-                { name: 'Internal Tools & ETL', val: '$645.23', pct: 14.9, color: '#8E6B2C', count: '14,231 reqs' },
-                { name: 'Customer Support Bot', val: '$512.12', pct: 11.8, color: '#B5996B', count: '12,431 reqs' },
-                { name: 'R&D Labs & Evaluation', val: '$341.26', pct: 7.9, color: '#8C8275', count: '8,207 reqs' },
-                { name: 'Other Sandbox Endpoints', val: '$111.14', pct: 2.6, color: '#D4CABE', count: '2,100 reqs' },
-              ] : breakdownModal === 'model' ? [
-                { name: 'GPT-4o (OpenAI)', val: '$1,945.23', pct: 45.0, color: '#18181B', count: '41.2M tokens' },
-                { name: 'Claude 3.5 Sonnet (Anthropic)', val: '$1,128.75', pct: 26.1, color: '#C59E5F', count: '28.4M tokens' },
-                { name: 'Gemini 1.5 Pro (Google)', val: '$645.32', pct: 14.9, color: '#8E6B2C', count: '19.8M tokens' },
-                { name: 'GPT-4 Turbo (OpenAI)', val: '$412.25', pct: 9.5, color: '#B5996B', count: '9.2M tokens' },
-                { name: 'Other Models (Mistral / Llama)', val: '$197.09', pct: 4.5, color: '#D4CABE', count: '5.1M tokens' },
-              ] : [
-                { name: 'Successful (200 OK)', val: '82,123 reqs', pct: 91.5, color: '#18181B', count: '99.98% SLA' },
-                { name: 'Blocked (Guardrail / Gateway)', val: '4,312 reqs', pct: 4.8, color: '#C59E5F', count: 'Zero leakage' },
-                { name: 'Failed / Upstream 5xx', val: '2,145 reqs', pct: 2.4, color: '#8E6B2C', count: 'Auto-retried' },
-                { name: 'Provider Rate Limits', val: '1,152 reqs', pct: 1.3, color: '#D4CABE', count: 'Fallback triggered' },
-              ]).map((it) => (
-                <div key={it.name} className="p-3 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-1.5 font-mono hover:bg-[#07090C] transition-colors">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-2 font-bold text-white">
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: it.color }} />
-                      <span>{it.name}</span>
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-white">{it.val}</span>
-                      <span className="text-[11px] text-zinc-500">({it.pct}%)</span>
+              {(() => {
+                const activeItems = breakdownModal === 'project'
+                  ? projectDistribution
+                  : breakdownModal === 'model'
+                  ? modelDistribution
+                  : statusDistribution;
+
+                if (activeItems.length === 0) {
+                  return (
+                    <div className="py-8 text-center text-zinc-500 font-mono text-xs">
+                      No recorded telemetry in this window yet. Requests routed through the gateway will automatically appear here.
+                    </div>
+                  );
+                }
+
+                return activeItems.map((it) => (
+                  <div key={it.name} className="p-3 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-1.5 font-mono hover:bg-[#07090C] transition-colors">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-2 font-bold text-white">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: it.color }} />
+                        <span>{it.name}</span>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-white">{it.val}</span>
+                        <span className="text-[11px] text-zinc-500">({it.pct}%)</span>
+                      </div>
+                    </div>
+                    
+                    {/* Visual Allocation Bar */}
+                    <div className="w-full bg-[#EAE5DC]/60 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all duration-300"
+                        style={{ width: `${Math.max(2, it.pct)}%`, backgroundColor: it.color }}
+                      />
+                    </div>
+                    <div className="text-[10px] text-zinc-500 flex justify-between font-mono">
+                      <span>{it.count}</span>
+                      <span>Share of total volume</span>
                     </div>
                   </div>
-                  
-                  {/* Visual Allocation Bar */}
-                  <div className="w-full bg-[#EAE5DC]/60 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{ width: `${it.pct}%`, backgroundColor: it.color }}
-                    />
-                  </div>
-                  <div className="text-[10px] text-zinc-500 flex justify-between font-mono">
-                    <span>{it.count}</span>
-                    <span>Share of total volume</span>
-                  </div>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
 
             {/* Modal Footer */}

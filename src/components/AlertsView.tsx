@@ -409,7 +409,7 @@ export const AlertsView: React.FC = () => {
           </span>
           <span className="px-2.5 py-1 rounded-lg bg-[#07090C] text-[11px] font-mono flex items-center gap-1.5 border border-white/[0.08]">
             <Mail className="w-3 h-3 text-[#E5C38D]" />
-            billing@ostra.ai
+            {user?.email || 'dev-ops@workspace.com'}
           </span>
           <span className="px-2.5 py-1 rounded-lg bg-[#07090C] text-[11px] font-mono flex items-center gap-1.5 border border-white/[0.08]">
             <Webhook className="w-3 h-3 text-blue-400" />
