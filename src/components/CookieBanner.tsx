@@ -10,11 +10,27 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({ onNavigateToCookies 
 
   useEffect(() => {
     const consent = localStorage.getItem('ostraops_cookie_consent');
-    if (!consent) {
-      // Delay display slightly so it doesn't jarringly block the initial load
-      const timer = setTimeout(() => setVisible(true), 1200);
-      return () => clearTimeout(timer);
-    }
+    if (consent) return;
+
+    // Show on first user interaction (scroll, touch, click) so it never steals LCP from Hero
+    const trigger = () => {
+      setVisible(true);
+      cleanup();
+    };
+
+    const cleanup = () => {
+      window.removeEventListener('scroll', trigger);
+      window.removeEventListener('touchstart', trigger);
+      window.removeEventListener('click', trigger);
+      clearTimeout(fallbackTimer);
+    };
+
+    window.addEventListener('scroll', trigger, { passive: true, once: true });
+    window.addEventListener('touchstart', trigger, { passive: true, once: true });
+    window.addEventListener('click', trigger, { passive: true, once: true });
+    const fallbackTimer = setTimeout(trigger, 8000);
+
+    return cleanup;
   }, []);
 
   const handleAcceptAll = () => {

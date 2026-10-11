@@ -221,8 +221,8 @@ const AppInner: React.FC = () => {
     }
   }, [currentRoute]);
 
-  // Loading skeleton — prevents unauthenticated render flash
-  if (loading) {
+  // Loading skeleton — only blocks for protected console routes to prevent unauthenticated render flash
+  if (loading && PROTECTED_ROUTES.includes(currentRoute)) {
     return (
       <div className="min-h-screen bg-[#07090C] text-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">

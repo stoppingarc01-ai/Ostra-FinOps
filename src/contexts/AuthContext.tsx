@@ -279,36 +279,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let unsubscribeSub: (() => void) | null = null;
+    let unsubscribeAuth: (() => void) | null = null;
 
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      if (fbUser) {
-        const authUser = formatAuthUser(fbUser);
-        setUser(authUser);
-        setSession({ user: authUser });
-        await syncOrCreateUserDocs(fbUser);
+    const initAuth = () => {
+      unsubscribeAuth = onAuthStateChanged(auth, async (fbUser) => {
+        if (fbUser) {
+          const authUser = formatAuthUser(fbUser);
+          setUser(authUser);
+          setSession({ user: authUser });
+          await syncOrCreateUserDocs(fbUser);
 
-        // Listen for real-time subscription updates in Firestore
-        if (unsubscribeSub) unsubscribeSub();
-        unsubscribeSub = subscribeToUserSubscription(fbUser.uid, (latestSub) => {
-          if (latestSub) setSubscription(latestSub);
-        });
-      } else {
-        if (unsubscribeSub) {
-          unsubscribeSub();
-          unsubscribeSub = null;
+          // Listen for real-time subscription updates in Firestore
+          if (unsubscribeSub) unsubscribeSub();
+          unsubscribeSub = subscribeToUserSubscription(fbUser.uid, (latestSub) => {
+            if (latestSub) setSubscription(latestSub);
+          });
+        } else {
+          if (unsubscribeSub) {
+            unsubscribeSub();
+            unsubscribeSub = null;
+          }
+          setUser(null);
+          setSession(null);
+          setProfile(null);
+          setOrganization(null);
+          setOrgRole(null);
+          setSubscription(null);
         }
-        setUser(null);
-        setSession(null);
-        setProfile(null);
-        setOrganization(null);
-        setOrgRole(null);
-        setSubscription(null);
-      }
-      setLoading(false);
-    });
+        setLoading(false);
+      });
+    };
+
+    // If on public home, defer auth listener slightly so initial network bandwidth is 100% focused on LCP
+    const hash = window.location.hash.toLowerCase();
+    const isPublic = !hash || hash === '#' || hash === '#home' || hash.startsWith('#features') || hash.startsWith('#architecture') || hash.startsWith('#pricing') || hash.startsWith('#ui-showcase') || hash.startsWith('#faq');
+
+    let timer: any = null;
+    if (isPublic && typeof window !== 'undefined') {
+      timer = setTimeout(initAuth, 1500);
+    } else {
+      initAuth();
+    }
 
     return () => {
-      unsubscribe();
+      if (timer) clearTimeout(timer);
+      if (unsubscribeAuth) unsubscribeAuth();
       if (unsubscribeSub) unsubscribeSub();
     };
   }, []);
