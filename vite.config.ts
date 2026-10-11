@@ -63,6 +63,80 @@ function soloPairingPlugin(): Plugin {
         res.statusCode = 405
         res.end('Method not allowed')
       })
+
+      server.middlewares.use('/api/verify-upstream', async (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          return res.end('Method not allowed')
+        }
+
+        let body = ''
+        req.on('data', (chunk) => { body += chunk })
+        req.on('end', async () => {
+          try {
+            const { provider, apiKey } = JSON.parse(body || '{}')
+            const key = String(apiKey || '').trim()
+            const p = String(provider || '').toLowerCase()
+            const t0 = Date.now()
+
+            if (!key) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              return res.end(JSON.stringify({ ok: false, error: 'API key is required' }))
+            }
+
+            let targetUrl = ''
+            const headers: Record<string, string> = {}
+
+            if (p === 'google') {
+              targetUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`
+            } else if (p === 'openai') {
+              targetUrl = 'https://api.openai.com/v1/models'
+              headers['Authorization'] = `Bearer ${key}`
+            } else if (p === 'anthropic') {
+              targetUrl = 'https://api.anthropic.com/v1/models'
+              headers['x-api-key'] = key
+              headers['anthropic-version'] = '2023-06-01'
+            } else if (p === 'deepseek') {
+              targetUrl = 'https://api.deepseek.com/models'
+              headers['Authorization'] = `Bearer ${key}`
+            } else if (p === 'mistral') {
+              targetUrl = 'https://api.mistral.ai/v1/models'
+              headers['Authorization'] = `Bearer ${key}`
+            } else if (p === 'xai') {
+              targetUrl = 'https://api.x.ai/v1/models'
+              headers['Authorization'] = `Bearer ${key}`
+            } else if (p === 'cohere') {
+              targetUrl = 'https://api.cohere.com/v1/models'
+              headers['Authorization'] = `Bearer ${key}`
+            } else {
+              targetUrl = 'https://api.openai.com/v1/models'
+              headers['Authorization'] = `Bearer ${key}`
+            }
+
+            const ctrl = new AbortController()
+            const timeout = setTimeout(() => ctrl.abort(), 6000)
+            const upstreamRes = await fetch(targetUrl, { headers, signal: ctrl.signal }).finally(() => clearTimeout(timeout))
+            const latency = Date.now() - t0
+
+            res.setHeader('Content-Type', 'application/json')
+            if (upstreamRes.ok) {
+              return res.end(JSON.stringify({ ok: true, latency, status: upstreamRes.status }))
+            } else {
+              const errText = await upstreamRes.text().catch(() => '')
+              let errMsg = `Upstream error HTTP ${upstreamRes.status}`
+              try {
+                const parsed = JSON.parse(errText)
+                errMsg = parsed?.error?.message || parsed?.message || errMsg
+              } catch {}
+              return res.end(JSON.stringify({ ok: false, error: errMsg, status: upstreamRes.status }))
+            }
+          } catch (err: any) {
+            res.setHeader('Content-Type', 'application/json')
+            return res.end(JSON.stringify({ ok: false, error: err.message || 'Handshake failed' }))
+          }
+        })
+      })
     },
   }
 }

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Search,
   Cpu,
@@ -9,7 +10,10 @@ import {
   Sparkles,
   CheckCircle2,
   ArrowRight,
-  Info
+  Info,
+  Minus,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { CATALOG_MODELS, ProviderLogo, type ModelIntegration } from './IntegrationsView';
 
@@ -19,6 +23,40 @@ export const ModelsView: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [sortBy, setSortBy] = useState<'recommended' | 'context' | 'cost-asc' | 'cost-desc' | 'name'>('recommended');
   const [activeDetailModel, setActiveDetailModel] = useState<ModelIntegration | null>(null);
+  const [isClosingDetail, setIsClosingDetail] = useState(false);
+  const [isDetailMaximized, setIsDetailMaximized] = useState(false);
+
+  const handleCloseDetail = () => {
+    setIsClosingDetail(true);
+    setTimeout(() => {
+      setActiveDetailModel(null);
+      setIsClosingDetail(false);
+      setIsDetailMaximized(false);
+    }, 200);
+  };
+
+  const handleOpenDetail = (model: ModelIntegration) => {
+    setIsClosingDetail(false);
+    setActiveDetailModel(model);
+  };
+
+  // Scroll lock and ESC key listener for clean modal display
+  useEffect(() => {
+    if (activeDetailModel) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          handleCloseDetail();
+        }
+      };
+      window.addEventListener('keydown', onKeyDown);
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        window.removeEventListener('keydown', onKeyDown);
+      };
+    }
+  }, [activeDetailModel]);
 
   const providers = useMemo(() => {
     const set = new Set<string>();
@@ -289,7 +327,10 @@ export const ModelsView: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div
+          key={`${selectedProvider}-${selectedCategory}-${sortBy}`}
+          className="tab-transition-enter grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+        >
           {filteredModels.map((model) => (
             <div
               key={model.id}
@@ -351,7 +392,11 @@ export const ModelsView: React.FC = () => {
 
               {/* Action Button: View Specs Modal */}
               <button
-                onClick={() => setActiveDetailModel(model)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleOpenDetail(model);
+                }}
                 className="w-full py-2.5 px-3 rounded-xl bg-white/[0.06] hover:bg-gradient-to-r hover:from-[#C59E5F] hover:to-[#E5C38D] hover:text-[#07090C] text-zinc-200 border border-white/[0.1] hover:border-transparent text-xs font-semibold font-sans transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs group/btn"
               >
                 <span>View Full Model Details</span>
@@ -362,111 +407,185 @@ export const ModelsView: React.FC = () => {
         </div>
       )}
 
-      {/* 5. Clean Model Details Modal (Zero Snippet Generator) */}
-      {activeDetailModel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-          <div className="bg-[#0B0E14] border border-white/[0.1] w-full max-w-2xl rounded-2xl shadow-2xl p-6 lg:p-7 space-y-5 max-h-[90vh] overflow-y-auto text-zinc-100">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-white/[0.08] pb-4">
+      {/* 5. Clean Model Details Modal (MacBook Style Window & React Portal) */}
+      {activeDetailModel && typeof document !== 'undefined' && createPortal(
+        <div
+          className={`fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md ${
+            isClosingDetail ? 'mac-backdrop-leave' : 'mac-backdrop-enter'
+          }`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleCloseDetail();
+          }}
+        >
+          <div className="relative w-full flex items-center justify-center">
+            <div className="mac-window-ambient-glow" />
+            <div
+              className={`bg-[#0B0E14] border border-white/[0.14] w-full ${
+                isDetailMaximized ? 'max-w-4xl max-h-[94vh]' : 'max-w-2xl max-h-[90vh]'
+              } rounded-[24px] mac-window-frame overflow-hidden flex flex-col transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] text-zinc-100 ${
+                isClosingDetail ? 'mac-window-leave' : 'mac-window-enter'
+              }`}
+            >
+              {/* Modal Titlebar (MacBook Style) */}
+            <div className="px-5 py-3.5 border-b border-white/[0.08] flex items-center justify-between bg-[#07090C] select-none">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center p-2.5 shadow-2xs">
-                  <ProviderLogo provider={activeDetailModel.provider} className="w-7 h-7" />
+                {/* Traffic Lights */}
+                <div className="flex items-center gap-2 group/modallights">
+                  <button
+                    type="button"
+                    onClick={handleCloseDetail}
+                    title="Close Window (Esc)"
+                    className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/70 flex items-center justify-center cursor-pointer mac-traffic-light"
+                  >
+                    <X className="w-2 h-2 text-black/80 opacity-0 group-hover/modallights:opacity-100 transition-opacity" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCloseDetail}
+                    title="Minimize"
+                    className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/70 flex items-center justify-center cursor-pointer mac-traffic-light"
+                  >
+                    <Minus className="w-2 h-2 text-black/80 opacity-0 group-hover/modallights:opacity-100 transition-opacity" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsDetailMaximized(!isDetailMaximized)}
+                    title={isDetailMaximized ? "Restore Size" : "Expand Window"}
+                    className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/70 flex items-center justify-center cursor-pointer mac-traffic-light"
+                  >
+                    {isDetailMaximized ? (
+                      <Minimize2 className="w-2 h-2 text-black/80 opacity-0 group-hover/modallights:opacity-100 transition-opacity" />
+                    ) : (
+                      <Maximize2 className="w-2 h-2 text-black/80 opacity-0 group-hover/modallights:opacity-100 transition-opacity" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="h-4 w-px bg-white/[0.1] hidden sm:block mx-0.5" />
+
+                <div className="w-6 h-6 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D] shrink-0">
+                  <Info className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold uppercase text-[#E5C38D]">
-                      {activeDetailModel.provider}
-                    </span>
-                    <span className="text-[10px] font-mono bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-bold">
-                      Available for Tracking
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-white font-sans mt-0.5">
-                    {activeDetailModel.name}
+                  <h3 className="text-xs sm:text-sm font-bold text-white font-sans tracking-tight">
+                    {activeDetailModel.name} — Technical Specifications
                   </h3>
                 </div>
               </div>
 
-              <button
-                onClick={() => setActiveDetailModel(null)}
-                className="w-8 h-8 rounded-full bg-[#07090C] border border-white/[0.1] flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Description in Plain Human Language */}
-            <div className="space-y-1.5">
-              <span className="text-xs font-bold text-zinc-300 uppercase font-mono">Overview:</span>
-              <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans bg-[#07090C] p-3.5 rounded-xl border border-white/[0.08]">
-                {activeDetailModel.description}
-              </p>
-            </div>
-
-            {/* Detailed Specs Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1">
-                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold block">
-                  Context Window
-                </span>
-                <span className="text-sm font-extrabold text-white font-mono block">
-                  {activeDetailModel.contextWindow}
-                </span>
-                <span className="text-[10px] text-zinc-400 block leading-tight">
-                  Total prompt &amp; completion memory
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1">
-                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold block">
-                  Official Pricing
-                </span>
-                <span className="text-sm font-extrabold text-[#E5C38D] font-mono block">
-                  {activeDetailModel.tokenCost}
-                </span>
-                <span className="text-[10px] text-zinc-400 block leading-tight">
-                  Per 1M input / output tokens
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1">
-                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold block">
-                  Recommended Fallback
-                </span>
-                <span className="text-sm font-extrabold text-zinc-200 font-mono block">
-                  {activeDetailModel.fallback}
-                </span>
-                <span className="text-[10px] text-zinc-400 block leading-tight">
-                  If rate-limited or unavailable
-                </span>
+              <div className="flex items-center gap-2">
+                <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.1] text-[10px] font-mono text-zinc-400">
+                  esc
+                </kbd>
+                <button
+                  type="button"
+                  onClick={handleCloseDetail}
+                  className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                  title="Close Window"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
 
-            {/* What OstraOps Tracks for this Model */}
-            <div className="space-y-2 border-t border-white/[0.08] pt-4">
-              <span className="text-xs font-bold text-white font-sans block">
-                How OstraOps Manages Calls to {activeDetailModel.name}:
-              </span>
-              <div className="space-y-2 text-xs text-zinc-300">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Live Cost Calculation:</strong> Tally input and output tokens accurately with official provider prices.</span>
+            {/* Scrollable Content Body */}
+            <div className="p-6 lg:p-7 space-y-5 overflow-y-auto flex-1">
+              {/* Model Header */}
+              <div className="flex items-start justify-between border-b border-white/[0.08] pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-[#07090C] border border-white/[0.08] flex items-center justify-center p-2.5 shadow-2xs">
+                    <ProviderLogo provider={activeDetailModel.provider} className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold uppercase text-[#E5C38D]">
+                        {activeDetailModel.provider}
+                      </span>
+                      <span className="text-[10px] font-mono bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-bold">
+                        Available for Tracking
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-bold text-white font-sans mt-0.5">
+                      {activeDetailModel.name}
+                    </h3>
+                  </div>
                 </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Budget Threshold Warning:</strong> Get alerted before you reach your monthly spending target.</span>
+              </div>
+
+              {/* Description in Plain Human Language */}
+              <div className="space-y-1.5">
+                <span className="text-xs font-bold text-zinc-300 uppercase font-mono">Overview:</span>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans bg-[#07090C] p-3.5 rounded-xl border border-white/[0.08]">
+                  {activeDetailModel.description}
+                </p>
+              </div>
+
+              {/* Detailed Specs Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1">
+                  <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold block">
+                    Context Window
+                  </span>
+                  <span className="text-sm font-extrabold text-white font-mono block">
+                    {activeDetailModel.contextWindow}
+                  </span>
+                  <span className="text-[10px] text-zinc-400 block leading-tight">
+                    Total prompt &amp; completion memory
+                  </span>
                 </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Complete Privacy:</strong> Your prompt contents and completions are never stored on external servers.</span>
+
+                <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1">
+                  <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold block">
+                    Official Pricing
+                  </span>
+                  <span className="text-sm font-extrabold text-[#E5C38D] font-mono block">
+                    {activeDetailModel.tokenCost}
+                  </span>
+                  <span className="text-[10px] text-zinc-400 block leading-tight">
+                    Per 1M input / output tokens
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] space-y-1">
+                  <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold block">
+                    Recommended Fallback
+                  </span>
+                  <span className="text-sm font-extrabold text-zinc-200 font-mono block">
+                    {activeDetailModel.fallback}
+                  </span>
+                  <span className="text-[10px] text-zinc-400 block leading-tight">
+                    If rate-limited or unavailable
+                  </span>
+                </div>
+              </div>
+
+              {/* What OstraOps Tracks for this Model */}
+              <div className="space-y-2 border-t border-white/[0.08] pt-4">
+                <span className="text-xs font-bold text-white font-sans block">
+                  How OstraOps Manages Calls to {activeDetailModel.name}:
+                </span>
+                <div className="space-y-2 text-xs text-zinc-300">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Live Cost Calculation:</strong> Tally input and output tokens accurately with official provider prices.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Budget Threshold Warning:</strong> Get alerted before you reach your monthly spending target.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Complete Privacy:</strong> Your prompt contents and completions are never stored on external servers.</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="border-t border-white/[0.08] pt-4 flex justify-end">
+            <div className="border-t border-white/[0.08] p-4 bg-[#07090C] flex justify-end">
               <button
-                onClick={() => setActiveDetailModel(null)}
+                type="button"
+                onClick={handleCloseDetail}
                 className="px-5 py-2 rounded-xl bg-white/[0.08] text-white text-xs font-semibold hover:bg-white/[0.14] border border-white/[0.1] transition-colors cursor-pointer"
               >
                 Close Details
@@ -474,7 +593,9 @@ export const ModelsView: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      </div>,
+      document.body
+    )}
     </div>
   );
 };

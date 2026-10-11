@@ -162,7 +162,7 @@ export const PreferencesView: React.FC = () => {
         </div>
 
         {/* Right Content Pane (8 Cols) */}
-        <div className="lg:col-span-8 rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs space-y-6">
+        <div key={activeCategory} className="tab-transition-enter lg:col-span-8 rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs space-y-6">
           {/* ============================================================ */}
           {/* CATEGORY 1: GENERAL                                         */}
           {/* ============================================================ */}

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Search,
   Check,
@@ -25,7 +26,10 @@ import {
   Terminal,
   ExternalLink,
   Send,
-  Loader2
+  Loader2,
+  Minus,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
@@ -981,69 +985,92 @@ export const CATALOG_MODELS: ModelIntegration[] = [
 ];
 
 // Provider-specific secret formats, placeholders, and validation rules
-interface ProviderRule {
-  placeholder: string;
-  expectedPrefix?: string;
+export interface ProviderRule {
+  pattern: RegExp;
   minLen: number;
-  guideUrl?: string;
+  maxLen?: number;
+  prefix?: string;
   formatDescription: string;
+  placeholder: string;
 }
 
-const PROVIDER_RULES: Record<string, ProviderRule> = {
-  Anthropic: {
-    placeholder: 'sk-ant-api03-xxxx... or custom key',
-    minLen: 10,
-    formatDescription: 'Enter valid Anthropic API key or token',
+export const PROVIDER_RULES: Record<string, ProviderRule> = {
+  Google: {
+    pattern: /^AIzaSy[A-Za-z0-9_-]{33}$/,
+    minLen: 39,
+    maxLen: 39,
+    prefix: 'AIzaSy',
+    formatDescription: 'Must start with "AIzaSy" and be exactly 39 characters',
+    placeholder: 'AIzaSy... (39 characters)',
   },
   OpenAI: {
-    placeholder: 'sk-proj-xxxx... or sk-xxxx...',
-    minLen: 10,
-    formatDescription: 'Enter valid OpenAI API key or token',
+    pattern: /^sk-(proj-[A-Za-z0-9_-]{20,}|admin-[A-Za-z0-9_-]{20,}|svcacct-[A-Za-z0-9_-]{20,}|[A-Za-z0-9_-]{40,})$/,
+    minLen: 48,
+    prefix: 'sk-',
+    formatDescription: 'Must start with "sk-" or "sk-proj-" and be at least 48 characters',
+    placeholder: 'sk-proj-... or sk-...',
   },
-  Google: {
-    placeholder: 'AIzaSy... or AQ....',
-    minLen: 10,
-    formatDescription: 'Enter valid Google Gemini API key or Vertex token',
-  },
-  Mistral: {
-    placeholder: 'mis_xxxx... or custom key',
-    minLen: 10,
-    formatDescription: 'Enter valid Mistral API key or token',
-  },
-  Kimi: {
-    placeholder: 'sk-xxxx... (Moonshot / Kimi API Key)',
-    minLen: 10,
-    formatDescription: 'Enter valid Moonshot AI / Kimi API key or token',
-  },
-  xAI: {
-    placeholder: 'xai-xxxx... or custom key',
-    minLen: 10,
-    formatDescription: 'Enter valid xAI API key or token',
+  Anthropic: {
+    pattern: /^sk-ant-(api03-|admin-)?[A-Za-z0-9_-]{30,}$/,
+    minLen: 40,
+    prefix: 'sk-ant-',
+    formatDescription: 'Must start with "sk-ant-" (e.g. sk-ant-api03-...)',
+    placeholder: 'sk-ant-api03-...',
   },
   DeepSeek: {
-    placeholder: 'sk-xxxx... or custom key',
-    minLen: 10,
-    formatDescription: 'Enter valid DeepSeek API key or token',
+    pattern: /^sk-[a-fA-F0-9]{32,}$/,
+    minLen: 35,
+    prefix: 'sk-',
+    formatDescription: 'Must start with "sk-" followed by 32 hex characters',
+    placeholder: 'sk-...',
   },
-  Qwen: {
-    placeholder: 'sk-qwen-xxxx... or sk-xxxx...',
-    minLen: 10,
-    formatDescription: 'Enter valid Qwen API key or token',
+  Mistral: {
+    pattern: /^[a-zA-Z0-9]{32}$/,
+    minLen: 32,
+    maxLen: 32,
+    formatDescription: 'Must be a 32-character alphanumeric key',
+    placeholder: '32-character Mistral API key...',
   },
-  Meta: {
-    placeholder: 'meta-xxxx... or custom key',
-    minLen: 10,
-    formatDescription: 'Enter valid Meta API key or token',
+  xAI: {
+    pattern: /^xai-[a-zA-Z0-9_-]{32,}$/,
+    minLen: 36,
+    prefix: 'xai-',
+    formatDescription: 'Must start with "xai-" and be at least 36 characters',
+    placeholder: 'xai-...',
   },
   Cohere: {
-    placeholder: 'coh-xxxx... or custom key',
-    minLen: 10,
-    formatDescription: 'Enter valid Cohere API key or token',
+    pattern: /^[a-zA-Z0-9_-]{38,45}$/,
+    minLen: 38,
+    maxLen: 45,
+    formatDescription: 'Must be 40 alphanumeric characters',
+    placeholder: '40-character Cohere Production key...',
+  },
+  Kimi: {
+    pattern: /^sk-[a-zA-Z0-9_-]{30,}$/,
+    minLen: 33,
+    prefix: 'sk-',
+    formatDescription: 'Must start with "sk-" and be at least 33 characters',
+    placeholder: 'sk-...',
+  },
+  Meta: {
+    pattern: /^(gsk_|together_|la-)[a-zA-Z0-9_-]{20,}$|^[a-zA-Z0-9_-]{30,}$/,
+    minLen: 30,
+    formatDescription: 'Must be a valid Meta inference key of at least 30 characters',
+    placeholder: 'gsk_... or inference token (30+ chars)',
   },
   NVIDIA: {
-    placeholder: 'nvapi-xxxx... (NVIDIA NIM / NGC API Key)',
-    minLen: 10,
-    formatDescription: 'Enter valid NVIDIA NIM or NGC API key',
+    pattern: /^nvapi-[a-zA-Z0-9_-]{30,}$/,
+    minLen: 36,
+    prefix: 'nvapi-',
+    formatDescription: 'Must start with "nvapi-" and be at least 36 characters',
+    placeholder: 'nvapi-...',
+  },
+  Qwen: {
+    pattern: /^sk-[a-zA-Z0-9]{32}$/,
+    minLen: 35,
+    prefix: 'sk-',
+    formatDescription: 'Must start with "sk-" followed by 32 characters',
+    placeholder: 'sk-...',
   },
 };
 
@@ -1128,9 +1155,11 @@ export const IntegrationsView: React.FC = () => {
   }, []);
 
   // ============================================================
-  // INTERACTIVE TEST PLAYGROUND STATE
+  // INTERACTIVE TEST PLAYGROUND STATE (MacBook Window Mode)
   // ============================================================
   const [testModalOpen, setTestModalOpen] = useState(false);
+  const [isClosingTestModal, setIsClosingTestModal] = useState(false);
+  const [isTestMaximized, setIsTestMaximized] = useState(false);
   const [testModelId, setTestModelId] = useState('gemini-3.5-flash-lite');
   const [testPrompt, setTestPrompt] = useState('Say hello and confirm live gateway connectivity in 1 sentence.');
   const [testCustomKey, setTestCustomKey] = useState('');
@@ -1146,13 +1175,75 @@ export const IntegrationsView: React.FC = () => {
   } | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
 
+  const handleCloseTestModal = () => {
+    setIsClosingTestModal(true);
+    setTimeout(() => {
+      setTestModalOpen(false);
+      setIsClosingTestModal(false);
+      setIsTestMaximized(false);
+    }, 200);
+  };
+
+  const handleOpenTestModal = (modelId?: string) => {
+    if (modelId) {
+      setTestModelId(modelId);
+    }
+    setIsClosingTestModal(false);
+    setTestModalOpen(true);
+  };
+
+  // Prevent scroll jump & lock body scroll on modal open
+  useEffect(() => {
+    if (testModalOpen) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          handleCloseTestModal();
+        }
+      };
+      window.addEventListener('keydown', onKeyDown);
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        window.removeEventListener('keydown', onKeyDown);
+      };
+    }
+  }, [testModalOpen]);
+
   // ============================================================
   // 3-STEP INTEGRATION WIZARD STATE
   // ============================================================
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [isClosingWizard, setIsClosingWizard] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(2);
   const [activeModel, setActiveModel] = useState<ModelIntegration>(CATALOG_MODELS[0]);
   const [activeProvider, setActiveProvider] = useState<ModelIntegration['provider']>('Google');
+
+  const handleCloseWizard = () => {
+    setIsClosingWizard(true);
+    setTimeout(() => {
+      setWizardOpen(false);
+      setIsClosingWizard(false);
+    }, 200);
+  };
+
+  // Scroll lock and ESC listener for Wizard Modal
+  useEffect(() => {
+    if (wizardOpen) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          handleCloseWizard();
+        }
+      };
+      window.addEventListener('keydown', onKeyDown);
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        window.removeEventListener('keydown', onKeyDown);
+      };
+    }
+  }, [wizardOpen]);
 
   // Step 2 Form States
   const [connectionName, setConnectionName] = useState('');
@@ -1246,15 +1337,39 @@ export const IntegrationsView: React.FC = () => {
       return { valid: false, message: 'Upstream API Key is required.' };
     }
 
-    const rule = PROVIDER_RULES[providerName] || {
-      minLen: 8,
-      formatDescription: 'Must be at least 8 characters',
-    };
+    const rule = PROVIDER_RULES[providerName];
+    if (!rule) {
+      if (trimmed.length < 24) {
+        return { valid: false, message: 'API key is too short. Minimum 24 characters required.' };
+      }
+      return { valid: true, message: '' };
+    }
+
+    if (rule.prefix && !trimmed.startsWith(rule.prefix)) {
+      return {
+        valid: false,
+        message: `Invalid format: ${providerName} key must start with "${rule.prefix}".`,
+      };
+    }
 
     if (trimmed.length < rule.minLen) {
       return {
         valid: false,
-        message: `Key is too short. ${rule.formatDescription}.`,
+        message: `Key is too short (${trimmed.length}/${rule.minLen} chars). ${rule.formatDescription}.`,
+      };
+    }
+
+    if (rule.maxLen && trimmed.length > rule.maxLen) {
+      return {
+        valid: false,
+        message: `Key is too long (${trimmed.length}/${rule.maxLen} chars). ${rule.formatDescription}.`,
+      };
+    }
+
+    if (!rule.pattern.test(trimmed)) {
+      return {
+        valid: false,
+        message: `Invalid format: ${rule.formatDescription}.`,
       };
     }
 
@@ -1266,15 +1381,15 @@ export const IntegrationsView: React.FC = () => {
   }, [apiKey, activeProvider]);
 
   const canProceedStep2 = useMemo(() => {
-    return keyValidation.valid && connectionName.trim().length > 0;
-  }, [keyValidation, connectionName]);
+    return keyValidation.valid && connectionName.trim().length > 0 && handshakeState !== 'testing';
+  }, [keyValidation, connectionName, handshakeState]);
 
   // REAL LIVE UPSTREAM HANDSHAKE TEST
-  const handleTestHandshake = async () => {
+  const handleTestHandshake = async (): Promise<boolean> => {
     setKeyTouched(true);
     if (!keyValidation.valid) {
-      showToast('Cannot test: Please enter a valid API key first.');
-      return;
+      showToast(keyValidation.message || `Please enter a valid ${activeProvider} API key.`);
+      return false;
     }
 
     setHandshakeState('testing');
@@ -1286,81 +1401,107 @@ export const IntegrationsView: React.FC = () => {
       let verifiedMsg = '';
       let verified = false;
 
+      // 1. Direct browser validation for Google Gemini (CORS supported natively)
       if (activeProvider.toLowerCase() === 'google') {
-        // Direct probe to Google API
-        try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(trimmedKey)}`);
-          latency = Math.round(performance.now() - startTime);
-          if (res.ok) {
-            verified = true;
-            verifiedMsg = `Handshake Verified with Google Gemini (${latency}ms)`;
-          } else {
-            const errData = await res.json().catch(() => null);
-            const errMsg = errData?.error?.message || `HTTP ${res.status}`;
-            // If OAuth / Vertex token, test bearer
-            const bRes = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/models', {
-              headers: { Authorization: `Bearer ${trimmedKey}` },
-            }).catch(() => null);
-            if (bRes && bRes.ok) {
-              verified = true;
-              verifiedMsg = `Handshake Verified with Google Vertex (${latency}ms)`;
-            } else {
-              setHandshakeState('failed');
-              showToast(`Google Handshake Failed: ${errMsg}`);
-              return;
-            }
-          }
-        } catch {
-          // If browser CORS prevents direct client probe, verify via local gateway proxy
-          await fetch('/v1/health').catch(() => null);
-          latency = Math.max(14, Math.round(performance.now() - startTime));
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(trimmedKey)}`);
+        latency = Math.round(performance.now() - startTime);
+        if (res.ok) {
           verified = true;
-          verifiedMsg = `Handshake Verified via Gateway Proxy (${latency}ms)`;
-        }
-      } else if (activeProvider.toLowerCase() === 'openai') {
-        try {
-          const res = await fetch('https://api.openai.com/v1/models', {
-            headers: { Authorization: `Bearer ${trimmedKey}` },
-          });
-          latency = Math.round(performance.now() - startTime);
-          if (res.ok) {
-            verified = true;
-            verifiedMsg = `Handshake Verified with OpenAI (${latency}ms)`;
-          } else {
-            const errData = await res.json().catch(() => null);
-            setHandshakeState('failed');
-            showToast(`OpenAI Handshake Failed: ${errData?.error?.message || res.statusText}`);
-            return;
-          }
-        } catch {
-          latency = Math.max(16, Math.round(performance.now() - startTime));
-          verified = true;
-          verifiedMsg = `Handshake Verified via Gateway Proxy (${latency}ms)`;
+          verifiedMsg = `Handshake Verified with Google Gemini (${latency}ms)`;
+        } else {
+          const errData = await res.json().catch(() => null);
+          const errMsg = errData?.error?.message || `HTTP ${res.status}: Invalid Google API Key`;
+          setHandshakeState('failed');
+          showToast(`Google Handshake Failed: ${errMsg}`);
+          return false;
         }
       } else {
-        await fetch('/v1/health').catch(() => null);
-        latency = Math.max(18, Math.round(performance.now() - startTime));
-        verified = true;
-        verifiedMsg = `Handshake Verified with ${activeProvider} (${latency}ms)`;
+        // 2. Server-side proxy verification via /api/verify-upstream
+        const verifyRes = await fetch('/api/verify-upstream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: activeProvider,
+            apiKey: trimmedKey,
+            model: targetModelId || activeModel.modelId,
+          }),
+        }).catch(() => null);
+
+        if (verifyRes && verifyRes.ok) {
+          const data = await verifyRes.json().catch(() => ({}));
+          if (data.ok) {
+            latency = data.latency || Math.round(performance.now() - startTime);
+            verified = true;
+            verifiedMsg = `Handshake Verified with ${activeProvider} (${latency}ms)`;
+          } else {
+            setHandshakeState('failed');
+            showToast(`${activeProvider} Handshake Failed: ${data.error || 'Invalid Upstream Key'}`);
+            return false;
+          }
+        } else if (verifyRes && (verifyRes.status === 400 || verifyRes.status === 401 || verifyRes.status === 403)) {
+          const data = await verifyRes.json().catch(() => ({}));
+          setHandshakeState('failed');
+          showToast(`${activeProvider} Rejected Key: ${data.error || 'Unauthorized API Key'}`);
+          return false;
+        } else {
+          // Direct fallback check if provider endpoint is accessible
+          const directRes = await fetch('https://api.openai.com/v1/models', {
+            headers: { Authorization: `Bearer ${trimmedKey}` },
+          }).catch(() => null);
+
+          if (directRes && directRes.ok) {
+            latency = Math.round(performance.now() - startTime);
+            verified = true;
+            verifiedMsg = `Handshake Verified with ${activeProvider} (${latency}ms)`;
+          } else if (directRes && (directRes.status === 401 || directRes.status === 403)) {
+            setHandshakeState('failed');
+            showToast(`${activeProvider} Rejected Key: HTTP ${directRes.status} Unauthorized`);
+            return false;
+          } else {
+            setHandshakeState('failed');
+            showToast(`Verification Failed: Could not verify key with ${activeProvider}. Please check credentials.`);
+            return false;
+          }
+        }
       }
 
       if (verified) {
         setHandshakeLatency(latency);
         setHandshakeState('success');
         showToast(verifiedMsg);
+        return true;
       }
+
+      setHandshakeState('failed');
+      showToast(`Verification Failed: Please check your ${activeProvider} key.`);
+      return false;
     } catch (err: any) {
       setHandshakeState('failed');
-      showToast(`Handshake verification error: ${err.message || 'Network error'}`);
+      showToast(`Handshake verification error: ${err.message || 'Verification failed'}`);
+      return false;
     }
   };
 
-  const handleProceedToStep3 = () => {
+  const handleProceedToStep3 = async () => {
     setKeyTouched(true);
-    if (!canProceedStep2) {
-      showToast('Validation Error: Please correct the invalid fields.');
+    if (!keyValidation.valid) {
+      showToast(`Cannot proceed: ${keyValidation.message}`);
       return;
     }
+    if (!connectionName.trim()) {
+      showToast('Please enter a Connection Name before proceeding.');
+      return;
+    }
+
+    // Strict Guard: Must pass live handshake before moving forward
+    if (handshakeState !== 'success') {
+      const ok = await handleTestHandshake();
+      if (!ok) {
+        showToast('Verification Required: Cannot proceed with unverified or invalid API key.');
+        return;
+      }
+    }
+
     setCurrentStep(3);
   };
 
@@ -1368,6 +1509,11 @@ export const IntegrationsView: React.FC = () => {
 
   // Persist Connection when wizard completes
   const handleSaveConnection = () => {
+    if (!keyValidation.valid || handshakeState !== 'success') {
+      showToast('Cannot save: API key must be verified first.');
+      return;
+    }
+
     const raw = apiKey.trim();
     const masked = raw.length > 8 ? `${raw.slice(0, 4)}••••••••${raw.slice(-4)}` : '••••••••';
     const newConn: ConnectedIntegration = {
@@ -1803,7 +1949,10 @@ response = client.chat.completions.create(
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setTestModalOpen(true)}
+            onClick={(e) => {
+              e.preventDefault();
+              handleOpenTestModal();
+            }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#18181B] hover:bg-[#27272A] border border-[#3F3F46] text-white text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer"
           >
             <Play className="w-3.5 h-3.5 text-[#C59E5F] fill-[#C59E5F]" />
@@ -1923,7 +2072,10 @@ response = client.chat.completions.create(
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setTestModalOpen(true)}
+              onClick={(e) => {
+                e.preventDefault();
+                handleOpenTestModal();
+              }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#C59E5F]/15 hover:bg-[#C59E5F]/25 text-[#E5C38D] border border-[#C59E5F]/30 text-xs font-mono font-medium transition-colors cursor-pointer"
             >
               <Terminal className="w-3.5 h-3.5" />
@@ -1993,10 +2145,11 @@ response = client.chat.completions.create(
                   <span>Ping: <strong className="text-zinc-300">{conn.latencyMs || 18}ms</strong></span>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => {
-                        setTestModelId(conn.targetModelId);
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setTestCustomKey(conn.apiKeyRaw);
-                        setTestModalOpen(true);
+                        handleOpenTestModal(conn.targetModelId);
                       }}
                       className="text-[#C59E5F] hover:underline flex items-center gap-1 cursor-pointer font-bold"
                     >
@@ -2232,9 +2385,10 @@ response = client.chat.completions.create(
                   <ArrowUpRight className={`w-3.5 h-3.5 transition-colors ${isShowcase ? 'text-white' : 'text-zinc-400 group-hover/btn:text-white'}`} />
                 </button>
                 <button
-                  onClick={() => {
-                    setTestModelId(model.modelId);
-                    setTestModalOpen(true);
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleOpenTestModal(model.modelId);
                   }}
                   title="Test Model in Playground"
                   className="py-2 px-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors cursor-pointer text-xs font-mono flex items-center gap-1"
@@ -2249,42 +2403,85 @@ response = client.chat.completions.create(
       </div>
 
       {/* ============================================================ */}
-      {/* 3-STEP INTEGRATION WIZARD MODAL (Matching Reference Layout)   */}
+      {/* 3-STEP INTEGRATION WIZARD MODAL (PORTAL & MACBOOK WINDOW)     */}
       {/* ============================================================ */}
-      {wizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="flex flex-col w-full max-w-2xl max-h-[88vh] bg-[#07090C] border border-[#C59E5F]/35 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.9)] overflow-hidden animate-in zoom-in-95 duration-200">
+      {wizardOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          className={`fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md ${
+            isClosingWizard ? 'mac-backdrop-leave' : 'mac-backdrop-enter'
+          }`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleCloseWizard();
+          }}
+        >
+          <div className="relative w-full max-w-2xl flex items-center justify-center">
+            <div className="mac-window-ambient-glow" />
+            <div
+              className={`flex flex-col w-full max-h-[88vh] bg-[#07090C] border border-[#C59E5F]/35 rounded-[24px] mac-window-frame overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                isClosingWizard ? 'mac-window-leave' : 'mac-window-enter'
+              }`}
+            >
             
-            {/* Modal Top Header */}
-            <div className="flex-shrink-0 px-6 py-4 border-b border-white/[0.08] flex items-center justify-between bg-[#0B0E14]">
+            {/* Modal Top Header (MacBook Style) */}
+            <div className="flex-shrink-0 px-5 py-3.5 border-b border-white/[0.08] flex items-center justify-between bg-[#0B0E14] select-none">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#FAF3E0] border border-[#EEDDB8] flex items-center justify-center flex-shrink-0">
-                  <Zap className="w-5 h-5 text-[#C59E5F]" />
+                {/* Traffic Lights */}
+                <div className="flex items-center gap-2 group/wizardlights">
+                  <button
+                    type="button"
+                    onClick={handleCloseWizard}
+                    title="Close Window (Esc)"
+                    className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/70 flex items-center justify-center cursor-pointer mac-traffic-light"
+                  >
+                    <X className="w-2 h-2 text-black/80 opacity-0 group-hover/wizardlights:opacity-100 transition-opacity" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCloseWizard}
+                    title="Minimize"
+                    className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/70 flex items-center justify-center cursor-pointer mac-traffic-light"
+                  >
+                    <Minus className="w-2 h-2 text-black/80 opacity-0 group-hover/wizardlights:opacity-100 transition-opacity" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {}}
+                    title="Zoom"
+                    className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/70 flex items-center justify-center cursor-pointer mac-traffic-light opacity-80"
+                  >
+                    <Maximize2 className="w-2 h-2 text-black/80 opacity-0 group-hover/wizardlights:opacity-100 transition-opacity" />
+                  </button>
+                </div>
+
+                <div className="h-4 w-px bg-white/[0.1] hidden sm:block mx-0.5" />
+
+                <div className="w-7 h-7 rounded-lg bg-[#FAF3E0] border border-[#EEDDB8] flex items-center justify-center flex-shrink-0">
+                  <Zap className="w-4 h-4 text-[#C59E5F]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-white font-sans">
-                      Connect Upstream Model & Provider
+                    <h3 className="text-sm sm:text-base font-bold text-white font-sans tracking-tight">
+                      Connect Upstream Model &amp; Provider
                     </h3>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#18181B] text-white uppercase tracking-wider">
                       STEP {currentStep} OF 3
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-400">
-                    {currentStep === 1
-                      ? 'Select an upstream model provider family to authorize.'
-                      : currentStep === 2
-                      ? 'Enter your provider API key, select models, and test upstream connectivity.'
-                      : 'Copy your drop-in gateway proxy snippet and verify live routing.'}
-                  </p>
                 </div>
               </div>
-              <button
-                onClick={() => setWizardOpen(false)}
-                className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.1] text-[10px] font-mono text-zinc-400">
+                  esc
+                </kbd>
+                <button
+                  type="button"
+                  onClick={handleCloseWizard}
+                  className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                  title="Close Window"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* 3 Step Tabs Navigation Bar */}
@@ -2465,9 +2662,9 @@ response = client.chat.completions.create(
                         }
                         className={`w-full px-3.5 py-2.5 pr-10 rounded-xl bg-[#0B0E14] text-xs font-mono transition-all focus:outline-none ${
                           keyTouched && !keyValidation.valid
-                            ? 'border-2 border-rose-400 bg-rose-50/20 text-rose-900 focus:border-rose-500'
+                            ? 'border-2 border-rose-500/80 bg-rose-950/20 text-rose-200 focus:border-rose-400'
                             : keyTouched && keyValidation.valid
-                            ? 'border border-emerald-400 text-white focus:border-emerald-500'
+                            ? 'border border-emerald-500/80 text-emerald-200 focus:border-emerald-400'
                             : 'border border-white/[0.08] text-white focus:border-[#C59E5F]'
                         }`}
                       />
@@ -2483,9 +2680,15 @@ response = client.chat.completions.create(
 
                     {/* Validation Error Message */}
                     {keyTouched && !keyValidation.valid && (
-                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-600 font-mono animate-in fade-in duration-150">
-                        <AlertTriangle className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
+                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-400 font-mono animate-in fade-in duration-150">
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
                         <span>{keyValidation.message}</span>
+                      </div>
+                    )}
+                    {keyTouched && keyValidation.valid && (
+                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-400 font-mono animate-in fade-in duration-150">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                        <span>Valid {activeProvider} API Key format</span>
                       </div>
                     )}
                   </div>
@@ -2541,7 +2744,9 @@ response = client.chat.completions.create(
                         !canProceedStep2
                           ? 'bg-white/[0.04] text-zinc-500 border-white/[0.08] cursor-not-allowed opacity-60'
                           : handshakeState === 'success'
-                          ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                          ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                          : handshakeState === 'failed'
+                          ? 'bg-rose-950/40 border-rose-500/50 text-rose-300 hover:bg-rose-900/30'
                           : 'bg-[#0B0E14] border-white/[0.08] hover:border-[#C59E5F] text-zinc-200 hover:bg-white/[0.04]'
                       }`}
                     >
@@ -2552,8 +2757,13 @@ response = client.chat.completions.create(
                         </>
                       ) : handshakeState === 'success' ? (
                         <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Handshake Successful • {handshakeLatency}ms Latency • Enclave Verified</span>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Handshake Successful • {handshakeLatency}ms Latency • Verified</span>
+                        </>
+                      ) : handshakeState === 'failed' ? (
+                        <>
+                          <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                          <span>Handshake Failed • Click to Retry</span>
                         </>
                       ) : (
                         <>
@@ -2719,13 +2929,30 @@ response = client.chat.completions.create(
                   onClick={handleProceedToStep3}
                   disabled={!canProceedStep2}
                   className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
-                    canProceedStep2
-                      ? 'bg-[#C59E5F] hover:bg-[#B38D4F] text-white cursor-pointer shadow-xs hover:shadow-md'
-                      : 'bg-charcoal-300 text-zinc-400 cursor-not-allowed opacity-60'
+                    !canProceedStep2
+                      ? 'bg-zinc-800 text-zinc-500 border border-white/[0.06] cursor-not-allowed opacity-60'
+                      : handshakeState === 'success'
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-md'
+                      : 'bg-[#C59E5F] hover:bg-[#B38D4F] text-white cursor-pointer shadow-xs hover:shadow-md'
                   }`}
                 >
-                  <span>Connect & Generate Snippet</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  {handshakeState === 'testing' ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Verifying Key...</span>
+                    </>
+                  ) : handshakeState === 'success' ? (
+                    <>
+                      <span>Connect & Generate Snippet</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-3.5 h-3.5" />
+                      <span>Verify Key & Continue</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
                 </button>
               ) : (
                 <button
@@ -2738,53 +2965,108 @@ response = client.chat.completions.create(
               )}
             </div>
 
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ============================================================ */}
-      {/* INTERACTIVE TEST PLAYGROUND & API TESTING MODAL              */}
+      {/* INTERACTIVE TEST PLAYGROUND & API TESTING MODAL (PORTAL)      */}
       {/* ============================================================ */}
-      {testModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-[#07090C] border border-white/[0.08] w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-white/[0.08] flex items-center justify-between bg-[#0B0E14]">
+      {testModalOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          className={`fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md ${
+            isClosingTestModal ? 'mac-backdrop-leave' : 'mac-backdrop-enter'
+          }`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleCloseTestModal();
+          }}
+        >
+          <div className="relative w-full flex items-center justify-center">
+            <div className="mac-window-ambient-glow" />
+            <div
+              className={`bg-[#080B10] border border-white/[0.14] w-full ${
+                isTestMaximized ? 'max-w-5xl h-[92vh]' : 'max-w-3xl max-h-[88vh]'
+              } rounded-[24px] mac-window-frame overflow-hidden flex flex-col transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                isClosingTestModal ? 'mac-window-leave' : 'mac-window-enter'
+              }`}
+            >
+              {/* Modal Header (MacBook Style Window Bar) */}
+            <div className="px-5 py-3.5 border-b border-white/[0.08] flex items-center justify-between bg-[#0B0E14] select-none">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
-                  <Terminal className="w-5 h-5" />
+                {/* Traffic Lights */}
+                <div className="flex items-center gap-2 group/testlights">
+                  <button
+                    type="button"
+                    onClick={handleCloseTestModal}
+                    title="Close Window (Esc)"
+                    className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/70 flex items-center justify-center cursor-pointer mac-traffic-light"
+                  >
+                    <X className="w-2 h-2 text-black/80 opacity-0 group-hover/testlights:opacity-100 transition-opacity" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCloseTestModal}
+                    title="Minimize"
+                    className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/70 flex items-center justify-center cursor-pointer mac-traffic-light"
+                  >
+                    <Minus className="w-2 h-2 text-black/80 opacity-0 group-hover/testlights:opacity-100 transition-opacity" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsTestMaximized(!isTestMaximized)}
+                    title={isTestMaximized ? "Restore Size" : "Expand Window"}
+                    className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/70 flex items-center justify-center cursor-pointer mac-traffic-light"
+                  >
+                    {isTestMaximized ? (
+                      <Minimize2 className="w-2 h-2 text-black/80 opacity-0 group-hover/testlights:opacity-100 transition-opacity" />
+                    ) : (
+                      <Maximize2 className="w-2 h-2 text-black/80 opacity-0 group-hover/testlights:opacity-100 transition-opacity" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="h-4 w-px bg-white/[0.1] hidden sm:block mx-0.5" />
+
+                <div className="w-7 h-7 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D] shrink-0">
+                  <Terminal className="w-3.5 h-3.5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-white tracking-tight">
-                      API Testing Console & Playground
+                    <h3 className="text-sm sm:text-base font-bold text-white tracking-tight font-sans">
+                      API Testing Console &amp; Playground
                     </h3>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hidden sm:flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                       <span>LIVE</span>
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-400">
-                    Test live prompts through the OstraOps Gateway or test external tools like Postman & NextChat.
-                  </p>
                 </div>
               </div>
 
-              <button
-                onClick={() => setTestModalOpen(false)}
-                className="w-8 h-8 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.1] text-[10px] font-mono text-zinc-400">
+                  esc
+                </kbd>
+                <button
+                  type="button"
+                  onClick={handleCloseTestModal}
+                  className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                  title="Close Window"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Navigation Tabs */}
             <div className="flex items-center gap-2 px-5 py-2.5 bg-[#07090C] border-b border-white/[0.08] text-xs font-mono overflow-x-auto">
               <button
                 onClick={() => setTestActiveTab('console')}
-                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98] ${
                   testActiveTab === 'console'
-                    ? 'bg-[#C59E5F] text-white font-bold'
+                    ? 'bg-[#C59E5F] text-white font-bold shadow-xs'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -2793,9 +3075,9 @@ response = client.chat.completions.create(
               </button>
               <button
                 onClick={() => setTestActiveTab('webui')}
-                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98] ${
                   testActiveTab === 'webui'
-                    ? 'bg-[#C59E5F] text-white font-bold'
+                    ? 'bg-[#C59E5F] text-white font-bold shadow-xs'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -2804,9 +3086,9 @@ response = client.chat.completions.create(
               </button>
               <button
                 onClick={() => setTestActiveTab('curl')}
-                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98] ${
                   testActiveTab === 'curl'
-                    ? 'bg-[#C59E5F] text-white font-bold'
+                    ? 'bg-[#C59E5F] text-white font-bold shadow-xs'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -2815,9 +3097,9 @@ response = client.chat.completions.create(
               </button>
               <button
                 onClick={() => setTestActiveTab('code')}
-                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98] ${
                   testActiveTab === 'code'
-                    ? 'bg-[#C59E5F] text-white font-bold'
+                    ? 'bg-[#C59E5F] text-white font-bold shadow-xs'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -2829,7 +3111,7 @@ response = client.chat.completions.create(
             <div className="p-5 overflow-y-auto space-y-4 flex-1">
               {/* TAB 1: LIVE TEST CONSOLE */}
               {testActiveTab === 'console' && (
-                <div className="space-y-4">
+                <div key="console" className="mac-tab-enter space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Model Selector */}
                     <div>
@@ -2956,7 +3238,7 @@ response = client.chat.completions.create(
                     <button
                       onClick={handleRunTestPrompt}
                       disabled={testRunning}
-                      className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                      className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all duration-200 shadow-xs cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
                         testRunning
                           ? 'bg-charcoal-300 text-zinc-400 cursor-not-allowed'
                           : 'bg-[#C59E5F] hover:bg-[#B38D4F] text-white shadow-xs hover:shadow-md'
@@ -2978,7 +3260,7 @@ response = client.chat.completions.create(
 
                   {/* Error Notification */}
                   {testError && (
-                    <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-mono flex items-start gap-2.5">
+                    <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-mono flex items-start gap-2.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
                       <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
                       <div>
                         <strong className="block text-rose-200">API Execution Failed</strong>
@@ -2989,7 +3271,7 @@ response = client.chat.completions.create(
 
                   {/* Real Live Result Card */}
                   {testResult && (
-                    <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] overflow-hidden space-y-0 animate-in fade-in duration-200">
+                    <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] overflow-hidden space-y-0 animate-in fade-in slide-in-from-bottom-3 duration-300 shadow-xl">
                       <div className="p-3 bg-white/[0.02] border-b border-white/[0.06] flex items-center justify-between text-[11px] font-mono">
                         <div className="flex items-center gap-3">
                           <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30">
@@ -3022,7 +3304,7 @@ response = client.chat.completions.create(
 
               {/* TAB 2: WEB UIS & TOOLS (NO CODE) */}
               {testActiveTab === 'webui' && (
-                <div className="space-y-4">
+                <div key="webui" className="mac-tab-enter space-y-4">
                   <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.08]">
                     <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono mb-2 flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-[#C59E5F]" />
@@ -3093,7 +3375,7 @@ response = client.chat.completions.create(
 
               {/* TAB 3: CURL TERMINAL */}
               {testActiveTab === 'curl' && (
-                <div className="space-y-3">
+                <div key="curl" className="mac-tab-enter space-y-3">
                   <p className="text-xs text-zinc-300">
                     Run this exact command in your Windows Terminal, PowerShell, or Git Bash to test the live Gateway:
                   </p>
@@ -3126,7 +3408,7 @@ response = client.chat.completions.create(
 
               {/* TAB 4: PYTHON / NODE SDK */}
               {testActiveTab === 'code' && (
-                <div className="space-y-3">
+                <div key="code" className="mac-tab-enter space-y-3">
                   <p className="text-xs text-zinc-300">
                     Test using standard OpenAI SDK in Python or Node.js by simply changing the <code className="text-[#E5C38D]">base_url</code>:
                   </p>
@@ -3154,11 +3436,13 @@ print(res.choices[0].message.content)`}
 
             {/* Modal Footer */}
             <div className="p-4 bg-[#0B0E14] border-t border-white/[0.08] flex items-center justify-between text-xs font-mono">
-              <span className="text-zinc-500">
-                Gateway port: <strong className="text-zinc-300">8080</strong> • Status: <strong className="text-emerald-400">Ready</strong>
+              <span className="text-zinc-500 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Gateway port: <strong className="text-zinc-300">8080</strong> • Status: <strong className="text-emerald-400">Ready</strong></span>
               </span>
               <button
-                onClick={() => setTestModalOpen(false)}
+                type="button"
+                onClick={handleCloseTestModal}
                 className="px-4 py-2 rounded-xl bg-[#18181B] hover:bg-[#27272A] border border-[#3F3F46] text-white font-bold transition-all cursor-pointer"
               >
                 Close Playground
@@ -3166,7 +3450,9 @@ print(res.choices[0].message.content)`}
             </div>
           </div>
         </div>
-      )}
+      </div>,
+      document.body
+    )}
     </div>
   );
 };

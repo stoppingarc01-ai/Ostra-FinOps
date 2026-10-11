@@ -149,7 +149,7 @@ const AppInner: React.FC = () => {
     setCurrentRoute(route as AppRoute);
     const newPath = route === 'home' ? '#' : `#${route}`;
     window.history.pushState(null, '', newPath);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   };
 
   // Redirect if on a protected route and not authenticated (after loading resolves)

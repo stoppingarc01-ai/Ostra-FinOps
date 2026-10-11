@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPlanEntitlements } from '../lib/entitlements';
-import { fetchGatewayLogs, isSupabaseConfigured, type DayStats } from '../lib/supabase';
+import { fetchGatewayLogs, isSupabaseAvailable, type DayStats } from '../lib/supabase';
 import { fetchUserAlerts } from '../lib/alertsService';
 import type { GatewayLog, SystemAlert } from '../types/database';
 
@@ -69,7 +69,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       } catch {}
 
       // 2. Organization-isolated Supabase Telemetry Logs
-      if (isSupabaseConfigured && orgId) {
+      if (isSupabaseAvailable() && orgId) {
         try {
           const remoteLogs = await fetchGatewayLogs(100, orgId);
           if (remoteLogs && remoteLogs.length > 0) {

@@ -393,8 +393,8 @@
     width: 0%;
     opacity: 1;
   }
-  35% {
-    width: 60%;
+  30% {
+    width: 55%;
     opacity: 1;
   }
   75% {
@@ -411,46 +411,52 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 2.5px;
-  background: linear-gradient(90deg, #9E743A 0%, #C59E5F 50%, #E8CA9B 100%);
-  box-shadow: 0 0 12px rgba(197, 158, 95, 0.8), 0 0 4px rgba(232, 202, 155, 0.9);
+  height: 3px;
+  background: linear-gradient(90deg, #9E743A 0%, #C59E5F 50%, #F5E0B8 100%);
+  box-shadow: 0 0 14px rgba(197, 158, 95, 0.9), 0 0 6px rgba(245, 224, 184, 1);
   z-index: 999999;
   pointer-events: none;
-  animation: route-progress-bar 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: route-progress-bar 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Page entrance transition */
+/* Page entrance transition: Smooth Glass Slide & Fade */
 @keyframes page-fade-in {
   0% {
     opacity: 0;
-    transform: translateY(10px) scale(0.998);
+    transform: translateY(12px) scale(0.996);
+    filter: blur(4px);
   }
   100% {
     opacity: 1;
     transform: translateY(0px) scale(1);
+    filter: blur(0px);
   }
 }
 
 .page-transition-enter {
   animation: page-fade-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: opacity, transform;
+  will-change: opacity, transform, filter;
+  backface-visibility: hidden;
 }
 
 /* Dashboard tab content transition */
 @keyframes tab-fade-in {
   0% {
     opacity: 0;
-    transform: translateY(7px);
+    transform: translateY(8px);
+    filter: blur(2px);
   }
   100% {
     opacity: 1;
     transform: translateY(0px);
+    filter: blur(0px);
   }
 }
 
 .tab-transition-enter {
-  animation: tab-fade-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: opacity, transform;
+  animation: tab-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform, filter;
+  backface-visibility: hidden;
 }
 
 /* ============================================================ */
@@ -737,4 +743,153 @@ aside[class*="bg-[#F"] {
   font-weight: 700 !important;
   box-shadow: 0 0 20px rgba(197, 158, 95, 0.3) !important;
 }
+
+/* ============================================================ */
+/* UPGRADED MACBOOK / macOS WINDOW SPRING OPEN-CLOSE TRANSITIONS */
+/* ============================================================ */
+
+@keyframes mac-scale-in {
+  0% {
+    opacity: 0;
+    transform: perspective(1200px) scale(0.88) translateY(32px) rotateX(2.5deg);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: perspective(1200px) scale(1.015) translateY(-3px) rotateX(-0.5deg);
+    filter: blur(0px);
+  }
+  80% {
+    transform: perspective(1200px) scale(0.995) translateY(1px) rotateX(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1200px) scale(1) translateY(0) rotateX(0deg);
+    filter: blur(0px);
+  }
+}
+
+@keyframes mac-scale-out {
+  0% {
+    opacity: 1;
+    transform: perspective(1200px) scale(1) translateY(0);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: perspective(1200px) scale(0.90) translateY(24px) rotateX(2deg);
+    filter: blur(6px);
+  }
+}
+
+@keyframes mac-backdrop-fade-in {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+@keyframes mac-backdrop-fade-out {
+  0% {
+    opacity: 1;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  100% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+}
+
+@keyframes mac-tab-fade-slide {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes mac-glow-pulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.03);
+  }
+}
+
+.mac-window-enter {
+  animation: mac-scale-in 0.36s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+  transform-origin: center center;
+}
+
+.mac-window-leave {
+  animation: mac-scale-out 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+  transform-origin: center center;
+}
+
+.mac-backdrop-enter {
+  animation: mac-backdrop-fade-in 0.3s ease-out forwards;
+}
+
+.mac-backdrop-leave {
+  animation: mac-backdrop-fade-out 0.22s ease-in forwards;
+}
+
+.mac-tab-enter {
+  animation: mac-tab-fade-slide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity, filter;
+}
+
+.mac-traffic-light {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+}
+
+.mac-traffic-light:hover {
+  filter: brightness(1.22);
+  transform: scale(1.14);
+}
+
+.mac-traffic-light:active {
+  transform: scale(0.92);
+}
+
+/* Apple Pro Specular Highlight for Window Frame */
+.mac-window-frame {
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 35px 90px -15px rgba(0, 0, 0, 0.92),
+    0 15px 35px -8px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
+}
+
+.mac-window-ambient-glow {
+  position: absolute;
+  inset: -24px;
+  background: radial-gradient(circle at 50% 15%, rgba(197, 158, 95, 0.14) 0%, transparent 68%);
+  pointer-events: none;
+  border-radius: 40px;
+  z-index: -1;
+  animation: mac-glow-pulse 4s ease-in-out infinite;
+}
+
 

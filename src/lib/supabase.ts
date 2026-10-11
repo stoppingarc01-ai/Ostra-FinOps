@@ -4,6 +4,10 @@ import type { GatewayLog, VirtualKey } from '../types/database';
 const rawUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
 
+let isCircuitOpen = false;
+let nextCircuitProbeTime = 0;
+const CIRCUIT_COOLDOWN_MS = 60_000; // 60s cooldown on DNS/network failure
+
 export const isSupabaseConfigured: boolean = Boolean(
   rawUrl &&
   rawKey &&
@@ -12,6 +16,32 @@ export const isSupabaseConfigured: boolean = Boolean(
   !rawKey.includes('your-') &&
   !rawKey.includes('placeholder')
 );
+
+export function isSupabaseAvailable(): boolean {
+  if (!isSupabaseConfigured) return false;
+  if (isCircuitOpen && Date.now() < nextCircuitProbeTime) return false;
+  return true;
+}
+
+function tripCircuit(err?: any) {
+  isCircuitOpen = true;
+  nextCircuitProbeTime = Date.now() + CIRCUIT_COOLDOWN_MS;
+  const msg = err?.message || String(err || '');
+  if (
+    msg.includes('Failed to fetch') ||
+    msg.includes('ENOTFOUND') ||
+    msg.includes('NetworkError') ||
+    msg.includes('ERR_NAME_NOT_RESOLVED') ||
+    msg.includes('Load failed')
+  ) {
+    console.warn(`[Supabase] DNS/Network unreachable for ${rawUrl}. Circuit breaker active for 60s to prevent spamming.`);
+  }
+}
+
+function closeCircuit() {
+  isCircuitOpen = false;
+  nextCircuitProbeTime = 0;
+}
 
 const supabaseUrl = isSupabaseConfigured ? rawUrl : 'https://placeholder.supabase.co';
 const supabaseAnonKey = isSupabaseConfigured ? rawKey : 'placeholder-anon-key';
@@ -35,10 +65,10 @@ export interface DayStats {
 
 /**
  * Aggregate KPIs from gateway_logs over the last N days.
- * Returns null when Supabase is unconfigured.
+ * Returns null when Supabase is unconfigured or DNS is unreachable.
  */
 export async function fetchGatewayStats(days = 7, orgId?: string): Promise<GatewayStats | null> {
-  if (!isSupabaseConfigured) return null;
+  if (!isSupabaseAvailable()) return null;
   try {
     const since = new Date(Date.now() - days * 86_400_000).toISOString();
     let query = supabase
@@ -51,7 +81,11 @@ export async function fetchGatewayStats(days = 7, orgId?: string): Promise<Gatew
     }
 
     const { data, error } = await query;
-    if (error || !data) return null;
+    if (error || !data) {
+      if (error) tripCircuit(error);
+      return null;
+    }
+    closeCircuit();
 
     const byModel: Record<string, number> = {};
     let totalSpendUsd = 0;
@@ -66,17 +100,18 @@ export async function fetchGatewayStats(days = 7, orgId?: string): Promise<Gatew
     }
 
     return { totalSpendUsd, totalTokens, totalRequests: data.length, byModel };
-  } catch {
+  } catch (err) {
+    tripCircuit(err);
     return null;
   }
 }
 
 /**
  * Per-day spend/tokens/requests for chart rendering.
- * Returns empty array when Supabase is unconfigured.
+ * Returns empty array when Supabase is unconfigured or unavailable.
  */
 export async function fetchGatewayStatsByDay(days = 7, orgId?: string): Promise<DayStats[]> {
-  if (!isSupabaseConfigured) return [];
+  if (!isSupabaseAvailable()) return [];
   try {
     const since = new Date(Date.now() - days * 86_400_000).toISOString();
     let query = supabase
@@ -89,7 +124,11 @@ export async function fetchGatewayStatsByDay(days = 7, orgId?: string): Promise<
     }
 
     const { data, error } = await query;
-    if (error || !data) return [];
+    if (error || !data) {
+      if (error) tripCircuit(error);
+      return [];
+    }
+    closeCircuit();
 
     const map: Record<string, DayStats> = {};
     for (const row of data) {
@@ -100,7 +139,8 @@ export async function fetchGatewayStatsByDay(days = 7, orgId?: string): Promise<
       map[date].totalRequests += 1;
     }
     return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
-  } catch {
+  } catch (err) {
+    tripCircuit(err);
     return [];
   }
 }
@@ -109,7 +149,7 @@ export async function fetchGatewayStatsByDay(days = 7, orgId?: string): Promise<
  * Fetch live gateway telemetry logs from Supabase scoped to organization
  */
 export async function fetchGatewayLogs(limit = 50, orgId?: string): Promise<GatewayLog[]> {
-  if (!isSupabaseConfigured) return [];
+  if (!isSupabaseAvailable()) return [];
   try {
     let query = supabase
       .from('gateway_logs')
@@ -123,12 +163,13 @@ export async function fetchGatewayLogs(limit = 50, orgId?: string): Promise<Gate
 
     const { data, error } = await query;
     if (error) {
-      console.warn('[Supabase] Telemetry query notice:', error.message);
+      tripCircuit(error);
       return [];
     }
+    closeCircuit();
     return (data as GatewayLog[]) || [];
   } catch (err) {
-    console.warn('[Supabase] Telemetry fetch exception:', err);
+    tripCircuit(err);
     return [];
   }
 }
@@ -137,7 +178,7 @@ export async function fetchGatewayLogs(limit = 50, orgId?: string): Promise<Gate
  * Fetch registered virtual keys from Supabase
  */
 export async function fetchVirtualKeys(orgId?: string): Promise<VirtualKey[]> {
-  if (!isSupabaseConfigured) return [];
+  if (!isSupabaseAvailable()) return [];
   try {
     let query = supabase.from('virtual_keys').select('*').order('created_at', { ascending: false });
     if (orgId) {
@@ -145,12 +186,14 @@ export async function fetchVirtualKeys(orgId?: string): Promise<VirtualKey[]> {
     }
     const { data, error } = await query;
     if (error) {
-      console.warn('[Supabase] Virtual keys query notice:', error.message);
+      tripCircuit(error);
       return [];
     }
+    closeCircuit();
     return (data as VirtualKey[]) || [];
   } catch (err) {
-    console.warn('[Supabase] Virtual keys fetch exception:', err);
+    tripCircuit(err);
     return [];
   }
 }
+

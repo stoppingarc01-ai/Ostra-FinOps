@@ -275,7 +275,7 @@ export const ProjectsView: React.FC = () => {
           <p className="text-zinc-400 text-sm font-mono">No projects found matching the filter criteria.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div key={envFilter} className="tab-transition-enter grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredProjects.map((project) => {
             const endpoint = project.endpoint || `https://gateway.ostraops.internal/v1/projects/${project.slug}`;
             const spendPercent = Math.min(100, (project.spend / project.budgetLimit) * 100);
