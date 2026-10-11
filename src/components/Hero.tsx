@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, Terminal, Copy, Check, ShieldCheck, Zap, Layers, ChevronDown } from 'lucide-react';
-import { HeroDashboard3D } from './HeroDashboard3D';
+const HeroDashboard3D = React.lazy(() => import('./HeroDashboard3D').then((m) => ({ default: m.HeroDashboard3D })));
 import { AnthropicLogo, OpenAILogo, GeminiLogo, MetaLlamaLogo, DeepSeekLogo, MistralLogo, NvidiaLogo } from './LLMLogos';
 
 interface HeroProps {
@@ -192,10 +192,12 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
         {/* Full-Width Desktop Dashboard Application Showcase            */}
         {/* ============================================================ */}
         <div className="mt-12 sm:mt-16 w-full max-w-[1440px] mx-auto relative content-auto">
-          <HeroDashboard3D 
-            standaloneWindow={true} 
-            onNavigatePricing={onNavigateToPricing} 
-          />
+          <React.Suspense fallback={<div className="min-h-[420px] w-full rounded-3xl bg-[#0B0E14]/60 border border-white/[0.08] animate-pulse" />}>
+            <HeroDashboard3D 
+              standaloneWindow={true} 
+              onNavigatePricing={onNavigateToPricing} 
+            />
+          </React.Suspense>
         </div>
 
         {/* Model Providers Dock — Floating 3D Satellite Logos that expand details on hover */}

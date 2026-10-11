@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-import { FloatingLLMHub } from './components/FloatingLLMHub';
-import { ProductUIShowcase } from './components/ProductUIShowcase';
-import { FeaturesSection } from './components/FeaturesSection';
-import { InteractiveArchitecture } from './components/InteractiveArchitecture';
-import { AgentEcosystemSection } from './components/AgentEcosystemSection';
-import { DeveloperQuickstartSection } from './components/DeveloperQuickstartSection';
-import { FAQSection } from './components/FAQSection';
-import { EnterpriseTrustSection } from './components/EnterpriseTrustSection';
-import { TeamsDevelopersSection } from './components/TeamsDevelopersSection';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { CookieBanner } from './components/CookieBanner';
 import { Footer } from './components/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { OstraIcon } from './components/OstraBrand';
+
+// Lazy-loaded homepage sections for sub-second mobile FCP & LCP
+const FloatingLLMHub = React.lazy(() => import('./components/FloatingLLMHub').then((m) => ({ default: m.FloatingLLMHub })));
+const ProductUIShowcase = React.lazy(() => import('./components/ProductUIShowcase').then((m) => ({ default: m.ProductUIShowcase })));
+const FeaturesSection = React.lazy(() => import('./components/FeaturesSection').then((m) => ({ default: m.FeaturesSection })));
+const InteractiveArchitecture = React.lazy(() => import('./components/InteractiveArchitecture').then((m) => ({ default: m.InteractiveArchitecture })));
+const AgentEcosystemSection = React.lazy(() => import('./components/AgentEcosystemSection').then((m) => ({ default: m.AgentEcosystemSection })));
+const DeveloperQuickstartSection = React.lazy(() => import('./components/DeveloperQuickstartSection').then((m) => ({ default: m.DeveloperQuickstartSection })));
+const FAQSection = React.lazy(() => import('./components/FAQSection').then((m) => ({ default: m.FAQSection })));
+const EnterpriseTrustSection = React.lazy(() => import('./components/EnterpriseTrustSection').then((m) => ({ default: m.EnterpriseTrustSection })));
+const TeamsDevelopersSection = React.lazy(() => import('./components/TeamsDevelopersSection').then((m) => ({ default: m.TeamsDevelopersSection })));
+const CookieBanner = React.lazy(() => import('./components/CookieBanner').then((m) => ({ default: m.CookieBanner })));
 
 // Lazy-loaded pages to optimize bundle splitting and improve initial load performance
 const PricingPage = React.lazy(() => import('./pages/PricingPage').then((m) => ({ default: m.PricingPage })));

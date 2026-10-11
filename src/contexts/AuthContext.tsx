@@ -23,7 +23,6 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { Profile, Organization, OrgRole, UserSubscription } from '../types/database';
 import {
   getUserSubscription,
@@ -443,14 +442,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: null };
     } catch (err: any) {
       // If user registered with Supabase or Firebase has domain mismatch, also try Supabase
-      if (isSupabaseConfigured) {
-        try {
+      try {
+        const { isSupabaseConfigured, supabase } = await import('../lib/supabase');
+        if (isSupabaseConfigured) {
           const { error: sbErr } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/#login`,
           });
           if (!sbErr) return { error: null };
-        } catch {}
-      }
+        }
+      } catch {}
       return { error: formatFirebaseError(err) };
     }
   };
