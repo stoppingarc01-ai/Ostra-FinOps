@@ -763,10 +763,12 @@ export const HeroDashboard3D: React.FC<HeroDashboard3DProps> = ({
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 placeholder="Ask anything about your proxy spend..."
+                aria-label="Ask anything about your proxy spend"
                 className="w-full bg-[#07090C] border border-white/[0.1] rounded-xl pl-3 pr-8 py-2 text-[11px] text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#C59E5F] font-sans"
               />
               <button
                 type="submit"
+                aria-label="Send proxy spend query"
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-[#E5C38D] transition-colors cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
@@ -915,10 +917,14 @@ export const HeroDashboard3D: React.FC<HeroDashboard3DProps> = ({
             </div>
 
             {/* Notification Bell */}
-            <div className="relative p-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-zinc-400 hover:text-white cursor-pointer transition-colors">
+            <button
+              type="button"
+              aria-label="System notifications"
+              className="relative p-2 rounded-xl bg-[#0B0E14] border border-white/[0.08] text-zinc-400 hover:text-white cursor-pointer transition-colors"
+            >
               <Bell className="w-3.5 h-3.5" />
               <span className="absolute 1 top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#C59E5F]" />
-            </div>
+            </button>
 
             {/* User Profile Card — Generic Admin / Owner (NO Personal Name) */}
             <div className="flex items-center gap-2 pl-1 cursor-pointer group">

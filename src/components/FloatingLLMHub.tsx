@@ -247,7 +247,7 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
                 role="tab"
                 id={`tab-${m.id}`}
                 aria-selected={isSelected}
-                aria-controls={`panel-${m.id}`}
+                aria-controls="llm-details-panel"
                 aria-label={`Select ${m.name} provider (${m.avgLatency} latency)`}
                 key={m.id}
                 onClick={() => setActiveModelId(m.id)}
@@ -295,7 +295,13 @@ export const FloatingLLMHub: React.FC<FloatingLLMHubProps> = ({ onNavigateToMode
         </div>
 
         {/* Selected Model 3D Deep-Dive Glass Card */}
-        <div className="relative rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-2xl overflow-hidden p-6 sm:p-8 lg:p-10">
+        <div
+          id="llm-details-panel"
+          role="tabpanel"
+          aria-labelledby={`tab-${activeModelId}`}
+          tabIndex={0}
+          className="relative rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-2xl overflow-hidden p-6 sm:p-8 lg:p-10"
+        >
           {/* Subtle Ambient Radial Glow */}
           <div className={`absolute top-0 right-0 w-[500px] h-[350px] bg-gradient-to-bl ${selected.bgGlow} blur-[80px] pointer-events-none`} />
 

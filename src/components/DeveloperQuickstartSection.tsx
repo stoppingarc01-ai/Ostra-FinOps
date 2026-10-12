@@ -137,6 +137,7 @@ with track("claude-3-7-sonnet"):
 
             <button
               onClick={copySnippet}
+              aria-label="Copy code snippet to clipboard"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-charcoal-800 text-zinc-300 hover:text-white hover:bg-charcoal-700 text-xs font-mono transition-colors cursor-pointer"
             >
               {copied ? (

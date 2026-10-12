@@ -124,6 +124,7 @@ export const ProductUIShowcase: React.FC = () => {
                   onClick={togglePlay}
                   className="relative group/btn w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-ostraGold-500 to-amber-300 text-charcoal-950 flex items-center justify-center shadow-[0_0_50px_rgba(212,175,124,0.4)] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer mb-6"
                   title="Play Demo Walkthrough"
+                  aria-label="Play Demo Walkthrough"
                 >
                   <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-current translate-x-1" />
                 </button>
