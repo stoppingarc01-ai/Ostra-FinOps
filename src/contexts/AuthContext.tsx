@@ -250,11 +250,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
   };
 
+  const authInitializedRef = React.useRef(false);
+
   useEffect(() => {
     let unsubscribeSub: (() => void) | null = null;
     let unsubscribeAuth: (() => void) | null = null;
 
+    const hasStoredFirebaseSession = (): boolean => {
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('firebase:authUser') || key.startsWith('firebase:host:'))) {
+            return true;
+          }
+        }
+      } catch {}
+      return false;
+    };
+
     const initAuth = async () => {
+      if (authInitializedRef.current) return;
+      authInitializedRef.current = true;
+
       try {
         const { onAuthStateChanged, auth, subscribeToUserSubscription } = await getAuthServices();
         unsubscribeAuth = onAuthStateChanged(auth, async (fbUser) => {
@@ -289,19 +306,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // If on public home, defer auth listener slightly so initial network bandwidth is 100% focused on LCP
-    const hash = window.location.hash.toLowerCase();
-    const isPublic = !hash || hash === '#' || hash === '#home' || hash.startsWith('#features') || hash.startsWith('#architecture') || hash.startsWith('#pricing') || hash.startsWith('#ui-showcase') || hash.startsWith('#faq');
+    // If on public home, defer auth listener completely unless existing session exists
+    const hash = typeof window !== 'undefined' ? window.location.hash.toLowerCase() : '';
+    const isPublic = !hash || hash === '#' || hash === '#home' || hash.startsWith('#features') || hash.startsWith('#architecture') || hash.startsWith('#pricing') || hash.startsWith('#ui-showcase') || hash.startsWith('#faq') || hash.startsWith('#about') || hash.startsWith('#docs');
 
-    let timer: any = null;
-    if (isPublic && typeof window !== 'undefined') {
-      timer = setTimeout(initAuth, 2500);
-    } else {
+    if (hasStoredFirebaseSession() || !isPublic) {
       initAuth();
+    } else {
+      // Unauthenticated visitor on public landing page: keep loading false and defer completely until interaction or navigation
+      setLoading(false);
+
+      const triggerAuth = () => {
+        window.removeEventListener('pointerdown', triggerAuth);
+        window.removeEventListener('keydown', triggerAuth);
+        window.removeEventListener('touchstart', triggerAuth);
+        window.removeEventListener('hashchange', triggerAuth);
+        initAuth();
+      };
+
+      window.addEventListener('pointerdown', triggerAuth, { passive: true, once: true });
+      window.addEventListener('keydown', triggerAuth, { passive: true, once: true });
+      window.addEventListener('touchstart', triggerAuth, { passive: true, once: true });
+      window.addEventListener('hashchange', triggerAuth, { once: true });
     }
 
     return () => {
-      if (timer) clearTimeout(timer);
       if (unsubscribeAuth) unsubscribeAuth();
       if (unsubscribeSub) unsubscribeSub();
     };

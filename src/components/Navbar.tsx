@@ -29,6 +29,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
 
   useEffect(() => {
     let isMounted = true;
+    let timer: any = null;
+
     const fetchStars = async () => {
       try {
         const cachedTime = localStorage.getItem('ostraops_gh_stars_time');
@@ -59,9 +61,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
       }
     };
 
-    fetchStars();
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => {
+        timer = setTimeout(fetchStars, 3000);
+      }, { timeout: 6000 });
+    } else {
+      timer = setTimeout(fetchStars, 4000);
+    }
+
     return () => {
       isMounted = false;
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
