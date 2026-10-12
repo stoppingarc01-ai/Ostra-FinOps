@@ -35,16 +35,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://api.github.com" />
     <link rel="preconnect" href="https://api.github.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Outfit:wght@700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Outfit:wght@700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Outfit:wght@700&family=Plus+Jakarta+Sans:wght@500;600;700&display=optional" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Outfit:wght@700&family=Plus+Jakarta+Sans:wght@500;600;700&display=optional" rel="stylesheet" />
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Outfit:wght@700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" />
     </noscript>
 
-    <!-- Critical CSS for Instant First Contentful Paint -->
+    <!-- Critical CSS for Instant Sub-Second First Contentful Paint & LCP -->
     <style>
       :root { color-scheme: dark; }
-      body { background-color: #07090C; color: #f4f4f5; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+      body { background-color: #07090C; color: #f4f4f5; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
       .gold-gradient-text { background: linear-gradient(135deg, #9E743A 0%, #D4AF7C 45%, #E8CA9B 85%, #AA824B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
       .pre-glow { position: absolute; top: 2.5rem; left: 50%; transform: translateX(-50%); width: 320px; height: 320px; background: radial-gradient(circle, rgba(197, 158, 95, 0.15) 0%, rgba(229, 195, 141, 0.05) 50%, transparent 70%); filter: blur(48px); pointer-events: none; z-index: 0; }
       .min-h-screen { min-height: 100vh; }
@@ -56,6 +56,34 @@
       .w-full { width: 100%; }
       .mx-auto { margin-left: auto; margin-right: auto; }
       .text-center { text-align: center; }
+      .hero-title {
+        font-size: 2.25rem;
+        line-height: 1.08;
+        font-weight: 800;
+        letter-spacing: -0.035em;
+        color: #ffffff;
+        max-width: 56rem;
+        margin-left: auto;
+        margin-right: auto;
+        font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      }
+      @media (min-width: 640px) {
+        .hero-title { font-size: 3.75rem; }
+      }
+      @media (min-width: 1024px) {
+        .hero-title { font-size: 4rem; }
+      }
+      .hero-sub {
+        font-size: 1rem;
+        line-height: 1.625;
+        color: #d4d4d8;
+        max-width: 42rem;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      @media (min-width: 640px) {
+        .hero-sub { font-size: 1.125rem; }
+      }
     </style>
 
     <!-- Structured Data (JSON-LD) for Google Search Engine Rich Snippets -->
@@ -121,7 +149,7 @@
               </div>
 
               <!-- Main 3D Headline (LCP target element) -->
-              <h1 class="text-4xl sm:text-6xl lg:text-[64px] font-extrabold text-white leading-[1.08] tracking-[-0.035em] font-display max-w-4xl">
+              <h1 class="text-4xl sm:text-6xl lg:text-[64px] font-extrabold text-white leading-[1.08] tracking-[-0.035em] font-display max-w-4xl hero-title">
                 <span class="block">Control Your AI Spend.</span>
                 <span class="gold-gradient-text block font-extrabold">
                   Before The Bill Arrives.
@@ -129,7 +157,7 @@
               </h1>
 
               <!-- Sub-headline description -->
-              <p class="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-2xl font-normal">
+              <p class="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-2xl font-normal hero-sub">
                 OstraOps tracks every token, calculates exact costs in real time, and lets you set hard budget caps so runaway scripts or autonomous loops never drain your credit card.
               </p>
 

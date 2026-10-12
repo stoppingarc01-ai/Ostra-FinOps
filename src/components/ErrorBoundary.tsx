@@ -1,5 +1,6 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { BuildErrorPage } from '../pages/BuildErrorPage';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
+
+const LazyBuildErrorPage = React.lazy(() => import('../pages/BuildErrorPage').then((m) => ({ default: m.BuildErrorPage })));
 
 interface Props {
   children: ReactNode;
@@ -42,13 +43,15 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <BuildErrorPage
-          error={this.state.error}
-          errorInfo={this.state.errorInfo}
-          onRetry={this.handleRetry}
-          onNavigateHome={this.props.onNavigateHome}
-          onNavigateDashboard={this.props.onNavigateDashboard}
-        />
+        <React.Suspense fallback={<div className="min-h-screen bg-[#07090C] text-white flex items-center justify-center font-mono text-sm">System recovery in progress...</div>}>
+          <LazyBuildErrorPage
+            error={this.state.error}
+            errorInfo={this.state.errorInfo}
+            onRetry={this.handleRetry}
+            onNavigateHome={this.props.onNavigateHome}
+            onNavigateDashboard={this.props.onNavigateDashboard}
+          />
+        </React.Suspense>
       );
     }
 

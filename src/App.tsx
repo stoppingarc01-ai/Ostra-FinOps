@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { Footer } from './components/Footer';
+const Footer = React.lazy(() => import('./components/Footer').then((m) => ({ default: m.Footer })));
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { OstraIcon } from './components/OstraBrand';
@@ -32,7 +32,7 @@ const TermsOfServicePage = React.lazy(() => import('./pages/TermsOfServicePage')
 const CookiePolicyPage = React.lazy(() => import('./pages/CookiePolicyPage').then((m) => ({ default: m.CookiePolicyPage })));
 const RefundPolicyPage = React.lazy(() => import('./pages/RefundPolicyPage').then((m) => ({ default: m.RefundPolicyPage })));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
-import { BuildErrorPage } from './pages/BuildErrorPage';
+const BuildErrorPage = React.lazy(() => import('./pages/BuildErrorPage').then((m) => ({ default: m.BuildErrorPage })));
 const ServerErrorPage = React.lazy(() => import('./pages/ServerErrorPage').then((m) => ({ default: m.ServerErrorPage })));
 const RateLimitPage = React.lazy(() => import('./pages/RateLimitPage').then((m) => ({ default: m.RateLimitPage })));
 const AboutUsPage = React.lazy(() => import('./pages/AboutUsPage').then((m) => ({ default: m.AboutUsPage })));

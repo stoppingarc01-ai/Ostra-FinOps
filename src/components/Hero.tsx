@@ -101,7 +101,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
           </div>
 
           {/* Main 3D Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-[64px] font-extrabold text-white leading-[1.08] tracking-[-0.035em] font-display max-w-4xl">
+          <h1 className="text-4xl sm:text-6xl lg:text-[64px] font-extrabold text-white leading-[1.08] tracking-[-0.035em] font-display max-w-4xl hero-title">
             <span className="block">Control Your AI Spend.</span>
             <span className="gold-gradient-text block font-extrabold">
               Before The Bill Arrives.
@@ -109,7 +109,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
           </h1>
 
           {/* Sub-headline description */}
-          <p className="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-2xl font-normal">
+          <p className="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-2xl font-normal hero-sub">
             OstraOps tracks every token, calculates exact costs in real time, and lets you set hard budget caps so runaway scripts or autonomous loops never drain your credit card.
           </p>
 
