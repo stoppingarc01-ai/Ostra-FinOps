@@ -1,52 +1,25 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  sendPasswordResetEmail,
-  onAuthStateChanged,
-  signInWithPopup,
-  GoogleAuthProvider,
-  GithubAuthProvider,
-  updateProfile as updateAuthProfile,
-  deleteUser,
-  reauthenticateWithPopup,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  updatePassword,
-  type User as FirebaseUser
-} from 'firebase/auth';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  deleteDoc
-} from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import type { User as FirebaseUser } from 'firebase/auth';
 import type { Profile, Organization, OrgRole, UserSubscription } from '../types/database';
-import {
-  getUserSubscription,
-  createUserDefaultSubscription,
-  updateUserSubscription,
-  subscribeToUserSubscription,
-  PLAN_METADATA
-} from '../lib/subscriptionService';
 import { getOrGenerateSupportAccountId } from '../lib/accountIdentity';
 
 export type { Profile, UserSubscription };
+
+// Dynamic loader for heavy Firebase services to keep initial bundle ultra-light
+const getAuthServices = () => import('../lib/firebaseAuthServices');
 
 export interface AuthUser {
   id: string;
   uid: string;
   email: string | null;
-  displayName: string | null;
+  displayName?: string | null;
 }
 
 export interface Session {
   user: AuthUser;
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   user: AuthUser | null;
   session: Session | null;
   profile: Profile | null;
@@ -108,10 +81,8 @@ const formatFirebaseError = (err: any): Error => {
       return new Error('Too many failed attempts. Access temporarily paused; please try again later or reset password.');
     case 'auth/network-request-failed':
       return new Error('Network connection error. Please check your internet connectivity.');
-    case 'auth/unauthorized-domain':
-      return new Error('Domain not authorized. Please add this domain to Authorized Domains in Firebase Console.');
     default:
-      return new Error(err?.message || 'Authentication failed. Please try again.');
+      return new Error(err?.message || 'Authentication failed. Please verify your credentials.');
   }
 };
 
@@ -139,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const syncOrCreateUserDocs = async (fbUser: FirebaseUser, overrideFullName?: string) => {
     try {
+      const { doc, getDoc, setDoc, db, getUserSubscription, PLAN_METADATA } = await getAuthServices();
       const userId = fbUser.uid;
       const profileRef = doc(db, 'profiles', userId);
       const profileSnap = await getDoc(profileRef);
@@ -258,56 +230,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem('ostraops_subscription', JSON.stringify(userSub));
         } catch {}
       }
-      if (!userSub) {
-        userSub = await createUserDefaultSubscription(userId);
+
+      if (userSub) {
+        setSubscription(userSub);
+        try {
+          localStorage.setItem(`ostraops_subscription_${userId}`, JSON.stringify(userSub));
+          localStorage.setItem('ostraops_subscription', JSON.stringify(userSub));
+        } catch {}
       }
-      setSubscription(userSub);
-    } catch (e) {
-      console.warn('Could not sync Firestore profile or subscription:', e);
-      try {
-        const raw = localStorage.getItem(`ostraops_subscription_${fbUser.uid}`) || localStorage.getItem('ostraops_subscription');
-        if (raw) {
-          setSubscription(JSON.parse(raw));
-        }
-      } catch {}
+    } catch (err) {
+      console.warn('Firestore profile sync note:', err);
     }
   };
 
   const refreshProfile = async () => {
-    if (auth.currentUser) await syncOrCreateUserDocs(auth.currentUser);
+    try {
+      const { auth } = await getAuthServices();
+      if (auth.currentUser) await syncOrCreateUserDocs(auth.currentUser);
+    } catch {}
   };
 
   useEffect(() => {
     let unsubscribeSub: (() => void) | null = null;
     let unsubscribeAuth: (() => void) | null = null;
 
-    const initAuth = () => {
-      unsubscribeAuth = onAuthStateChanged(auth, async (fbUser) => {
-        if (fbUser) {
-          const authUser = formatAuthUser(fbUser);
-          setUser(authUser);
-          setSession({ user: authUser });
-          await syncOrCreateUserDocs(fbUser);
+    const initAuth = async () => {
+      try {
+        const { onAuthStateChanged, auth, subscribeToUserSubscription } = await getAuthServices();
+        unsubscribeAuth = onAuthStateChanged(auth, async (fbUser) => {
+          if (fbUser) {
+            const authUser = formatAuthUser(fbUser);
+            setUser(authUser);
+            setSession({ user: authUser });
+            await syncOrCreateUserDocs(fbUser);
 
-          // Listen for real-time subscription updates in Firestore
-          if (unsubscribeSub) unsubscribeSub();
-          unsubscribeSub = subscribeToUserSubscription(fbUser.uid, (latestSub) => {
-            if (latestSub) setSubscription(latestSub);
-          });
-        } else {
-          if (unsubscribeSub) {
-            unsubscribeSub();
-            unsubscribeSub = null;
+            // Listen for real-time subscription updates in Firestore
+            if (unsubscribeSub) unsubscribeSub();
+            unsubscribeSub = subscribeToUserSubscription(fbUser.uid, (latestSub) => {
+              if (latestSub) setSubscription(latestSub);
+            });
+          } else {
+            if (unsubscribeSub) {
+              unsubscribeSub();
+              unsubscribeSub = null;
+            }
+            setUser(null);
+            setSession(null);
+            setProfile(null);
+            setOrganization(null);
+            setOrgRole(null);
+            setSubscription(null);
           }
-          setUser(null);
-          setSession(null);
-          setProfile(null);
-          setOrganization(null);
-          setOrgRole(null);
-          setSubscription(null);
-        }
+          setLoading(false);
+        });
+      } catch (e) {
+        console.warn('Auth initialization deferred notice:', e);
         setLoading(false);
-      });
+      }
     };
 
     // If on public home, defer auth listener slightly so initial network bandwidth is 100% focused on LCP
@@ -316,7 +295,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     let timer: any = null;
     if (isPublic && typeof window !== 'undefined') {
-      timer = setTimeout(initAuth, 1500);
+      timer = setTimeout(initAuth, 2500);
     } else {
       initAuth();
     }
@@ -330,6 +309,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
+      const { signInWithEmailAndPassword, auth } = await getAuthServices();
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const authUser = formatAuthUser(cred.user);
       setUser(authUser);
@@ -343,6 +323,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
+      const { createUserWithEmailAndPassword, updateAuthProfile, auth } = await getAuthServices();
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       if (fullName) {
         updateAuthProfile(cred.user, { displayName: fullName }).catch(() => {});
@@ -399,6 +380,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     try {
+      const { GoogleAuthProvider, signInWithPopup, auth } = await getAuthServices();
       const provider = new GoogleAuthProvider();
       const cred = await signInWithPopup(auth, provider);
       const authUser = formatAuthUser(cred.user);
@@ -413,6 +395,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGithub = async () => {
     try {
+      const { GithubAuthProvider, signInWithPopup, auth } = await getAuthServices();
       const provider = new GithubAuthProvider();
       const cred = await signInWithPopup(auth, provider);
       const authUser = formatAuthUser(cred.user);
@@ -427,6 +410,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      const { firebaseSignOut, auth } = await getAuthServices();
       await firebaseSignOut(auth);
     } catch {}
     setUser(null);
@@ -437,7 +421,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSubscription(null);
     try {
       sessionStorage.clear();
-      // Remove any legacy unscoped keys so they cannot pollute the next user
       localStorage.removeItem('ostraops_pending_plan');
       localStorage.removeItem('ostraops_onboarding_completed');
       localStorage.removeItem('ostraops_avatar_url');
@@ -453,10 +436,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     try {
+      const { sendPasswordResetEmail, auth } = await getAuthServices();
       await sendPasswordResetEmail(auth, email);
       return { error: null };
     } catch (err: any) {
-      // If user registered with Supabase or Firebase has domain mismatch, also try Supabase
       try {
         const { isSupabaseConfigured, supabase } = await import('../lib/supabase');
         if (isSupabaseConfigured) {
@@ -471,11 +454,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const changePassword = async (currentPwd: string, newPwd: string) => {
-    if (!auth.currentUser || !auth.currentUser.email) {
-      return { error: new Error('You must be signed in to update your password.') };
-    }
     try {
-      // Re-authenticate user before allowing sensitive master password rotation
+      const { EmailAuthProvider, reauthenticateWithCredential, updatePassword, auth } = await getAuthServices();
+      if (!auth.currentUser || !auth.currentUser.email) {
+        return { error: new Error('You must be signed in to update your password.') };
+      }
       const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPwd);
       await reauthenticateWithCredential(auth.currentUser, credential);
       await updatePassword(auth.currentUser, newPwd);
@@ -488,10 +471,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error('Not authenticated') };
     try {
-      // 1. Optimistic React state update
       setProfile((prev) => (prev ? { ...prev, ...updates } : (updates as Profile)));
-
-      // 2. Local persistence (scoped per user + global fallback)
       try {
         if (updates.avatar_url) {
           localStorage.setItem('ostraops_avatar_url', updates.avatar_url);
@@ -502,7 +482,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem(`ostraops_profile_${user.id}`, JSON.stringify({ ...parsed, ...updates }));
       } catch {}
 
-      // 3. Update Firebase Auth user profile (displayName & photoURL)
+      const { doc, setDoc, updateAuthProfile, auth, db } = await getAuthServices();
       if (auth.currentUser) {
         const authUpdates: { displayName?: string; photoURL?: string } = {};
         if (updates.full_name) authUpdates.displayName = updates.full_name;
@@ -516,7 +496,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // 4. Upsert into Firestore using setDoc with merge: true
       const profileRef = doc(db, 'profiles', user.id);
       const payload = { ...updates, updated_at: new Date().toISOString() };
       await setDoc(profileRef, payload, { merge: true });
@@ -529,10 +508,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateSubscription = async (updates: Partial<UserSubscription>) => {
-    // 1. Immediately update React state
     setSubscription((prev) => (prev ? { ...prev, ...updates } : (updates as UserSubscription)));
-
-    // 2. Persist to localStorage scoped to user
     const uid = user?.id || 'guest';
     try {
       if (updates.plan_id) {
@@ -546,9 +522,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('ostraops_subscription', JSON.stringify(merged));
     } catch {}
 
-    // 3. Attempt async Firestore write if user is authenticated without blocking caller
     if (user) {
       try {
+        const { updateUserSubscription } = await getAuthServices();
         await updateUserSubscription(user.id, updates);
       } catch (err) {
         console.warn('Firestore subscription update notice (persisted in local state):', err);
@@ -559,10 +535,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const deleteAccount = async (password?: string) => {
     try {
+      const { deleteUser, EmailAuthProvider, reauthenticateWithCredential, doc, deleteDoc, GoogleAuthProvider, GithubAuthProvider, reauthenticateWithPopup, firebaseSignOut, auth, db } = await getAuthServices();
       const currentUser = auth.currentUser;
       const uid = currentUser?.uid || user?.id || user?.uid;
 
-      // 1. Zero-data retention database purge: remove all documents across collections
       if (uid) {
         const collectionsToPurge = ['profiles', 'subscriptions', 'user_subscriptions'];
         await Promise.allSettled(
@@ -575,14 +551,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // 2. Delete Firebase Auth identity
       if (currentUser) {
         try {
           await deleteUser(currentUser);
         } catch (authErr: any) {
           console.warn('Initial deleteUser notice:', authErr?.code);
 
-          // Handle requires-recent-login by attempting provider-specific reauth
           if (authErr?.code === 'auth/requires-recent-login') {
             const providerId = currentUser.providerData?.[0]?.providerId;
 
@@ -614,19 +588,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
-        // Ensure user is signed out regardless of auth backend status
         try {
           await firebaseSignOut(auth);
         } catch {}
       }
 
-      // 3. Clear all local storage, session storage & client cache
       try {
         localStorage.clear();
         sessionStorage.clear();
       } catch {}
 
-      // 4. Reset React context states
       setUser(null);
       setSession(null);
       setProfile(null);
@@ -636,11 +607,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null };
     } catch (err: any) {
-      // Fail-safe cleanup: even on unexpected unhandled rejection, wipe session and reset UI
       try {
         localStorage.clear();
         sessionStorage.clear();
-        await firebaseSignOut(auth);
       } catch {}
       setUser(null);
       setSession(null);
