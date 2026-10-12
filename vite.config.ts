@@ -141,9 +141,22 @@ function soloPairingPlugin(): Plugin {
   }
 }
 
+function asyncCssPlugin(): Plugin {
+  return {
+    name: 'async-css-plugin',
+    enforce: 'post',
+    transformIndexHtml(html) {
+      return html.replace(
+        /<link rel="stylesheet" crossorigin href="([^"]+\.css)">/g,
+        '<link rel="preload" as="style" href="$1" /><link rel="stylesheet" href="$1" media="print" onload="this.media=\'all\'" /><noscript><link rel="stylesheet" href="$1" /></noscript>'
+      );
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), soloPairingPlugin()],
+  plugins: [react(), soloPairingPlugin(), asyncCssPlugin()],
   build: {
     chunkSizeWarningLimit: 600,
     rollupOptions: {
