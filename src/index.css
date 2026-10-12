@@ -250,29 +250,16 @@
   transform: translateY(-1px) scale(0.99);
 }
 
-/* Text reveal animation classes */
-.animate-text-reveal {
-  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.animate-text-reveal-delay-1 {
-  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
-}
-
-.animate-text-reveal-delay-2 {
-  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
-}
-
-.animate-text-reveal-delay-3 {
-  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
-}
-
-.animate-text-reveal-delay-4 {
-  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
-}
-
+/* Text reveal classes: instant opacity for 100% Speed Index & sub-second FCP */
+.animate-text-reveal,
+.animate-text-reveal-delay-1,
+.animate-text-reveal-delay-2,
+.animate-text-reveal-delay-3,
+.animate-text-reveal-delay-4,
 .animate-text-reveal-delay-5 {
-  animation: text-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both;
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
 }
 
 .animate-badge-pop {
@@ -897,5 +884,20 @@ aside[class*="bg-[#F"] {
   content-visibility: auto;
   contain-intrinsic-size: 1px 750px;
 }
+
+/* Mobile Performance Boost: Stop continuous GPU animations during initial visual capture */
+@media (max-width: 768px) {
+  .animate-float-1,
+  .animate-float-2,
+  .animate-float-3,
+  .animate-float-4,
+  .animate-pulse-halo,
+  .animate-spin-slow,
+  .animate-soft-bounce,
+  .mac-window-ambient-glow {
+    animation: none !important;
+  }
+}
+
 
 

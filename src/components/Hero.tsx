@@ -96,25 +96,25 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
           
           {/* Eyebrow badge */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-[#C59E5F]/30 text-xs font-semibold text-[#E5C38D] uppercase tracking-wider font-mono shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C59E5F] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C59E5F]" />
             <span>AI Cost &amp; Budget Management</span>
           </div>
 
           {/* Main 3D Headline */}
           <h1 className="text-4xl sm:text-6xl lg:text-[64px] font-extrabold text-white leading-[1.08] tracking-[-0.035em] font-display max-w-4xl">
-            <span className="animate-text-reveal block">Control Your AI Spend.</span>
-            <span className="gold-gradient-text block font-extrabold animate-text-reveal-delay-1">
+            <span className="block">Control Your AI Spend.</span>
+            <span className="gold-gradient-text block font-extrabold">
               Before The Bill Arrives.
             </span>
           </h1>
 
           {/* Sub-headline description */}
-          <p className="animate-text-reveal-delay-2 text-base sm:text-lg text-zinc-300 leading-relaxed max-w-2xl font-normal">
+          <p className="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-2xl font-normal">
             OstraOps tracks every token, calculates exact costs in real time, and lets you set hard budget caps so runaway scripts or autonomous loops never drain your credit card.
           </p>
 
           {/* Primary Action Buttons */}
-          <div className="animate-text-reveal-delay-3 flex flex-wrap items-center justify-center gap-3.5 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
             <button
               onClick={onNavigateToPricing}
               className="btn-primary-glow group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] text-[15px] font-bold shadow-lg shadow-[#C59E5F]/20 hover:shadow-[#C59E5F]/35 hover:scale-[1.02] transition-all cursor-pointer"
@@ -133,7 +133,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
           </div>
 
           {/* Terminal Command Quick Copy Badge */}
-          <div className="animate-text-reveal-delay-4 pt-1 flex flex-wrap items-center justify-center gap-3 text-xs text-zinc-400">
+          <div className="pt-1 flex flex-wrap items-center justify-center gap-3 text-xs text-zinc-400">
             <button 
               type="button"
               onClick={copyCommand}
@@ -155,7 +155,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
           </div>
 
           {/* 3 Value Badges Strip */}
-          <div className="animate-text-reveal-delay-5 pt-4 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-left border-t border-white/[0.08] w-full max-w-2xl">
+          <div className="pt-4 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-left border-t border-white/[0.08] w-full max-w-2xl">
             <div className="value-badge flex items-center gap-2 cursor-default">
               <div className="value-badge-icon w-6 h-6 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
                 <Layers className="w-3.5 h-3.5" />
@@ -192,7 +192,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
         {/* Full-Width Desktop Dashboard Application Showcase            */}
         {/* ============================================================ */}
         <div className="mt-12 sm:mt-16 w-full max-w-[1440px] mx-auto relative content-auto">
-          <React.Suspense fallback={<div className="min-h-[420px] w-full rounded-3xl bg-[#0B0E14]/60 border border-white/[0.08] animate-pulse" />}>
+          <React.Suspense fallback={<div className="min-h-[420px] w-full rounded-3xl bg-[#0B0E14]/60 border border-white/[0.08]" />}>
             <HeroDashboard3D 
               standaloneWindow={true} 
               onNavigatePricing={onNavigateToPricing} 
@@ -203,7 +203,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
         {/* Model Providers Dock — Floating 3D Satellite Logos that expand details on hover */}
         <div className="mt-16 pt-8 border-t border-white/[0.08] flex flex-col items-center justify-center gap-4">
           <div className="flex items-center gap-2 text-[11px] font-mono font-medium text-zinc-400 uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C59E5F] animate-ping" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C59E5F]" />
             <span>Supported LLM Lineages • Hover Floating Logo for Telemetry</span>
           </div>
 
