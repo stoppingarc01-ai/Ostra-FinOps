@@ -899,5 +899,82 @@ aside[class*="bg-[#F"] {
   }
 }
 
+/* ============================================================ */
+/* 3D Depth & Scroll Animation Styling                           */
+/* ============================================================ */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-1200 {
+  perspective: 1200px;
+}
+
+/* 3D Interactive Card with floating depth layers */
+.card-3d-interactive {
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+  will-change: transform;
+}
+
+.card-3d-interactive:hover {
+  transform: perspective(1000px) translateY(-8px) rotateX(2deg) scale(1.015);
+  box-shadow: 0 24px 50px -12px rgba(197, 158, 95, 0.2), 0 0 0 1px rgba(197, 158, 95, 0.45);
+}
+
+.card-3d-interactive .depth-icon {
+  transform: translateZ(24px);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-3d-interactive:hover .depth-icon {
+  transform: translateZ(32px) scale(1.1);
+}
+
+.card-3d-interactive .depth-badge {
+  transform: translateZ(16px);
+}
+
+.card-3d-interactive .depth-content {
+  transform: translateZ(12px);
+}
+
+/* Subtle holographic cyber grid pattern */
+.bg-grid-cyber-3d {
+  background-image: 
+    linear-gradient(to right, rgba(197, 158, 95, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(197, 158, 95, 0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(circle at 50% 50%, black 50%, transparent 85%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 50%, transparent 85%);
+}
+
+/* Section glowing divider */
+.section-laser-divider {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(197, 158, 95, 0.35) 50%, transparent 100%);
+}
+.section-laser-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #E5C38D;
+  box-shadow: 0 0 10px #C59E5F, 0 0 20px #C59E5F;
+}
+
 
 

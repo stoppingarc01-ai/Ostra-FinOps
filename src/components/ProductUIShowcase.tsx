@@ -78,8 +78,8 @@ export const ProductUIShowcase: React.FC = () => {
           </p>
         </div>
 
-        {/* Demo Video Frame */}
-        <div className="relative rounded-3xl bg-charcoal-950 border border-charcoal-800 shadow-dashboard-3d overflow-hidden max-w-5xl mx-auto group">
+        {/* Demo Video Frame with 3D Depth & Underglow */}
+        <div className="relative rounded-3xl bg-charcoal-950/90 border border-charcoal-800/90 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.9),0_0_45px_rgba(197,158,95,0.12)] hover:shadow-[0_40px_85px_-15px_rgba(0,0,0,0.95),0_0_60px_rgba(197,158,95,0.22)] hover:border-ostraGold-500/40 transition-all duration-700 max-w-5xl mx-auto group overflow-hidden preserve-3d">
           {/* Top Video Header Bar */}
           <div className="flex items-center justify-between px-6 py-3.5 border-b border-charcoal-800/80 bg-charcoal-900/90 text-xs">
             <div className="flex items-center gap-3">

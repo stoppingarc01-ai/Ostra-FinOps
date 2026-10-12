@@ -91,17 +91,21 @@ export const InteractiveArchitecture: React.FC = () => {
               return (
                 <div
                   key={card.step}
-                  className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] shadow-subtle hover:shadow-[0_0_25px_rgba(197,158,95,0.1)] hover:border-[#C59E5F]/40 transition-all duration-200 flex flex-col justify-between group"
+                  className="card-3d-interactive group relative p-5 rounded-2xl bg-[#0B0E14]/90 backdrop-blur-md border border-white/[0.08] shadow-subtle hover:shadow-[0_0_25px_rgba(197,158,95,0.18)] hover:border-[#C59E5F]/50 flex flex-col justify-between overflow-hidden"
                 >
-                  <div className="space-y-3">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none group-hover:from-[#C59E5F]/10 transition-all duration-300" />
+                  
+                  <div className="relative z-10 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-bold text-[#E5C38D] bg-[#C59E5F]/15 border border-[#C59E5F]/30 px-2 py-0.5 rounded">
+                      <span className="depth-badge text-xs font-mono font-bold text-[#E5C38D] bg-[#C59E5F]/15 border border-[#C59E5F]/30 px-2 py-0.5 rounded shadow-xs">
                         {card.step}
                       </span>
-                      <Icon className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+                      <div className="depth-icon p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] group-hover:bg-[#C59E5F]/20 group-hover:border-[#C59E5F]/40 transition-colors">
+                        <Icon className="w-4 h-4 text-zinc-300 group-hover:text-[#E5C38D] transition-colors" />
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-zinc-100 leading-snug">
+                    <div className="depth-content">
+                      <h4 className="text-sm font-bold text-zinc-100 leading-snug group-hover:text-white transition-colors">
                         {card.title}
                       </h4>
                       <p className="text-xs text-zinc-400 leading-relaxed mt-1">
@@ -109,10 +113,11 @@ export const InteractiveArchitecture: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-white/[0.06]">
-                    <span className="text-[10px] font-mono font-semibold text-zinc-500 uppercase tracking-wide">
+                  <div className="relative z-10 mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-semibold text-zinc-500 uppercase tracking-wide group-hover:text-zinc-300 transition-colors">
                       {card.badge}
                     </span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 shadow-[0_0_6px_#10B981]" />
                   </div>
                 </div>
               );

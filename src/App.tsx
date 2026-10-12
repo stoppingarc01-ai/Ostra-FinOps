@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ScrollReveal3D } from './components/ScrollReveal3D';
 const Footer = React.lazy(() => import('./components/Footer').then((m) => ({ default: m.Footer })));
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -435,53 +436,87 @@ const AppInner: React.FC = () => {
               onNavigateToModels={() => navigate('models')}
             />
 
-            {/* Below-the-fold sections with content-visibility auto for 95+ performance */}
+            {/* Below-the-fold sections with 3D scroll unfolding and content-visibility */}
             <div className="content-auto">
               {/* Floating 3D Multi-Model Mesh & Provider Ecosystem */}
-              <FloatingLLMHub onNavigateToModels={() => navigate('models')} />
+              <ScrollReveal3D direction="up">
+                <FloatingLLMHub onNavigateToModels={() => navigate('models')} />
+              </ScrollReveal3D>
             </div>
+
+            <div className="section-laser-divider my-2" />
 
             <div className="content-auto">
               {/* Live Operational UI Console Preview (No Simulator, Real Telemetry) */}
-              <ProductUIShowcase />
+              <ScrollReveal3D direction="up">
+                <ProductUIShowcase />
+              </ScrollReveal3D>
             </div>
+
+            <div className="section-laser-divider my-2" />
 
             <div className="content-auto">
               {/* Core Capability Pillars (3D Cards) */}
-              <FeaturesSection />
+              <ScrollReveal3D direction="up">
+                <FeaturesSection />
+              </ScrollReveal3D>
             </div>
+
+            <div className="section-laser-divider my-2" />
 
             <div className="content-auto">
               {/* Deterministic Architecture Specs & Benchmarks (Zero Cross-Vendor Corruption) */}
-              <InteractiveArchitecture />
+              <ScrollReveal3D direction="up">
+                <InteractiveArchitecture />
+              </ScrollReveal3D>
             </div>
+
+            <div className="section-laser-divider my-2" />
 
             <div className="content-auto">
               {/* Universal Agent Ecosystem (Cursor, Cline, Windsurf, Antigravity, Aider) */}
-              <AgentEcosystemSection />
+              <ScrollReveal3D direction="up">
+                <AgentEcosystemSection />
+              </ScrollReveal3D>
             </div>
+
+            <div className="section-laser-divider my-2" />
 
             <div className="content-auto">
               {/* Teams & Developers FinOps & Governance Section */}
-              <TeamsDevelopersSection 
-                onNavigateDashboard={() => navigate('dashboard')} 
-                onNavigatePricing={() => navigate('pricing')} 
-              />
+              <ScrollReveal3D direction="up">
+                <TeamsDevelopersSection 
+                  onNavigateDashboard={() => navigate('dashboard')} 
+                  onNavigatePricing={() => navigate('pricing')} 
+                />
+              </ScrollReveal3D>
             </div>
+
+            <div className="section-laser-divider my-2" />
 
             <div className="content-auto">
               {/* Developer Quickstart & Terminal SDK Preview */}
-              <DeveloperQuickstartSection />
+              <ScrollReveal3D direction="up">
+                <DeveloperQuickstartSection />
+              </ScrollReveal3D>
             </div>
+
+            <div className="section-laser-divider my-2" />
 
             <div className="content-auto">
               {/* Frequently Asked Questions (Technical & Architecture) */}
-              <FAQSection />
+              <ScrollReveal3D direction="up">
+                <FAQSection />
+              </ScrollReveal3D>
             </div>
+
+            <div className="section-laser-divider my-2" />
 
             <div className="content-auto">
               {/* Enterprise Security, Zero Retention Guarantee & Final CTA Banner */}
-              <EnterpriseTrustSection onNavigateToPricing={() => navigate('pricing')} />
+              <ScrollReveal3D direction="up">
+                <EnterpriseTrustSection onNavigateToPricing={() => navigate('pricing')} />
+              </ScrollReveal3D>
             </div>
           </>
         ) : currentRoute === 'models' ? (
