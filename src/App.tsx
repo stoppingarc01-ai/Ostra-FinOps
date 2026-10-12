@@ -436,55 +436,49 @@ const AppInner: React.FC = () => {
               onNavigateToModels={() => navigate('models')}
             />
 
-            {/* Below-the-fold sections with 3D scroll unfolding and content-visibility */}
+            {/* Below-the-fold sections with premium 3D scroll unfolding */}
             <div className="content-auto">
-              {/* Floating 3D Multi-Model Mesh & Provider Ecosystem */}
               <ScrollReveal3D direction="up">
                 <FloatingLLMHub onNavigateToModels={() => navigate('models')} />
               </ScrollReveal3D>
             </div>
 
-            <div className="section-laser-divider my-2" />
+            <div className="section-laser-divider my-4" />
 
             <div className="content-auto">
-              {/* Live Operational UI Console Preview (No Simulator, Real Telemetry) */}
-              <ScrollReveal3D direction="up">
+              <ScrollReveal3D direction="left" delay={80}>
                 <ProductUIShowcase />
               </ScrollReveal3D>
             </div>
 
-            <div className="section-laser-divider my-2" />
+            <div className="section-laser-divider my-4" />
 
             <div className="content-auto">
-              {/* Core Capability Pillars (3D Cards) */}
-              <ScrollReveal3D direction="up">
+              <ScrollReveal3D direction="up" delay={60}>
                 <FeaturesSection />
               </ScrollReveal3D>
             </div>
 
-            <div className="section-laser-divider my-2" />
+            <div className="section-laser-divider my-4" />
 
             <div className="content-auto">
-              {/* Deterministic Architecture Specs & Benchmarks (Zero Cross-Vendor Corruption) */}
-              <ScrollReveal3D direction="up">
+              <ScrollReveal3D direction="right" delay={80}>
                 <InteractiveArchitecture />
               </ScrollReveal3D>
             </div>
 
-            <div className="section-laser-divider my-2" />
+            <div className="section-laser-divider my-4" />
 
             <div className="content-auto">
-              {/* Universal Agent Ecosystem (Cursor, Cline, Windsurf, Antigravity, Aider) */}
-              <ScrollReveal3D direction="up">
+              <ScrollReveal3D direction="up" delay={60}>
                 <AgentEcosystemSection />
               </ScrollReveal3D>
             </div>
 
-            <div className="section-laser-divider my-2" />
+            <div className="section-laser-divider my-4" />
 
             <div className="content-auto">
-              {/* Teams & Developers FinOps & Governance Section */}
-              <ScrollReveal3D direction="up">
+              <ScrollReveal3D direction="left" delay={80}>
                 <TeamsDevelopersSection 
                   onNavigateDashboard={() => navigate('dashboard')} 
                   onNavigatePricing={() => navigate('pricing')} 
@@ -492,28 +486,25 @@ const AppInner: React.FC = () => {
               </ScrollReveal3D>
             </div>
 
-            <div className="section-laser-divider my-2" />
+            <div className="section-laser-divider my-4" />
 
             <div className="content-auto">
-              {/* Developer Quickstart & Terminal SDK Preview */}
-              <ScrollReveal3D direction="up">
+              <ScrollReveal3D direction="up" delay={60}>
                 <DeveloperQuickstartSection />
               </ScrollReveal3D>
             </div>
 
-            <div className="section-laser-divider my-2" />
+            <div className="section-laser-divider my-4" />
 
             <div className="content-auto">
-              {/* Frequently Asked Questions (Technical & Architecture) */}
-              <ScrollReveal3D direction="up">
+              <ScrollReveal3D direction="right" delay={80}>
                 <FAQSection />
               </ScrollReveal3D>
             </div>
 
-            <div className="section-laser-divider my-2" />
+            <div className="section-laser-divider my-4" />
 
             <div className="content-auto">
-              {/* Enterprise Security, Zero Retention Guarantee & Final CTA Banner */}
               <ScrollReveal3D direction="up">
                 <EnterpriseTrustSection onNavigateToPricing={() => navigate('pricing')} />
               </ScrollReveal3D>

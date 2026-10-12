@@ -7,6 +7,35 @@ interface ScrollReveal3DProps {
   direction?: 'up' | 'down' | 'left' | 'right';
 }
 
+const HIDDEN_STYLES: Record<string, React.CSSProperties> = {
+  up: {
+    opacity: 0,
+    transform: 'perspective(1200px) translateY(80px) rotateX(8deg) scale(0.92)',
+    filter: 'blur(6px)',
+  },
+  down: {
+    opacity: 0,
+    transform: 'perspective(1200px) translateY(-60px) rotateX(-6deg) scale(0.94)',
+    filter: 'blur(5px)',
+  },
+  left: {
+    opacity: 0,
+    transform: 'perspective(1200px) translateX(80px) rotateY(-8deg) scale(0.93)',
+    filter: 'blur(5px)',
+  },
+  right: {
+    opacity: 0,
+    transform: 'perspective(1200px) translateX(-80px) rotateY(8deg) scale(0.93)',
+    filter: 'blur(5px)',
+  },
+};
+
+const VISIBLE_STYLE: React.CSSProperties = {
+  opacity: 1,
+  transform: 'perspective(1200px) translateY(0) translateX(0) rotateX(0) rotateY(0) scale(1)',
+  filter: 'blur(0px)',
+};
+
 export const ScrollReveal3D: React.FC<ScrollReveal3DProps> = ({
   children,
   className = '',
@@ -20,6 +49,7 @@ export const ScrollReveal3D: React.FC<ScrollReveal3DProps> = ({
     const el = domRef.current;
     if (!el) return;
 
+    // ponytail: SSR / old-browser fallback — just show
     if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
       setIsVisible(true);
       return;
@@ -32,43 +62,22 @@ export const ScrollReveal3D: React.FC<ScrollReveal3DProps> = ({
           observer.unobserve(el);
         }
       },
-      {
-        threshold: 0.08,
-        rootMargin: '0px 0px -40px 0px',
-      }
+      { threshold: 0.06, rootMargin: '0px 0px -60px 0px' }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  const getTransformClass = () => {
-    if (isVisible) {
-      return 'opacity-100 translate-y-0 translate-x-0 rotate-x-0 rotate-y-0 scale-100';
-    }
-    switch (direction) {
-      case 'left':
-        return 'opacity-20 translate-x-10 rotate-y-3 scale-[0.98]';
-      case 'right':
-        return 'opacity-20 -translate-x-10 -rotate-y-3 scale-[0.98]';
-      case 'down':
-        return 'opacity-20 -translate-y-10 -rotate-x-3 scale-[0.98]';
-      case 'up':
-      default:
-        return 'opacity-20 translate-y-12 rotate-x-3 scale-[0.98]';
-    }
+  const baseStyle: React.CSSProperties = {
+    ...(isVisible ? VISIBLE_STYLE : HIDDEN_STYLES[direction] || HIDDEN_STYLES.up),
+    transformStyle: 'preserve-3d' as const,
+    transition: `opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, filter 0.9s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+    willChange: 'opacity, transform, filter',
   };
 
   return (
-    <div
-      ref={domRef}
-      style={{
-        transitionDelay: `${delay}ms`,
-        transformStyle: 'preserve-3d',
-        perspective: '1200px',
-      }}
-      className={`transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] transform will-change-transform ${getTransformClass()} ${className}`}
-    >
+    <div ref={domRef} style={baseStyle} className={className}>
       {children}
     </div>
   );
