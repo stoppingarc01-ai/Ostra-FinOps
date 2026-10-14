@@ -25,7 +25,7 @@ interface ModelOrbNode {
 }
 
 /**
- * The 9 official OstraOps models (pure transparent vector marks, no background, no text).
+ * The 9 official OstraOps models with signature brand colors.
  */
 const ORBIT_MODELS: ModelOrbNode[] = [
   {
@@ -35,7 +35,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     latency: '190ms',
     status: '2M Long-Context Guard',
     color: '#4285F4',
-    glowColor: 'rgba(66, 133, 244, 0.45)',
+    glowColor: 'rgba(66, 133, 244, 0.55)',
     Logo: GeminiLogo,
     angle: 0, // Top
   },
@@ -46,7 +46,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     latency: '280ms',
     status: 'Structured Outputs Enforced',
     color: '#10A37F',
-    glowColor: 'rgba(16, 163, 127, 0.45)',
+    glowColor: 'rgba(16, 163, 127, 0.55)',
     Logo: OpenAILogo,
     angle: 40,
   },
@@ -57,7 +57,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     latency: '310ms',
     status: 'Intra-Family Protected',
     color: '#D97706',
-    glowColor: 'rgba(217, 119, 6, 0.45)',
+    glowColor: 'rgba(217, 119, 6, 0.55)',
     Logo: AnthropicLogo,
     angle: 80,
   },
@@ -68,7 +68,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     latency: '240ms',
     status: 'Code & FIM Protected',
     color: '#FA520F',
-    glowColor: 'rgba(250, 82, 15, 0.45)',
+    glowColor: 'rgba(250, 82, 15, 0.55)',
     Logo: MistralLogo,
     angle: 120,
   },
@@ -79,7 +79,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     latency: '145ms',
     status: 'Air-Gapped & Local Proxy',
     color: '#0866FF',
-    glowColor: 'rgba(8, 102, 255, 0.45)',
+    glowColor: 'rgba(8, 102, 255, 0.55)',
     Logo: MetaLlamaLogo,
     angle: 160,
   },
@@ -90,7 +90,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     latency: '240ms',
     status: 'TensorRT-LLM Armed',
     color: '#76B900',
-    glowColor: 'rgba(118, 185, 0, 0.45)',
+    glowColor: 'rgba(118, 185, 0, 0.55)',
     Logo: NvidiaLogo,
     angle: 200,
   },
@@ -101,7 +101,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     latency: '210ms',
     status: '128K Context Stream',
     color: '#0686FF',
-    glowColor: 'rgba(6, 134, 255, 0.45)',
+    glowColor: 'rgba(6, 134, 255, 0.55)',
     Logo: KimiLogo,
     angle: 240,
   },
@@ -112,7 +112,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     latency: '320ms',
     status: 'RAG Grounding Shield',
     color: '#39594D',
-    glowColor: 'rgba(57, 89, 77, 0.45)',
+    glowColor: 'rgba(57, 89, 77, 0.55)',
     Logo: CohereLogo,
     angle: 280,
   },
@@ -123,15 +123,15 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     latency: '390ms',
     status: 'Zero Egress Shield',
     color: '#1E56F0',
-    glowColor: 'rgba(30, 86, 240, 0.45)',
+    glowColor: 'rgba(30, 86, 240, 0.55)',
     Logo: DeepSeekLogo,
     angle: 320,
   },
 ];
 
 /**
- * Modern AI Core Thinking Orb & Floating Models Constellation
- * Clean transparent backgrounds, prominent floating logos, zero bloat.
+ * Modern AI Core Orb & Floating Constellation
+ * Clean, futuristic theme: deep cosmic glass, iridescent aurora, zero black smudges.
  */
 export const AiThinkingOrb: React.FC = () => {
   const [activeIdx, setActiveIdx] = useState<number>(0);
@@ -155,39 +155,39 @@ export const AiThinkingOrb: React.FC = () => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Dynamic Ambient Background Aura matched to active model */}
+      {/* Dynamic Ambient Background Nebula matched to active model */}
       <div
-        className="absolute inset-0 rounded-full blur-[100px] opacity-40 transition-all duration-1000 pointer-events-none -z-10"
+        className="absolute inset-0 rounded-full blur-[110px] opacity-45 transition-all duration-1000 pointer-events-none -z-10"
         style={{
-          background: `radial-gradient(circle, ${active.glowColor} 0%, rgba(197, 158, 95, 0.15) 45%, transparent 70%)`,
+          background: `radial-gradient(circle, ${active.glowColor} 0%, rgba(197, 158, 95, 0.18) 45%, transparent 75%)`,
         }}
       />
 
-      {/* Outer Gyroscope Orbital Ring 1 */}
+      {/* Gyroscope Orbital Ring 1: Outer Celestial Band */}
       <div
-        className="absolute w-[88%] h-[88%] rounded-full border border-dashed border-white/[0.12] pointer-events-none animate-spin-slow"
+        className="absolute w-[88%] h-[88%] rounded-full border border-dashed border-white/[0.14] pointer-events-none animate-spin-slow"
         style={{
           transform: 'rotateX(66deg) rotateY(12deg)',
           transformStyle: 'preserve-3d',
         }}
       />
 
-      {/* Counter-rotating Inner Orbital Ring 2 */}
+      {/* Gyroscope Orbital Ring 2: Counter-rotating Inner Band */}
       <div
-        className="absolute w-[74%] h-[74%] rounded-full border border-white/[0.08] pointer-events-none"
+        className="absolute w-[74%] h-[74%] rounded-full border border-white/[0.1] pointer-events-none"
         style={{
           transform: 'rotateX(58deg) rotateY(-24deg)',
-          animation: 'spin-slow 34s linear infinite reverse',
+          animation: 'spin-slow 32s linear infinite reverse',
         }}
       >
-        {/* Pulsing satellite tracer on ring */}
+        {/* Pulsing satellite photon on ring */}
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full shadow-[0_0_12px_#C59E5F]"
           style={{ backgroundColor: active.color }}
         />
       </div>
 
-      {/* SVG Circular Grid Guide */}
+      {/* Subtle Circular Grid Guide */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
         <circle
           cx="50%"
@@ -239,25 +239,23 @@ export const AiThinkingOrb: React.FC = () => {
                 onMouseEnter={() => setActiveIdx(idx)}
                 aria-label={`Inspect ${model.name} (${model.latency})`}
                 className={`group relative flex items-center justify-center p-2.5 sm:p-3 rounded-2xl transition-all duration-300 cursor-pointer ${floatClass} ${
-                  isActive
-                    ? 'scale-115 z-30'
-                    : 'hover:scale-110'
+                  isActive ? 'scale-115 z-30' : 'hover:scale-110'
                 }`}
                 style={{
                   background: isActive
-                    ? 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(11,14,20,0.9) 100%)'
-                    : 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(11,14,20,0.75) 100%)',
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(14,18,26,0.92) 100%)'
+                    : 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(10,13,18,0.78) 100%)',
                   backdropFilter: 'blur(16px)',
                   WebkitBackdropFilter: 'blur(16px)',
                   border: isActive
                     ? `1.5px solid ${model.color}`
                     : '1px solid rgba(255, 255, 255, 0.12)',
                   boxShadow: isActive
-                    ? `0 0 28px -2px ${model.glowColor}, inset 0 1px 1px rgba(255,255,255,0.2), 0 10px 24px rgba(0,0,0,0.8)`
-                    : '0 4px 14px rgba(0,0,0,0.5)',
+                    ? `0 0 28px -2px ${model.glowColor}, inset 0 1px 1px rgba(255,255,255,0.2), 0 8px 20px rgba(0,0,0,0.7)`
+                    : '0 4px 14px rgba(0,0,0,0.4)',
                 }}
               >
-                {/* Clean, prominent floating logo icon */}
+                {/* Clean, prominent floating vector logo */}
                 <div
                   className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
                   style={{
@@ -281,43 +279,55 @@ export const AiThinkingOrb: React.FC = () => {
       </div>
 
       {/* ============================================================ */}
-      {/* CENTRAL 3D GLOWING AI THINKING ORB                           */}
+      {/* CENTRAL 3D GLOWING AI THINKING ORB (Futuristic Cosmic Theme) */}
       {/* ============================================================ */}
-      <div className="relative z-10 w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-full flex items-center justify-center">
-        {/* Deep Radiant Core Aura */}
+      <div className="relative z-10 w-40 h-40 sm:w-48 sm:h-48 md:w-52 md:h-52 rounded-full flex items-center justify-center">
+        {/* Ambient Soft Outer Glow Halo */}
         <div
-          className="absolute inset-0 rounded-full blur-xl opacity-75 animate-pulse-halo"
+          className="absolute inset-0 rounded-full blur-2xl opacity-60 animate-pulse-halo pointer-events-none"
           style={{
-            background: `radial-gradient(circle, ${active.color} 0%, #C59E5F 50%, transparent 80%)`,
+            background: `radial-gradient(circle, ${active.color} 0%, #C59E5F 45%, transparent 75%)`,
           }}
         />
 
-        {/* Outer Glass Sphere Contour with Specular Edge */}
-        <div className="absolute inset-0 rounded-full border border-white/20 shadow-[inset_0_2px_12px_rgba(255,255,255,0.25)] pointer-events-none" />
-
-        {/* Sphere Gradient Body */}
+        {/* Outer Glowing Precision Rim */}
         <div
-          className="w-full h-full rounded-full relative overflow-hidden transition-all duration-700 p-0.5"
+          className="absolute inset-0 rounded-full border border-white/25 shadow-[inset_0_1px_8px_rgba(255,255,255,0.3)] pointer-events-none"
+          style={{
+            boxShadow: `0 0 35px ${active.glowColor}, inset 0 0 20px rgba(255, 255, 255, 0.15)`,
+          }}
+        />
+
+        {/* Sphere Glass Body: Cosmic Dark Gradient with Iridescent Gold/Blue Edge */}
+        <div
+          className="w-full h-full rounded-full relative overflow-hidden transition-all duration-700 flex items-center justify-center p-3"
           style={{
             background:
-              'radial-gradient(circle at 35% 30%, rgba(255, 247, 237, 0.95) 0%, rgba(229, 195, 141, 0.8) 25%, rgba(197, 158, 95, 0.9) 55%, #0B0E14 100%)',
-            boxShadow: `0 0 35px ${active.glowColor}, inset 0 0 25px rgba(255, 255, 255, 0.3)`,
+              'radial-gradient(circle at 50% 40%, rgba(25, 32, 48, 0.95) 0%, rgba(15, 19, 28, 0.98) 55%, #07090C 100%)',
           }}
         >
-          {/* Internal Rotating Light Aura */}
+          {/* Subtle Rotating Auroral Conic Shimmer */}
           <div
-            className="absolute inset-0 rounded-full opacity-60 animate-spin-slow pointer-events-none"
+            className="absolute inset-0 rounded-full opacity-35 animate-spin-slow pointer-events-none"
             style={{
               background:
-                'conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.4) 90deg, transparent 180deg, rgba(197,158,95,0.6) 270deg, transparent 360deg)',
+                'conic-gradient(from 0deg, transparent 0deg, rgba(197,158,95,0.35) 90deg, transparent 180deg, rgba(66,133,244,0.35) 270deg, transparent 360deg)',
             }}
           />
 
-          {/* Core HUD Spotlight: Big active logo + telemetry */}
-          <div className="absolute inset-3 rounded-full bg-[#07090C]/88 backdrop-blur-md flex flex-col items-center justify-center p-3 text-center border border-white/10 shadow-inner">
-            {/* Active Model Logo — Prominent & Transparent */}
+          {/* Smooth Specular Light Curve at the Top (No hard divs or dark smudges) */}
+          <div
+            className="absolute top-0 inset-x-0 h-1/2 rounded-t-full pointer-events-none opacity-40"
+            style={{
+              background: 'radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.4) 0%, transparent 70%)',
+            }}
+          />
+
+          {/* Central AI Nexus Core: Active Model Spotlight */}
+          <div className="relative z-10 flex flex-col items-center justify-center text-center">
+            {/* Active Model Logo — Prominent & Clean */}
             <div
-              className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center mb-1.5 transition-transform duration-300 scale-100 drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
+              className="w-11 h-11 sm:w-13 sm:h-13 md:w-14 md:h-14 flex items-center justify-center mb-1.5 transition-transform duration-300 drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]"
               style={{
                 color: active.id === 'openai' || active.id === 'anthropic' ? '#FFFFFF' : active.color,
               }}
@@ -326,24 +336,21 @@ export const AiThinkingOrb: React.FC = () => {
             </div>
 
             {/* Core Model Name */}
-            <span className="text-[11px] sm:text-xs font-extrabold text-white font-display tracking-tight leading-tight block">
+            <span className="text-xs sm:text-[13px] font-extrabold text-white font-display tracking-tight leading-tight block">
               {active.name}
             </span>
 
             {/* Real-time Telemetry Tag */}
-            <div className="flex items-center gap-1 mt-1 text-[9px] sm:text-[10px] text-emerald-400 font-mono font-semibold">
-              <Zap className="w-2.5 h-2.5" />
+            <div className="flex items-center gap-1 mt-1 text-[10px] sm:text-[11px] text-emerald-400 font-mono font-semibold">
+              <Zap className="w-3 h-3" />
               <span>{active.latency}</span>
             </div>
           </div>
-
-          {/* Specular 3D Glass Light Glint */}
-          <div className="absolute top-2 left-6 w-12 h-6 rounded-full bg-white/30 blur-[2px] transform -rotate-25 pointer-events-none" />
         </div>
       </div>
 
       {/* Floating Bottom Telemetry Pill */}
-      <div className="absolute -bottom-3 sm:bottom-0 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0B0E14]/90 backdrop-blur-md border border-white/10 shadow-lg whitespace-nowrap">
+      <div className="absolute -bottom-3 sm:bottom-0 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0B0E14]/90 backdrop-blur-md border border-white/10 shadow-xl whitespace-nowrap">
         <ShieldCheck className="w-3.5 h-3.5 text-[#C59E5F]" />
         <span className="text-[10px] sm:text-[11px] font-mono text-zinc-300 font-medium">
           {active.family} • <span className="text-[#E5C38D] font-bold">{active.status}</span>
