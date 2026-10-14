@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, Terminal, Copy, Check, ShieldCheck, Zap, Layers, ChevronDown } from 'lucide-react';
 const HeroDashboard3D = React.lazy(() => import('./HeroDashboard3D').then((m) => ({ default: m.HeroDashboard3D })));
+const AiThinkingOrbLazy = React.lazy(() => import('./AiThinkingOrb').then((m) => ({ default: m.AiThinkingOrb })));
 import { AnthropicLogo, OpenAILogo, GeminiLogo, MetaLlamaLogo, DeepSeekLogo, MistralLogo, NvidiaLogo } from './LLMLogos';
 
 interface HeroProps {
@@ -90,101 +91,109 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
       <div className="hidden sm:block hero-particle top-[70%] left-[75%]" style={{ animationDelay: '1s', width: 6, height: 6, opacity: 0.25 }} />
 
       <div className="max-w-[1540px] mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Top Centered Section: Typography & Conversion Core */}
-        <div className="max-w-4xl mx-auto text-center space-y-6 z-10 flex flex-col items-center">
-          
-          {/* Eyebrow badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-[#C59E5F]/30 text-xs font-semibold text-[#E5C38D] uppercase tracking-wider font-mono shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C59E5F]" />
-            <span>AI Cost &amp; Budget Management</span>
-          </div>
 
-          {/* Main 3D Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-[64px] font-extrabold text-white leading-[1.08] tracking-[-0.035em] font-display max-w-4xl hero-title">
-            <span className="block">Control Your AI Spend.</span>
-            <span className="gold-gradient-text block font-extrabold">
-              Before The Bill Arrives.
-            </span>
-          </h1>
+        {/* ============================================================ */}
+        {/* Hero Split: Text Left + AI Thinking Orb Right                */}
+        {/* ============================================================ */}
+        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16 z-10">
 
-          {/* Sub-headline description */}
-          <p className="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-2xl font-normal hero-sub">
-            OstraOps tracks every token, calculates exact costs in real time, and lets you set hard budget caps so runaway scripts or autonomous loops never drain your credit card.
-          </p>
+          {/* LEFT: Text & CTA — strictly left aligned with buttons */}
+          <div className="flex-1 w-full min-w-0 text-left space-y-5 flex flex-col items-start">
 
-          {/* Primary Action Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
-            <button
-              onClick={onNavigateToPricing}
-              className="btn-primary-glow group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] text-[15px] font-bold shadow-lg shadow-[#C59E5F]/20 hover:shadow-[#C59E5F]/35 hover:scale-[1.02] transition-all cursor-pointer"
-            >
-              <span>View Plans &amp; Pricing</span>
-              <ArrowRight className="w-4 h-4 text-[#07090C] group-hover:translate-x-1 transition-transform" />
-            </button>
+            {/* Main Headline */}
+            <h1 className="w-full text-left text-4xl sm:text-5xl lg:text-[56px] font-extrabold text-white leading-[1.08] tracking-[-0.035em] font-display hero-title">
+              <span className="block">Control Your AI Spend.</span>
+              <span className="gold-gradient-text block font-extrabold">
+                Before The Bill Arrives.
+              </span>
+            </h1>
 
-            <button
-              onClick={scrollToUi}
-              className="btn-secondary-glass inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-white/[0.04] border border-white/[0.1] hover:border-[#C59E5F]/50 text-zinc-300 hover:text-white hover:bg-white/[0.08] text-[15px] font-semibold transition-all cursor-pointer group shadow-lg"
-            >
-              <span>Explore Platform</span>
-              <Layers className="w-4 h-4 text-zinc-400 group-hover:text-[#E5C38D] transition-colors" />
-            </button>
-          </div>
 
-          {/* Terminal Command Quick Copy Badge */}
-          <div className="pt-1 flex flex-wrap items-center justify-center gap-3 text-xs text-zinc-400">
-            <button 
-              type="button"
-              onClick={copyCommand}
-              className="terminal-badge inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] hover:border-[#C59E5F]/40 cursor-pointer font-mono text-zinc-200 transition-colors shadow-2xs group min-h-[40px]"
-              title="Click to copy install command"
-              aria-label="Copy terminal install command: npx ostraops"
-            >
-              <Terminal className="w-3.5 h-3.5 text-[#C59E5F]" />
-              <span className="font-semibold text-zinc-100">npx ostraops</span>
-              {copied ? (
-                <Check className="w-3.5 h-3.5 text-emerald-400 ml-1" />
-              ) : (
-                <Copy className="w-3.5 h-3.5 text-zinc-500 ml-1 group-hover:text-zinc-200 transition-colors" />
-              )}
-            </button>
-            <span className="text-[11px] text-zinc-400 font-mono">
-              Run via npx • Zero complex setup
-            </span>
-          </div>
+            {/* Sub-headline — simplified, easy terms */}
+            <p className="w-full text-left text-base sm:text-lg text-zinc-300 leading-relaxed max-w-xl font-normal hero-sub">
+              See exactly what every AI call costs, set spending limits, and stop runaway bills before they happen. Works with all major AI providers.
+            </p>
 
-          {/* 3 Value Badges Strip */}
-          <div className="pt-4 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-left border-t border-white/[0.08] w-full max-w-2xl">
-            <div className="value-badge flex items-center gap-2 cursor-default">
-              <div className="value-badge-icon w-6 h-6 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
-                <Layers className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-zinc-100 font-display">Hard Cap Limits</div>
-                <div className="text-[10px] text-zinc-400">Immediate HTTP 429 when cap hit</div>
-              </div>
+            {/* Primary Action Buttons */}
+            <div className="w-full flex flex-wrap items-center justify-start gap-3.5 pt-1">
+              <button
+                onClick={onNavigateToPricing}
+                className="btn-primary-glow group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] text-[15px] font-bold shadow-lg shadow-[#C59E5F]/20 hover:shadow-[#C59E5F]/35 hover:scale-[1.02] transition-all cursor-pointer"
+              >
+                <span>View Plans &amp; Pricing</span>
+                <ArrowRight className="w-4 h-4 text-[#07090C] group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                onClick={scrollToUi}
+                className="btn-secondary-glass inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-white/[0.04] border border-white/[0.1] hover:border-[#C59E5F]/50 text-zinc-300 hover:text-white hover:bg-white/[0.08] text-[15px] font-semibold transition-all cursor-pointer group shadow-lg"
+              >
+                <span>Explore Platform</span>
+                <Layers className="w-4 h-4 text-zinc-400 group-hover:text-[#E5C38D] transition-colors" />
+              </button>
             </div>
 
-            <div className="value-badge flex items-center gap-2 cursor-default">
-              <div className="value-badge-icon w-6 h-6 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
-                <ShieldCheck className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-zinc-100 font-display">Deterministic</div>
-                <div className="text-[10px] text-zinc-400">Intra-family tool schema parity</div>
-              </div>
+            {/* Terminal Command Quick Copy Badge */}
+            <div className="w-full pt-1 flex flex-wrap items-center justify-start gap-3 text-xs text-zinc-400">
+              <button 
+                type="button"
+                onClick={copyCommand}
+                className="terminal-badge inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] hover:border-[#C59E5F]/40 cursor-pointer font-mono text-zinc-200 transition-colors shadow-2xs group min-h-[40px]"
+                title="Click to copy install command"
+                aria-label="Copy terminal install command: npx ostraops"
+              >
+                <Terminal className="w-3.5 h-3.5 text-[#C59E5F]" />
+                <span className="font-semibold text-zinc-100">npx ostraops</span>
+                {copied ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-400 ml-1" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5 text-zinc-500 ml-1 group-hover:text-zinc-200 transition-colors" />
+                )}
+              </button>
+              <span className="text-[11px] text-zinc-400 font-mono">
+                Zero setup needed
+              </span>
             </div>
 
-            <div className="value-badge flex items-center gap-2 cursor-default">
-              <div className="value-badge-icon w-6 h-6 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
-                <Zap className="w-3.5 h-3.5" />
+            {/* 3 Value Badges Strip */}
+            <div className="pt-4 flex flex-wrap items-center justify-start gap-5 sm:gap-8 text-left border-t border-white/[0.08] w-full">
+              <div className="value-badge flex items-center gap-2 cursor-default">
+                <div className="value-badge-icon w-6 h-6 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
+                  <Layers className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-zinc-100 font-display">Hard Spend Limits</div>
+                  <div className="text-[10px] text-zinc-400">Auto-stops when budget is hit</div>
+                </div>
               </div>
-              <div>
-                <div className="text-xs font-bold text-zinc-100 font-display">~0.8ms Overhead</div>
-                <div className="text-[10px] text-zinc-400">Stream passthrough (p99 &lt; 2.5ms)</div>
+
+              <div className="value-badge flex items-center gap-2 cursor-default">
+                <div className="value-badge-icon w-6 h-6 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-zinc-100 font-display">All Providers</div>
+                  <div className="text-[10px] text-zinc-400">One dashboard for every AI</div>
+                </div>
+              </div>
+
+              <div className="value-badge flex items-center gap-2 cursor-default">
+                <div className="value-badge-icon w-6 h-6 rounded-lg bg-[#C59E5F]/15 border border-[#C59E5F]/30 flex items-center justify-center text-[#E5C38D]">
+                  <Zap className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-zinc-100 font-display">Near-Zero Lag</div>
+                  <div className="text-[10px] text-zinc-400">Under 1ms overhead per call</div>
+                </div>
               </div>
             </div>
+          </div>
+
+          {/* RIGHT: AI Thinking Orb */}
+          <div className="flex-1 w-full max-w-lg lg:max-w-xl xl:max-w-2xl">
+            <React.Suspense fallback={<div className="min-h-[400px] w-full rounded-3xl bg-[#0B0E14]/30" />}>
+              <AiThinkingOrbLazy />
+            </React.Suspense>
           </div>
         </div>
 

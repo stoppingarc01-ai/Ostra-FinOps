@@ -124,16 +124,14 @@ export const DeepSeekLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size 
     aria-label="DeepSeek"
   >
     <path
-      d="M3 13.5C3 8.253 7.253 4 12.5 4C17.747 4 22 8.253 22 13.5C22 16.5 20.2 19 17.5 19.5C14.8 20 13.5 17.5 11.5 17.5C9.5 17.5 7.5 19.5 4.5 18C3.5 17.5 3 15.5 3 13.5Z"
+      d="M20.5 6C19.3 5 17.5 5 16.5 6C15.8 6.8 15.5 7.8 15.5 9C14 7.8 12 7.2 10 7.8C6.5 8.5 4 11.5 4 15C4 17.8 6 20 8.8 20C12 20 15 18 16.5 15.5C17.5 14 18 12 18 10.5C19 11.2 20.5 11.2 21.5 10.2C22.5 9.2 22.5 7.5 20.5 6Z"
       fill="#1E56F0"
     />
     <path
-      d="M12.5 4C12.5 4 16 7.5 16 11C16 14.5 12.5 16 12.5 16"
-      stroke="#64B5F6"
-      strokeWidth="1.8"
-      strokeLinecap="round"
+      d="M18.5 6.5C19.5 5 21.5 4.5 23 5.2C23.5 5.5 23.2 6.2 22.5 6.8C21 7.8 19.5 7.5 18.5 6.5Z"
+      fill="#60A5FA"
     />
-    <circle cx="7" cy="11.5" r="1.5" fill="#FFFFFF" />
+    <circle cx="8.5" cy="13" r="1.2" fill="#FFFFFF" />
   </svg>
 );
 
@@ -162,30 +160,103 @@ export const CohereLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size })
   </svg>
 );
 
-
-// 9. Kimi / Moonshot AI Mark
-export const KimiLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size }) => (
+// 8. Grok / xAI Slashing Ring Mark
+export const GrokLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
     width={size}
     height={size}
     className={className}
-    aria-label="Kimi"
+    aria-label="xAI Grok"
   >
-    <rect width="24" height="24" rx="6" fill="#07090C" stroke="#00D1B2" strokeWidth="1.5" />
+    {/* Dynamic slashing blade */}
     <path
-      d="M7 6V18M7 12L16 6M10.5 12L17 18"
-      stroke="#00D1B2"
-      strokeWidth="2.2"
+      d="M3.2 20.8L9.2 14.8M14.8 9.2L20.8 3.2M2.5 21.5L7 17M17 7L21.5 2.5"
+      stroke="currentColor"
+      strokeWidth="2.4"
       strokeLinecap="round"
-      strokeLinejoin="round"
     />
-    <circle cx="16" cy="6" r="1.5" fill="#E5C38D" />
+    {/* Grok ring with slash gap */}
+    <path
+      d="M8.2 15.8C6.2 13.8 6.2 10.2 8.2 8.2C10.2 6.2 13.8 6.2 15.8 8.2C17.8 10.2 17.8 13.8 15.8 15.8C13.8 17.8 10.2 17.8 8.2 15.8Z"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      fill="none"
+    />
   </svg>
 );
 
-// 10. NVIDIA Logo (Official Green Spiral Eye)
+// 9. Kimi / Moonshot AI Mark (Bold K with Cyan Dot)
+export const KimiLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    width={size}
+    height={size}
+    className={className}
+    aria-label="Kimi"
+  >
+    {/* Bold K vertical bar */}
+    <path d="M4 3.5H8V20.5H4V3.5Z" />
+    {/* Upper diagonal arm */}
+    <path d="M8 13.2L14.2 4.5H18.8L11.5 14L8 13.2Z" />
+    {/* Lower diagonal arm */}
+    <path d="M10.8 12.8L18.8 20.5H13.6L7.8 14.2L10.8 12.8Z" />
+    {/* Bright Cyan Dot at top-right */}
+    <circle cx="19.5" cy="5" r="2.2" fill="#0686FF" />
+  </svg>
+);
+
+// 10. Qwen / Alibaba Cloud (Isometric Interlocking Prism Hexagon)
+export const QwenLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    width={size}
+    height={size}
+    className={className}
+    aria-label="Qwen"
+  >
+    <path
+      d="M12 2.5L18.5 6.25V13.75L15.5 12V8L12 6L8.5 8V12L5.5 13.75V6.25L12 2.5Z"
+      fill="#8B5CF6"
+    />
+    <path
+      d="M18.5 13.75L12 17.5L5.5 13.75L8.5 12L12 14L15.5 12L18.5 13.75Z"
+      fill="#7C3AED"
+    />
+    <path
+      d="M12 17.5V21.5L5.5 17.75V13.75L8.5 15.5V17.5L12 17.5Z"
+      fill="#6D28D9"
+    />
+    <path
+      d="M12 21.5L18.5 17.75V13.75L15.5 15.5V17.5L12 17.5V21.5Z"
+      fill="#7C3AED"
+    />
+    <polygon points="12,8.5 14.5,12.8 9.5,12.8" fill="#4C1D95" opacity="0.4" />
+  </svg>
+);
+
+// 11. GLM / Zhipu AI (Hexagonal G Monogram)
+export const GLMLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    width={size}
+    height={size}
+    className={className}
+    aria-label="GLM"
+  >
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M12 2.5L19.5 6.8V11H16V8.8L12 6.5L8 8.8V15.2L12 17.5L16 15.2V13H12V10.2H19.5V17.2L12 21.5L4.5 17.2V6.8L12 2.5Z"
+    />
+  </svg>
+);
+
+// 12. NVIDIA Logo (Official Green Spiral Eye)
 export const NvidiaLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size }) => (
   <svg
     viewBox="0 0 24 24"
@@ -198,5 +269,6 @@ export const NvidiaLogo: React.FC<LogoProps> = ({ className = 'w-6 h-6', size })
     <path d="M8.938 6.578c-.07.008-.14.02-.207.037-2.316.59-3.79 2.766-3.418 5.051.353 2.164 2.293 3.754 4.545 3.717 1.545-.025 2.924-.889 3.633-2.275.463-.906.533-1.928.197-2.879l2.428-1.076c.484 1.488.381 3.125-.348 4.549-1.127 2.197-3.328 3.59-5.777 3.65-3.564.088-6.666-2.433-7.227-5.882C2.18 7.892 4.542 4.416 8.232 3.473c1.996-.51 4.094-.148 5.797.994l-1.848 1.94c-1.02-.68-2.18-.87-3.243-.829zm3.504 5.297c-.012.399-.18.783-.482 1.053-.518.463-1.295.465-1.814.004-.52-.46-.6-1.229-.188-1.78.41-.55 1.18-.724 1.785-.404.43.228.69.658.699 1.127zm4.72-4.57c-2.072-1.637-4.73-2.16-7.309-1.5-4.887 1.25-8.03 5.867-7.295 10.438.74 4.594 4.86 7.97 9.584 7.854 3.256-.08 6.183-1.943 7.68-4.865.986-1.928 1.258-4.135.77-6.239l-2.455.773c.338 1.54.14 3.15-.59 4.574-1.11 2.166-3.278 3.553-5.69 3.613-3.498.086-6.55-2.414-7.102-5.813-.578-3.563 1.764-7.067 5.378-7.992 1.916-.49 3.916-.1 5.457 1.054l1.562-1.895zm2.932-2.135C17.472 3.01 13.904 2.217 10.3 3.14 4.024 4.745-.022 10.669.918 16.535c.954 5.955 6.273 10.334 12.378 10.183 4.195-.104 7.965-2.502 9.89-6.265 1.272-2.484 1.62-5.328.99-8.04l-2.58.56c.47 2.052.203 4.2-.764 6.084-1.464 2.862-4.328 4.693-7.518 4.772-4.636.115-8.68-3.21-9.404-7.732-.767-4.728 2.34-9.378 7.135-10.603 2.723-.695 5.47-.095 7.615 1.59l2.434-1.914z" />
   </svg>
 );
+
 
 
