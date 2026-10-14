@@ -1,4 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import {
+  AnthropicLogo,
+  OpenAILogo,
+  GeminiLogo,
+  DeepSeekLogo,
+  MetaLlamaLogo,
+  MistralLogo,
+  CohereLogo,
+  KimiLogo,
+  NvidiaLogo
+} from './LLMLogos';
 import { ShieldCheck, Zap } from 'lucide-react';
 
 interface ModelOrbNode {
@@ -9,15 +20,12 @@ interface ModelOrbNode {
   status: string;
   color: string;
   glowColor: string;
-  bgPos: string; // CSS background-position in /models-showcase.jpg (3x3 grid)
+  Logo: React.FC<{ className?: string; size?: number }>;
   angle: number; // 0 to 360 around the orb
 }
 
 /**
- * The 9 official OstraOps models from user-created showcase graphic:
- * Row 0: Anthropic (0% 0%), OpenAI (50% 0%), Gemini (100% 0%)
- * Row 1: DeepSeek (0% 50%), Meta Llama (50% 50%), Mistral AI (100% 50%)
- * Row 2: Cohere (0% 100%), Kimi (50% 100%), NVIDIA Nemotron (100% 100%)
+ * The 9 official OstraOps models (pure transparent vector marks, no background, no text).
  */
 const ORBIT_MODELS: ModelOrbNode[] = [
   {
@@ -28,8 +36,8 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     status: '2M Long-Context Guard',
     color: '#4285F4',
     glowColor: 'rgba(66, 133, 244, 0.45)',
-    bgPos: '100% 0%', // Col 2, Row 0
-    angle: 0,
+    Logo: GeminiLogo,
+    angle: 0, // Top
   },
   {
     id: 'openai',
@@ -39,7 +47,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     status: 'Structured Outputs Enforced',
     color: '#10A37F',
     glowColor: 'rgba(16, 163, 127, 0.45)',
-    bgPos: '50% 0%', // Col 1, Row 0
+    Logo: OpenAILogo,
     angle: 40,
   },
   {
@@ -50,7 +58,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     status: 'Intra-Family Protected',
     color: '#D97706',
     glowColor: 'rgba(217, 119, 6, 0.45)',
-    bgPos: '0% 0%', // Col 0, Row 0
+    Logo: AnthropicLogo,
     angle: 80,
   },
   {
@@ -61,7 +69,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     status: 'Code & FIM Protected',
     color: '#FA520F',
     glowColor: 'rgba(250, 82, 15, 0.45)',
-    bgPos: '100% 50%', // Col 2, Row 1
+    Logo: MistralLogo,
     angle: 120,
   },
   {
@@ -72,7 +80,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     status: 'Air-Gapped & Local Proxy',
     color: '#0866FF',
     glowColor: 'rgba(8, 102, 255, 0.45)',
-    bgPos: '50% 50%', // Col 1, Row 1
+    Logo: MetaLlamaLogo,
     angle: 160,
   },
   {
@@ -83,7 +91,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     status: 'TensorRT-LLM Armed',
     color: '#76B900',
     glowColor: 'rgba(118, 185, 0, 0.45)',
-    bgPos: '100% 100%', // Col 2, Row 2
+    Logo: NvidiaLogo,
     angle: 200,
   },
   {
@@ -94,7 +102,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     status: '128K Context Stream',
     color: '#0686FF',
     glowColor: 'rgba(6, 134, 255, 0.45)',
-    bgPos: '50% 100%', // Col 1, Row 2
+    Logo: KimiLogo,
     angle: 240,
   },
   {
@@ -105,7 +113,7 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     status: 'RAG Grounding Shield',
     color: '#39594D',
     glowColor: 'rgba(57, 89, 77, 0.45)',
-    bgPos: '0% 100%', // Col 0, Row 2
+    Logo: CohereLogo,
     angle: 280,
   },
   {
@@ -116,14 +124,14 @@ const ORBIT_MODELS: ModelOrbNode[] = [
     status: 'Zero Egress Shield',
     color: '#1E56F0',
     glowColor: 'rgba(30, 86, 240, 0.45)',
-    bgPos: '0% 50%', // Col 0, Row 1
+    Logo: DeepSeekLogo,
     angle: 320,
   },
 ];
 
 /**
- * Modern AI Core Thinking Orb & Multi-Model Constellation
- * Uses the user's graphic for the 9 official OstraOps models.
+ * Modern AI Core Thinking Orb & Floating Models Constellation
+ * Clean transparent backgrounds, prominent floating logos, zero bloat.
  */
 export const AiThinkingOrb: React.FC = () => {
   const [activeIdx, setActiveIdx] = useState<number>(0);
@@ -139,14 +147,15 @@ export const AiThinkingOrb: React.FC = () => {
   }, [isHovered]);
 
   const active = ORBIT_MODELS[activeIdx];
+  const ActiveLogo = active.Logo;
 
   return (
     <div
-      className="relative w-full aspect-square max-w-[460px] sm:max-w-[500px] lg:max-w-[540px] mx-auto flex items-center justify-center select-none"
+      className="relative w-full aspect-square max-w-[480px] sm:max-w-[520px] lg:max-w-[560px] mx-auto flex items-center justify-center select-none"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Dynamic Ambient Background Glow matched to active model */}
+      {/* Dynamic Ambient Background Aura matched to active model */}
       <div
         className="absolute inset-0 rounded-full blur-[100px] opacity-40 transition-all duration-1000 pointer-events-none -z-10"
         style={{
@@ -156,7 +165,7 @@ export const AiThinkingOrb: React.FC = () => {
 
       {/* Outer Gyroscope Orbital Ring 1 */}
       <div
-        className="absolute w-[86%] h-[86%] rounded-full border border-dashed border-white/[0.12] pointer-events-none animate-spin-slow"
+        className="absolute w-[88%] h-[88%] rounded-full border border-dashed border-white/[0.12] pointer-events-none animate-spin-slow"
         style={{
           transform: 'rotateX(66deg) rotateY(12deg)',
           transformStyle: 'preserve-3d',
@@ -192,11 +201,12 @@ export const AiThinkingOrb: React.FC = () => {
       </svg>
 
       {/* ============================================================ */}
-      {/* 9 ORBITING MODEL BADGES (User Graphic: /models-showcase.jpg) */}
+      {/* 9 FLOATING MODEL LOGOS (Prominent, Transparent, Floating)     */}
       {/* ============================================================ */}
       <div className="absolute inset-0 w-full h-full">
         {ORBIT_MODELS.map((model, idx) => {
           const isActive = idx === activeIdx;
+          const NodeLogo = model.Logo;
 
           // Trigonometric orbit placement (Radius ~41% from center)
           const rad = (model.angle - 90) * (Math.PI / 180);
@@ -228,45 +238,39 @@ export const AiThinkingOrb: React.FC = () => {
                 onClick={() => setActiveIdx(idx)}
                 onMouseEnter={() => setActiveIdx(idx)}
                 aria-label={`Inspect ${model.name} (${model.latency})`}
-                className={`group relative flex items-center gap-1.5 p-1 rounded-2xl transition-all duration-300 cursor-pointer ${floatClass} ${
+                className={`group relative flex items-center justify-center p-2.5 sm:p-3 rounded-2xl transition-all duration-300 cursor-pointer ${floatClass} ${
                   isActive
-                    ? 'bg-white/10 scale-110 shadow-2xl z-30'
-                    : 'bg-[#090C10]/85 hover:bg-white/10 hover:scale-105'
+                    ? 'scale-115 z-30'
+                    : 'hover:scale-110'
                 }`}
                 style={{
+                  background: isActive
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(11,14,20,0.9) 100%)'
+                    : 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(11,14,20,0.75) 100%)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
                   border: isActive
-                    ? `1px solid ${model.color}`
+                    ? `1.5px solid ${model.color}`
                     : '1px solid rgba(255, 255, 255, 0.12)',
                   boxShadow: isActive
-                    ? `0 0 24px -2px ${model.glowColor}, 0 8px 18px rgba(0,0,0,0.8)`
-                    : '0 4px 12px rgba(0,0,0,0.4)',
+                    ? `0 0 28px -2px ${model.glowColor}, inset 0 1px 1px rgba(255,255,255,0.2), 0 10px 24px rgba(0,0,0,0.8)`
+                    : '0 4px 14px rgba(0,0,0,0.5)',
                 }}
               >
-                {/* Clean White Squircle Tile holding User's Logo */}
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white shadow-md border border-white/30 overflow-hidden flex items-center justify-center p-0.5 shrink-0 transition-transform duration-300 group-hover:scale-105">
-                  <div
-                    className="w-full h-full bg-no-repeat bg-contain"
-                    style={{
-                      backgroundImage: "url('/models-showcase.jpg')",
-                      backgroundSize: '300% 300%',
-                      backgroundPosition: model.bgPos,
-                    }}
-                  />
+                {/* Clean, prominent floating logo icon */}
+                <div
+                  className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+                  style={{
+                    color: model.id === 'openai' || model.id === 'anthropic' ? '#FFFFFF' : model.color,
+                  }}
+                >
+                  <NodeLogo className="w-full h-full drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]" />
                 </div>
 
-                {/* Model Name on Desktop/Active */}
-                <span
-                  className={`text-[11px] font-bold font-display whitespace-nowrap transition-colors duration-200 hidden md:inline-block pr-1.5 ${
-                    isActive ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'
-                  }`}
-                >
-                  {model.name}
-                </span>
-
-                {/* Active Indicator Pip */}
+                {/* Subtle active glow dot */}
                 {isActive && (
                   <span
-                    className="w-1.5 h-1.5 rounded-full animate-pulse mr-1"
+                    className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-[#0B0E14] animate-pulse"
                     style={{ backgroundColor: model.color }}
                   />
                 )}
@@ -309,23 +313,16 @@ export const AiThinkingOrb: React.FC = () => {
             }}
           />
 
-          {/* Core HUD Shield Display */}
-          <div className="absolute inset-3 rounded-full bg-[#07090C]/85 backdrop-blur-md flex flex-col items-center justify-center p-3 text-center border border-white/10 shadow-inner">
-            {/* Active Model Logo Tile from User's Graphic */}
+          {/* Core HUD Spotlight: Big active logo + telemetry */}
+          <div className="absolute inset-3 rounded-full bg-[#07090C]/88 backdrop-blur-md flex flex-col items-center justify-center p-3 text-center border border-white/10 shadow-inner">
+            {/* Active Model Logo — Prominent & Transparent */}
             <div
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white shadow-xl overflow-hidden flex items-center justify-center p-1 mb-1 transition-transform duration-300 scale-100 border-2"
+              className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center mb-1.5 transition-transform duration-300 scale-100 drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
               style={{
-                borderColor: active.color,
+                color: active.id === 'openai' || active.id === 'anthropic' ? '#FFFFFF' : active.color,
               }}
             >
-              <div
-                className="w-full h-full bg-no-repeat bg-contain"
-                style={{
-                  backgroundImage: "url('/models-showcase.jpg')",
-                  backgroundSize: '300% 300%',
-                  backgroundPosition: active.bgPos,
-                }}
-              />
+              <ActiveLogo className="w-full h-full" />
             </div>
 
             {/* Core Model Name */}
@@ -334,7 +331,7 @@ export const AiThinkingOrb: React.FC = () => {
             </span>
 
             {/* Real-time Telemetry Tag */}
-            <div className="flex items-center gap-1 mt-0.5 text-[9px] sm:text-[10px] text-emerald-400 font-mono font-semibold">
+            <div className="flex items-center gap-1 mt-1 text-[9px] sm:text-[10px] text-emerald-400 font-mono font-semibold">
               <Zap className="w-2.5 h-2.5" />
               <span>{active.latency}</span>
             </div>
