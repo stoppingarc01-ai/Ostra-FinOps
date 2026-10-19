@@ -29,21 +29,48 @@ export const BlogPage: React.FC<BlogPageProps> = ({
   onNavigateModels,
   onNavigatePricing,
 }) => {
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(() => {
+  const getSlugFromLocation = (): string | null => {
     try {
-      const params = new URLSearchParams(window.location.search || window.location.hash.split('?')[1] || '');
-      const slug = params.get('slug') || params.get('post') || params.get('id');
-      if (slug) {
-        const found = BLOG_POSTS.find(p => p.slug === slug || p.id === slug);
+      const pathname = window.location.pathname;
+      const blogMatch = pathname.match(/\/blog\/([a-zA-Z0-9_-]+)/);
+      if (blogMatch && blogMatch[1]) {
+        const found = BLOG_POSTS.find(p => p.slug === blogMatch[1] || p.id === blogMatch[1]);
         if (found) return found.id;
+      }
+
+      const searchParams = new URLSearchParams(window.location.search);
+      const searchSlug = searchParams.get('slug') || searchParams.get('post') || searchParams.get('id');
+      if (searchSlug) {
+        const found = BLOG_POSTS.find(p => p.slug === searchSlug || p.id === searchSlug);
+        if (found) return found.id;
+      }
+
+      const hash = window.location.hash;
+      if (hash.includes('?')) {
+        const hashParams = new URLSearchParams(hash.split('?')[1]);
+        const hashSlug = hashParams.get('slug') || hashParams.get('post') || hashParams.get('id');
+        if (hashSlug) {
+          const found = BLOG_POSTS.find(p => p.slug === hashSlug || p.id === hashSlug);
+          if (found) return found.id;
+        }
       }
     } catch {}
     return null;
-  });
+  };
+
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(getSlugFromLocation);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setSelectedPostId(getSlugFromLocation());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -75,12 +102,39 @@ export const BlogPage: React.FC<BlogPageProps> = ({
     return BLOG_POSTS.find(p => p.id === selectedPostId) || null;
   }, [selectedPostId]);
 
+  useEffect(() => {
+    if (activePost) {
+      document.title = `${activePost.title} | OstraOps`;
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        metaDesc.setAttribute('content', activePost.summary);
+      }
+      let canonical = document.querySelector('link[rel="canonical"]');
+      if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonical);
+      }
+      canonical.setAttribute('href', `https://ostraops.vercel.app/blog/${activePost.slug}`);
+    } else {
+      document.title = 'Open Source LLM Gateway Engineering & FinOps Guides | OstraOps';
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        metaDesc.setAttribute('content', 'Honest developer tutorials on building with AI without surprise bills. Setup guides for Cursor, Windsurf, token pricing comparisons, and runaway loop prevention.');
+      }
+      let canonical = document.querySelector('link[rel="canonical"]');
+      if (canonical) {
+        canonical.setAttribute('href', 'https://ostraops.vercel.app/blog');
+      }
+    }
+  }, [activePost]);
+
   const handleSelectPost = (id: string) => {
     setSelectedPostId(id);
     try {
       const post = BLOG_POSTS.find(p => p.id === id);
       if (post) {
-        window.history.pushState(null, '', `#blog?slug=${post.slug}`);
+        window.history.pushState(null, '', `/blog/${post.slug}`);
       }
     } catch {}
   };
@@ -88,7 +142,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
   const handleBackToList = () => {
     setSelectedPostId(null);
     try {
-      window.history.pushState(null, '', '#blog');
+      window.history.pushState(null, '', '/blog');
     } catch {}
   };
 

@@ -1,147 +1,162 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
   <url>
     <loc>https://ostraops.vercel.app/</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- Core Public Product Pages -->
   <url>
     <loc>https://ostraops.vercel.app/pricing</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://ostraops.vercel.app/models</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://ostraops.vercel.app/blog</loc>
     <lastmod>2026-10-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://ostraops.vercel.app/blog?slug=open-source-llm-gateway-comparison-litellm-helicone-ostraops</loc>
-    <lastmod>2026-10-19</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
+
+  <!-- 12 Clean Canonical Blog Guides (Indexed for Google Search) -->
   <url>
-    <loc>https://ostraops.vercel.app/blog?slug=why-ostraops-no-credit-card-100-percent-open-source</loc>
+    <loc>https://ostraops.vercel.app/blog/open-source-llm-gateway-comparison-litellm-helicone-ostraops</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://ostraops.vercel.app/blog?slug=difference-between-ostraops-and-ostraops-guard</loc>
+    <loc>https://ostraops.vercel.app/blog/why-ostraops-no-credit-card-100-percent-open-source</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://ostraops.vercel.app/blog?slug=how-to-integrate-and-connect-a-model</loc>
+    <loc>https://ostraops.vercel.app/blog/difference-between-ostraops-and-ostraops-guard</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ostraops.vercel.app/blog/how-to-integrate-and-connect-a-model</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ostraops.vercel.app/blog?slug=runaway-loops-and-surprise-bills</loc>
+    <loc>https://ostraops.vercel.app/blog/runaway-loops-and-surprise-bills</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ostraops.vercel.app/blog?slug=cursor-and-windsurf-spending-guardrails</loc>
+    <loc>https://ostraops.vercel.app/blog/cursor-and-windsurf-spending-guardrails</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ostraops.vercel.app/blog?slug=model-price-faceoff-gpt4o-claude-deepseek</loc>
+    <loc>https://ostraops.vercel.app/blog/model-price-faceoff-gpt4o-claude-deepseek</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ostraops.vercel.app/blog?slug=cut-ai-api-bill-by-half</loc>
+    <loc>https://ostraops.vercel.app/blog/cut-ai-api-bill-by-half</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ostraops.vercel.app/blog?slug=zero-prompt-storage-explained</loc>
+    <loc>https://ostraops.vercel.app/blog/zero-prompt-storage-explained</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ostraops.vercel.app/blog?slug=automatic-llm-fallback-resilience</loc>
+    <loc>https://ostraops.vercel.app/blog/automatic-llm-fallback-resilience</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ostraops.vercel.app/blog?slug=tokens-and-context-windows-plain-english</loc>
+    <loc>https://ostraops.vercel.app/blog/tokens-and-context-windows-plain-english</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ostraops.vercel.app/blog?slug=track-cost-per-user-saas</loc>
+    <loc>https://ostraops.vercel.app/blog/track-cost-per-user-saas</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Company, Support & Help Pages -->
   <url>
     <loc>https://ostraops.vercel.app/about</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ostraops.vercel.app/support</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ostraops.vercel.app/faq</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ostraops.vercel.app/signup</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://ostraops.vercel.app/login</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Legal & Compliance Pages -->
+  <url>
+    <loc>https://ostraops.vercel.app/privacy</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://ostraops.vercel.app/privacy</loc>
-    <lastmod>2026-10-11</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
     <loc>https://ostraops.vercel.app/terms</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://ostraops.vercel.app/cookies</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://ostraops.vercel.app/refund</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <priority>0.4</priority>
   </url>
 </urlset>
