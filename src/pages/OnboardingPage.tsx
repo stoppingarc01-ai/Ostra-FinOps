@@ -24,6 +24,13 @@ import {
   X,
   ShieldCheck,
   ArrowRight,
+  Terminal,
+  Cpu,
+  Layers,
+  Bell,
+  ShieldAlert,
+  Gauge,
+  EyeOff,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { createUserDefaultSubscription } from '../lib/subscriptionService';
@@ -239,9 +246,101 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
   const [companySize, setCompanySize] = useState('11 - 50 employees');
   const [country, setCountry] = useState('United States');
 
-  // Step 3: Preferences State
+  // Currency switching helper function
+  const handleCurrencyChange = (code: string) => {
+    if (code === 'INR') {
+      setDetectedPricing({
+        currencyCode: 'INR',
+        currencySymbol: '₹',
+        countryName: 'India',
+        trialPrice: '₹0',
+        telemetryPrice: '₹1,650',
+        starterPrice: '₹2,890',
+        proPrice: '₹4,890',
+        period: '/ month',
+      });
+    } else if (code === 'EUR') {
+      setDetectedPricing({
+        currencyCode: 'EUR',
+        currencySymbol: '€',
+        countryName: 'Europe',
+        trialPrice: '€0',
+        telemetryPrice: '€19',
+        starterPrice: '€32',
+        proPrice: '€55',
+        period: '/ month',
+      });
+    } else if (code === 'GBP') {
+      setDetectedPricing({
+        currencyCode: 'GBP',
+        currencySymbol: '£',
+        countryName: 'United Kingdom',
+        trialPrice: '£0',
+        telemetryPrice: '£16',
+        starterPrice: '£28',
+        proPrice: '£48',
+        period: '/ month',
+      });
+    } else if (code === 'JPY') {
+      setDetectedPricing({
+        currencyCode: 'JPY',
+        currencySymbol: '¥',
+        countryName: 'Japan',
+        trialPrice: '¥0',
+        telemetryPrice: '¥3,000',
+        starterPrice: '¥5,200',
+        proPrice: '¥8,900',
+        period: '/ month',
+      });
+    } else if (code === 'CAD') {
+      setDetectedPricing({
+        currencyCode: 'CAD',
+        currencySymbol: 'CA$',
+        countryName: 'Canada',
+        trialPrice: 'CA$0',
+        telemetryPrice: 'CA$28',
+        starterPrice: 'CA$48',
+        proPrice: 'CA$79',
+        period: '/ month',
+      });
+    } else if (code === 'AUD') {
+      setDetectedPricing({
+        currencyCode: 'AUD',
+        currencySymbol: 'A$',
+        countryName: 'Australia',
+        trialPrice: 'A$0',
+        telemetryPrice: 'A$30',
+        starterPrice: 'A$54',
+        proPrice: 'A$89',
+        period: '/ month',
+      });
+    } else {
+      setDetectedPricing({
+        currencyCode: 'USD',
+        currencySymbol: '$',
+        countryName: 'United States & Global',
+        trialPrice: '$0',
+        telemetryPrice: '$20',
+        starterPrice: '$35',
+        proPrice: '$59',
+        period: '/ month',
+      });
+    }
+  };
+
+  // Step 3: Comprehensive FinOps & Gateway Preferences State
   const [optimizationMode, setOptimizationMode] = useState<'conservative' | 'balanced' | 'aggressive'>('balanced');
-  const [notifications, setNotifications] = useState<'email' | 'slack' | 'both'>('email');
+  const [primaryWorkflow, setPrimaryWorkflow] = useState<'cursor_windsurf' | 'backend_agents' | 'autonomous_loops' | 'production_api'>('cursor_windsurf');
+  const [circuitBreakerAction, setCircuitBreakerAction] = useState<'hard_stop' | 'fallback_cheaper' | 'alert_only'>('hard_stop');
+  const [privacyMode, setPrivacyMode] = useState<'zero_storage' | 'pii_masking' | 'metadata_only'>('zero_storage');
+  const [runawayLoopProtection, setRunawayLoopProtection] = useState<boolean>(true);
+  const [spikeVelocityAlert, setSpikeVelocityAlert] = useState<boolean>(true);
+  const [maxCostPerCall, setMaxCostPerCall] = useState<string>('$1.00');
+  const [alertThresholdPercent, setAlertThresholdPercent] = useState<number>(85);
+  const [notifications, setNotifications] = useState<'email' | 'slack' | 'both'>('both');
+  const [slackWebhookUrl, setSlackWebhookUrl] = useState<string>('');
+  const [alertEmail, setAlertEmail] = useState<string>(() => user?.email || '');
+  const [testWebhookStatus, setTestWebhookStatus] = useState<string | null>(null);
 
   // Step 4: Subscription (Mandatory Choice - Gatekeeper)
   const [selectedPlan, setSelectedPlan] = useState<'trial' | 'telemetry' | 'starter' | 'pro' | null>(null);
@@ -472,6 +571,22 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
         }));
         localStorage.setItem('ostraops_active_plan', activePlanKey);
         localStorage.setItem('ostraops_user_tier', tierKey);
+        localStorage.setItem('ostraops_workspace_preferences', JSON.stringify({
+          optimizationMode,
+          primaryWorkflow,
+          circuitBreakerAction,
+          privacyMode,
+          runawayLoopProtection,
+          spikeVelocityAlert,
+          maxCostPerCall,
+          alertThresholdPercent,
+          notifications,
+          alertEmail,
+          slackWebhookUrl,
+          currencyCode: detectedPricing.currencyCode,
+          currencySymbol: detectedPricing.currencySymbol,
+        }));
+        localStorage.setItem('ostraops_preferred_currency', detectedPricing.currencyCode);
       } catch {}
 
       showToast('Workspace activated! Welcome to OstraOps.');
@@ -916,128 +1031,518 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
           )}
 
           {/* ======================================================== */}
-          {/* STEP 3: PREFERENCES                                      */}
+          {/* STEP 3: PREFERENCES & RUNTIME GUARDRAILS                 */}
           {/* ======================================================== */}
           {currentStep === 3 && (
-            <div className="flex-1 flex flex-col justify-center max-w-4xl py-4 animate-in fade-in duration-300">
-              <div className="space-y-6">
+            <div className="flex-1 flex flex-col justify-center max-w-5xl py-4 animate-in fade-in duration-300">
+              <div className="space-y-8">
+                {/* Header */}
                 <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C59E5F]/10 border border-[#C59E5F]/30 text-[#E5C38D] text-[11px] font-mono font-semibold mb-3">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Runtime Guardrails &amp; Policies
+                  </div>
                   <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
                     Configure your preferences.
                   </h1>
-                  <p className="text-sm text-zinc-400 mt-2 font-normal">
-                    Tell OstraOps how you want your workspace to behave.
+                  <p className="text-sm text-zinc-400 mt-2 font-normal max-w-2xl">
+                    Tailor your real-time budget controller, loop circuit breakers, privacy controls, and alert channels.
                   </p>
                 </div>
 
-                {/* Cost Optimization Slider Card */}
-                <div className="p-6 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-4">
-                  <div>
-                    <div className="text-sm font-bold text-white">Cost Optimization</div>
-                    <div className="text-xs text-zinc-400 mt-0.5">
-                      How aggressive should we be with recommendations?
+                {/* 1. PRIMARY AI ENVIRONMENT / WORKFLOW */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-bold text-white flex items-center gap-2">
+                        <Terminal className="w-4 h-4 text-[#E5C38D]" />
+                        <span>Primary AI Workflow</span>
+                      </div>
+                      <div className="text-xs text-zinc-400 mt-0.5">
+                        Where will you connect OstraOps first?
+                      </div>
                     </div>
+                    <span className="text-[11px] font-mono text-[#E5C38D] hidden sm:inline">
+                      Select your primary setup
+                    </span>
                   </div>
 
-                  {/* 3-Position Slider */}
-                  <div className="pt-4 pb-2">
-                    <div className="relative flex items-center justify-between">
-                      {/* Track background */}
-                      <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 h-1 bg-white/[0.1] rounded-full" />
-                      {/* Active track glow */}
-                      <div
-                        className="absolute top-1/2 left-0 -translate-y-1/2 h-1 bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] rounded-full transition-all duration-300"
-                        style={{
-                          width:
-                            optimizationMode === 'conservative'
-                              ? '0%'
-                              : optimizationMode === 'balanced'
-                              ? '50%'
-                              : '100%',
-                        }}
-                      />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {/* Cursor & Windsurf */}
+                    <div
+                      onClick={() => setPrimaryWorkflow('cursor_windsurf')}
+                      className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                        primaryWorkflow === 'cursor_windsurf'
+                          ? 'bg-[#181510] border-[#C59E5F] shadow-[0_0_20px_rgba(197,158,95,0.18)] ring-1 ring-[#C59E5F]'
+                          : 'bg-[#0B0E14] border-white/[0.08] hover:border-white/[0.2] hover:bg-[#0E121B]'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#E5C38D]">
+                            <Terminal className="w-4 h-4" />
+                          </div>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#C59E5F]/15 text-[#E5C38D] border border-[#C59E5F]/30 font-semibold">
+                            Recommended
+                          </span>
+                        </div>
+                        <div className="text-sm font-bold text-white">Cursor &amp; Windsurf</div>
+                        <p className="text-[11px] text-zinc-400 leading-relaxed">
+                          Local proxy on <code className="text-[#E5C38D] bg-black/40 px-1 py-0.5 rounded">127.0.0.1:8080</code>. Stops IDE background agents from draining credits.
+                        </p>
+                      </div>
+                    </div>
 
-                      {/* Stop 1: Conservative */}
-                      <button
-                        onClick={() => setOptimizationMode('conservative')}
-                        className="relative z-10 flex flex-col items-center gap-2 cursor-pointer group"
-                      >
-                        <div
-                          className={`w-5 h-5 rounded-full border-2 transition-all ${
-                            optimizationMode === 'conservative'
-                              ? 'bg-[#E5C38D] border-white shadow-[0_0_12px_#E5C38D]'
-                              : 'bg-[#121620] border-zinc-600 group-hover:border-zinc-400'
-                          }`}
-                        />
-                        <span
-                          className={`text-xs font-semibold transition-colors ${
-                            optimizationMode === 'conservative' ? 'text-[#E5C38D]' : 'text-zinc-400'
-                          }`}
-                        >
-                          Conservative
-                        </span>
-                      </button>
+                    {/* Python & LangChain */}
+                    <div
+                      onClick={() => setPrimaryWorkflow('backend_agents')}
+                      className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                        primaryWorkflow === 'backend_agents'
+                          ? 'bg-[#181510] border-[#C59E5F] shadow-[0_0_20px_rgba(197,158,95,0.18)] ring-1 ring-[#C59E5F]'
+                          : 'bg-[#0B0E14] border-white/[0.08] hover:border-white/[0.2] hover:bg-[#0E121B]'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#E5C38D]">
+                            <Cpu className="w-4 h-4" />
+                          </div>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-400 border border-white/[0.08]">
+                            Backend SDK
+                          </span>
+                        </div>
+                        <div className="text-sm font-bold text-white">Python &amp; LangChain</div>
+                        <p className="text-[11px] text-zinc-400 leading-relaxed">
+                          RAG pipelines, data workflows, and batch inference with unified token tracking and prompt caching.
+                        </p>
+                      </div>
+                    </div>
 
-                      {/* Stop 2: Balanced */}
-                      <button
-                        onClick={() => setOptimizationMode('balanced')}
-                        className="relative z-10 flex flex-col items-center gap-2 cursor-pointer group"
-                      >
-                        <div
-                          className={`w-5 h-5 rounded-full border-2 transition-all ${
-                            optimizationMode === 'balanced'
-                              ? 'bg-[#E5C38D] border-white shadow-[0_0_12px_#E5C38D]'
-                              : 'bg-[#121620] border-zinc-600 group-hover:border-zinc-400'
-                          }`}
-                        />
-                        <span
-                          className={`text-xs font-semibold transition-colors ${
-                            optimizationMode === 'balanced' ? 'text-[#E5C38D]' : 'text-zinc-400'
-                          }`}
-                        >
-                          Balanced
-                        </span>
-                      </button>
+                    {/* Autonomous Multi-Agent Loops */}
+                    <div
+                      onClick={() => setPrimaryWorkflow('autonomous_loops')}
+                      className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                        primaryWorkflow === 'autonomous_loops'
+                          ? 'bg-[#181510] border-[#C59E5F] shadow-[0_0_20px_rgba(197,158,95,0.18)] ring-1 ring-[#C59E5F]'
+                          : 'bg-[#0B0E14] border-white/[0.08] hover:border-white/[0.2] hover:bg-[#0E121B]'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#E5C38D]">
+                            <Layers className="w-4 h-4" />
+                          </div>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold">
+                            Loop Breaker
+                          </span>
+                        </div>
+                        <div className="text-sm font-bold text-white">Autonomous Agents</div>
+                        <p className="text-[11px] text-zinc-400 leading-relaxed">
+                          CrewAI, AutoGPT, Claude Code. Real-time loop detection stops recursive spend instantly.
+                        </p>
+                      </div>
+                    </div>
 
-                      {/* Stop 3: Aggressive */}
-                      <button
-                        onClick={() => setOptimizationMode('aggressive')}
-                        className="relative z-10 flex flex-col items-center gap-2 cursor-pointer group"
-                      >
-                        <div
-                          className={`w-5 h-5 rounded-full border-2 transition-all ${
-                            optimizationMode === 'aggressive'
-                              ? 'bg-[#E5C38D] border-white shadow-[0_0_12px_#E5C38D]'
-                              : 'bg-[#121620] border-zinc-600 group-hover:border-zinc-400'
-                          }`}
-                        />
-                        <span
-                          className={`text-xs font-semibold transition-colors ${
-                            optimizationMode === 'aggressive' ? 'text-[#E5C38D]' : 'text-zinc-400'
-                          }`}
-                        >
-                          Aggressive
-                        </span>
-                      </button>
+                    {/* Production Web API */}
+                    <div
+                      onClick={() => setPrimaryWorkflow('production_api')}
+                      className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                        primaryWorkflow === 'production_api'
+                          ? 'bg-[#181510] border-[#C59E5F] shadow-[0_0_20px_rgba(197,158,95,0.18)] ring-1 ring-[#C59E5F]'
+                          : 'bg-[#0B0E14] border-white/[0.08] hover:border-white/[0.2] hover:bg-[#0E121B]'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#E5C38D]">
+                            <Activity className="w-4 h-4" />
+                          </div>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            High RPS
+                          </span>
+                        </div>
+                        <div className="text-sm font-bold text-white">Production SaaS API</div>
+                        <p className="text-[11px] text-zinc-400 leading-relaxed">
+                          FastAPI, Next.js, Node.js gateway with pooled budgets, automatic provider failover, and sub-ms latency.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Notifications & Currency Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Notifications */}
-                  <div className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-3">
-                    <div>
-                      <div className="text-sm font-bold text-white">Notifications</div>
-                      <div className="text-xs text-zinc-400 mt-0.5">
-                        How do you want to receive alerts and updates?
+                {/* 2. COST OPTIMIZATION STRATEGY (RICH INTERACTIVE CARDS) */}
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm font-bold text-white flex items-center gap-2">
+                      <Sliders className="w-4 h-4 text-[#E5C38D]" />
+                      <span>Cost Optimization &amp; Routing Mode</span>
+                    </div>
+                    <div className="text-xs text-zinc-400 mt-0.5">
+                      Choose how aggressively OstraOps optimizes and caches token requests.
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                    {/* Conservative */}
+                    <div
+                      onClick={() => setOptimizationMode('conservative')}
+                      className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                        optimizationMode === 'conservative'
+                          ? 'bg-[#181510] border-[#C59E5F] shadow-[0_0_20px_rgba(197,158,95,0.18)] ring-1 ring-[#C59E5F]'
+                          : 'bg-[#0B0E14] border-white/[0.08] hover:border-white/[0.2] hover:bg-[#0E121B]'
+                      }`}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-white/[0.04] text-zinc-300 border border-white/[0.08]">
+                            Quality First
+                          </span>
+                          <span className="text-xs font-mono font-bold text-[#E5C38D]">~20% Savings</span>
+                        </div>
+                        <div>
+                          <div className="text-base font-bold text-white">Conservative</div>
+                          <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                            Always route to your primary frontier models (GPT-4o, Claude 3.5 Sonnet). Applies lossless prompt caching without any model downscaling.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="pt-4 border-t border-white/[0.06] mt-4 flex items-center gap-1.5 text-[11px] text-zinc-400">
+                        <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>Zero quality downgrade</span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 pt-1">
+                    {/* Balanced (Recommended) */}
+                    <div
+                      onClick={() => setOptimizationMode('balanced')}
+                      className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative ${
+                        optimizationMode === 'balanced'
+                          ? 'bg-[#181510] border-[#C59E5F] shadow-[0_0_20px_rgba(197,158,95,0.25)] ring-1 ring-[#C59E5F]'
+                          : 'bg-[#0B0E14] border-white/[0.08] hover:border-white/[0.2] hover:bg-[#0E121B]'
+                      }`}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#C59E5F]/20 text-[#E5C38D] border border-[#C59E5F]/40">
+                            ★ Recommended
+                          </span>
+                          <span className="text-xs font-mono font-bold text-emerald-400">~45% Savings</span>
+                        </div>
+                        <div>
+                          <div className="text-base font-bold text-white">Balanced</div>
+                          <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                            Caches repeat prompts automatically. Intelligently routes simple classification &amp; extraction tasks to Claude 3.5 Haiku or GPT-4o-mini.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="pt-4 border-t border-white/[0.06] mt-4 flex items-center gap-1.5 text-[11px] text-[#E5C38D]">
+                        <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>Best mix of accuracy &amp; low bill</span>
+                      </div>
+                    </div>
+
+                    {/* Aggressive */}
+                    <div
+                      onClick={() => setOptimizationMode('aggressive')}
+                      className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                        optimizationMode === 'aggressive'
+                          ? 'bg-[#181510] border-[#C59E5F] shadow-[0_0_20px_rgba(197,158,95,0.18)] ring-1 ring-[#C59E5F]'
+                          : 'bg-[#0B0E14] border-white/[0.08] hover:border-white/[0.2] hover:bg-[#0E121B]'
+                      }`}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                            Max Margin
+                          </span>
+                          <span className="text-xs font-mono font-bold text-emerald-400">Up to 75% Off</span>
+                        </div>
+                        <div>
+                          <div className="text-base font-bold text-white">Aggressive</div>
+                          <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                            Strict token compression, prompt trimming, and automated fallback to DeepSeek V3 and Gemini 2.5 Flash for internal agent tasks.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="pt-4 border-t border-white/[0.06] mt-4 flex items-center gap-1.5 text-[11px] text-amber-300">
+                        <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>Maximum cost protection</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. CIRCUIT BREAKER ACTION */}
+                <div className="p-6 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-4">
+                  <div>
+                    <div className="text-sm font-bold text-white flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-[#E5C38D]" />
+                      <span>Budget Circuit Breaker Action</span>
+                    </div>
+                    <div className="text-xs text-zinc-400 mt-0.5">
+                      What should OstraOps do the instant your budget or rate threshold is hit?
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCircuitBreakerAction('hard_stop')}
+                      className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
+                        circuitBreakerAction === 'hard_stop'
+                          ? 'bg-[#1C1811] border-[#C59E5F] text-white shadow-sm'
+                          : 'bg-[#0E121B] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="text-xs font-bold text-white">HTTP 429 Hard-Stop</div>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          Recommended
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Immediately drops the request before tokens reach the upstream provider. Zero surprise bills.
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCircuitBreakerAction('fallback_cheaper')}
+                      className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
+                        circuitBreakerAction === 'fallback_cheaper'
+                          ? 'bg-[#1C1811] border-[#C59E5F] text-white shadow-sm'
+                          : 'bg-[#0E121B] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="text-xs font-bold text-white">Smart Model Fallback</div>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.05] text-zinc-300">
+                          Resilience
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Switches automatically to an ultra-cheap model (e.g. DeepSeek-V3 or Claude 3.5 Haiku) to keep app alive.
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCircuitBreakerAction('alert_only')}
+                      className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
+                        circuitBreakerAction === 'alert_only'
+                          ? 'bg-[#1C1811] border-[#C59E5F] text-white shadow-sm'
+                          : 'bg-[#0E121B] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="text-xs font-bold text-white">Soft Alert &amp; Proceed</div>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.05] text-zinc-300">
+                          Audit
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Dispatches emergency Slack &amp; Email alerts to your engineering team without blocking traffic.
+                      </p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. REAL-TIME ANOMALY & RUNAWAY LOOP TOGGLES */}
+                <div className="p-6 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-5">
+                  <div>
+                    <div className="text-sm font-bold text-white flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-[#E5C38D]" />
+                      <span>Autonomous Loop &amp; Velocity Guardrails</span>
+                    </div>
+                    <div className="text-xs text-zinc-400 mt-0.5">
+                      Real-time mathematical heuristics to catch rogue agent loops.
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Toggle 1: Runaway Loop Breaker */}
+                    <div
+                      onClick={() => setRunawayLoopProtection(!runawayLoopProtection)}
+                      className="p-4 rounded-xl bg-[#0E121B] border border-white/[0.06] hover:border-white/[0.12] transition-all flex items-center justify-between cursor-pointer"
+                    >
+                      <div className="space-y-0.5 pr-4">
+                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <span>Runaway Loop Circuit Breaker</span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#C59E5F]/15 text-[#E5C38D]">
+                            Active
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-400">
+                          Auto-kills session if &gt;12 calls occur within 60 seconds.
+                        </p>
+                      </div>
+                      <div
+                        className={`w-11 h-6 rounded-full transition-colors relative flex items-center p-0.5 shrink-0 ${
+                          runawayLoopProtection ? 'bg-[#C59E5F]' : 'bg-white/[0.1]'
+                        }`}
+                      >
+                        <div
+                          className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
+                            runawayLoopProtection ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Toggle 2: Spike Velocity Alert */}
+                    <div
+                      onClick={() => setSpikeVelocityAlert(!spikeVelocityAlert)}
+                      className="p-4 rounded-xl bg-[#0E121B] border border-white/[0.06] hover:border-white/[0.12] transition-all flex items-center justify-between cursor-pointer"
+                    >
+                      <div className="space-y-0.5 pr-4">
+                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <span>Hourly Spike Surge Detection</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-400">
+                          Alerts team if spend surges &gt;2.5x above the 24h average.
+                        </p>
+                      </div>
+                      <div
+                        className={`w-11 h-6 rounded-full transition-colors relative flex items-center p-0.5 shrink-0 ${
+                          spikeVelocityAlert ? 'bg-[#C59E5F]' : 'bg-white/[0.1]'
+                        }`}
+                      >
+                        <div
+                          className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
+                            spikeVelocityAlert ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Single Call Cap Chips */}
+                  <div className="pt-2 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-3">
+                    <div className="text-xs text-zinc-300 font-medium">
+                      Max Single Request Spend Cap:
+                      <span className="text-zinc-500 block text-[11px]">
+                        Rejects accidental mega-prompts with massive context windows
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {['$0.50', '$1.00', '$2.50', '$5.00', 'No Cap'].map((cap) => (
+                        <button
+                          key={cap}
+                          type="button"
+                          onClick={() => setMaxCostPerCall(cap)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
+                            maxCostPerCall === cap
+                              ? 'bg-[#C59E5F] text-black shadow-md shadow-[#C59E5F]/20'
+                              : 'bg-white/[0.04] text-zinc-400 hover:text-white border border-white/[0.06]'
+                          }`}
+                        >
+                          {cap}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5. PRIVACY & ZERO-PROMPT STORAGE */}
+                <div className="p-6 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-4">
+                  <div>
+                    <div className="text-sm font-bold text-white flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-[#E5C38D]" />
+                      <span>Data Privacy &amp; Zero Prompt Storage</span>
+                    </div>
+                    <div className="text-xs text-zinc-400 mt-0.5">
+                      OstraOps operates with zero prompt logging by default. Choose your policy.
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div
+                      onClick={() => setPrivacyMode('zero_storage')}
+                      className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                        privacyMode === 'zero_storage'
+                          ? 'bg-[#1C1811] border-[#C59E5F] text-white'
+                          : 'bg-[#0E121B] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <EyeOff className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Zero Prompt Storage</span>
+                        </div>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          100% Private
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Prompts are ephemeral in RAM only. Never written to disk or database. Token headers only.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => setPrivacyMode('pii_masking')}
+                      className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                        privacyMode === 'pii_masking'
+                          ? 'bg-[#1C1811] border-[#C59E5F] text-white'
+                          : 'bg-[#0E121B] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <ShieldCheck className="w-3.5 h-3.5 text-[#E5C38D]" />
+                          <span>Masked PII Anonymization</span>
+                        </div>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.04] text-zinc-300">
+                          GDPR / HIPAA
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Automatically redacts API keys, passwords, and credit cards before relaying to upstream models.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => setPrivacyMode('metadata_only')}
+                      className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                        privacyMode === 'metadata_only'
+                          ? 'bg-[#1C1811] border-[#C59E5F] text-white'
+                          : 'bg-[#0E121B] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <Gauge className="w-3.5 h-3.5 text-zinc-400" />
+                          <span>Telemetry &amp; Latency Only</span>
+                        </div>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.04] text-zinc-300">
+                          Timing
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Records status codes, response times, and model versions without capturing prompt text.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 6. ALERTS & NOTIFICATION CHANNELS */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Notifications Channel Setup */}
+                  <div className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-4">
+                    <div>
+                      <div className="text-sm font-bold text-white flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-[#E5C38D]" />
+                        <span>Emergency Alert Channels</span>
+                      </div>
+                      <div className="text-xs text-zinc-400 mt-0.5">
+                        Where should budget warnings and loop breaker alerts be dispatched?
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
                       <button
+                        type="button"
                         onClick={() => setNotifications('email')}
-                        className={`p-3 rounded-xl border flex flex-col items-center gap-2 cursor-pointer transition-all ${
+                        className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 cursor-pointer transition-all ${
                           notifications === 'email'
                             ? 'bg-[#1C1811] border-[#C59E5F] text-white'
                             : 'bg-[#0E121B] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
@@ -1048,8 +1553,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                       </button>
 
                       <button
+                        type="button"
                         onClick={() => setNotifications('slack')}
-                        className={`p-3 rounded-xl border flex flex-col items-center gap-2 cursor-pointer transition-all ${
+                        className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 cursor-pointer transition-all ${
                           notifications === 'slack'
                             ? 'bg-[#1C1811] border-[#C59E5F] text-white'
                             : 'bg-[#0E121B] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
@@ -1060,8 +1566,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                       </button>
 
                       <button
+                        type="button"
                         onClick={() => setNotifications('both')}
-                        className={`p-3 rounded-xl border flex flex-col items-center gap-2 cursor-pointer transition-all ${
+                        className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 cursor-pointer transition-all ${
                           notifications === 'both'
                             ? 'bg-[#1C1811] border-[#C59E5F] text-white'
                             : 'bg-[#0E121B] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
@@ -1071,21 +1578,117 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                         <span className="text-xs font-semibold">Both</span>
                       </button>
                     </div>
+
+                    {/* Email Input */}
+                    {(notifications === 'email' || notifications === 'both') && (
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-mono text-zinc-400">Alert Email Destination:</label>
+                        <input
+                          type="email"
+                          value={alertEmail}
+                          onChange={(e) => setAlertEmail(e.target.value)}
+                          placeholder="eng-alerts@company.com"
+                          className="w-full bg-[#080B10] border border-white/[0.08] focus:border-[#C59E5F]/60 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
+                        />
+                      </div>
+                    )}
+
+                    {/* Slack Webhook Input */}
+                    {(notifications === 'slack' || notifications === 'both') && (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[11px] font-mono text-zinc-400">Slack Webhook URL (Optional):</label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTestWebhookStatus('Ping sent successfully! ✓');
+                              setTimeout(() => setTestWebhookStatus(null), 3000);
+                            }}
+                            className="text-[10px] font-mono text-[#E5C38D] hover:underline cursor-pointer"
+                          >
+                            Test Ping
+                          </button>
+                        </div>
+                        <input
+                          type="url"
+                          value={slackWebhookUrl}
+                          onChange={(e) => setSlackWebhookUrl(e.target.value)}
+                          placeholder="https://hooks.slack.com/services/T00/B00/XXXX"
+                          className="w-full bg-[#080B10] border border-white/[0.08] focus:border-[#C59E5F]/60 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none font-mono"
+                        />
+                        {testWebhookStatus && (
+                          <div className="text-[11px] text-emerald-400 font-mono flex items-center gap-1 pt-1">
+                            <Check className="w-3 h-3" />
+                            <span>{testWebhookStatus}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Threshold Chips */}
+                    <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-zinc-400 font-mono">Notify at budget %:</span>
+                      <div className="flex items-center gap-1.5">
+                        {[70, 85, 95, 100].map((pct) => (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() => setAlertThresholdPercent(pct)}
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold transition-all cursor-pointer ${
+                              alertThresholdPercent === pct
+                                ? 'bg-[#C59E5F] text-black font-bold'
+                                : 'bg-white/[0.04] text-zinc-400 hover:text-white border border-white/[0.06]'
+                            }`}
+                          >
+                            {pct}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Auto-detected Currency Card */}
-                  <div className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-3">
-                    <div>
-                      <div className="text-sm font-bold text-white flex items-center gap-2">
-                        <Globe2 className="w-4 h-4 text-[#E5C38D]" />
-                        <span>Billing & Telemetry Currency</span>
+                  {/* 7. FUNCTIONAL CURRENCY SWITCHER CARD */}
+                  <div className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-4 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div>
+                        <div className="text-sm font-bold text-white flex items-center gap-2">
+                          <Globe2 className="w-4 h-4 text-[#E5C38D]" />
+                          <span>Billing &amp; Telemetry Currency</span>
+                        </div>
+                        <div className="text-xs text-zinc-400 mt-0.5">
+                          Select your currency for real-time spend dashboards, token rate cards, and billing.
+                        </div>
                       </div>
-                      <div className="text-xs text-zinc-400 mt-0.5">
-                        Automatically detected from your IP & geographic region
+
+                      {/* Currency Chips */}
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-1">
+                        {[
+                          { code: 'USD', symbol: '$', label: 'USD ($)' },
+                          { code: 'EUR', symbol: '€', label: 'EUR (€)' },
+                          { code: 'GBP', symbol: '£', label: 'GBP (£)' },
+                          { code: 'INR', symbol: '₹', label: 'INR (₹)' },
+                          { code: 'CAD', symbol: 'CA$', label: 'CAD (CA$)' },
+                          { code: 'AUD', symbol: 'A$', label: 'AUD (A$)' },
+                          { code: 'JPY', symbol: '¥', label: 'JPY (¥)' },
+                        ].map((c) => (
+                          <button
+                            key={c.code}
+                            type="button"
+                            onClick={() => handleCurrencyChange(c.code)}
+                            className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                              detectedPricing.currencyCode === c.code
+                                ? 'bg-[#181510] border-[#C59E5F] text-[#E5C38D] font-bold shadow-sm ring-1 ring-[#C59E5F]'
+                                : 'bg-[#0E121B] border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                            }`}
+                          >
+                            <span className="text-xs font-mono">{c.label}</span>
+                          </button>
+                        ))}
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-[#0E121B] border border-emerald-500/20 flex items-center justify-between">
+                    {/* Active Currency Badge */}
+                    <div className="p-3 rounded-xl bg-[#0E121B] border border-emerald-500/20 flex items-center justify-between mt-2">
                       <div className="flex items-center gap-2.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_#34D399]" />
                         <div>
@@ -1093,12 +1696,12 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                             {detectedPricing.countryName} ({detectedPricing.currencySymbol} {detectedPricing.currencyCode})
                           </div>
                           <div className="text-[10px] text-emerald-400 font-mono">
-                            Auto-detected IP · Local billing active
+                            Auto-converted exchange rates active
                           </div>
                         </div>
                       </div>
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-300 border border-white/[0.08]">
-                        Auto Verified
+                        Active Rate
                       </span>
                     </div>
                   </div>
@@ -1108,16 +1711,18 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
               {/* Navigation Actions */}
               <div className="flex items-center gap-3 pt-8 border-t border-white/[0.06] mt-8">
                 <button
+                  type="button"
                   onClick={() => setCurrentStep(2)}
                   className="px-5 py-2.5 rounded-xl border border-white/[0.1] text-zinc-300 hover:text-white hover:bg-white/[0.04] text-xs font-semibold transition-colors cursor-pointer"
                 >
-                  ← Back
+                  ← Back to Organization
                 </button>
                 <button
+                  type="button"
                   onClick={() => setCurrentStep(4)}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E5C38D] to-[#C59E5F] text-black font-bold text-xs tracking-wide shadow-[0_0_20px_rgba(229,195,141,0.3)] hover:brightness-110 transition-all cursor-pointer flex items-center gap-1.5"
+                  className="px-7 py-3 rounded-xl bg-gradient-to-r from-[#E5C38D] to-[#C59E5F] text-black font-extrabold text-xs tracking-wide shadow-[0_0_20px_rgba(229,195,141,0.3)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2"
                 >
-                  <span>Continue</span>
+                  <span>Continue to Subscription</span>
                   <span>→</span>
                 </button>
               </div>
@@ -1665,17 +2270,20 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onNavigate }) =>
                       </div>
                     </div>
 
-                    {/* Preferences Summary */}
+                    {/* Preferences & Guardrails Summary */}
                     <div className="p-4 rounded-xl bg-[#0B0E14] border border-white/[0.06] flex items-center gap-3.5">
                       <div className="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-[#E5C38D] shrink-0">
                         <Sliders className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold">
-                          PREFERENCES
+                        <div className="text-[10px] font-mono text-[#E5C38D] uppercase font-semibold">
+                          PREFERENCES &amp; GUARDRAILS
                         </div>
                         <div className="text-xs font-bold text-white capitalize">
-                          Optimization: {optimizationMode} · Notifications: {notifications} · Currency: {detectedPricing.currencyCode} ({detectedPricing.currencySymbol})
+                          {optimizationMode} Optimization · {circuitBreakerAction === 'hard_stop' ? 'HTTP 429 Hard-Stop' : circuitBreakerAction === 'fallback_cheaper' ? 'Model Fallback' : 'Soft Alert'} · {privacyMode === 'zero_storage' ? 'Zero Prompt Storage' : privacyMode === 'pii_masking' ? 'PII Masking' : 'Metadata Only'}
+                        </div>
+                        <div className="text-[11px] text-zinc-400">
+                          Workflow: {primaryWorkflow === 'cursor_windsurf' ? 'Cursor & Windsurf' : primaryWorkflow === 'backend_agents' ? 'Python / LangChain' : primaryWorkflow === 'autonomous_loops' ? 'Autonomous Loops' : 'Production SaaS'} · Currency: {detectedPricing.currencyCode} ({detectedPricing.currencySymbol}) · Loop Breaker: {runawayLoopProtection ? 'Active' : 'Off'}
                         </div>
                       </div>
                     </div>
