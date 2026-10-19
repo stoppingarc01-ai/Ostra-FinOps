@@ -13,8 +13,7 @@ import {
   Radio, 
   Clock, 
   Flame, 
-  Layers,
-  Send
+  Layers
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPlanEntitlements } from '../lib/entitlements';
@@ -69,10 +68,11 @@ interface DualLineForecastCardProps {
 
 /**
  * DualLineForecastCard:
+ * 100% Real-Time Data Driven. Zero Mock Data.
  * Matches reference layout:
  * - Top-left dropdown + top-right 6-dot menu icon
- * - Bottom-left big KPI value with green trend pill
- * - Bottom-right dual-line SVG curve (solid actual + dashed baseline + diagonal hatched Nov/Dec forecast zone + floating dark pill tooltip)
+ * - Bottom-left big KPI value with trend indicator
+ * - Bottom-right dual-line SVG curve (solid actual + dashed comparison + diagonal hatched Nov/Dec forecast zone + floating dark pill tooltip)
  */
 const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
   id,
@@ -84,7 +84,7 @@ const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
   points,
   curveColor = '#E5C38D',
   baselineColor = 'rgba(255, 255, 255, 0.28)',
-  emptyLabel = 'Awaiting live gateway traffic...',
+  emptyLabel = 'No live gateway traffic recorded yet',
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -204,7 +204,7 @@ const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
 
       {/* Grid: Left KPI + Right Dual-Line Graph */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-        {/* Left Column: Big KPI + Green Trend Pill */}
+        {/* Left Column: Big KPI + Trend Pill */}
         <div className="lg:col-span-3 pb-2 sm:pb-5">
           <div className="flex items-baseline gap-2.5 flex-wrap">
             <span className="text-2xl sm:text-[32px] font-extrabold text-white tracking-tight font-sans">
@@ -220,7 +220,7 @@ const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
         {/* Right Column: Dual-Line Forecast Graph */}
         <div className="lg:col-span-9 relative select-none">
           {/* Floating Tooltip */}
-          {activeCoord && (
+          {activeCoord && !isAllZero && (
             <div
               className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full transition-all duration-75"
               style={{
@@ -302,7 +302,7 @@ const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
               strokeDasharray="3 3"
             />
 
-            {/* Dashed Baseline Line */}
+            {/* Baseline Line */}
             <path
               d={baselinePath}
               fill="none"
@@ -312,7 +312,7 @@ const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
               strokeLinecap="round"
             />
 
-            {/* Solid Historic Curve Line (Jan to Oct) */}
+            {/* Historic Curve Line */}
             <path
               d={actualHistoricPath}
               fill="none"
@@ -322,7 +322,7 @@ const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
               strokeLinejoin="round"
             />
 
-            {/* Solid Forecast Curve Line (Oct to Dec) */}
+            {/* Forecast Curve Line */}
             <path
               d={actualForecastPath}
               fill="none"
@@ -392,6 +392,33 @@ const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
   );
 };
 
+// Dynamic Sparkline Path Generator (100% Real-Time Data Derived, Zero Mock Waves)
+const getSparklinePath = (data: number[], width = 76, height = 24, pad = 2): string => {
+  if (!data || data.length === 0) return `M ${pad} ${height - pad} L ${width - pad} ${height - pad}`;
+  const max = Math.max(...data, 0);
+  const min = Math.min(...data, 0);
+  if (max === 0) return `M ${pad} ${height - pad} L ${width - pad} ${height - pad}`;
+  
+  const range = max - min || 1;
+  const plotW = width - pad * 2;
+  const plotH = height - pad * 2;
+  
+  const pts = data.map((v, i) => {
+    const x = pad + (i / Math.max(1, data.length - 1)) * plotW;
+    const y = pad + (1 - (v - min) / range) * plotH;
+    return { x, y };
+  });
+
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const c = pts[i];
+    const n = pts[i + 1];
+    const cpx = ((c.x + n.x) / 2).toFixed(1);
+    d += ` C ${cpx} ${c.y.toFixed(1)}, ${cpx} ${n.y.toFixed(1)}, ${n.x.toFixed(1)} ${n.y.toFixed(1)}`;
+  }
+  return d;
+};
+
 export const OverviewView: React.FC<OverviewViewProps> = ({
   onNavigateToUsage,
   onNavigateToModels,
@@ -412,10 +439,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   // Dual Line Graph Dropdown States
   const [spendOption, setSpendOption] = useState('Spend Velocity');
   const [requestOption, setRequestOption] = useState('All Invocations');
-
-  // Real-time Traffic Simulation Toggle
-  const [autoSimulate, setAutoSimulate] = useState(false);
-  const [isSendingProbe, setIsSendingProbe] = useState(false);
 
   // Live Telemetry Data from Backend
   const [liveLogs, setLiveLogs] = useState<GatewayLog[]>([]);
@@ -444,6 +467,34 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     const userId = user?.id || 'guest';
     const orgId = organization?.id;
 
+    // Purge any simulated or mock test logs that may have been saved to localStorage
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('ostraops_recent_logs') || k === 'ostraops_demo_logs' || k === 'ostraops_mock_logs')) {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              const cleaned = parsed.filter(
+                (l: any) =>
+                  !l.id?.startsWith('ost_live_') &&
+                  !l.request_id?.startsWith('ost_live_') &&
+                  !l.id?.startsWith('mock_') &&
+                  !l.request_id?.startsWith('mock_') &&
+                  !l.id?.startsWith('demo_') &&
+                  !l.request_id?.startsWith('demo_') &&
+                  !l.is_simulated
+              );
+              if (cleaned.length !== parsed.length) {
+                localStorage.setItem(k, JSON.stringify(cleaned));
+              }
+            }
+          }
+        }
+      }
+    } catch {}
+
     const loadRealData = async () => {
       let combinedLogs: GatewayLog[] = [];
 
@@ -464,7 +515,17 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         if (local) {
           const parsed = JSON.parse(local);
           if (Array.isArray(parsed)) {
-            combinedLogs.push(...parsed);
+            const realOnly = parsed.filter(
+              (l: any) =>
+                !l.id?.startsWith('ost_live_') &&
+                !l.request_id?.startsWith('ost_live_') &&
+                !l.id?.startsWith('mock_') &&
+                !l.request_id?.startsWith('mock_') &&
+                !l.id?.startsWith('demo_') &&
+                !l.request_id?.startsWith('demo_') &&
+                !l.is_simulated
+            );
+            combinedLogs.push(...realOnly);
           }
         }
       } catch {}
@@ -583,60 +644,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     };
   }, [user?.uid, user?.id, organization?.id]);
 
-  // Real-time Traffic Simulator Probe
-  const handleSendLiveProbe = async () => {
-    setIsSendingProbe(true);
-    const sampleEngines = [
-      { id: 'openai/gpt-4o', provider: 'OpenAI', inTok: 840, outTok: 290, cost: 0.0033 },
-      { id: 'anthropic/claude-3-7-sonnet', provider: 'Anthropic', inTok: 1250, outTok: 480, cost: 0.0082 },
-      { id: 'deepseek/deepseek-r1', provider: 'Fireworks', inTok: 2400, outTok: 710, cost: 0.0022 },
-      { id: 'google/gemini-2.5-flash', provider: 'Google', inTok: 620, outTok: 180, cost: 0.00045 },
-      { id: 'meta-llama/llama-3.3-70b', provider: 'Groq', inTok: 980, outTok: 340, cost: 0.00068 },
-    ];
-    const eng = sampleEngines[Math.floor(Math.random() * sampleEngines.length)];
-    const traceId = 'ost_live_' + Math.random().toString(36).slice(2, 9);
-    const simulatedLog: GatewayLog = {
-      id: traceId,
-      request_id: traceId,
-      organization_id: organization?.id || 'default_org',
-      project_id: 'default_proj',
-      environment_id: 'development',
-      virtual_key_id: 'vk_playground',
-      created_at: new Date().toISOString(),
-      completed_at: new Date().toISOString(),
-      routed_model: eng.id,
-      requested_model: eng.id,
-      provider: eng.provider,
-      cost_usd: eng.cost,
-      input_tokens: eng.inTok,
-      output_tokens: eng.outTok,
-      latency_ms: Math.floor(Math.random() * 80) + 110,
-      status_code: 200,
-      fallback_used: false,
-      fallback_from_model: null,
-      error_type: null,
-      error_code: null,
-    };
-
-    try {
-      const storageKey = `ostraops_recent_logs_${user?.id || 'guest'}`;
-      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      localStorage.setItem(storageKey, JSON.stringify([simulatedLog, ...existing.slice(0, 99)]));
-    } catch {}
-
-    window.dispatchEvent(new CustomEvent('ostraops:new_log', { detail: simulatedLog }));
-    setTimeout(() => setIsSendingProbe(false), 300);
-  };
-
-  // Auto Simulation Interval
-  useEffect(() => {
-    if (!autoSimulate) return;
-    const interval = setInterval(() => {
-      handleSendLiveProbe();
-    }, 3800);
-    return () => clearInterval(interval);
-  }, [autoSimulate]);
-
   // Filter logs by timeframe (pure real data)
   const filteredLogs = useMemo(() => {
     if (timeframe === 'All time') return liveLogs;
@@ -732,8 +739,34 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     return map;
   }, [liveLogs]);
 
-  // Card 1: Real Spend Velocity Points
+  // Card 1: Real Spend Velocity Points (Reactive to dropdown option)
   const spendVelocityPoints = useMemo<DualLinePoint[]>(() => {
+    if (spendOption === 'Hourly Spend') {
+      const todayHours = ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayLogs = liveLogs.filter((l) => (l.created_at || '').startsWith(todayStr));
+      const hourlyMap = new Array(12).fill(0);
+      todayLogs.forEach((l) => {
+        try {
+          const h = new Date(l.created_at).getHours();
+          const bucket = Math.min(11, Math.floor(h / 2));
+          hourlyMap[bucket] += (l.cost_usd || 0);
+        } catch {}
+      });
+      const currentBucket = Math.min(11, Math.floor(new Date().getHours() / 2));
+      return todayHours.map((h, i) => {
+        const val = Number((hourlyMap[i] || 0).toFixed(4));
+        return {
+          month: h,
+          actual: val,
+          baseline: 0,
+          isForecast: i > currentBucket,
+          dateStr: `Today at ${h}`,
+          tooltipVal: `$${val.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`,
+        };
+      });
+    }
+
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentMonthSpend = monthlySpendMap[currentMonthIdx] || totalSpend;
     const currentDay = Math.max(1, new Date().getDate());
@@ -747,13 +780,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
       if (i < currentMonthIdx) {
         actualVal = Number((monthlySpendMap[i] || 0).toFixed(4));
-        baselineVal = Number((actualVal * 0.9).toFixed(4));
+        baselineVal = 0;
       } else if (i === currentMonthIdx) {
         actualVal = Number(currentMonthSpend.toFixed(4));
-        baselineVal = Number((actualVal * 0.85).toFixed(4));
+        baselineVal = 0;
       } else {
-        actualVal = projectedSpend;
-        baselineVal = Number((projectedSpend * 0.9).toFixed(4));
+        actualVal = totalSpend > 0 ? projectedSpend : 0;
+        baselineVal = 0;
       }
 
       const tooltipVal = `$${actualVal.toLocaleString('en-US', { minimumFractionDigits: actualVal > 0 && actualVal < 1 ? 4 : 2, maximumFractionDigits: 4 })}`;
@@ -768,10 +801,37 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         tooltipVal,
       };
     });
-  }, [monthlySpendMap, currentMonthIdx, currentYear, totalSpend]);
+  }, [monthlySpendMap, currentMonthIdx, currentYear, totalSpend, spendOption, liveLogs]);
 
-  // Card 2: Real Request Volume Points
+  // Card 2: Real Request Volume Points (Reactive to dropdown option)
   const requestVolumePoints = useMemo<DualLinePoint[]>(() => {
+    if (requestOption === 'RPM Velocity') {
+      const todayHours = ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayLogs = liveLogs.filter((l) => (l.created_at || '').startsWith(todayStr));
+      const hourlyReqMap = new Array(12).fill(0);
+      todayLogs.forEach((l) => {
+        try {
+          const h = new Date(l.created_at).getHours();
+          const bucket = Math.min(11, Math.floor(h / 2));
+          hourlyReqMap[bucket] += 1;
+        } catch {}
+      });
+      const currentBucket = Math.min(11, Math.floor(new Date().getHours() / 2));
+      return todayHours.map((h, i) => {
+        const reqCount = hourlyReqMap[i] || 0;
+        const rpm = Number((reqCount / 120).toFixed(2));
+        return {
+          month: h,
+          actual: rpm,
+          baseline: 0,
+          isForecast: i > currentBucket,
+          dateStr: `Today at ${h}`,
+          tooltipVal: `${rpm} RPM (${reqCount} reqs)`,
+        };
+      });
+    }
+
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentMonthReqs = monthlyRequestsMap[currentMonthIdx] || totalRequests;
     const currentDay = Math.max(1, new Date().getDate());
@@ -785,13 +845,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
       if (i < currentMonthIdx) {
         actualVal = monthlyRequestsMap[i] || 0;
-        baselineVal = Math.round(actualVal * 0.9);
+        baselineVal = 0;
       } else if (i === currentMonthIdx) {
         actualVal = currentMonthReqs;
-        baselineVal = Math.round(actualVal * 0.85);
+        baselineVal = 0;
       } else {
-        actualVal = projectedReqs;
-        baselineVal = Math.round(projectedReqs * 0.9);
+        actualVal = totalRequests > 0 ? projectedReqs : 0;
+        baselineVal = 0;
       }
 
       const tooltipVal = `${actualVal.toLocaleString()} reqs`;
@@ -806,7 +866,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         tooltipVal,
       };
     });
-  }, [monthlyRequestsMap, currentMonthIdx, currentYear, totalRequests]);
+  }, [monthlyRequestsMap, currentMonthIdx, currentYear, totalRequests, requestOption, liveLogs]);
 
   // Deep High-Resolution Telemetry Points (100% Real from liveLogs)
   const chartPoints: TelemetryPoint[] = useMemo(() => {
@@ -1033,34 +1093,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
         {/* Real-time controls & Timeframe */}
         <div className="flex items-center gap-2.5 self-start lg:self-auto flex-wrap">
-          {/* Live Request Probe Button */}
-          <button
-            onClick={handleSendLiveProbe}
-            disabled={isSendingProbe}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer border ${
-              isSendingProbe 
-                ? 'bg-[#C59E5F] text-black border-[#C59E5F]' 
-                : 'bg-white/[0.04] hover:bg-white/[0.08] text-[#E5C38D] border-white/10 hover:border-[#C59E5F]/40'
-            }`}
-            title="Fire a live simulated LLM execution to test real-time graphs and live table updates"
-          >
-            <Send className={`w-3.5 h-3.5 ${isSendingProbe ? 'animate-bounce' : ''}`} />
-            <span>{isSendingProbe ? 'Streaming...' : 'Send Live Probe'}</span>
-          </button>
-
-          {/* Auto-Stream Toggle */}
-          <button
-            onClick={() => setAutoSimulate((v) => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer border ${
-              autoSimulate
-                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-[0_0_12px_rgba(52,211,153,0.2)]'
-                : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 border-white/10'
-            }`}
-            title="Toggle continuous real-time synthetic traffic stream"
-          >
-            <span className={`w-2 h-2 rounded-full ${autoSimulate ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
-            <span>Auto Stream: {autoSimulate ? 'ON' : 'OFF'}</span>
-          </button>
+          {/* Real-Time Gateway Port Indicator */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-mono text-zinc-300">
+            <span className="w-2 h-2 rounded-full bg-[#C59E5F] animate-pulse" />
+            <span>Gateway Daemon: 127.0.0.1:8080</span>
+          </div>
 
           {/* Timeframe Dropdown */}
           <div className="relative">
@@ -1129,10 +1166,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             
             <svg viewBox="0 0 76 24" className="w-20 h-6 overflow-visible shrink-0">
               <path
-                d="M 2 20 C 24 20, 36 17, 48 11 C 58 6, 66 5, 74 2"
+                d={getSparklinePath(chartPoints.map((p) => p.spend))}
                 fill="none"
-                stroke="#E5C38D"
-                strokeWidth="2.5"
+                stroke={totalSpend > 0 ? "#E5C38D" : "rgba(255,255,255,0.15)"}
+                strokeWidth="2"
                 strokeLinecap="round"
               />
             </svg>
@@ -1164,16 +1201,24 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </div>
             
             <div className="flex items-end gap-1 h-5 shrink-0 pr-1">
-              {[22, 34, 28, 48, 62, 52, 76, 88, 100].map((h, idx) => (
-                <span
-                  key={idx}
-                  className="w-1 rounded-xs bg-[#C59E5F] transition-all duration-300"
-                  style={{
-                    height: `${totalTokens > 0 ? h : 15}%`,
-                    opacity: totalTokens > 0 ? 0.35 + (idx / 9) * 0.65 : 0.2,
-                  }}
-                />
-              ))}
+              {(() => {
+                const recentTokens = chartPoints.slice(-9).map((p) => p.tokens);
+                const maxTok = Math.max(...recentTokens, 0);
+                return recentTokens.map((tok, idx) => {
+                  const pct = maxTok > 0 ? Math.max(15, Math.round((tok / maxTok) * 100)) : 10;
+                  return (
+                    <span
+                      key={idx}
+                      className="w-1 rounded-xs transition-all duration-300"
+                      style={{
+                        height: `${pct}%`,
+                        backgroundColor: totalTokens > 0 ? '#C59E5F' : 'rgba(255,255,255,0.1)',
+                        opacity: totalTokens > 0 ? 0.35 + (idx / 9) * 0.65 : 0.25,
+                      }}
+                    />
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>
@@ -1203,10 +1248,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             
             <svg viewBox="0 0 76 24" className="w-20 h-6 overflow-visible shrink-0">
               <path
-                d="M 2 22 C 26 22, 40 20, 52 14 C 62 9, 68 5, 74 3"
+                d={getSparklinePath(chartPoints.map((p) => (p.topModel !== 'No Traffic' ? 1 : 0)))}
                 fill="none"
-                stroke="#E5C38D"
-                strokeWidth="2.5"
+                stroke={uniqueModelsCount > 0 ? "#E5C38D" : "rgba(255,255,255,0.15)"}
+                strokeWidth="2"
                 strokeLinecap="round"
               />
             </svg>
@@ -1239,10 +1284,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             
             <svg viewBox="0 0 76 24" className="w-20 h-6 overflow-visible shrink-0">
               <path
-                d="M 2 18 C 16 18, 26 6, 38 6 C 50 6, 58 18, 74 8"
+                d={getSparklinePath(chartPoints.map((p) => p.requests))}
                 fill="none"
-                stroke="#E5C38D"
-                strokeWidth="2.5"
+                stroke={totalRequests > 0 ? "#E5C38D" : "rgba(255,255,255,0.15)"}
+                strokeWidth="2"
                 strokeLinecap="round"
               />
             </svg>
@@ -1267,7 +1312,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           points={spendVelocityPoints}
           curveColor="#E5C38D"
           baselineColor="rgba(255, 255, 255, 0.28)"
-          emptyLabel="Awaiting live gateway spend..."
+          emptyLabel="No gateway spend recorded yet"
         />
 
         {/* Graph 2: Request Volume (All Invocations) */}
@@ -1281,7 +1326,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           points={requestVolumePoints}
           curveColor="#FFFFFF"
           baselineColor="rgba(255, 255, 255, 0.28)"
-          emptyLabel="Awaiting live gateway traffic..."
+          emptyLabel="No gateway traffic recorded yet"
         />
       </div>
 
@@ -1374,8 +1419,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                 <div className="bg-[#0B0E14]/95 backdrop-blur-xl border border-[#C59E5F]/50 rounded-2xl p-3 shadow-2xl text-xs font-mono w-56 space-y-1.5 -mt-3 animate-in fade-in zoom-in-95">
                   <div className="flex items-center justify-between border-b border-white/[0.08] pb-1.5">
                     <span className="text-[11px] font-bold text-zinc-300">{chartPoints[hoveredIndex].fullDate}</span>
-                    <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      HTTP 200
+                    <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${
+                      chartPoints[hoveredIndex].requests > 0
+                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-white/[0.06] text-zinc-400 border border-white/10'
+                    }`}>
+                      {chartPoints[hoveredIndex].requests > 0 ? 'HTTP 200 OK' : 'Idle (0 reqs)'}
                     </span>
                   </div>
                   
@@ -1399,9 +1448,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                       <span>Latency:</span>
                       <span className="text-white font-bold">{chartPoints[hoveredIndex].latency}ms</span>
                     </div>
-                    <div className="flex justify-between text-emerald-400">
+                    <div className={`flex justify-between ${chartPoints[hoveredIndex].requests > 0 ? 'text-emerald-400' : 'text-zinc-500'}`}>
                       <span>Status:</span>
-                      <span className="font-bold">Real Log Synced</span>
+                      <span className="font-bold">
+                        {chartPoints[hoveredIndex].requests > 0 ? 'Real Log Synced' : 'No Traffic in Window'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1600,7 +1651,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                 <Activity className="w-8 h-8 text-zinc-600 mb-2" />
                 <span className="text-zinc-300 font-medium">No model usage recorded yet.</span>
                 <span className="text-zinc-500 mt-0.5">
-                  Execute a prompt via Gateway API or Test Playground to see real-time model distribution.
+                  All traffic routed through OstraOps Gateway will be classified and broken down by provider cost and token share here in real time.
                 </span>
               </div>
             ) : (
@@ -1768,7 +1819,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             <Activity className="w-8 h-8 text-zinc-600 mb-2" />
             <span className="text-zinc-300 font-medium">No API invocations recorded yet.</span>
             <span className="text-zinc-500 mt-0.5">
-              Click &quot;Send Live Probe&quot; above or run a prompt in Test Playground to stream live telemetry here.
+              Connect your applications to http://localhost:8080 or run a prompt in Test Playground to stream live telemetry here.
             </span>
           </div>
         ) : (
@@ -1819,10 +1870,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                         </span>
                       </td>
                       <td className="py-3 text-zinc-300 font-semibold">
-                        {log.latency_ms || 240}ms
+                        {log.latency_ms !== undefined && log.latency_ms !== null ? `${log.latency_ms}ms` : '0ms'}
                       </td>
                       <td className="py-3 text-[#E5C38D] font-bold">
-                        ${(log.cost_usd || 0.00001).toFixed(6)}
+                        ${(log.cost_usd || 0).toFixed(6)}
                       </td>
                       <td className="py-3 text-right">
                         <span className="text-zinc-300 font-semibold block">
