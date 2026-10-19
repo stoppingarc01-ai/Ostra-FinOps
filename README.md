@@ -2,7 +2,7 @@
 
 # OstraOps
 
-**The Open-Source Smart Spend Controller for AI Apps & Agents.**  
+**The Open-Source LLM Gateway & Real-Time Spend Controller for AI Apps & Agents.**  
 *Stop runaway LLM costs, agent loops, and surprise bills with real-time budget limits.*
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)

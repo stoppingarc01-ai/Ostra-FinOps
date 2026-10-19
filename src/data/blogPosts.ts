@@ -30,6 +30,49 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: 'open-source-llm-gateway-comparison-litellm-helicone-ostraops',
+    slug: 'open-source-llm-gateway-comparison-litellm-helicone-ostraops',
+    title: 'The Open-Source LLM Gateway Landscape: LiteLLM vs Helicone vs OstraOps',
+    subtitle: 'How to choose the right AI gateway for your stack. An honest comparison of features, latency, budget controls, and privacy.',
+    category: 'Architecture',
+    readTime: '6 min read',
+    publishDate: 'October 2026',
+    featured: true,
+    tags: ['Open Source LLM Gateway', 'LiteLLM', 'Helicone', 'Portkey', 'AI Gateway', 'Comparison'],
+    summary: 'A direct, honest comparison of the top 3 open-source AI gateways. Discover why developers pick LiteLLM for protocol translation, Helicone for prompt traces, and OstraOps for real-time budget stops and 100% prompt privacy.',
+    content: {
+      overview: 'As developers build with AI agents, having an LLM gateway is no longer optional. Without one, you face unmonitored keys, surprise runaway loop bills, and zero outage failover. Here is how LiteLLM, Helicone, and OstraOps compare side-by-side.',
+      sections: [
+        {
+          heading: '1. LiteLLM: The Protocol Adapter',
+          body: [
+            'LiteLLM excels at translating 100+ different enterprise provider APIs into one unified OpenAI-compatible format.',
+            'Best for enterprise teams with complex legacy cloud setups. However, configuration can be heavy and it lacks instant local circuit breakers for solo devs.'
+          ]
+        },
+        {
+          heading: '2. Helicone: The Deep Tracing Platform',
+          body: [
+            'Helicone specializes in visual trace logging, user prompt histories, and request latency graphs.',
+            'Best for inspecting chatbot conversations. The catch: full prompts and completions are logged to external cloud servers, and it only alerts you after spend has already occurred.'
+          ],
+          callout: {
+            type: 'warning',
+            title: 'Passive Logger vs Active Controller',
+            text: 'Passive loggers record what was spent after the fact. OstraOps trips an instant HTTP 429 pause locally before the money leaves your account.'
+          }
+        },
+        {
+          heading: '3. OstraOps: Real-Time Budget Controller & Privacy Guard',
+          body: [
+            'OstraOps focuses on the #1 pain point: preventing surprise runaway bills with zero prompt storage.',
+            'Runs via "npx ostraops-guard" in 30 seconds with no credit card and no signup. Works as a local seatbelt for solo devs in Cursor, or as a team gateway with pooled budgets and automatic failover.'
+          ]
+        }
+      ]
+    }
+  },
+  {
     id: 'why-ostraops-no-credit-card-100-percent-open-source',
     slug: 'why-ostraops-no-credit-card-100-percent-open-source',
     title: 'Why OstraOps is 100% Open Source, Requires No Credit Card, and Takes 30 Seconds to Use',
@@ -37,7 +80,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Guides',
     readTime: '4 min read',
     publishDate: 'October 2026',
-    featured: true,
+    featured: false,
     tags: ['Open Source', 'No Credit Card', 'Privacy', 'MIT License', 'Quickstart', 'Zero Markup'],
     summary: 'Discover why OstraOps never asks for your credit card, operates under 100% open-source MIT code, and takes under 30 seconds to set up on your machine.',
     content: {
