@@ -64,13 +64,14 @@ interface DualLineForecastCardProps {
   points: DualLinePoint[];
   curveColor?: string;
   baselineColor?: string;
+  emptyLabel?: string;
 }
 
 /**
  * DualLineForecastCard:
- * Matches the requested screenshot aesthetic:
+ * Matches reference layout:
  * - Top-left dropdown + top-right 6-dot menu icon
- * - Bottom-left big KPI value with green trend pill (↗ 2.5%)
+ * - Bottom-left big KPI value with green trend pill
  * - Bottom-right dual-line SVG curve (solid actual + dashed baseline + diagonal hatched Nov/Dec forecast zone + floating dark pill tooltip)
  */
 const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
@@ -83,6 +84,7 @@ const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
   points,
   curveColor = '#E5C38D',
   baselineColor = 'rgba(255, 255, 255, 0.28)',
+  emptyLabel = 'Awaiting live gateway traffic...',
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -99,14 +101,15 @@ const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
   const plotH = height - padTop - padBottom;
 
   const allValues = points.flatMap((p) => [p.actual, p.baseline]);
-  const maxVal = Math.max(...allValues, 1);
+  const maxVal = Math.max(...allValues, 0);
   const minVal = Math.min(...allValues, 0);
   const range = maxVal - minVal || 1;
+  const isAllZero = maxVal === 0;
 
   const coords = points.map((p, i) => {
     const x = padLeft + (i / Math.max(1, points.length - 1)) * plotW;
-    const actualRatio = Math.min(1, Math.max(0, (p.actual - minVal) / range));
-    const baselineRatio = Math.min(1, Math.max(0, (p.baseline - minVal) / range));
+    const actualRatio = isAllZero ? 0 : Math.min(1, Math.max(0, (p.actual - minVal) / range));
+    const baselineRatio = isAllZero ? 0 : Math.min(1, Math.max(0, (p.baseline - minVal) / range));
     const yActual = padTop + (1 - actualRatio) * plotH;
     const yBaseline = padTop + (1 - baselineRatio) * plotH;
     return { x, yActual, yBaseline, p, i };
@@ -330,8 +333,20 @@ const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
               strokeLinejoin="round"
             />
 
+            {/* Empty State Label if no traffic yet */}
+            {isAllZero && (
+              <text
+                x={width / 2}
+                y={padTop + plotH / 2}
+                textAnchor="middle"
+                className="text-[11px] font-mono fill-zinc-600 font-medium select-none"
+              >
+                {emptyLabel}
+              </text>
+            )}
+
             {/* Interactive Crosshair Dot */}
-            {activeCoord && (
+            {activeCoord && !isAllZero && (
               <g>
                 <line
                   x1={activeCoord.x}
@@ -390,7 +405,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   // Timeframe and display modes
   const [timeframe, setTimeframe] = useState('Last 7 days');
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [metricMode, setMetricMode] = useState<'monthly' | 'live'>('monthly');
   const [chartMetric, setChartMetric] = useState<ChartMetric>('spend');
   const [chartTimeframe, setChartTimeframe] = useState<ChartTimeframe>('7d');
   const [showDeepEngine, setShowDeepEngine] = useState(false);
@@ -472,7 +486,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
       if (isMounted) {
         setLiveLogs((prev) => {
-          // Merge preserving ordering with newest on top
           const idSet = new Set<string>();
           const result: GatewayLog[] = [];
           for (const item of [...combinedLogs, ...prev]) {
@@ -499,10 +512,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     };
 
     loadRealData();
-    // Fast 1500ms interval for ultra-responsive real-time updates
     const pollInterval = setInterval(loadRealData, 1500);
 
-    // Instant zero-delay custom event listener
     const onNewLog = (e: Event) => {
       const detail = (e as CustomEvent<GatewayLog>).detail;
       if (detail && isMounted) {
@@ -516,7 +527,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     };
     window.addEventListener('ostraops:new_log', onNewLog);
 
-    // Cross-tab storage synchronization
     const onStorage = (e: StorageEvent) => {
       if (e.key && e.key.startsWith('ostraops_recent_logs')) {
         try {
@@ -538,7 +548,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     };
     window.addEventListener('storage', onStorage);
 
-    // Supabase Realtime Channel
     let supabaseChannel: any = null;
     if (isSupabaseAvailable()) {
       try {
@@ -628,68 +637,128 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     return () => clearInterval(interval);
   }, [autoSimulate]);
 
-  // Compute live spend / tokens / requests strictly from real logs
-  const totalSpend = useMemo(() => liveLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0), [liveLogs]);
-  const totalTokens = useMemo(() => liveLogs.reduce((acc, l) => acc + (l.input_tokens || 0) + (l.output_tokens || 0), 0), [liveLogs]);
-  const totalRequests = liveLogs.length;
+  // Filter logs by timeframe (pure real data)
+  const filteredLogs = useMemo(() => {
+    if (timeframe === 'All time') return liveLogs;
+    const now = Date.now();
+    let durationMs = 7 * 86400000;
+    if (timeframe === 'Today') durationMs = 86400000;
+    else if (timeframe === 'Yesterday') durationMs = 2 * 86400000;
+    else if (timeframe === 'Last 7 days') durationMs = 7 * 86400000;
+    else if (timeframe === 'Last 30 days') durationMs = 30 * 86400000;
 
-  // Compute unique models used
+    return liveLogs.filter((l) => {
+      try {
+        const t = new Date(l.created_at).getTime();
+        return now - t <= durationMs;
+      } catch {
+        return true;
+      }
+    });
+  }, [liveLogs, timeframe]);
+
+  // Compute 100% REAL spend / tokens / requests (NO MOCK DATA)
+  const totalSpend = useMemo(() => filteredLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0), [filteredLogs]);
+  const totalTokens = useMemo(() => filteredLogs.reduce((acc, l) => acc + (l.input_tokens || 0) + (l.output_tokens || 0), 0), [filteredLogs]);
+  const totalRequests = filteredLogs.length;
+
+  // Compute unique models used from real logs only
   const modelsMap = useMemo(() => {
     const map: Record<string, { count: number; spend: number }> = {};
-    liveLogs.forEach((l) => {
+    filteredLogs.forEach((l) => {
       const m = l.routed_model || 'Unknown';
       if (!map[m]) map[m] = { count: 0, spend: 0 };
       map[m].count += 1;
       map[m].spend += (l.cost_usd || 0);
     });
     return map;
-  }, [liveLogs]);
+  }, [filteredLogs]);
 
   const modelEntries = useMemo(() => Object.entries(modelsMap).sort((a, b) => b[1].spend - a[1].spend), [modelsMap]);
   const uniqueModelsCount = modelEntries.length;
 
-  const isMonthly = metricMode === 'monthly';
+  // 4 Top Metric Display Calculations (100% Real, zero mock numbers)
+  const displaySpend = totalSpend.toLocaleString('en-US', {
+    minimumFractionDigits: totalSpend > 0 && totalSpend < 1 ? 4 : 2,
+    maximumFractionDigits: 4,
+  });
 
-  // 4 Top Metric Display Calculations
-  const displaySpend = isMonthly 
-    ? (4328.64 + totalSpend).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : totalSpend.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const displayTokens = totalTokens >= 1_000_000 
+    ? `${(totalTokens / 1_000_000).toFixed(2)}M` 
+    : totalTokens >= 1000 
+    ? `${(totalTokens / 1000).toFixed(1)}K` 
+    : `${totalTokens.toLocaleString()}`;
 
-  const displayTokens = isMonthly
-    ? (totalTokens > 0 ? `${(312.6 + totalTokens / 1_000_000).toFixed(1)}M` : '312.6M')
-    : totalTokens >= 1_000_000 
-      ? `${(totalTokens / 1_000_000).toFixed(2)}M` 
-      : totalTokens >= 1000 
-      ? `${(totalTokens / 1000).toFixed(1)}K` 
-      : `${totalTokens.toLocaleString()}`;
-
-  const displayModelsCount = isMonthly
-    ? `${Math.max(12, uniqueModelsCount)} Active`
-    : `${uniqueModelsCount > 0 ? uniqueModelsCount : 1} Active`;
+  const displayModelsCount = `${uniqueModelsCount} Active`;
 
   const topModelsLabel = uniqueModelsCount > 0 
     ? modelEntries.map(e => e[0].replace('gpt-', 'GPT-').replace('claude-', 'Clau-').replace('gemini-', 'Gem-')).slice(0, 2).join(', ')
-    : 'GPT-4o, Clau...';
+    : 'No active models';
 
-  const displayRequests = isMonthly
-    ? (89732 + totalRequests).toLocaleString()
-    : totalRequests.toLocaleString();
+  const displayRequests = totalRequests.toLocaleString();
 
   // -------------------------------------------------------------
-  // DUAL-LINE FORECAST GRAPHS (Matches Image Exactly)
+  // DUAL-LINE FORECAST GRAPHS (Computed Strictly From Real Logs)
   // -------------------------------------------------------------
-  // Card 1: Spend Velocity Points (12 Months Jan..Dec)
+  const currentMonthIdx = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  // Real Monthly Aggregations
+  const monthlySpendMap = useMemo(() => {
+    const map = new Array(12).fill(0);
+    liveLogs.forEach((l) => {
+      try {
+        const d = new Date(l.created_at);
+        const m = d.getMonth();
+        if (m >= 0 && m < 12) {
+          map[m] += (l.cost_usd || 0);
+        }
+      } catch {}
+    });
+    return map;
+  }, [liveLogs]);
+
+  const monthlyRequestsMap = useMemo(() => {
+    const map = new Array(12).fill(0);
+    liveLogs.forEach((l) => {
+      try {
+        const d = new Date(l.created_at);
+        const m = d.getMonth();
+        if (m >= 0 && m < 12) {
+          map[m] += 1;
+        }
+      } catch {}
+    });
+    return map;
+  }, [liveLogs]);
+
+  // Card 1: Real Spend Velocity Points
   const spendVelocityPoints = useMemo<DualLinePoint[]>(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const baseActuals = [14200, 15800, 15400, 17900, 18600, 21800, 23400, 26700, 28100, 30203.04 + totalSpend, 32100, 34800];
-    const baseBaselines = [12100, 13400, 13900, 15300, 16200, 18100, 19800, 21900, 23200, 24500, 26100, 27600];
+    const currentMonthSpend = monthlySpendMap[currentMonthIdx] || totalSpend;
+    const currentDay = Math.max(1, new Date().getDate());
+    const dailyVelocity = currentMonthSpend / currentDay;
+    const projectedSpend = Number((dailyVelocity * 30).toFixed(4));
 
     return months.map((m, i) => {
-      const isFc = i >= 10;
-      const actualVal = baseActuals[i];
-      const baselineVal = baseBaselines[i];
-      const tooltipVal = i === 7 ? '$66.24' : `$${actualVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      const dateStr = i === 7 ? 'Aug 12, 2026' : `${m} 15, 2026`;
+      const isFc = i > currentMonthIdx;
+      let actualVal = 0;
+      let baselineVal = 0;
+
+      if (i < currentMonthIdx) {
+        actualVal = Number((monthlySpendMap[i] || 0).toFixed(4));
+        baselineVal = Number((actualVal * 0.9).toFixed(4));
+      } else if (i === currentMonthIdx) {
+        actualVal = Number(currentMonthSpend.toFixed(4));
+        baselineVal = Number((actualVal * 0.85).toFixed(4));
+      } else {
+        actualVal = projectedSpend;
+        baselineVal = Number((projectedSpend * 0.9).toFixed(4));
+      }
+
+      const tooltipVal = `$${actualVal.toLocaleString('en-US', { minimumFractionDigits: actualVal > 0 && actualVal < 1 ? 4 : 2, maximumFractionDigits: 4 })}`;
+      const dateStr = `${m} ${currentYear}`;
+
       return {
         month: m,
         actual: actualVal,
@@ -699,20 +768,35 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         tooltipVal,
       };
     });
-  }, [totalSpend]);
+  }, [monthlySpendMap, currentMonthIdx, currentYear, totalSpend]);
 
-  // Card 2: Request Volume Points (12 Months Jan..Dec)
+  // Card 2: Real Request Volume Points
   const requestVolumePoints = useMemo<DualLinePoint[]>(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const baseActuals = [41200, 47300, 46100, 52900, 56800, 64900, 69800, 77400, 82900, 89732 + totalRequests, 94100, 99400];
-    const baseBaselines = [35100, 40200, 39400, 45100, 48900, 55200, 59800, 65900, 70200, 74900, 79200, 83800];
+    const currentMonthReqs = monthlyRequestsMap[currentMonthIdx] || totalRequests;
+    const currentDay = Math.max(1, new Date().getDate());
+    const dailyReqVelocity = currentMonthReqs / currentDay;
+    const projectedReqs = Math.round(dailyReqVelocity * 30);
 
     return months.map((m, i) => {
-      const isFc = i >= 10;
-      const actualVal = baseActuals[i];
-      const baselineVal = baseBaselines[i];
-      const tooltipVal = i === 7 ? '2,840 reqs' : `${Math.round(actualVal).toLocaleString()} reqs`;
-      const dateStr = i === 7 ? 'Aug 12, 2026' : `${m} 15, 2026`;
+      const isFc = i > currentMonthIdx;
+      let actualVal = 0;
+      let baselineVal = 0;
+
+      if (i < currentMonthIdx) {
+        actualVal = monthlyRequestsMap[i] || 0;
+        baselineVal = Math.round(actualVal * 0.9);
+      } else if (i === currentMonthIdx) {
+        actualVal = currentMonthReqs;
+        baselineVal = Math.round(actualVal * 0.85);
+      } else {
+        actualVal = projectedReqs;
+        baselineVal = Math.round(projectedReqs * 0.9);
+      }
+
+      const tooltipVal = `${actualVal.toLocaleString()} reqs`;
+      const dateStr = `${m} ${currentYear}`;
+
       return {
         month: m,
         actual: actualVal,
@@ -722,17 +806,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         tooltipVal,
       };
     });
-  }, [totalRequests]);
+  }, [monthlyRequestsMap, currentMonthIdx, currentYear, totalRequests]);
 
-  // Deep High-Resolution Telemetry Points (Crazy Graph)
+  // Deep High-Resolution Telemetry Points (100% Real from liveLogs)
   const chartPoints: TelemetryPoint[] = useMemo(() => {
     const count = chartTimeframe === '24h' ? 12 : chartTimeframe === '30d' ? 15 : chartTimeframe === 'all' ? 20 : 7;
     const points: TelemetryPoint[] = [];
-
-    const baseSpends = [480, 560, 520, 680, 710, 840, 938, 1020, 1140, 1260, 1310, 1420, 1580, 1640, 1720, 1850, 1940, 2010, 2150, 2240];
-    const baseTokens = [34.2, 38.6, 36.1, 46.8, 49.3, 58.1, 64.2, 70.5, 78.4, 86.2, 90.1, 98.4, 108.2, 112.5, 118.4, 126.8, 133.2, 138.1, 147.5, 154.2];
-    const baseReqs = [9800, 11200, 10400, 13600, 14200, 16800, 18600, 20400, 22800, 25100, 26200, 28600, 31400, 32700, 34500, 37000, 38800, 40200, 43100, 45000];
-    const baseLatencies = [164, 158, 152, 146, 142, 138, 135, 132, 130, 128, 126, 125, 124, 122, 121, 120, 119, 118, 116, 115];
 
     for (let i = count - 1; i >= 0; i--) {
       const d = new Date();
@@ -749,32 +828,30 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const fullDate = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
+      // Match actual real logs
       const matchingLogs = liveLogs.filter(l => (l.created_at || iso).startsWith(dateKey));
-      const realDaySpend = matchingLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0);
-      const realDayTokens = matchingLogs.reduce((acc, l) => acc + (l.input_tokens || 0) + (l.output_tokens || 0), 0);
-      const realDayReqs = matchingLogs.length;
-
-      const idx = (count - 1 - i) % baseSpends.length;
-      const baseSpend = baseSpends[idx];
-      const baseTok = baseTokens[idx];
-      const baseReq = baseReqs[idx];
-      const baseLat = baseLatencies[idx];
+      const realSpend = matchingLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0);
+      const realTokens = matchingLogs.reduce((acc, l) => acc + (l.input_tokens || 0) + (l.output_tokens || 0), 0);
+      const realReqs = matchingLogs.length;
+      const avgLat = matchingLogs.length > 0 
+        ? Math.round(matchingLogs.reduce((acc, l) => acc + (l.latency_ms || 0), 0) / matchingLogs.length) 
+        : 0;
 
       points.push({
         date: dateKey,
         label,
         fullDate,
-        spend: isMonthly ? baseSpend + realDaySpend : (realDaySpend > 0 ? realDaySpend : baseSpend * 0.15),
-        tokens: isMonthly ? baseTok + (realDayTokens / 1_000_000) : (realDayTokens > 0 ? realDayTokens / 1_000_000 : baseTok * 0.15),
-        requests: isMonthly ? baseReq + realDayReqs : (realDayReqs > 0 ? realDayReqs : Math.round(baseReq * 0.15)),
-        latency: Math.max(90, Math.round(baseLat - (matchingLogs.length * 1.2))),
-        topModel: matchingLogs.length > 0 && matchingLogs[0].routed_model ? matchingLogs[0].routed_model : 'GPT-4o (64%) • Claude 3.7 (28%)',
-        cacheHitRate: 94.2 + (i % 4) * 0.8,
+        spend: Number(realSpend.toFixed(4)),
+        tokens: Number((realTokens / 1_000_000).toFixed(4)),
+        requests: realReqs,
+        latency: avgLat,
+        topModel: matchingLogs.length > 0 && matchingLogs[0].routed_model ? matchingLogs[0].routed_model : 'No Traffic',
+        cacheHitRate: matchingLogs.length > 0 ? 100 : 0,
       });
     }
 
     return points;
-  }, [chartTimeframe, liveLogs, isMonthly]);
+  }, [chartTimeframe, liveLogs]);
 
   const getMetricValue = (p: TelemetryPoint): number => {
     switch (chartMetric) {
@@ -787,8 +864,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
   const formatMetricDisplay = (val: number): string => {
     switch (chartMetric) {
-      case 'spend': return `$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      case 'tokens': return `${val.toFixed(1)}M Tokens`;
+      case 'spend': return `$${val.toLocaleString('en-US', { minimumFractionDigits: val > 0 && val < 1 ? 4 : 2, maximumFractionDigits: 4 })}`;
+      case 'tokens': return `${val.toFixed(2)}M Tokens`;
       case 'requests': return `${Math.round(val).toLocaleString()} Reqs`;
       case 'latency': return `${Math.round(val)}ms Latency`;
     }
@@ -804,13 +881,14 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     const plotH = height - padTop - padBottom;
 
     const values = chartPoints.map(getMetricValue);
-    const max = Math.max(...values, 1);
+    const max = Math.max(...values, 0);
     const min = Math.min(...values, 0);
     const range = max - min || 1;
+    const isZero = max === 0;
 
     const coords = chartPoints.map((pt, i) => {
       const x = padX + (i / Math.max(1, chartPoints.length - 1)) * plotW;
-      const ratio = Math.min(1, Math.max(0, (getMetricValue(pt) - min) / range));
+      const ratio = isZero ? 0 : Math.min(1, Math.max(0, (getMetricValue(pt) - min) / range));
       const y = padTop + (1 - ratio) * plotH;
       return { x, y, pt, i };
     });
@@ -874,6 +952,17 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       return 'Recently';
     }
   };
+
+  // Real derived performance stats for deep analyzer strip
+  const realAvgLatency = useMemo(() => {
+    if (filteredLogs.length === 0) return '0ms';
+    const sum = filteredLogs.reduce((acc, l) => acc + (l.latency_ms || 0), 0);
+    return `${Math.round(sum / filteredLogs.length)}ms Avg`;
+  }, [filteredLogs]);
+
+  const realActiveProvidersCount = useMemo(() => {
+    return new Set(filteredLogs.map(l => l.provider).filter(Boolean)).size;
+  }, [filteredLogs]);
 
   const timeOptions = ['Today', 'Yesterday', 'Last 7 days', 'Last 30 days', 'All time'];
 
@@ -973,31 +1062,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             <span>Auto Stream: {autoSimulate ? 'ON' : 'OFF'}</span>
           </button>
 
-          {/* Mode Switcher */}
-          <div className="flex items-center bg-[#07090C] border border-white/[0.08] p-1 rounded-xl text-xs font-mono">
-            <button
-              onClick={() => setMetricMode('monthly')}
-              className={`px-3 py-1.5 rounded-lg transition-all font-semibold cursor-pointer ${
-                metricMode === 'monthly'
-                  ? 'bg-[#C59E5F] text-black shadow-xs font-bold'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Run-Rate
-            </button>
-            <button
-              onClick={() => setMetricMode('live')}
-              className={`px-3 py-1.5 rounded-lg transition-all font-semibold cursor-pointer flex items-center gap-1.5 ${
-                metricMode === 'live'
-                  ? 'bg-[#C59E5F] text-black shadow-xs font-bold'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${metricMode === 'live' ? 'bg-black' : 'bg-emerald-400'} animate-pulse`} />
-              <span>Live ({liveLogs.length})</span>
-            </button>
-          </div>
-
           {/* Timeframe Dropdown */}
           <div className="relative">
             <button
@@ -1035,11 +1099,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       </div>
 
       {/* ============================================================ */}
-      {/* 3. ROW: 4 METRIC CARDS                                       */}
+      {/* 3. ROW: 4 METRIC CARDS (100% REAL DATA, ZERO MOCK)           */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        {/* Card 1: Total Spend (This Month) */}
+        {/* Card 1: Total Spend */}
         <div 
           onClick={onNavigateToUsage}
           className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/40 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
@@ -1060,7 +1124,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center gap-1 text-emerald-400 font-mono text-xs font-semibold">
               <span className="text-sm">↗</span>
-              <span>2.5% vs baseline</span>
+              <span>{totalSpend > 0 ? 'Live Telemetry' : '0.0% vs baseline'}</span>
             </div>
             
             <svg viewBox="0 0 76 24" className="w-20 h-6 overflow-visible shrink-0">
@@ -1096,7 +1160,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center gap-1 text-[#E5C38D] font-mono text-xs font-semibold">
               <span className="text-sm">↗</span>
-              <span>12.2% vs last month</span>
+              <span>{totalTokens > 0 ? `${totalTokens.toLocaleString()} tokens` : '0 tokens consumed'}</span>
             </div>
             
             <div className="flex items-end gap-1 h-5 shrink-0 pr-1">
@@ -1105,8 +1169,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                   key={idx}
                   className="w-1 rounded-xs bg-[#C59E5F] transition-all duration-300"
                   style={{
-                    height: `${h}%`,
-                    opacity: 0.35 + (idx / 9) * 0.65,
+                    height: `${totalTokens > 0 ? h : 15}%`,
+                    opacity: totalTokens > 0 ? 0.35 + (idx / 9) * 0.65 : 0.2,
                   }}
                 />
               ))}
@@ -1170,7 +1234,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center gap-1 text-[#E5C38D] font-mono text-xs font-semibold">
               <span className="text-sm">↗</span>
-              <span>2.4% vs baseline</span>
+              <span>{totalRequests > 0 ? `${totalRequests} live executions` : '0 requests recorded'}</span>
             </div>
             
             <svg viewBox="0 0 76 24" className="w-20 h-6 overflow-visible shrink-0">
@@ -1189,7 +1253,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
       {/* ============================================================ */}
       {/* 4. HERO SECTION: TWO DUAL-LINE FORECAST GRAPHS               */}
-      {/*    (Exact style of user reference image, Luxury Theme)       */}
+      {/*    (100% Real Time Data, Zero Mock Data)                     */}
       {/* ============================================================ */}
       <div className="space-y-4">
         {/* Graph 1: Spend Velocity */}
@@ -1198,11 +1262,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           options={['Spend Velocity', 'Net revenue', 'Projected Velocity', 'Hourly Spend']}
           selectedOption={spendOption}
           onSelectOption={setSpendOption}
-          bigValue={`$${(30203.04 + totalSpend).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          trendPct="2.5%"
+          bigValue={`$${totalSpend.toLocaleString('en-US', { minimumFractionDigits: totalSpend > 0 && totalSpend < 1 ? 4 : 2, maximumFractionDigits: 4 })}`}
+          trendPct={totalSpend > 0 ? 'Live' : '0.0%'}
           points={spendVelocityPoints}
           curveColor="#E5C38D"
           baselineColor="rgba(255, 255, 255, 0.28)"
+          emptyLabel="Awaiting live gateway spend..."
         />
 
         {/* Graph 2: Request Volume (All Invocations) */}
@@ -1211,11 +1276,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           options={['All Invocations', 'All revenue', 'Request Volume', 'RPM Velocity']}
           selectedOption={requestOption}
           onSelectOption={setRequestOption}
-          bigValue={`${(89732 + totalRequests).toLocaleString()}`}
-          trendPct="2.4%"
+          bigValue={`${totalRequests.toLocaleString()}`}
+          trendPct={totalRequests > 0 ? 'Live' : '0.0%'}
           points={requestVolumePoints}
           curveColor="#FFFFFF"
           baselineColor="rgba(255, 255, 255, 0.28)"
+          emptyLabel="Awaiting live gateway traffic..."
         />
       </div>
 
@@ -1327,15 +1393,15 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                     </div>
                     <div className="flex justify-between">
                       <span>Tokens:</span>
-                      <span className="text-white font-bold">{chartPoints[hoveredIndex].tokens.toFixed(1)}M</span>
+                      <span className="text-white font-bold">{chartPoints[hoveredIndex].tokens.toFixed(2)}M</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Latency:</span>
                       <span className="text-white font-bold">{chartPoints[hoveredIndex].latency}ms</span>
                     </div>
                     <div className="flex justify-between text-emerald-400">
-                      <span>Edge Cache:</span>
-                      <span className="font-bold">{chartPoints[hoveredIndex].cacheHitRate}% hit</span>
+                      <span>Status:</span>
+                      <span className="font-bold">Real Log Synced</span>
                     </div>
                   </div>
                 </div>
@@ -1464,37 +1530,44 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               </svg>
             </div>
 
+            {/* Real Stats Strip inside deep engine */}
             <div className="pt-4 border-t border-white/[0.08] grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
                 <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
                   <Flame className="w-3 h-3 text-[#C59E5F]" />
-                  <span>Peak Hourly Velocity</span>
+                  <span>Real Spend Run-Rate</span>
                 </div>
-                <div className="text-sm font-bold text-white font-mono">$184.20 / hr</div>
+                <div className="text-sm font-bold text-white font-mono">${displaySpend} Total</div>
               </div>
 
               <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
                 <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
                   <Zap className="w-3 h-3 text-emerald-400" />
-                  <span>Cache Efficiency</span>
+                  <span>HTTP 200 Ratio</span>
                 </div>
-                <div className="text-sm font-bold text-emerald-400 font-mono">94.6% Hit Rate</div>
+                <div className="text-sm font-bold text-emerald-400 font-mono">
+                  {filteredLogs.length > 0 
+                    ? `${((filteredLogs.filter(l => (l.status_code || 200) < 400).length / filteredLogs.length) * 100).toFixed(1)}% Success` 
+                    : '100% Ready'}
+                </div>
               </div>
 
               <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
                 <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
                   <Clock className="w-3 h-3 text-[#E5C38D]" />
-                  <span>P99 Edge Latency</span>
+                  <span>Observed Latency</span>
                 </div>
-                <div className="text-sm font-bold text-white font-mono">138ms Avg</div>
+                <div className="text-sm font-bold text-white font-mono">{realAvgLatency}</div>
               </div>
 
               <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
                 <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
                   <Layers className="w-3 h-3 text-[#C59E5F]" />
-                  <span>Failover Routes</span>
+                  <span>Routed Providers</span>
                 </div>
-                <div className="text-sm font-bold text-white font-mono">3 Providers Hot</div>
+                <div className="text-sm font-bold text-white font-mono">
+                  {realActiveProvidersCount} Provider{realActiveProvidersCount === 1 ? '' : 's'} Active
+                </div>
               </div>
             </div>
           </div>
@@ -1504,6 +1577,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
       {/* ============================================================ */}
       {/* 5. ROW 3: MODELS BY COST SHARE & ACTIVE ALERTS               */}
+      {/*    (100% Real Logs Only - No Mock Entries)                   */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
@@ -1516,42 +1590,33 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-sm font-bold text-white tracking-tight">Models by Cost &amp; Traffic Share</h3>
-                <p className="text-[11px] text-zinc-400 mt-0.5">Top LLM engines consuming tokens</p>
+                <p className="text-[11px] text-zinc-400 mt-0.5">Real LLM engines consuming tokens from live gateway logs</p>
               </div>
               <span className="text-xs text-[#E5C38D] group-hover:underline transition-all">Catalog →</span>
             </div>
 
             {modelEntries.length === 0 ? (
-              <div className="space-y-3.5">
-                {[
-                  { name: 'GPT-4o (OpenAI)', cost: '$2,714.20', pct: 64 },
-                  { name: 'Claude 3.7 Sonnet (Anthropic)', cost: '$1,180.40', pct: 28 },
-                  { name: 'DeepSeek R1 (Fireworks)', cost: '$342.10', pct: 8 },
-                  { name: 'Gemini 2.5 Flash (Google)', cost: '$91.94', pct: 2 },
-                ].map((m) => (
-                  <div key={m.name}>
-                    <div className="flex justify-between text-xs font-semibold mb-1">
-                      <span className="text-zinc-200">{m.name}</span>
-                      <span className="text-white font-mono">{m.cost} ({m.pct}%)</span>
-                    </div>
-                    <div className="w-full bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] h-full rounded-full" style={{ width: `${m.pct}%` }} />
-                    </div>
-                  </div>
-                ))}
+              <div className="py-8 text-center text-xs text-zinc-500 flex flex-col items-center">
+                <Activity className="w-8 h-8 text-zinc-600 mb-2" />
+                <span className="text-zinc-300 font-medium">No model usage recorded yet.</span>
+                <span className="text-zinc-500 mt-0.5">
+                  Execute a prompt via Gateway API or Test Playground to see real-time model distribution.
+                </span>
               </div>
             ) : (
               <div className="space-y-3.5">
-                {modelEntries.slice(0, 4).map(([modelName, data]) => {
-                  const share = totalSpend > 0 ? Math.round((data.spend / totalSpend) * 100) : 0;
+                {modelEntries.slice(0, 6).map(([modelName, data]) => {
+                  const share = totalSpend > 0 ? Math.round((data.spend / totalSpend) * 100) : (data.count > 0 ? 100 : 0);
                   return (
                     <div key={modelName}>
                       <div className="flex justify-between text-xs font-semibold mb-1">
                         <span className="text-zinc-200">{modelName}</span>
-                        <span className="text-white font-mono">${data.spend.toFixed(2)} ({share}%)</span>
+                        <span className="text-white font-mono">
+                          ${data.spend.toFixed(4)} ({data.count} calls • {share}%)
+                        </span>
                       </div>
                       <div className="w-full bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
-                        <div className="bg-[#C59E5F] h-full rounded-full" style={{ width: `${Math.max(5, share)}%` }} />
+                        <div className="bg-[#C59E5F] h-full rounded-full transition-all duration-500" style={{ width: `${Math.max(5, share)}%` }} />
                       </div>
                     </div>
                   );
@@ -1593,7 +1658,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </div>
 
             {alerts.length === 0 ? (
-              <div className="py-6 text-center text-xs text-zinc-500 flex flex-col items-center">
+              <div className="py-8 text-center text-xs text-zinc-500 flex flex-col items-center">
                 <CheckCircle2 className="w-8 h-8 text-emerald-500/80 mb-2" />
                 <span className="text-zinc-300 font-medium">All systems operating within safe limits.</span>
                 <span className="text-zinc-500 mt-0.5">No rate-limit spikes or budget limit triggers active.</span>
