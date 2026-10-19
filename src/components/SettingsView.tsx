@@ -29,6 +29,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { auth, db } from '../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { subscribeToUserProjects } from '../lib/projectsService';
+import { subscribeToUserTeamMembers } from '../lib/teamService';
 
 interface SettingsViewProps {
   onNavigateHome?: () => void;
@@ -54,14 +55,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
     return unsub;
   }, [user?.uid]);
 
-  // Real team members count
-  const teamMembersCount = useMemo(() => {
+  // Real team members count live subscription
+  const [teamMembersCount, setTeamMembersCount] = useState<number>(() => {
     try {
       const raw = localStorage.getItem(`ostraops_team_members_${user?.id}`);
       return raw ? JSON.parse(raw).length : 1;
     } catch {
       return 1;
     }
+  });
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const unsub = subscribeToUserTeamMembers(user.id, (members) => {
+      setTeamMembersCount(members.length);
+    });
+    return unsub;
   }, [user?.id]);
 
   // Real API Keys State

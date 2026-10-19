@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Users,
   UserPlus,
@@ -16,43 +16,27 @@ import {
   Lock,
   CheckCircle2,
   Building2,
-  RefreshCw
+  RefreshCw,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { FeatureGate } from '../lib/entitlements';
-
-interface TeamMember {
-  id: string;
-  userId: string;
-  name: string;
-  email: string;
-  password?: string;
-  team: string;
-  role: 'Owner' | 'Admin' | 'Developer' | 'Viewer' | 'Billing' | 'Client';
-  apiKeysCount: number;
-  requests30d: string;
-  spend30d: string;
-  lastActive: string;
-  avatarColor: string;
-  monthlyLimit: number;
-  currentSpend: number;
-}
-
-interface TeamGroup {
-  id: string;
-  name: string;
-  isDefault?: boolean;
-  description: string;
-  membersCount: number;
-  projectsCount: number;
-  apiKeysCount: number;
-  spend30d: string;
-  budgetUsedPercent: number;
-  color: string;
-}
+import {
+  subscribeToUserTeams,
+  subscribeToUserTeamMembers,
+  createTeam,
+  createTeamMember,
+  updateTeamMember,
+  deleteTeamMember,
+  deleteTeam,
+  type TeamMember,
+  type TeamGroup
+} from '../lib/teamService';
 
 const defaultTeam: TeamGroup = {
   id: 'platform',
+  user_id: '',
   name: 'Platform Engineering',
   isDefault: true,
   description: 'Core workspace engineering team managing AI models and proxy keys.',
@@ -62,6 +46,8 @@ const defaultTeam: TeamGroup = {
   spend30d: '$0.00',
   budgetUsedPercent: 0,
   color: '#C59E5F',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
 };
 
 export const TeamView: React.FC = () => {
@@ -69,6 +55,7 @@ export const TeamView: React.FC = () => {
 
   const defaultOwner: TeamMember = {
     id: user?.id || 'owner_1',
+    user_id: user?.id || '',
     userId: user?.id || 'usr_owner',
     name: profile?.full_name || user?.displayName || 'Workspace Owner',
     email: user?.email || 'owner@workspace',
@@ -79,13 +66,16 @@ export const TeamView: React.FC = () => {
     spend30d: '$0.00',
     lastActive: 'Active Now',
     avatarColor: '#C59E5F',
-    monthlyLimit: 500,
+    monthlyLimit: 1000,
     currentSpend: 0,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 
   const [activeTab, setActiveTab] = useState<'teams' | 'developers' | 'apikeys' | 'roles' | 'activity'>('teams');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Real-time backend state with local fallback
   const [teams, setTeams] = useState<TeamGroup[]>(() => {
     try {
       const raw = localStorage.getItem(`ostraops_teams_${user?.id}`);
@@ -104,6 +94,8 @@ export const TeamView: React.FC = () => {
     }
   });
 
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -113,7 +105,7 @@ export const TeamView: React.FC = () => {
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberUserId, setNewMemberUserId] = useState('');
   const [newMemberPassword, setNewMemberPassword] = useState('');
-  const [newMemberTeam, setNewMemberTeam] = useState('Platform Team');
+  const [newMemberTeam, setNewMemberTeam] = useState('Platform Engineering');
   const [newMemberRole, setNewMemberRole] = useState<TeamMember['role']>('Developer');
   const [newMemberSpendLimit, setNewMemberSpendLimit] = useState('500');
   const [showInvitePassword, setShowInvitePassword] = useState(true);
@@ -121,6 +113,8 @@ export const TeamView: React.FC = () => {
   // View Member Details Modal
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [showMemberDetailsPassword, setShowMemberDetailsPassword] = useState(false);
+  const [editLimitInput, setEditLimitInput] = useState<string>('');
+  const [isUpdatingLimit, setIsUpdatingLimit] = useState(false);
 
   // Create Team Modal
   const [createTeamModalOpen, setCreateTeamModalOpen] = useState(false);
@@ -138,6 +132,43 @@ export const TeamView: React.FC = () => {
     showToast(`Copied ${label} to clipboard`);
     setTimeout(() => setCopiedField(null), 2000);
   };
+
+  // Connect real-time Firestore listeners for Teams & Developers
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const unsubTeams = subscribeToUserTeams(user.id, (liveTeams) => {
+      setTeams(liveTeams);
+      setIsLiveConnected(true);
+    });
+
+    const unsubMembers = subscribeToUserTeamMembers(
+      user.id,
+      (liveMembers) => {
+        setMembers(liveMembers);
+        setIsLiveConnected(true);
+      },
+      {
+        name: profile?.full_name || user?.displayName || undefined,
+        email: user?.email || undefined,
+      }
+    );
+
+    return () => {
+      unsubTeams();
+      unsubMembers();
+    };
+  }, [user?.id, profile?.full_name, user?.displayName, user?.email]);
+
+  // Keep selectedMember in sync with real-time updates
+  useEffect(() => {
+    if (selectedMember) {
+      const refreshed = members.find((m) => m.id === selectedMember.id);
+      if (refreshed) {
+        setSelectedMember(refreshed);
+      }
+    }
+  }, [members]);
 
   // Generate random secure password helper
   const generateRandomPassword = () => {
@@ -160,48 +191,161 @@ export const TeamView: React.FC = () => {
     }
   };
 
-  // Handle Invite Form Submission
-  const handleInviteSubmit = (e: React.FormEvent) => {
+  // Handle Invite / Create Member Form Submission to Real-time Backend
+  const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMemberName.trim() || !newMemberEmail.trim()) {
       showToast('Please provide member name and email.');
       return;
     }
 
+    if (!user?.id) {
+      showToast('Please sign in to invite members.');
+      return;
+    }
+
     const finalUserId = newMemberUserId.trim() || `usr_${Math.random().toString(36).substring(2, 9)}`;
     const finalPassword = newMemberPassword.trim() || 'Ost$TempPass2026!';
 
-    const created: TeamMember = {
-      id: `m-${Date.now()}`,
-      userId: finalUserId,
-      name: newMemberName.trim(),
-      email: newMemberEmail.trim(),
-      password: finalPassword,
-      team: newMemberTeam,
-      role: newMemberRole,
-      apiKeysCount: 1,
-      requests30d: '0',
-      spend30d: '$0.00',
-      lastActive: 'Just invited',
-      avatarColor: '#C59E5F',
-      monthlyLimit: parseInt(newMemberSpendLimit, 10) || 500,
-      currentSpend: 0,
-    };
+    setIsSubmitting(true);
+    try {
+      const created = await createTeamMember(user.id, {
+        userId: finalUserId,
+        name: newMemberName.trim(),
+        email: newMemberEmail.trim(),
+        password: finalPassword,
+        team: newMemberTeam,
+        role: newMemberRole,
+        apiKeysCount: 1,
+        requests30d: '0',
+        spend30d: '$0.00',
+        lastActive: 'Just invited',
+        avatarColor: '#C59E5F',
+        monthlyLimit: parseInt(newMemberSpendLimit, 10) || 500,
+        currentSpend: 0,
+      });
 
-    setMembers([created, ...members]);
-    // update team count
-    setTeams(
-      teams.map((t) => (t.name === newMemberTeam ? { ...t, membersCount: t.membersCount + 1 } : t))
-    );
+      setInviteModalOpen(false);
+      showToast(`Invited ${created.name} (${created.userId}) & synced to cloud!`);
 
-    setInviteModalOpen(false);
-    showToast(`Invited ${created.name} (${created.userId}) successfully!`);
+      // Reset form
+      setNewMemberName('');
+      setNewMemberEmail('');
+      setNewMemberUserId('');
+      setNewMemberPassword('');
+    } catch (err: any) {
+      showToast(`Failed to invite: ${err.message || 'Check network'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    // Reset form
-    setNewMemberName('');
-    setNewMemberEmail('');
-    setNewMemberUserId('');
-    setNewMemberPassword('');
+  // Handle Create Team Submission to Real-time Backend
+  const handleCreateTeamSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTeamName.trim()) return;
+    if (!user?.id) return;
+
+    setIsSubmitting(true);
+    try {
+      const created = await createTeam(user.id, {
+        name: newTeamName.trim(),
+        description: newTeamDesc.trim() || 'Custom operational squad.',
+        membersCount: 0,
+        projectsCount: 1,
+        apiKeysCount: 0,
+        spend30d: '$0.00',
+        budgetUsedPercent: 0,
+        color: '#C59E5F',
+      });
+
+      setCreateTeamModalOpen(false);
+      setNewTeamName('');
+      setNewTeamDesc('');
+      showToast(`Team "${created.name}" created & synced to cloud!`);
+    } catch (err: any) {
+      showToast(`Failed to create team: ${err.message || 'Check network'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle Revoke Member Access in Real-time Backend
+  const handleRevokeMember = async (member: TeamMember) => {
+    if (!user?.id) return;
+    if (member.role === 'Owner') {
+      showToast('Workspace owner cannot be revoked.');
+      return;
+    }
+
+    if (!window.confirm(`Revoke access and invalidate credentials for ${member.name} (${member.userId})?`)) {
+      return;
+    }
+
+    try {
+      await deleteTeamMember(user.id, member.id, member.team);
+      setSelectedMember(null);
+      showToast(`Member access for ${member.name} revoked.`);
+    } catch (err: any) {
+      showToast(`Failed to revoke: ${err.message || 'Check network'}`);
+    }
+  };
+
+  // Handle Delete Team in Real-time Backend
+  const handleDeleteTeam = async (team: TeamGroup) => {
+    if (!user?.id) return;
+    if (team.isDefault) {
+      showToast('Default platform team cannot be deleted.');
+      return;
+    }
+
+    if (!window.confirm(`Delete team "${team.name}"? Members will be preserved.`)) {
+      return;
+    }
+
+    try {
+      await deleteTeam(user.id, team.id);
+      showToast(`Team "${team.name}" removed from workspace.`);
+    } catch (err: any) {
+      showToast(`Failed to delete team: ${err.message}`);
+    }
+  };
+
+  // Handle Update Member Monthly Spend Limit
+  const handleSaveMemberLimit = async () => {
+    if (!user?.id || !selectedMember) return;
+    const newLimit = parseInt(editLimitInput, 10);
+    if (isNaN(newLimit) || newLimit < 0) {
+      showToast('Please enter a valid dollar limit.');
+      return;
+    }
+
+    setIsUpdatingLimit(true);
+    try {
+      await updateTeamMember(user.id, selectedMember.id, { monthlyLimit: newLimit });
+      showToast(`Updated monthly limit to $${newLimit} for ${selectedMember.name}`);
+      setEditLimitInput('');
+    } catch (err: any) {
+      showToast(`Failed to update limit: ${err.message}`);
+    } finally {
+      setIsUpdatingLimit(false);
+    }
+  };
+
+  // Handle Update Member Role
+  const handleUpdateMemberRole = async (newRole: TeamMember['role']) => {
+    if (!user?.id || !selectedMember) return;
+    if (selectedMember.role === 'Owner') {
+      showToast('Owner role cannot be changed.');
+      return;
+    }
+
+    try {
+      await updateTeamMember(user.id, selectedMember.id, { role: newRole });
+      showToast(`Updated ${selectedMember.name} role to ${newRole}`);
+    } catch (err: any) {
+      showToast(`Failed to update role: ${err.message}`);
+    }
   };
 
   const filteredTeams = useMemo(() => {
@@ -222,6 +366,30 @@ export const TeamView: React.FC = () => {
     );
   }, [members, searchQuery]);
 
+  // Dynamic team distribution computed directly from real-time data
+  const teamDistribution = useMemo(() => {
+    return teams.map((t) => {
+      const count = members.filter(
+        (m) => m.team.toLowerCase() === t.name.toLowerCase()
+      ).length;
+      return {
+        name: t.name,
+        count,
+        color: t.color || '#C59E5F',
+      };
+    });
+  }, [teams, members]);
+
+  // Dynamic role distribution computed directly from real-time data
+  const roleDistribution = useMemo(() => {
+    const roles: TeamMember['role'][] = ['Owner', 'Admin', 'Developer', 'Client', 'Viewer', 'Billing'];
+    return roles.map((r) => {
+      const count = members.filter((m) => m.role === r).length;
+      const percent = members.length > 0 ? Math.round((count / members.length) * 100) : 0;
+      return { label: r, count, percent };
+    });
+  }, [members]);
+
   return (
     <FeatureGate subscription={subscription} feature="team_seats">
       <div className="space-y-6 max-w-[1600px] mx-auto pb-16">
@@ -238,17 +406,23 @@ export const TeamView: React.FC = () => {
       {/* ============================================================ */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
             <span className="px-2 py-0.5 rounded-md bg-[#C59E5F]/15 text-[#E5C38D] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#C59E5F]/30">
               Access & Organization FinOps
             </span>
-            <span className="text-[11px] font-mono text-zinc-500">Acme Enterprise</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-mono font-semibold">
+              <span className={`w-1.5 h-1.5 rounded-full bg-emerald-400 ${isLiveConnected ? 'animate-pulse' : ''}`} />
+              <span>{isLiveConnected ? 'Real-Time Backend Synced' : 'Connecting to Cloud DB...'}</span>
+            </div>
+            <span className="text-[11px] font-mono text-zinc-500">
+              {profile?.company_name || 'Production Workspace'}
+            </span>
           </div>
           <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight font-sans">
             Teams & Developers
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl">
-            Manage your organization, teams, client members, user credentials, and developer access limits.
+            Live real-time organization management: teams, developer credentials, client access, and per-user monthly spend limits.
           </p>
         </div>
 
@@ -492,17 +666,28 @@ export const TeamView: React.FC = () => {
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => {
-                          setNewMemberTeam(team.name);
-                          generateRandomPassword();
-                          setInviteModalOpen(true);
-                        }}
-                        className="text-zinc-500 hover:text-zinc-200 p-1 transition-colors cursor-pointer"
-                        title="Add member to team"
-                      >
-                        <UserPlus className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            setNewMemberTeam(team.name);
+                            generateRandomPassword();
+                            setInviteModalOpen(true);
+                          }}
+                          className="text-zinc-500 hover:text-zinc-200 p-1 transition-colors cursor-pointer"
+                          title="Add member to team"
+                        >
+                          <UserPlus className="w-4 h-4" />
+                        </button>
+                        {!team.isDefault && (
+                          <button
+                            onClick={() => handleDeleteTeam(team)}
+                            className="text-zinc-500 hover:text-rose-400 p-1 transition-colors cursor-pointer"
+                            title="Delete Team"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Description */}
@@ -514,7 +699,9 @@ export const TeamView: React.FC = () => {
                     <div className="grid grid-cols-4 gap-2 text-center py-2.5 px-2 rounded-xl bg-[#07090C] border border-white/[0.08] mb-3 font-mono">
                       <div>
                         <span className="text-[10px] text-zinc-500 block">Members</span>
-                        <span className="text-xs font-bold text-white">{team.membersCount}</span>
+                        <span className="text-xs font-bold text-white">
+                          {members.filter((m) => m.team.toLowerCase() === team.name.toLowerCase()).length}
+                        </span>
                       </div>
                       <div>
                         <span className="text-[10px] text-zinc-500 block">Projects</span>
@@ -695,23 +882,25 @@ export const TeamView: React.FC = () => {
             <div className="flex items-center justify-center py-2 relative">
               <svg viewBox="0 0 100 100" className="w-36 h-36 -rotate-90">
                 {/* Background Track */}
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#F4EFE6" strokeWidth="12" />
-                {/* Platform Team (8/24 = 33%) */}
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#C59E5F" strokeWidth="12" strokeDasharray="78 160" strokeDashoffset="0" />
-                {/* Product Team (6/24 = 25%) */}
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#18181B" strokeWidth="12" strokeDasharray="60 178" strokeDashoffset="-80" />
-                {/* Data Science (5/24 = 21%) */}
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#9C7938" strokeWidth="12" strokeDasharray="50 188" strokeDashoffset="-142" />
-                {/* Support (3/24 = 12.5%) */}
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#E06D53" strokeWidth="12" strokeDasharray="30 208" strokeDashoffset="-194" />
-                {/* Security & R&D (2/24 = 8.5%) */}
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#6366F1" strokeWidth="12" strokeDasharray="20 218" strokeDashoffset="-226" />
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#18181B" strokeWidth="12" />
+                {members.length > 0 && (
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    fill="none"
+                    stroke="#C59E5F"
+                    strokeWidth="12"
+                    strokeDasharray="238 238"
+                    strokeDashoffset="0"
+                  />
+                )}
               </svg>
 
               {/* Center Readout */}
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <span className="text-2xl font-extrabold text-white font-mono leading-none">
-                  {members.length + 19}
+                  {members.length}
                 </span>
                 <span className="text-[10px] text-zinc-400 font-mono mt-0.5">
                   Total Members
@@ -720,19 +909,12 @@ export const TeamView: React.FC = () => {
             </div>
 
             {/* Legend Breakdown */}
-            <div className="space-y-1.5 text-xs font-mono pt-1">
-              {[
-                { name: 'Platform Team', count: 8, color: '#C59E5F' },
-                { name: 'Product Team', count: 6, color: '#18181B' },
-                { name: 'Data Science', count: 5, color: '#9C7938' },
-                { name: 'Support Team', count: 3, color: '#E06D53' },
-                { name: 'Security Team', count: 2, color: '#2E7D32' },
-                { name: 'R&D Team', count: 3, color: '#6366F1' },
-              ].map((item) => (
+            <div className="space-y-1.5 text-xs font-mono pt-1 max-h-48 overflow-y-auto">
+              {teamDistribution.map((item) => (
                 <div key={item.name} className="flex items-center justify-between text-zinc-300">
                   <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span>{item.name}</span>
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="truncate max-w-[150px]">{item.name}</span>
                   </div>
                   <span className="font-bold text-white">{item.count}</span>
                 </div>
@@ -746,26 +928,23 @@ export const TeamView: React.FC = () => {
               <h3 className="text-sm font-bold text-white font-sans">
                 Role Distribution
               </h3>
-              <span className="text-[11px] text-[#C59E5F] font-mono cursor-pointer font-semibold">
-                View all
+              <span className="text-[11px] text-[#C59E5F] font-mono font-semibold">
+                {members.length} Assigned
               </span>
             </div>
 
             <div className="space-y-2.5 text-xs font-mono">
-              {[
-                { label: 'Owner', count: 2, percent: 8 },
-                { label: 'Admin', count: 4, percent: 16 },
-                { label: 'Developer', count: 12, percent: 50 },
-                { label: 'Client / Viewer', count: 5, percent: 21 },
-                { label: 'Billing', count: 1, percent: 5 },
-              ].map((r) => (
+              {roleDistribution.map((r) => (
                 <div key={r.label} className="space-y-1">
                   <div className="flex justify-between text-zinc-400 text-[11px]">
                     <span>{r.label}</span>
                     <span className="font-bold text-white">{r.count}</span>
                   </div>
-                  <div className="h-1.5 w-full bg-[#EAE4D8] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#C59E5F] rounded-full" style={{ width: `${r.percent * 1.8}%` }} />
+                  <div className="h-1.5 w-full bg-[#18181B] rounded-full overflow-hidden border border-white/[0.05]">
+                    <div
+                      className="h-full bg-[#C59E5F] rounded-full transition-all duration-300"
+                      style={{ width: `${r.percent}%` }}
+                    />
                   </div>
                 </div>
               ))}
@@ -1059,10 +1238,15 @@ export const TeamView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-[#C59E5F] hover:bg-[#B38D4F] text-white text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer flex items-center gap-1.5"
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 rounded-xl bg-[#C59E5F] hover:bg-[#B38D4F] disabled:opacity-50 text-white text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer flex items-center gap-1.5"
                 >
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>Create Member & Save</span>
+                  {isSubmitting ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  )}
+                  <span>{isSubmitting ? 'Syncing to Cloud...' : 'Create Member & Save'}</span>
                 </button>
               </div>
             </form>
@@ -1181,25 +1365,66 @@ export const TeamView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Spend Cap Progress */}
-              <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-2">
-                <div className="flex justify-between text-xs font-mono">
+              {/* Spend Cap Progress & Editable Limit */}
+              <div className="p-4 rounded-2xl bg-[#0B0E14] border border-white/[0.08] space-y-3">
+                <div className="flex justify-between items-center text-xs font-mono">
                   <span className="text-zinc-400">Monthly Spend Ceiling</span>
                   <span className="font-bold text-white">
                     ${selectedMember.currentSpend.toFixed(2)} / ${selectedMember.monthlyLimit}
                   </span>
                 </div>
-                <div className="h-2 w-full bg-[#EAE4D8] rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-[#18181B] rounded-full overflow-hidden border border-white/[0.05]">
                   <div
-                    className="h-full bg-[#C59E5F] rounded-full"
+                    className="h-full bg-[#C59E5F] rounded-full transition-all duration-300"
                     style={{
                       width: `${Math.min(
                         100,
-                        (selectedMember.currentSpend / selectedMember.monthlyLimit) * 100
+                        (selectedMember.currentSpend / (selectedMember.monthlyLimit || 1)) * 100
                       )}%`,
                     }}
                   />
                 </div>
+
+                {/* Adjust Limit Live Form */}
+                <div className="pt-2 border-t border-white/[0.06] flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-500">$</span>
+                    <input
+                      type="number"
+                      placeholder={`New Limit (Current: $${selectedMember.monthlyLimit})`}
+                      value={editLimitInput}
+                      onChange={(e) => setEditLimitInput(e.target.value)}
+                      className="w-full pl-6 pr-2 py-1.5 rounded-lg bg-[#07090C] border border-white/[0.08] text-xs font-mono text-white focus:outline-none focus:border-[#C59E5F]"
+                    />
+                  </div>
+                  <button
+                    onClick={handleSaveMemberLimit}
+                    disabled={isUpdatingLimit || !editLimitInput}
+                    className="px-3 py-1.5 rounded-lg bg-[#C59E5F] hover:bg-[#B38D4F] disabled:opacity-50 text-white text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                  >
+                    {isUpdatingLimit ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                    <span>Save Limit</span>
+                  </button>
+                </div>
+
+                {/* Change Role Selector */}
+                {selectedMember.role !== 'Owner' && (
+                  <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono">
+                    <span className="text-zinc-400">Change Member Role:</span>
+                    <select
+                      value={selectedMember.role}
+                      onChange={(e) => handleUpdateMemberRole(e.target.value as any)}
+                      className="px-2.5 py-1 rounded-lg bg-[#07090C] border border-white/[0.08] text-xs font-mono text-zinc-200 focus:outline-none focus:border-[#C59E5F]"
+                    >
+                      <option value="Developer">Developer (Standard)</option>
+                      <option value="Client">Client Member (Scoped)</option>
+                      <option value="Admin">Admin (Full Access)</option>
+                      <option value="Viewer">Viewer (Read-Only)</option>
+                      <option value="Billing">Billing (Invoices Only)</option>
+                    </select>
+                  </div>
+                )}
+
                 <span className="text-[10px] text-zinc-500 font-mono block">
                   Hard cap triggers fallback routing when 100% threshold is reached.
                 </span>
@@ -1208,19 +1433,23 @@ export const TeamView: React.FC = () => {
 
             {/* Footer */}
             <div className="px-6 py-3.5 bg-[#0B0E14] border-t border-white/[0.08] flex items-center justify-between">
-              <button
-                onClick={() => {
-                  setMembers(members.filter((m) => m.id !== selectedMember.id));
-                  setSelectedMember(null);
-                  showToast('Member access revoked.');
-                }}
-                className="text-xs font-semibold text-rose-600 hover:text-rose-800 cursor-pointer font-mono"
-              >
-                Revoke Access
-              </button>
+              {selectedMember.role !== 'Owner' ? (
+                <button
+                  onClick={() => handleRevokeMember(selectedMember)}
+                  className="text-xs font-semibold text-rose-500 hover:text-rose-400 cursor-pointer font-mono flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Revoke Access</span>
+                </button>
+              ) : (
+                <span className="text-[11px] font-mono text-zinc-500">Workspace Primary Owner</span>
+              )}
 
               <button
-                onClick={() => setSelectedMember(null)}
+                onClick={() => {
+                  setSelectedMember(null);
+                  setEditLimitInput('');
+                }}
                 className="px-4 py-2 rounded-xl bg-[#18181B] hover:bg-black text-white text-xs font-bold transition-all cursor-pointer"
               >
                 Close
@@ -1252,26 +1481,7 @@ export const TeamView: React.FC = () => {
             </div>
 
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!newTeamName.trim()) return;
-                const newTeam: TeamGroup = {
-                  id: `team-${Date.now()}`,
-                  name: newTeamName.trim(),
-                  description: newTeamDesc.trim() || 'Custom operational squad.',
-                  membersCount: 0,
-                  projectsCount: 0,
-                  apiKeysCount: 0,
-                  spend30d: '$0.00',
-                  budgetUsedPercent: 0,
-                  color: '#C59E5F',
-                };
-                setTeams([...teams, newTeam]);
-                setCreateTeamModalOpen(false);
-                setNewTeamName('');
-                setNewTeamDesc('');
-                showToast(`Team "${newTeam.name}" created!`);
-              }}
+              onSubmit={handleCreateTeamSubmit}
               className="p-6 space-y-4"
             >
               <div>
@@ -1311,9 +1521,15 @@ export const TeamView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#C59E5F] hover:bg-[#B38D4F] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 rounded-xl bg-[#C59E5F] hover:bg-[#B38D4F] disabled:opacity-50 text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
                 >
-                  Create Team
+                  {isSubmitting ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Plus className="w-3.5 h-3.5" />
+                  )}
+                  <span>{isSubmitting ? 'Creating Team...' : 'Create Team'}</span>
                 </button>
               </div>
             </form>
