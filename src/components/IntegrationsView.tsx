@@ -995,12 +995,10 @@ export interface ProviderRule {
 
 export const PROVIDER_RULES: Record<string, ProviderRule> = {
   Google: {
-    pattern: /^AIzaSy[A-Za-z0-9_-]{33}$/,
-    minLen: 39,
-    maxLen: 39,
-    prefix: 'AIzaSy',
-    formatDescription: 'Must start with "AIzaSy" and be exactly 39 characters',
-    placeholder: 'AIzaSy... (39 characters)',
+    pattern: /^[A-Za-z0-9_.-]{16,}$/,
+    minLen: 16,
+    formatDescription: 'Google Gemini or Vertex key (AIzaSy..., AQ..., or custom key)',
+    placeholder: 'AIzaSy... or AQ....',
   },
   OpenAI: {
     pattern: /^sk-(proj-[A-Za-z0-9_-]{20,}|admin-[A-Za-z0-9_-]{20,}|svcacct-[A-Za-z0-9_-]{20,}|[A-Za-z0-9_-]{40,})$/,
@@ -1351,6 +1349,14 @@ export const IntegrationsView: React.FC = () => {
       return { valid: true, message: '' };
     }
 
+    // Google keys can start with AIzaSy, AQ. (Vertex / Gemini Studio), or custom formats
+    if (providerName === 'Google') {
+      if (trimmed.length < 16) {
+        return { valid: false, message: 'Google API key is too short. Minimum 16 characters required.' };
+      }
+      return { valid: true, message: '' };
+    }
+
     if (rule.prefix && !trimmed.startsWith(rule.prefix)) {
       return {
         valid: false,
@@ -1409,14 +1415,23 @@ export const IntegrationsView: React.FC = () => {
 
       // 1. Direct browser validation for Google Gemini (CORS supported natively)
       if (activeProvider.toLowerCase() === 'google') {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(trimmedKey)}`);
+        let res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(trimmedKey)}`).catch(() => null);
+        if (!res || !res.ok) {
+          // Fallback: test with header authentication (for AQ. or Vertex/service tokens)
+          res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+            headers: {
+              'x-goog-api-key': trimmedKey,
+              'Authorization': `Bearer ${trimmedKey}`,
+            },
+          }).catch(() => null);
+        }
         latency = Math.round(performance.now() - startTime);
-        if (res.ok) {
+        if (res && res.ok) {
           verified = true;
           verifiedMsg = `Handshake Verified with Google Gemini (${latency}ms)`;
         } else {
-          const errData = await res.json().catch(() => null);
-          const errMsg = errData?.error?.message || `HTTP ${res.status}: Invalid Google API Key`;
+          const errData = res ? await res.json().catch(() => null) : null;
+          const errMsg = errData?.error?.message || (res ? `HTTP ${res.status}: Invalid Google API Key` : 'Network error reaching Google API');
           setHandshakeState('failed');
           showToast(`Google Handshake Failed: ${errMsg}`);
           return false;

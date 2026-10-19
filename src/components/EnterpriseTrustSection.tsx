@@ -28,28 +28,28 @@ export const EnterpriseTrustSection: React.FC<EnterpriseTrustProps> = ({ onNavig
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {[
             {
-              title: 'Zero Cloud Storage',
-              desc: 'No remote databases, logs, or analytics servers. All traces reside strictly in local SQLite.',
+              title: 'Zero Prompt Cloud Storage',
+              desc: 'In local guard mode, your prompts, code files, and model responses are never uploaded or stored on our servers.',
               icon: Server,
-              badge: '0 Byte Egress',
+              badge: 'Private Guard',
             },
             {
-              title: 'AES-256 Local Encryption',
-              desc: 'Trace buffer and credentials encrypted at rest using machine-derived cryptographic keys.',
+              title: 'API Keys Stay Safe',
+              desc: 'Your OpenAI and Anthropic API keys stay securely on your computer or your private gateway environment.',
               icon: Key,
-              badge: 'Hardware Keyed',
+              badge: 'Key Safety',
             },
             {
-              title: 'Air-Gapped & Offline',
-              desc: 'Runs seamlessly in disconnected environments, VPC private subnets, and local vLLM nodes.',
+              title: 'Local Machine Support',
+              desc: 'The guard runs locally on your machine, working seamlessly with Cursor, Cline, or local models via Ollama.',
               icon: Lock,
-              badge: 'Offline Mode',
+              badge: 'Local First',
             },
             {
-              title: 'SOC2 & HIPAA Compliant',
-              desc: 'Architectural compliance readiness: zero third-party data processing agreements required.',
+              title: 'Transparent & Open',
+              desc: 'No hidden telemetry or surprise tracking. The local guard only tracks token counts to enforce your spend limits.',
               icon: FileCheck,
-              badge: 'Compliance Ready',
+              badge: 'No Hidden Logs',
             },
           ].map((item) => {
             const Icon = item.icon;

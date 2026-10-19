@@ -13,6 +13,7 @@ import {
   RefreshCw,
   CheckCircle2,
   Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import {
   GoogleAuthIcon,
@@ -55,10 +56,12 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    setToastType(type);
+    setTimeout(() => setToastMessage(null), type === 'error' ? 6500 : 3500);
   };
 
   // Password strength calculation (0 to 5 bars)
@@ -115,7 +118,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
 
     if (error) {
       setErrors({ password: error.message || 'Registration failed. Please try again.' });
-      showToast(error.message || 'Registration failed.');
+      showToast(error.message || 'Registration failed.', 'error');
     } else {
       if (companyName.trim()) {
         updateProfile({ company_name: companyName.trim() }).catch(() => {});
@@ -145,7 +148,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     setLoading(false);
 
     if (error) {
-      showToast(error.message);
+      showToast(error.message, 'error');
     } else {
       try {
         localStorage.setItem('ostraops_active_plan', 'team_trial');
@@ -211,8 +214,16 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-[#161C22] text-[#FFF4D6] px-4 py-3 rounded-2xl shadow-2xl border border-[#E5C287]/30 text-xs font-semibold flex items-center gap-2.5 animate-in slide-in-from-top-2">
-          <CheckCircle2 className="w-4 h-4 text-[#E5C287]" />
+        <div className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2.5 animate-in slide-in-from-top-2 max-w-md ${
+          toastType === 'error'
+            ? 'bg-[#180E12] text-rose-200 border border-rose-500/40'
+            : 'bg-[#161C22] text-[#FFF4D6] border border-[#E5C287]/30'
+        }`}>
+          {toastType === 'error' ? (
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-[#E5C287] shrink-0" />
+          )}
           <span>{toastMessage}</span>
         </div>
       )}

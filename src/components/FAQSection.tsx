@@ -14,81 +14,81 @@ interface FAQItem {
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    id: 'faq-1',
-    category: 'architecture',
-    tags: ['latency', 'daemon', 'loopback', 'overhead', 'memory'],
-    question: 'What is the actual latency overhead of running OstraOps locally?',
-    answer: 'OstraOps runs as a local daemon bound to your loopback interface (`http://127.0.0.1:8080`). Every proxy introduces networking and parsing layers: benchmarks measure OstraOps proxy overhead at typically ~0.8ms to 1.8ms (p99 < 2.5ms). Because requests and responses stream chunk-by-chunk through Server-Sent Events (SSE) directly to the upstream model provider, your Time-To-First-Token (TTFT) overhead is limited to immediate packet transit without artificial full-body buffering.',
-  },
-  {
-    id: 'faq-2',
+    id: 'faq-cli-vs-web',
     category: 'guardrails',
-    tags: ['circuit breaker', 'runaway loops', 'billing', 'cost limit', 'hard cap'],
-    question: 'How does the Financial Circuit Breaker stop runaway agent loops?',
-    answer: 'Autonomous agents (such as Cursor Composer or Cline) can get trapped in repetitive retry loops, consuming thousands of dollars in tokens overnight. OstraOps computes a real-time spending derivative ($/minute) over a rolling 180-second window and tracks cumulative daily spend. If velocity spikes or your daily hard cap (e.g. $15.00/day) is crossed, OstraOps injects a clean HTTP 429 backoff locally before the request leaves your computer, preventing unauthorized charges.',
+    tags: ['npx', 'cli', 'website', 'tokens', 'api tracking', 'difference', 'guard'],
+    question: 'What is the difference between "npx ostraops-guard" and this website?',
+    answer: 'Here is the simple breakdown: "npx ostraops-guard" is a free local tool that runs on your computer. It does NOT send your API calls, code, or prompts to any server — it only counts your tokens and enforces your daily spend limit so runaway AI agents don\'t drain your wallet. On the other hand, the OstraOps Website and Gateway is our hosted platform for teams who want full API tracking, live dashboards, response times, model breakdowns, and team budgets.',
   },
   {
-    id: 'faq-3',
-    category: 'architecture',
-    tags: ['intra-family', 'failover', 'tool calling', 'json schema', 'claude', 'gpt'],
-    question: 'Why do other AI proxies break agent tool calls, and how does Intra-Family Failover solve this?',
-    answer: 'Generic AI proxies attempt cross-vendor swapping (e.g., redirecting Claude to GPT-4o when rate-limited). This breaks agents because Claude expects XML-based `tool_use` blocks while OpenAI relies on JSON-based `tool_calls` schemas. OstraOps enforces deterministic Intra-Family Failover: if Claude 3.7 Sonnet encounters a 429/529 overload, OstraOps automatically cascades to Claude 3.5 Haiku, keeping the exact same provider API contract, parameter definitions, and file-editing tools intact with 0% session disruption.',
-  },
-  {
-    id: 'faq-4',
-    category: 'privacy',
-    tags: ['sqlite', 'cloud retention', 'privacy', 'aes-256', 'gdpr', 'soc2'],
-    question: 'Does OstraOps store or log my codebase and prompts on remote cloud servers?',
-    answer: 'No. OstraOps is strictly local-first with a Zero-Data-Retention architecture. All agent dispatches, tokens, and telemetry are buffered locally in an on-device SQLite database at `~/.ostraops/traces.db` encrypted with local AES-256 keys. No prompts, completion tokens, codebase files, or secrets ever egress to OstraOps cloud servers.',
-  },
-  {
-    id: 'faq-5',
-    category: 'setup',
-    tags: ['cursor', 'cline', 'windsurf', 'aider', 'setup', 'config'],
-    question: 'How do I connect Cursor, Cline, or Windsurf to OstraOps?',
-    answer: 'Setup takes under 30 seconds. In Cursor, open Settings > Models, enable OpenAI API Key, and set the OpenAI Base URL to `http://127.0.0.1:8080/v1`. For Cline or Claude Dev, set Custom Base URL to `http://127.0.0.1:8080/v1`. OstraOps automatically intercepts prompt streams without requiring changes to your source code or agent scripts.',
-  },
-  {
-    id: 'faq-6',
-    category: 'setup',
-    tags: ['npx', 'cli', 'install', 'free', 'open-core'],
-    question: 'Do I need to create an account or provide a credit card to run the daemon?',
-    answer: 'No account or credit card is required. Individual developers can run `npx ostraops-guard` in any terminal immediately. The local loopback gateway, real-time telemetry console (localhost:4040), and local SQLite trace buffer are completely free and open-core for local developers.',
-  },
-  {
-    id: 'faq-7',
-    category: 'privacy',
-    tags: ['pii', 'redaction', 'secrets', 'jwt', 'security'],
-    question: 'How does the local PII and secret redaction engine work?',
-    answer: 'Before any prompt payload is dispatched to an upstream provider, OstraOps executes an in-memory high-entropy scanner (0.18ms latency). It identifies API keys (sk-live-...), JWT tokens, and private internal IP addresses (RFC1918), replacing them with deterministic masks before transmission. Tokens are re-hydrated dynamically in the completion stream before being returned to your agent.',
-  },
-  {
-    id: 'faq-8',
-    category: 'architecture',
-    tags: ['vllm', 'ollama', 'local models', 'deepseek', 'llama'],
-    question: 'Can I use OstraOps with local LLMs like Ollama or vLLM?',
-    answer: 'Yes. OstraOps fully supports local inference engines. You can configure OstraOps to route background indexing or fast code review tasks to your local Ollama or vLLM endpoints (e.g. Llama 3.3 70B or DeepSeek-R1) while routing complex reasoning to frontier models, enforcing budget limits across all combined channels.',
-  },
-  {
-    id: 'faq-9',
+    id: 'faq-circuit-breaker',
     category: 'guardrails',
-    tags: ['pricing', 'teams', 'hosted', 'enterprise'],
-    question: 'When should a team upgrade from Solo Guard to Team Gateway?',
-    answer: 'Solo Guard is optimized for individual developers working locally on their own machines. Teams upgrade to OstraOps Team Gateway when they need centralized team budget pooling, shared project API keys, role-based governance, multi-seat audit exports for SOC2 compliance, and unified organization analytics across dozens of engineers.',
+    tags: ['spending limit', 'runaway agents', 'hard cap', 'billing', 'cursor', 'cline'],
+    question: 'How do spending limits stop runaway AI agents from burning my money?',
+    answer: 'Autonomous coding agents (like Cursor, Cline, or custom scripts) can sometimes get stuck in an endless retry loop and burn through hundreds of dollars while you sleep. With OstraOps, you set a hard budget limit (for example, $10/day). The second your limit is reached, OstraOps stops the requests locally with a standard 429 pause code. Your credit card is never hit with surprise charges.',
+  },
+  {
+    id: 'faq-privacy-code',
+    category: 'privacy',
+    tags: ['privacy', 'code security', 'prompts', 'secrets', 'data'],
+    question: 'Does OstraOps read, save, or upload my code and prompts?',
+    answer: 'No. When you use the local guard (npx ostraops-guard), your code and prompts stay 100% on your own computer. We never read or store your source code or prompts on our servers. The guard only counts token numbers so it knows when to stop before you exceed your budget.',
+  },
+  {
+    id: 'faq-latency',
+    category: 'architecture',
+    tags: ['speed', 'latency', 'delay', 'fast'],
+    question: 'Will OstraOps slow down my AI responses?',
+    answer: 'Not at all. OstraOps adds less than 1 to 2 milliseconds of delay, which is invisible to humans. The response streams straight through to your editor, so coding in Cursor or Cline feels just as fast as normal.',
+  },
+  {
+    id: 'faq-where-available',
+    category: 'setup',
+    tags: ['cursor', 'cline', 'windsurf', 'python', 'langchain', 'tools', 'compatibility'],
+    question: 'Where is OstraOps available? Is it only for Cursor and Cline?',
+    answer: 'Not at all! OstraOps works anywhere you use AI. Because it implements the standard OpenAI and Anthropic API formats, you can use it with: (1) AI Code Editors like Cursor, Windsurf, VS Code (Cline, Continue.dev), Aider CLI, and Claude Code; (2) AI Frameworks like LangChain, CrewAI, AutoGen, and LlamaIndex; (3) Custom apps in Python, Node.js, Next.js, FastAPI, or Go; and (4) Any terminal on macOS, Linux, and Windows using npx ostraops-guard. Setup takes just 30 seconds by pointing your base URL to http://127.0.0.1:8080/v1.',
+  },
+  {
+    id: 'faq-free-account',
+    category: 'setup',
+    tags: ['free', 'pricing', 'signup', 'credit card'],
+    question: 'Do I need to sign up or enter a credit card to use it?',
+    answer: 'No! You can run "npx ostraops-guard" in your terminal right now without creating an account or entering a credit card. The local tool is completely free for individual developers.',
+  },
+  {
+    id: 'faq-models-supported',
+    category: 'architecture',
+    tags: ['openai', 'anthropic', 'claude', 'gemini', 'deepseek', 'models'],
+    question: 'Which AI providers and models work with OstraOps?',
+    answer: 'All major models work out of the box: OpenAI (GPT-4o, o3-mini), Anthropic (Claude 3.7 Sonnet, Haiku), Google Gemini, DeepSeek, Mistral, and even local models via Ollama. If it uses standard OpenAI or Anthropic format, OstraOps supports it.',
+  },
+  {
+    id: 'faq-model-fallback',
+    category: 'architecture',
+    tags: ['fallback', 'error', 'model down', 'reliability'],
+    question: 'What happens if an AI model is down or gives an error?',
+    answer: 'If your primary model (like Claude 3.7 Sonnet) is temporarily down or gives a server error, OstraOps can automatically redirect the request to a fallback model from the same provider (like Claude 3.5 Haiku) so your agent doesn\'t crash in the middle of a task.',
+  },
+  {
+    id: 'faq-upgrade-teams',
+    category: 'guardrails',
+    tags: ['teams', 'enterprise', 'upgrade', 'dashboard'],
+    question: 'When should someone upgrade to the Team Gateway?',
+    answer: 'If you are coding alone, the free local guard is all you need. But if you lead a team and want shared budgets across multiple developers, centralized company API keys, and a web dashboard to see all API logs in one place, that is when you use our Team Gateway.',
   },
 ];
 
 export const FAQSection: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [openItemIds, setOpenItemIds] = useState<string[]>(['faq-1', 'faq-3']);
+  const [openItemIds, setOpenItemIds] = useState<string[]>(['faq-cli-vs-web', 'faq-circuit-breaker']);
 
   const categories = [
     { id: 'all', label: 'All Questions' },
-    { id: 'architecture', label: 'Architecture & Loopback' },
-    { id: 'guardrails', label: 'Cost Guardrails' },
-    { id: 'setup', label: 'Agent Setup' },
+    { id: 'guardrails', label: 'Spending & Limits' },
     { id: 'privacy', label: 'Privacy & Security' },
+    { id: 'setup', label: 'Setup & Tools' },
+    { id: 'architecture', label: 'Speed & Models' },
   ];
 
   const filteredItems = useMemo(() => {
@@ -132,10 +132,10 @@ export const FAQSection: React.FC = () => {
           </p>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-[-0.02em] font-display">
             Clear Answers.{' '}
-            <span className="gold-gradient-text block">Zero Jargon. Honest Facts.</span>
+            <span className="gold-gradient-text block">Simple English. Honest Facts.</span>
           </h2>
           <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-2xl mx-auto">
-            Got questions about token tracking, budget limits, data privacy, or getting started? Here are straightforward answers.
+            Got questions about token tracking, spending limits, local privacy, or getting started? Here are honest, plain answers.
           </p>
         </div>
 

@@ -27,9 +27,11 @@ const DEFAULT_FALLBACK_CHAINS: Record<string, string[]> = {
   'deepseek-coder': ['deepseek-chat', 'qwen-2.5-coder-32b'],
 
   // Gemini (wireAdapter: 'openai_chat')
-  'gemini-2.5-pro': ['gemini-2.0-flash', 'gpt-4o', 'gemini-1.5-pro'],
-  'gemini-2.0-flash-thinking': ['gemini-2.0-flash', 'deepseek-reasoner'],
-  'gemini-2.0-flash': ['gemini-1.5-flash', 'gpt-4o-mini'],
+  'gemini-3.8-flash': ['gemini-2.5-pro', 'gemini-2.0-flash'],
+  'gemini-2.5-pro': ['gemini-3.8-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'],
+  'gemini-2.0-flash-thinking': ['gemini-3.8-flash', 'gemini-2.0-flash'],
+  'gemini-2.0-flash': ['gemini-3.8-flash', 'gemini-1.5-flash'],
+  'gemini-1.5-flash': ['gemini-3.8-flash', 'gemini-2.5-pro'],
 
   // Grok (wireAdapter: 'openai_chat')
   'grok-2': ['gpt-4o', 'qwen-2.5-72b', 'deepseek-chat'],

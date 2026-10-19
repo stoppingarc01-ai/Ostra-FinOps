@@ -15,7 +15,6 @@ const FeaturesSection = React.lazy(() => import('./components/FeaturesSection').
 const InteractiveArchitecture = React.lazy(() => import('./components/InteractiveArchitecture').then((m) => ({ default: m.InteractiveArchitecture })));
 const AgentEcosystemSection = React.lazy(() => import('./components/AgentEcosystemSection').then((m) => ({ default: m.AgentEcosystemSection })));
 const DeveloperQuickstartSection = React.lazy(() => import('./components/DeveloperQuickstartSection').then((m) => ({ default: m.DeveloperQuickstartSection })));
-const FAQSection = React.lazy(() => import('./components/FAQSection').then((m) => ({ default: m.FAQSection })));
 const EnterpriseTrustSection = React.lazy(() => import('./components/EnterpriseTrustSection').then((m) => ({ default: m.EnterpriseTrustSection })));
 const TeamsDevelopersSection = React.lazy(() => import('./components/TeamsDevelopersSection').then((m) => ({ default: m.TeamsDevelopersSection })));
 const CookieBanner = React.lazy(() => import('./components/CookieBanner').then((m) => ({ default: m.CookieBanner })));
@@ -40,6 +39,8 @@ const AboutUsPage = React.lazy(() => import('./pages/AboutUsPage').then((m) => (
 const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage').then((m) => ({ default: m.OnboardingPage })));
 const SupportPage = React.lazy(() => import('./pages/SupportPage').then((m) => ({ default: m.SupportPage })));
 const BillingPage = React.lazy(() => import('./pages/BillingPage').then((m) => ({ default: m.BillingPage })));
+const FAQPage = React.lazy(() => import('./pages/FAQPage').then((m) => ({ default: m.FAQPage })));
+const BlogPage = React.lazy(() => import('./pages/BlogPage').then((m) => ({ default: m.BlogPage })));
 
 const PageLoader: React.FC = () => (
   <div className="min-h-screen bg-[#07090C] text-white flex items-center justify-center">
@@ -50,11 +51,11 @@ const PageLoader: React.FC = () => (
   </div>
 );
 
-export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'billing' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'refund' | 'about' | 'support' | '404' | '500' | 'build-error' | '429';
+export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'billing' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'refund' | 'about' | 'support' | 'faq' | 'blog' | '404' | '500' | 'build-error' | '429';
 
 // Routes that require authentication
 const PROTECTED_ROUTES: AppRoute[] = ['dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings', 'onboarding', 'billing'];
-const HOMEPAGE_SECTIONS = ['#features', '#architecture', '#agents', '#developers', '#docs', '#quickstart', '#security', '#faq', '#ui-showcase', '#hero', '#about-sec', '#teams'];
+const HOMEPAGE_SECTIONS = ['#features', '#architecture', '#agents', '#developers', '#docs', '#quickstart', '#security', '#ui-showcase', '#hero', '#about-sec', '#teams'];
 
 const AppInner: React.FC = () => {
   const { user, profile, loading } = useAuth();
@@ -91,6 +92,8 @@ const AppInner: React.FC = () => {
     if (path.includes('refund') || hash.includes('refund')) return 'refund';
     if (path.includes('about') || hash.includes('about')) return 'about';
     if (path.includes('support') || hash.includes('support') || path.includes('help') || hash.includes('help')) return 'support';
+    if (path.includes('faq') || hash.includes('faq')) return 'faq';
+    if (path.includes('blog') || hash.includes('blog')) return 'blog';
     if (path.includes('pricing') || hash.includes('pricing')) return 'pricing';
     if (path.includes('429') || hash.includes('429') || path.includes('rate-limit') || hash.includes('rate-limit') || path.includes('quota') || hash.includes('quota')) return '429';
     if (path.includes('build-error') || hash.includes('build-error') || path.includes('build') || hash.includes('build')) return 'build-error';
@@ -497,14 +500,6 @@ const AppInner: React.FC = () => {
             <div className="section-laser-divider my-4" />
 
             <div className="content-auto">
-              <ScrollReveal3D direction="right" delay={80}>
-                <FAQSection />
-              </ScrollReveal3D>
-            </div>
-
-            <div className="section-laser-divider my-4" />
-
-            <div className="content-auto">
               <ScrollReveal3D direction="up">
                 <EnterpriseTrustSection onNavigateToPricing={() => navigate('pricing')} />
               </ScrollReveal3D>
@@ -527,6 +522,18 @@ const AppInner: React.FC = () => {
             onNavigateHome={() => navigate('home')}
             onNavigatePricing={() => navigate('pricing')}
             onNavigateDashboard={() => navigate('dashboard')}
+          />
+        ) : currentRoute === 'faq' ? (
+          <FAQPage
+            onNavigateHome={() => navigate('home')}
+            onNavigatePricing={() => navigate('pricing')}
+            onNavigateSupport={() => navigate('support')}
+          />
+        ) : currentRoute === 'blog' ? (
+          <BlogPage
+            onNavigateHome={() => navigate('home')}
+            onNavigateModels={() => navigate('models')}
+            onNavigatePricing={() => navigate('pricing')}
           />
         ) : currentRoute === 'pricing' ? (
           /* Separate Dedicated Pricing Page */

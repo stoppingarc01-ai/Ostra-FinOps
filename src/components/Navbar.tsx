@@ -124,13 +124,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
           >
             Product
           </button>
-          
-          <button
-            onClick={() => onNavigate('home')}
-            className="nav-link-animated hover:text-white transition-colors cursor-pointer"
-          >
-            Solutions
-          </button>
 
           {/* Models page link with active indicator */}
           <button
@@ -156,71 +149,28 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
             Pricing
           </button>
 
-          {/* Dashboard Link */}
-          {user && (
-            <button
-              onClick={() => onNavigate('dashboard')}
-              className={`relative py-1 transition-all cursor-pointer ${
-                currentRoute === 'dashboard'
-                  ? 'text-white font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#C59E5F] after:rounded-full'
-                  : 'hover:text-white'
-              }`}
-            >
-              Dashboard
-            </button>
-          )}
-
+          {/* FAQ link with active indicator */}
           <button
-            onClick={() => {
-              if (currentRoute !== 'home') {
-                onNavigate('home');
-                setTimeout(() => {
-                  document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-              } else {
-                document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-            className="nav-link-animated hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
-          >
-            Docs
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.08] text-zinc-300 font-mono">v1.0</span>
-          </button>
-
-          <button
-            onClick={() => {
-              if (currentRoute !== 'home') {
-                onNavigate('home');
-                setTimeout(() => {
-                  document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-              } else {
-                document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-            className="nav-link-animated hover:text-white transition-colors cursor-pointer"
-          >
-            FAQ
-          </button>
-          <button
-            onClick={() => onNavigate('about')}
+            onClick={() => onNavigate('faq')}
             className={`relative py-1 transition-all cursor-pointer ${
-              currentRoute === 'about'
+              currentRoute === 'faq'
                 ? 'text-white font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#C59E5F] after:rounded-full'
                 : 'hover:text-white'
             }`}
           >
-            About Us
+            FAQ
           </button>
+
+          {/* Blog link with active indicator */}
           <button
-            onClick={() => onNavigate('support')}
+            onClick={() => onNavigate('blog')}
             className={`relative py-1 transition-all cursor-pointer ${
-              currentRoute === 'support'
-                ? 'text-[#E5C38D] font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#C59E5F] after:rounded-full'
+              currentRoute === 'blog'
+                ? 'text-white font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#C59E5F] after:rounded-full'
                 : 'hover:text-white'
             }`}
           >
-            Support
+            Blog
           </button>
         </nav>
 
@@ -318,16 +268,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
               Pricing
             </button>
             <button
-              onClick={() => { onNavigate('about'); setMobileMenuOpen(false); }}
-              className={`text-left py-1 ${currentRoute === 'about' ? 'text-[#E5C38D] font-bold' : 'hover:text-white'}`}
+              onClick={() => { onNavigate('faq'); setMobileMenuOpen(false); }}
+              className={`text-left py-1 ${currentRoute === 'faq' ? 'text-[#E5C38D] font-bold' : 'hover:text-white'}`}
             >
-              About Us
+              FAQ
             </button>
             <button
-              onClick={() => { onNavigate('support'); setMobileMenuOpen(false); }}
-              className={`text-left py-1 ${currentRoute === 'support' ? 'text-[#E5C38D] font-bold' : 'hover:text-white'}`}
+              onClick={() => { onNavigate('blog'); setMobileMenuOpen(false); }}
+              className={`text-left py-1 ${currentRoute === 'blog' ? 'text-[#E5C38D] font-bold' : 'hover:text-white'}`}
             >
-              Support Center
+              Blog
             </button>
             {user && (
               <button
@@ -337,38 +287,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate }) => {
                 Dashboard
               </button>
             )}
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                if (currentRoute !== 'home') {
-                  onNavigate('home');
-                  setTimeout(() => {
-                    document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' });
-                  }, 100);
-                } else {
-                  document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-              className="text-left py-1 text-zinc-300 hover:text-white"
-            >
-              Docs
-            </button>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                if (currentRoute !== 'home') {
-                  onNavigate('home');
-                  setTimeout(() => {
-                    document.getElementById('architecture')?.scrollIntoView({ behavior: 'smooth' });
-                  }, 100);
-                } else {
-                  document.getElementById('architecture')?.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-              className="text-left py-1 text-zinc-300 hover:text-white"
-            >
-              Architecture Specs
-            </button>
             <a
               href="https://github.com/stoppingarc01-ai/Ostra-FinOps"
               target="_blank"

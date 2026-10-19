@@ -74,7 +74,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
   };
 
   return (
-    <section className="relative pt-12 pb-16 md:pt-16 md:pb-24 overflow-hidden select-none">
+    <section className="relative pt-16 sm:pt-20 md:pt-24 lg:pt-26 pb-16 md:pb-24 overflow-hidden select-none">
       {/* 3D Warm Ambient Radial Aura behind Hero - optimized for mobile GPU */}
       <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[320px] h-[320px] sm:w-[1000px] sm:h-[600px] bg-gradient-to-br from-[#C59E5F]/15 via-[#E5C38D]/10 to-transparent blur-3xl sm:blur-[160px] pointer-events-none -z-10" />
 
@@ -90,32 +90,31 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
       <div className="hidden sm:block hero-particle top-[45%] left-[85%]" style={{ animationDelay: '4s' }} />
       <div className="hidden sm:block hero-particle top-[70%] left-[75%]" style={{ animationDelay: '1s', width: 6, height: 6, opacity: 0.25 }} />
 
-      <div className="max-w-[1540px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8">
 
         {/* ============================================================ */}
         {/* Hero Split: Text Left + AI Thinking Orb Right                */}
         {/* ============================================================ */}
-        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16 z-10">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8 lg:gap-12 z-10">
 
-          {/* LEFT: Text & CTA — strictly left aligned with buttons */}
-          <div className="flex-1 w-full min-w-0 text-left space-y-5 flex flex-col items-start">
+          {/* LEFT: Text & CTA — shifted left as requested */}
+          <div className="flex-[1.15] w-full min-w-0 text-left space-y-5 flex flex-col items-start pt-0 lg:pt-2 -translate-x-3 sm:-translate-x-5 lg:-translate-x-8">
 
             {/* Main Headline */}
-            <h1 className="w-full text-left text-4xl sm:text-5xl lg:text-[56px] font-extrabold text-white leading-[1.08] tracking-[-0.035em] font-display hero-title">
-              <span className="block">Control Your AI Spend.</span>
-              <span className="gold-gradient-text block font-extrabold">
-                Before The Bill Arrives.
+            <h1 className="w-full text-left self-start text-4xl sm:text-5xl lg:text-[52px] font-extrabold text-white leading-[1.12] tracking-[-0.035em] font-display hero-title m-0 p-0">
+              <span className="block">The Smart Spend Controller</span>
+              <span className="gold-gradient-text block font-extrabold mt-1">
+                For AI Apps &amp; Agents.
               </span>
             </h1>
 
-
-            {/* Sub-headline — simplified, easy terms */}
-            <p className="w-full text-left text-base sm:text-lg text-zinc-300 leading-relaxed max-w-xl font-normal hero-sub">
-              See exactly what every AI call costs, set spending limits, and stop runaway bills before they happen. Works with all major AI providers.
+            {/* Sub-headline — strictly left-aligned flush with headline */}
+            <p className="w-full text-left self-start text-base sm:text-lg text-zinc-300 leading-relaxed max-w-xl font-normal hero-sub m-0 p-0">
+              Set real-time budget limits to stop runaway agent loops and surprise bills before they arrive.
             </p>
 
             {/* Primary Action Buttons */}
-            <div className="w-full flex flex-wrap items-center justify-start gap-3.5 pt-1">
+            <div className="w-full flex flex-wrap items-center justify-start self-start gap-3.5 pt-1 m-0">
               <button
                 onClick={onNavigateToPricing}
                 className="btn-primary-glow group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#C59E5F] to-[#E5C38D] text-[#07090C] text-[15px] font-bold shadow-lg shadow-[#C59E5F]/20 hover:shadow-[#C59E5F]/35 hover:scale-[1.02] transition-all cursor-pointer"
@@ -140,10 +139,10 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                 onClick={copyCommand}
                 className="terminal-badge inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] hover:border-[#C59E5F]/40 cursor-pointer font-mono text-zinc-200 transition-colors shadow-2xs group min-h-[40px]"
                 title="Click to copy install command"
-                aria-label="Copy terminal install command: npx ostraops"
+                aria-label="Copy terminal install command: npx ostraops-guard"
               >
                 <Terminal className="w-3.5 h-3.5 text-[#C59E5F]" />
-                <span className="font-semibold text-zinc-100">npx ostraops</span>
+                <span className="font-semibold text-zinc-100">npx ostraops-guard</span>
                 {copied ? (
                   <Check className="w-3.5 h-3.5 text-emerald-400 ml-1" />
                 ) : (
@@ -151,8 +150,20 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToPricing, onNavigateToUiS
                 )}
               </button>
               <span className="text-[11px] text-zinc-400 font-mono">
-                Zero setup needed
+                Runs locally • Zero signup needed
               </span>
+            </div>
+
+            {/* Works with ecosystem chips strip */}
+            <div className="w-full flex flex-wrap items-center gap-1.5 pt-0.5 text-[11px] font-mono text-zinc-400">
+              <span className="text-zinc-500 font-semibold mr-1">Available for:</span>
+              <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-zinc-300">Cursor</span>
+              <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-zinc-300">Windsurf</span>
+              <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-zinc-300">Cline</span>
+              <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-zinc-300">Claude Code</span>
+              <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-zinc-300">Python</span>
+              <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-zinc-300">LangChain</span>
+              <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-zinc-300">Node / Next.js</span>
             </div>
 
             {/* 3 Value Badges Strip */}

@@ -68,6 +68,9 @@ export function createUpstreamDispatcher(options?: DispatcherOptions): UpstreamD
 
     // 1. Resolve Provider Key from Direct Key > Vault / Secrets > Environment
     let apiKey: string | null = options?.directApiKey || null;
+    if (apiKey && (apiKey.startsWith('ost_') || apiKey.startsWith('ostra_'))) {
+      apiKey = null;
+    }
     if (!apiKey && secretResolver && orgId) {
       apiKey = await secretResolver.resolveProviderKey(orgId, provider);
     }
@@ -86,6 +89,9 @@ export function createUpstreamDispatcher(options?: DispatcherOptions): UpstreamD
       if (provider === 'anthropic') {
         headers['x-api-key'] = apiKey;
         headers['anthropic-version'] = '2023-06-01';
+      } else if (provider === 'gemini' || provider === 'google') {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        headers['x-goog-api-key'] = apiKey;
       } else {
         headers['Authorization'] = `Bearer ${apiKey}`;
       }
@@ -116,6 +122,13 @@ export function createUpstreamDispatcher(options?: DispatcherOptions): UpstreamD
         if (wirePayload.temperature === undefined) wirePayload.temperature = 0.6;
       }
 
+      if (provider === 'gemini' || provider === 'google') {
+        const requestedModel = String(wirePayload.model || targetModel.id);
+        if (requestedModel.includes('1.5-flash') || requestedModel.includes('2.0-flash')) {
+          wirePayload.model = 'gemini-3.8-flash';
+        }
+      }
+
       let res = await fetchImpl(endpoint, {
         method: 'POST',
         headers,
@@ -126,6 +139,14 @@ export function createUpstreamDispatcher(options?: DispatcherOptions): UpstreamD
       // If specific preview model ID returns 404, fallback to NVIDIA's universal live Nemotron NIM
       if (res.status === 404 && provider === 'nvidia' && wirePayload.model !== 'nvidia/llama-3.1-nemotron-70b-instruct') {
         wirePayload.model = 'nvidia/llama-3.1-nemotron-70b-instruct';
+        res = await fetchImpl(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(wirePayload),
+          signal: timeoutController.signal,
+        });
+      } else if (res.status === 404 && (provider === 'gemini' || provider === 'google') && wirePayload.model !== 'gemini-3.8-flash') {
+        wirePayload.model = 'gemini-3.8-flash';
         res = await fetchImpl(endpoint, {
           method: 'POST',
           headers,

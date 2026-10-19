@@ -6,14 +6,14 @@ export const DeveloperQuickstartSection: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const snippets = {
-    npx: `# 1. Run OstraOps in any terminal with zero configuration
-npx ostraops
+    npx: `# 1. Run the local guard in your terminal (no signup needed)
+npx ostraops-guard
 
 # What happens:
-# - Connects to your local AI environment
-# - Reads active model pricing rate cards
-# - Arms your custom budget limits
-# - Ready to track OpenAI, Anthropic, Gemini, and DeepSeek calls`,
+# - Starts a local proxy on your machine (http://127.0.0.1:8080)
+# - Counts tokens in real time
+# - Stops runaway agent loops as soon as your spend limit is reached
+# - Your code and prompts stay 100% private on your computer`,
     ts: `// Track calls in TypeScript / Node
 import { track } from 'ostraops';
 import OpenAI from 'openai';

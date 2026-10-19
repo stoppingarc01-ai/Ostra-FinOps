@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Loader2,
   Check,
+  AlertCircle,
 } from 'lucide-react';
 import {
   GoogleAuthIcon,
@@ -45,11 +46,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    setToastType(type);
+    setTimeout(() => setToastMessage(null), type === 'error' ? 6500 : 3500);
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -79,7 +82,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
 
     if (error) {
       setErrors({ password: error.message || 'Invalid credentials. Please try again.' });
-      showToast(error.message || 'Authentication failed.');
+      showToast(error.message || 'Authentication failed.', 'error');
     } else {
       showToast('Welcome back! Taking you to your dashboard...');
       setTimeout(() => onNavigate('dashboard'), 400);
@@ -100,7 +103,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     setLoading(false);
 
     if (error) {
-      showToast(error.message);
+      showToast(error.message, 'error');
     } else {
       showToast('Signed in successfully! Loading your dashboard...');
       setTimeout(() => onNavigate('dashboard'), 400);
@@ -159,8 +162,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-[#161C22] text-[#FFF4D6] px-4 py-3 rounded-2xl shadow-2xl border border-[#E5C287]/30 text-xs font-semibold flex items-center gap-2.5 animate-in slide-in-from-top-2">
-          <CheckCircle2 className="w-4 h-4 text-[#E5C287]" />
+        <div className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2.5 animate-in slide-in-from-top-2 max-w-md ${
+          toastType === 'error'
+            ? 'bg-[#180E12] text-rose-200 border border-rose-500/40'
+            : 'bg-[#161C22] text-[#FFF4D6] border border-[#E5C287]/30'
+        }`}>
+          {toastType === 'error' ? (
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-[#E5C287] shrink-0" />
+          )}
           <span>{toastMessage}</span>
         </div>
       )}

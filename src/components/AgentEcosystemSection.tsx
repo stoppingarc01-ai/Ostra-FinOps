@@ -1,11 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Terminal, Copy, Check } from 'lucide-react';
+
+interface SubSnippet {
+  id: string;
+  label: string;
+  code: string;
+}
+
+interface AgentItem {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  configType: string;
+  envVar: string;
+  codeSnippet: string;
+  subSnippets?: SubSnippet[];
+  supportedModels: string;
+  stat: string;
+}
 
 export const AgentEcosystemSection: React.FC = () => {
   const [selectedAgent, setSelectedAgent] = useState<string>('cursor');
+  const [activeSubTab, setActiveSubTab] = useState<string>('langchain');
   const [copied, setCopied] = useState(false);
 
-  const agents = [
+  const agents: AgentItem[] = [
     {
       id: 'cursor',
       name: 'Cursor IDE',
@@ -80,16 +100,69 @@ aider --openai-api-base http://127.0.0.1:8080/v1 \\
       id: 'frameworks',
       name: 'LangChain & CrewAI',
       category: 'Agent Orchestration SDKs',
-      description: 'Universal drop-in for multi-agent Python and TypeScript autonomous workflows.',
+      description: 'Official LangChain and CrewAI SDK integrations with real-time budget guardrails.',
       configType: 'SDK Client Constructor',
       envVar: 'base_url="http://127.0.0.1:8080/v1"',
-      codeSnippet: `from openai import OpenAI
+      codeSnippet: `from langchain_openai import ChatOpenAI
 
-# OstraOps intercepts all outbound calls transparently
-client = OpenAI(
+# Initialize LangChain with OstraOps spend limits active
+llm = ChatOpenAI(
+    model="gpt-4o",
     base_url="http://127.0.0.1:8080/v1",
     api_key="your-api-key"
+)
+
+response = llm.invoke("Audit codebase spend velocity")`,
+      subSnippets: [
+        {
+          id: 'langchain',
+          label: 'LangChain (Python)',
+          code: `from langchain_openai import ChatOpenAI
+
+# Initialize LangChain with OstraOps Spend Controller
+llm = ChatOpenAI(
+    model="gpt-4o",
+    base_url="http://127.0.0.1:8080/v1",
+    api_key="your-api-key"
+)
+
+# Every invoke and chain is protected by your hard budget cap!
+response = llm.invoke("Audit API spend velocity")`,
+        },
+        {
+          id: 'crewai',
+          label: 'CrewAI (Python)',
+          code: `from crewai import Agent, LLM
+
+# Protect multi-agent CrewAI loops from runaway costs
+research_llm = LLM(
+    model="gpt-4o",
+    base_url="http://127.0.0.1:8080/v1",
+    api_key="your-api-key"
+)
+
+# When daily spend limit hits, requests safely 429 pause
+analyst = Agent(
+    role="Senior Data Analyst",
+    goal="Extract and summarize key metrics",
+    llm=research_llm
 )`,
+        },
+        {
+          id: 'typescript',
+          label: 'LangChain (TypeScript)',
+          code: `import { ChatOpenAI } from "@langchain/openai";
+
+// LangChain.js protected by OstraOps spend limits
+const model = new ChatOpenAI({
+  model: "gpt-4o",
+  configuration: {
+    baseURL: "http://127.0.0.1:8080/v1",
+    apiKey: process.env.OPENAI_API_KEY,
+  },
+});`,
+        },
+      ],
       supportedModels: 'All Provider Families',
       stat: 'Drop-In Python / TS',
     },
@@ -97,8 +170,16 @@ client = OpenAI(
 
   const current = agents.find((a) => a.id === selectedAgent) || agents[0];
 
+  const currentSnippet = useMemo(() => {
+    if (current.subSnippets && current.subSnippets.length > 0) {
+      const found = current.subSnippets.find((s) => s.id === activeSubTab);
+      return found ? found.code : current.subSnippets[0].code;
+    }
+    return current.codeSnippet;
+  }, [current, activeSubTab]);
+
   const copyCode = () => {
-    navigator.clipboard.writeText(current.codeSnippet);
+    navigator.clipboard.writeText(currentSnippet);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -198,14 +279,32 @@ client = OpenAI(
             {/* Right: Code Block (6 cols) */}
             <div className="lg:col-span-6">
               <div className="rounded-2xl bg-[#07090C] text-white border border-white/[0.08] shadow-2xl overflow-hidden font-mono text-xs">
-                <div className="flex items-center justify-between px-4 py-3 bg-charcoal-900 border-b border-charcoal-800">
+                <div className="flex flex-wrap items-center justify-between px-4 py-3 bg-charcoal-900 border-b border-charcoal-800 gap-2">
                   <div className="flex items-center gap-2 text-zinc-400 text-[11px]">
-                    <Terminal className="w-3.5 h-3.5 text-ostraGold-400" />
-                    <span>One-Line Connection Spec</span>
+                    <Terminal className="w-3.5 h-3.5 text-ostraGold-400 shrink-0" />
+                    {current.subSnippets && current.subSnippets.length > 0 ? (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {current.subSnippets.map((tab) => (
+                          <button
+                            key={tab.id}
+                            onClick={() => setActiveSubTab(tab.id)}
+                            className={`px-2 py-0.5 rounded text-[10.5px] font-mono transition-all cursor-pointer ${
+                              activeSubTab === tab.id
+                                ? 'bg-[#C59E5F] text-[#07090C] font-bold shadow-xs'
+                                : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <span>One-Line Connection Spec</span>
+                    )}
                   </div>
                   <button
                     onClick={copyCode}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-charcoal-800 text-zinc-300 hover:text-white hover:bg-charcoal-700 text-[11px] transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-charcoal-800 text-zinc-300 hover:text-white hover:bg-charcoal-700 text-[11px] transition-colors cursor-pointer shrink-0"
                   >
                     {copied ? (
                       <>
@@ -222,7 +321,7 @@ client = OpenAI(
                 </div>
 
                 <pre className="p-5 text-[11px] leading-relaxed overflow-x-auto text-zinc-300 selection:bg-ostraGold-500/30">
-                  <code>{current.codeSnippet}</code>
+                  <code>{currentSnippet}</code>
                 </pre>
               </div>
             </div>

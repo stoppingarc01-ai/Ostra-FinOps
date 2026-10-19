@@ -90,6 +90,8 @@ function soloPairingPlugin(): Plugin {
 
             if (p === 'google') {
               targetUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`
+              headers['x-goog-api-key'] = key
+              headers['Authorization'] = `Bearer ${key}`
             } else if (p === 'openai') {
               targetUrl = 'https://api.openai.com/v1/models'
               headers['Authorization'] = `Bearer ${key}`

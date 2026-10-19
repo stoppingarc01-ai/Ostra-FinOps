@@ -80,18 +80,47 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <ul className="space-y-2">
               <li>
                 <button 
-                  onClick={() => onNavigate && onNavigate('home')} 
+                  onClick={() => {
+                    if (onNavigate) {
+                      onNavigate('home');
+                      setTimeout(() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }), 100);
+                    }
+                  }} 
                   className="hover:text-white transition-colors text-left cursor-pointer"
                 >
-                  Spend Guardrails
+                  Solutions
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => onNavigate && onNavigate('dashboard')} 
+                  className="hover:text-white transition-colors text-left cursor-pointer font-medium text-zinc-300"
+                >
+                  Dashboard
                 </button>
               </li>
               <li>
                 <button 
                   onClick={() => onNavigate && onNavigate('models')} 
-                  className="hover:text-white transition-colors text-left cursor-pointer font-medium text-zinc-300"
+                  className="hover:text-white transition-colors text-left cursor-pointer"
                 >
                   Model Directory &amp; Pricing
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => onNavigate && onNavigate('pricing')} 
+                  className="hover:text-white transition-colors text-left cursor-pointer font-semibold text-zinc-200"
+                >
+                  Plans &amp; Pricing
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => onNavigate && onNavigate('faq')} 
+                  className="hover:text-white transition-colors text-left cursor-pointer"
+                >
+                  Frequently Asked Questions (FAQ)
                 </button>
               </li>
               <li>
@@ -107,27 +136,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   Watch Demo Video
                 </button>
               </li>
-              <li>
-                <button 
-                  onClick={() => {
-                    if (onNavigate) {
-                      onNavigate('home');
-                      setTimeout(() => document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    }
-                  }} 
-                  className="hover:text-white transition-colors text-left cursor-pointer"
-                >
-                  Frequently Asked Questions
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => onNavigate && onNavigate('pricing')} 
-                  className="hover:text-white transition-colors text-left cursor-pointer font-semibold text-zinc-200"
-                >
-                  Plans &amp; Pricing
-                </button>
-              </li>
             </ul>
           </div>
 
@@ -136,28 +144,18 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <span className="text-[11px] font-bold uppercase tracking-wider text-white font-mono">Developers</span>
             <ul className="space-y-2">
               <li>
-                <a 
-                  href="https://x.com/Team_Ostraops" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="hover:text-white transition-colors flex items-center gap-1.5 group"
+                <button 
+                  onClick={() => { 
+                    if (onNavigate) { 
+                      onNavigate('home'); 
+                      setTimeout(() => document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' }), 100); 
+                    } 
+                  }} 
+                  className="hover:text-white transition-colors cursor-pointer text-left flex items-center gap-1.5"
                 >
-                  <XIcon className="w-3 h-3 text-zinc-400 group-hover:text-[#E5C38D] transition-colors" />
-                  <span>X (@Team_Ostraops)</span>
-                  <ArrowUpRight className="w-3 h-3 text-zinc-500 group-hover:text-[#E5C38D] transition-colors" />
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="https://github.com/stoppingarc01-ai/Ostra-FinOps" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="hover:text-white transition-colors flex items-center gap-1.5 group"
-                >
-                  <GithubIcon className="w-3 h-3 text-zinc-400 group-hover:text-[#E5C38D] transition-colors" />
-                  <span>GitHub Repository</span>
-                  <ArrowUpRight className="w-3 h-3 text-zinc-500 group-hover:text-[#E5C38D] transition-colors" />
-                </a>
+                  <span>Docs (Documentation)</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.08] text-zinc-300 font-mono">v1.0</span>
+                </button>
               </li>
               <li>
                 <button 
@@ -184,6 +182,38 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 >
                   Editor &amp; Agent Setup
                 </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => onNavigate && onNavigate('blog')} 
+                  className="hover:text-white transition-colors cursor-pointer text-left text-zinc-300 font-medium"
+                >
+                  Blog &amp; Guides
+                </button>
+              </li>
+              <li>
+                <a 
+                  href="https://github.com/stoppingarc01-ai/Ostra-FinOps" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-white transition-colors flex items-center gap-1.5 group"
+                >
+                  <GithubIcon className="w-3 h-3 text-zinc-400 group-hover:text-[#E5C38D] transition-colors" />
+                  <span>GitHub Repository</span>
+                  <ArrowUpRight className="w-3 h-3 text-zinc-500 group-hover:text-[#E5C38D] transition-colors" />
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://x.com/Team_Ostraops" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-white transition-colors flex items-center gap-1.5 group"
+                >
+                  <XIcon className="w-3 h-3 text-zinc-400 group-hover:text-[#E5C38D] transition-colors" />
+                  <span>X (@Team_Ostraops)</span>
+                  <ArrowUpRight className="w-3 h-3 text-zinc-500 group-hover:text-[#E5C38D] transition-colors" />
+                </a>
               </li>
             </ul>
           </div>

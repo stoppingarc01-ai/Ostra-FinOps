@@ -5,8 +5,14 @@ import { getOrGenerateSupportAccountId } from '../lib/accountIdentity';
 
 export type { Profile, UserSubscription };
 
-// Dynamic loader for heavy Firebase services to keep initial bundle ultra-light
-const getAuthServices = () => import('../lib/firebaseAuthServices');
+// Dynamic loader for heavy Firebase services with singleton promise caching and preload
+let authServicesPromise: Promise<typeof import('../lib/firebaseAuthServices')> | null = null;
+const getAuthServices = () => {
+  if (!authServicesPromise) {
+    authServicesPromise = import('../lib/firebaseAuthServices');
+  }
+  return authServicesPromise;
+};
 
 export interface AuthUser {
   id: string;
@@ -58,6 +64,8 @@ const formatAuthUser = (fbUser: FirebaseUser): AuthUser => ({
 
 const formatFirebaseError = (err: any): Error => {
   const code = err?.code || '';
+  const message = err?.message || '';
+
   switch (code) {
     case 'auth/invalid-credential':
     case 'auth/wrong-password':
@@ -70,18 +78,34 @@ const formatFirebaseError = (err: any): Error => {
     case 'auth/invalid-email':
       return new Error('Please enter a valid email address.');
     case 'auth/popup-closed-by-user':
-      return new Error('Sign-in popup closed before completion.');
+      return new Error('Google sign-in popup was closed before completing authentication.');
     case 'auth/popup-blocked':
-      return new Error('Sign-in popup was blocked by your browser. Please allow popups for this site.');
+      return new Error('Sign-in popup was blocked by your browser. Please allow popups for localhost:5173 or sign up using email.');
     case 'auth/cancelled-popup-request':
-      return new Error('Sign-in request was cancelled. Please try again.');
+      return new Error('Sign-in request was cancelled. Please click "Continue with Google" again.');
     case 'auth/account-exists-with-different-credential':
-      return new Error('An account already exists with this email using a different sign-in method.');
+      return new Error('An account already exists with this email using a different sign-in method. Please sign in using that method.');
+    case 'auth/operation-not-allowed':
+      return new Error('Google Sign-In is disabled in Firebase Console. Please go to Firebase Console -> Authentication -> Sign-in method -> Google and enable it.');
+    case 'auth/unauthorized-domain':
+      return new Error('This domain (localhost) is not authorized in Firebase. Please add "localhost" in Firebase Console -> Authentication -> Settings -> Authorized Domains.');
+    case 'auth/configuration-not-found':
+      return new Error('Google OAuth is not configured in Firebase. Please enable Google provider in Firebase Console.');
+    case 'auth/invalid-api-key':
+      return new Error('Invalid Firebase API Key. Please verify your credentials in .env.local.');
     case 'auth/too-many-requests':
-      return new Error('Too many failed attempts. Access temporarily paused; please try again later or reset password.');
+      return new Error('Too many failed attempts. Access temporarily paused; please try again in a few minutes.');
     case 'auth/network-request-failed':
       return new Error('Network connection error. Please check your internet connectivity.');
+    case 'auth/internal-error':
+      return new Error('Firebase internal error. Please check your internet connection or verify that Google provider is enabled in Firebase Console.');
     default:
+      if (message.includes('operation-not-allowed')) {
+        return new Error('Google Sign-In is disabled in Firebase Console. Please go to Firebase Console -> Authentication -> Sign-in method -> Google and enable it.');
+      }
+      if (message.includes('unauthorized-domain')) {
+        return new Error('This domain (localhost) is not authorized in Firebase. Add "localhost" in Firebase Console -> Authentication -> Settings -> Authorized Domains.');
+      }
       return new Error(err?.message || 'Authentication failed. Please verify your credentials.');
   }
 };
@@ -201,8 +225,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
-        await setDoc(profileRef, initialProfile);
 
+        // Immediately set local in-memory profile and org so user is never blocked
         setProfile(initialProfile);
         setOrganization(initialOrg);
         setOrgRole('owner');
@@ -212,6 +236,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.setItem(`ostraops_avatar_${userId}`, initialProfile.avatar_url);
           } catch {}
         }
+
+        // Persist to Firestore gracefully with Promise.allSettled
+        await Promise.allSettled([
+          setDoc(doc(db, 'organizations', orgId), initialOrg),
+          setDoc(doc(db, 'organization_members', `${orgId}_${userId}`), {
+            id: `${orgId}_${userId}`,
+            organization_id: orgId,
+            user_id: userId,
+            role: 'owner',
+            created_at: new Date().toISOString(),
+          }),
+          setDoc(profileRef, initialProfile)
+        ]);
       }
 
       // Sync and isolate user subscription in Firestore
@@ -411,13 +448,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { GoogleAuthProvider, signInWithPopup, auth } = await getAuthServices();
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
       const cred = await signInWithPopup(auth, provider);
       const authUser = formatAuthUser(cred.user);
       setUser(authUser);
       setSession({ user: authUser });
       await syncOrCreateUserDocs(cred.user);
       return { error: null };
-    } catch (err) {
+    } catch (err: any) {
+      console.error('[Firebase Auth] signInWithGoogle failed:', err);
       return { error: formatFirebaseError(err) };
     }
   };
@@ -432,7 +471,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession({ user: authUser });
       await syncOrCreateUserDocs(cred.user);
       return { error: null };
-    } catch (err) {
+    } catch (err: any) {
+      console.error('[Firebase Auth] signInWithGithub failed:', err);
       return { error: formatFirebaseError(err) };
     }
   };

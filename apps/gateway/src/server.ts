@@ -27,6 +27,8 @@ export interface GatewayServerOptions {
   failPolicy?: GatewayFailPolicy;
 }
 
+export const inMemoryTelemetryLogs: any[] = [];
+
 // Wire up Supabase persistence and spend synchronizer
 telemetryQueue.setWriter(async (records) => {
   await supabaseBridge.writeTelemetryBatch(records);
@@ -99,6 +101,18 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
           dbConfigured: supabaseBridge.isConfigured(),
         })
       );
+      return;
+    }
+
+    // Live Telemetry Endpoint for Dashboard Sync
+    if (req.method === 'GET' && (url === '/telemetry' || url === '/v1/telemetry' || url === '/gateway/telemetry')) {
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': '*',
+      });
+      res.end(JSON.stringify(inMemoryTelemetryLogs));
       return;
     }
 
@@ -380,6 +394,32 @@ export function createGatewayServer(options?: GatewayServerOptions): Server {
               createdAt: new Date(start).toISOString(),
               completedAt: new Date().toISOString(),
             };
+
+            const mappedLog = {
+              id: logRecord.requestId,
+              request_id: logRecord.requestId,
+              organization_id: logRecord.organizationId,
+              project_id: logRecord.projectId,
+              environment_id: logRecord.environmentId,
+              virtual_key_id: logRecord.virtualKeyId,
+              provider: logRecord.provider,
+              requested_model: logRecord.requestedModel,
+              routed_model: logRecord.routedModel,
+              fallback_used: logRecord.fallbackUsed,
+              fallback_from_model: logRecord.fallbackFromModel,
+              input_tokens: logRecord.inputTokens,
+              output_tokens: logRecord.outputTokens,
+              cost_usd: logRecord.costUsd,
+              latency_ms: logRecord.latencyMs,
+              status_code: logRecord.statusCode,
+              error_type: logRecord.errorType,
+              error_code: logRecord.errorCode,
+              created_at: logRecord.createdAt,
+              completed_at: logRecord.completedAt,
+            };
+            inMemoryTelemetryLogs.unshift(mappedLog);
+            if (inMemoryTelemetryLogs.length > 200) inMemoryTelemetryLogs.pop();
+
             telemetryQueue.enqueue(logRecord);
 
             // Populate Prompt Cache

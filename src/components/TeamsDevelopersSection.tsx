@@ -363,15 +363,15 @@ export const TeamsDevelopersSection: React.FC<TeamsDevelopersSectionProps> = ({
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-[#C59E5F]/30 text-xs font-mono font-bold text-[#E5C38D] uppercase tracking-wider shadow-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-[#C59E5F] animate-pulse" />
-            <span>ORGANIZATION &amp; ACCESS FINOPS</span>
+            <span>TEAM &amp; SQUAD CONTROLS</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight font-display leading-[1.12]">
-            Teams, Developers &amp; <span className="gold-gradient-text">Squad Governance.</span>
+            Manage Teams, Developers &amp; <span className="gold-gradient-text">AI Budgets.</span>
           </h2>
 
           <p className="text-sm sm:text-base text-zinc-300 leading-relaxed font-normal">
-            Multi-tenant organization architecture: isolate engineering squads, provision hardware-scoped API keys, and enforce hard spend ceilings.
+            Set individual spend limits for each developer or team, share company API keys safely, and keep total costs under control.
           </p>
         </div>
 

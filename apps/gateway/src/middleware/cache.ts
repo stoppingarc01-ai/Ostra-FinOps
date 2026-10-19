@@ -37,8 +37,9 @@ export function extractApiKey(headers: IncomingHttpHeaders): string | null {
   const authHeader = headers['authorization'];
   if (authHeader) {
     const raw = Array.isArray(authHeader) ? authHeader[0] : authHeader;
-    if (raw && raw.startsWith('Bearer ')) {
-      return raw.slice(7).trim();
+    if (raw && raw.trim().length > 0) {
+      const trimmed = raw.trim();
+      return trimmed.toLowerCase().startsWith('bearer ') ? trimmed.slice(7).trim() : trimmed;
     }
   }
 

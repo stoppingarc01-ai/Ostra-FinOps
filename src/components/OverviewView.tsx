@@ -57,6 +57,17 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     const loadRealData = async () => {
       let combinedLogs: GatewayLog[] = [];
 
+      // 0. Real-time Live Gateway Daemon Telemetry (Localhost & Terminal)
+      try {
+        const gwRes = await fetch('/gateway/telemetry');
+        if (gwRes.ok) {
+          const gwLogs = await gwRes.json();
+          if (Array.isArray(gwLogs) && gwLogs.length > 0) {
+            combinedLogs.push(...gwLogs);
+          }
+        }
+      } catch {}
+
       // 1. User-isolated recent logs (from playground or gateway tests performed by this account)
       try {
         const local = localStorage.getItem(`ostraops_recent_logs_${userId}`);
