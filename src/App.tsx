@@ -51,10 +51,10 @@ const PageLoader: React.FC = () => (
   </div>
 );
 
-export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'billing' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'refund' | 'about' | 'support' | 'faq' | 'blog' | '404' | '500' | 'build-error' | '429';
+export type AppRoute = 'home' | 'pricing' | 'models' | 'login' | 'signup' | 'onboarding' | 'billing' | 'auth-showcase' | 'forgot-password' | 'dashboard' | 'apikeys' | 'projects' | 'optimization' | 'usage' | 'reports' | 'integrations' | 'team' | 'settings' | 'privacy' | 'terms' | 'cookies' | 'refund' | 'about' | 'support' | 'faq' | 'blog' | '404' | '500' | 'build-error' | '429';
 
 // Routes that require authentication
-const PROTECTED_ROUTES: AppRoute[] = ['dashboard', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings', 'onboarding', 'billing'];
+const PROTECTED_ROUTES: AppRoute[] = ['dashboard', 'apikeys', 'projects', 'optimization', 'usage', 'reports', 'integrations', 'team', 'settings', 'onboarding', 'billing'];
 const HOMEPAGE_SECTIONS = ['#features', '#architecture', '#agents', '#developers', '#docs', '#quickstart', '#security', '#ui-showcase', '#hero', '#about-sec', '#teams'];
 
 const AppInner: React.FC = () => {
@@ -79,6 +79,7 @@ const AppInner: React.FC = () => {
     if (path.includes('settings') || hash.includes('settings')) return 'settings';
     if (path.includes('team') || hash.includes('team')) return 'team';
     if (path.includes('integrations') || hash.includes('integrations')) return 'integrations';
+    if (path.includes('apikeys') || hash.includes('apikeys') || path.includes('api-keys') || hash.includes('api-keys') || path.includes('keys') || hash.includes('keys')) return 'apikeys';
     if (path.includes('reports') || hash.includes('reports')) return 'reports';
     if (path.includes('usage') || hash.includes('usage') || path.includes('costs') || hash.includes('costs')) return 'usage';
     if (path.includes('optimization') || hash.includes('optimization')) return 'optimization';
@@ -353,14 +354,12 @@ const AppInner: React.FC = () => {
     return (
       <>
         <div key={`progress-${navProgressKey}`} className="route-progress-bar" />
-        <div key={currentRoute} className="page-transition-enter">
-          <DashboardPage
-            onNavigateHome={() => navigate('home')}
-            onNavigatePricing={() => navigate('pricing')}
-            onNavigateSupport={() => navigate('support')}
-            initialTab={currentRoute === 'dashboard' ? 'dashboard' : currentRoute}
-          />
-        </div>
+        <DashboardPage
+          onNavigateHome={() => navigate('home')}
+          onNavigatePricing={() => navigate('pricing')}
+          onNavigateSupport={() => navigate('support')}
+          initialTab={currentRoute === 'dashboard' ? 'dashboard' : currentRoute}
+        />
         <CookieBanner onNavigateToCookies={() => navigate('cookies')} />
       </>
     );

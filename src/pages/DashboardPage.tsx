@@ -25,7 +25,8 @@ import {
   Copy,
   Check,
   ShieldCheck,
-  Zap
+  Zap,
+  Key
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPlanEntitlements } from '../lib/entitlements';
@@ -33,6 +34,7 @@ import { OverviewView } from '../components/OverviewView';
 import { OstraIcon } from '../components/OstraBrand';
 
 // Code-split sub-tabs so initial console load is fast and responsive
+const ApiKeysView = React.lazy(() => import('../components/ApiKeysView').then((m) => ({ default: m.ApiKeysView })));
 const ProjectsView = React.lazy(() => import('../components/ProjectsView').then((m) => ({ default: m.ProjectsView })));
 const UsageCostsView = React.lazy(() => import('../components/UsageCostsView').then((m) => ({ default: m.UsageCostsView })));
 const ReportsView = React.lazy(() => import('../components/ReportsView').then((m) => ({ default: m.ReportsView })));
@@ -65,6 +67,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const resolveInitialTab = () => {
     if (initialTab) return initialTab;
     const h = typeof window !== 'undefined' ? window.location.hash.toLowerCase() : '';
+    if (h.includes('apikeys') || h.includes('api-keys') || h.includes('gateway-keys')) return 'apikeys';
     if (h.includes('playground')) return 'playground';
     if (h.includes('budgets')) return 'budgets';
     if (h.includes('alerts')) return 'alerts';
@@ -97,7 +100,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       setActiveTab(initialTab);
     } else {
       const h = window.location.hash.toLowerCase();
-      if (h.includes('playground')) setActiveTab('playground');
+      if (h.includes('apikeys') || h.includes('api-keys') || h.includes('gateway-keys')) setActiveTab('apikeys');
+      else if (h.includes('playground')) setActiveTab('playground');
     }
   }, [initialTab]);
 
@@ -139,6 +143,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const sidebarNavItems: Array<{ id: string; label: string; icon: any; badge?: string }> = [
     { id: 'dashboard', label: 'Gateway Overview', icon: LayoutDashboard },
+    { id: 'apikeys', label: 'Gateway API Keys', icon: Key, badge: 'GATEWAY' },
     { id: 'projects', label: 'API Keys & Projects', icon: FolderKanban },
     { id: 'integrations', label: 'API Key Vault', icon: Cable },
     { id: 'playground', label: 'AI Playground', icon: Zap, badge: 'HOT' },
@@ -154,7 +159,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-[#07090C] text-white font-sans flex antialiased selection:bg-[#C59E5F]/25 selection:text-white">
+    <div className="h-screen w-full bg-[#07090C] text-white font-sans flex antialiased selection:bg-[#C59E5F]/25 selection:text-white overflow-hidden">
       
       {/* Mobile Sidebar Overlay */}
       {mobileSidebarOpen && (
@@ -170,7 +175,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <aside
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
-        className={`fixed top-0 left-0 z-50 h-screen bg-[#07090C]/95 backdrop-blur-xl border-r border-white/[0.08] flex flex-col justify-between py-5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none ${
+        className={`fixed inset-y-0 left-0 z-50 h-screen h-[100dvh] bg-[#07090C]/95 backdrop-blur-xl border-r border-white/[0.08] flex flex-col justify-between py-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none ${
           mobileSidebarOpen
             ? 'translate-x-0 w-64 px-4 shadow-[8px_0_36px_rgba(0,0,0,0.8)]'
             : '-translate-x-full lg:translate-x-0 ' +
@@ -179,86 +184,83 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 : 'w-[72px] px-2.5 shadow-[2px_0_12px_rgba(0,0,0,0.3)]')
         }`}
       >
-        <div className="space-y-6 overflow-y-auto overflow-x-hidden pr-0.5 scrollbar-none">
-          
-          {/* Top Logo & App Header */}
-          <div className={`flex items-center transition-all duration-300 ${isExpanded ? 'justify-between px-2' : 'justify-center px-0'}`}>
+        {/* Top Logo & App Header (Fixed at top) */}
+        <div className={`shrink-0 mb-2 flex items-center transition-all duration-300 ${isExpanded ? 'justify-between px-2' : 'justify-center px-0'}`}>
+          <button
+            onClick={onNavigateHome}
+            className="flex items-center group cursor-pointer overflow-hidden"
+            title={!isExpanded ? "OstraOps Home" : undefined}
+          >
+            <div className="shrink-0 flex items-center justify-center w-8 h-8">
+              <OstraIcon className="w-8 h-8 group-hover:scale-105 transition-transform duration-200" variant="gold" />
+            </div>
+            <div className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap text-left ${
+              isExpanded ? 'max-w-[160px] opacity-100 ml-3' : 'max-w-0 opacity-0 ml-0 pointer-events-none'
+            }`}>
+              <span className="font-sans font-bold tracking-tight text-white text-lg block leading-tight">
+                OstraOps
+              </span>
+              <span className="font-mono text-[8px] tracking-[0.2em] uppercase text-[#A4AFB3] font-medium block">
+                CONTROL / OBSERVE
+              </span>
+            </div>
+          </button>
+
+          {/* Mobile close button */}
+          {isExpanded && (
             <button
-              onClick={onNavigateHome}
-              className="flex items-center group cursor-pointer overflow-hidden"
-              title={!isExpanded ? "OstraOps Home" : undefined}
+              onClick={() => setMobileSidebarOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg text-zinc-400 hover:bg-white/[0.08]"
             >
-              <div className="shrink-0 flex items-center justify-center w-8 h-8">
-                <OstraIcon className="w-8 h-8 group-hover:scale-105 transition-transform duration-200" variant="gold" />
-              </div>
-              <div className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap text-left ${
-                isExpanded ? 'max-w-[160px] opacity-100 ml-3' : 'max-w-0 opacity-0 ml-0 pointer-events-none'
-              }`}>
-                <span className="font-sans font-bold tracking-tight text-white text-lg block leading-tight">
-                  OstraOps
-                </span>
-                <span className="font-mono text-[8px] tracking-[0.2em] uppercase text-[#A4AFB3] font-medium block">
-                  CONTROL / OBSERVE
-                </span>
-              </div>
+              <X className="w-5 h-5" />
             </button>
-
-            {/* Mobile close button */}
-            {isExpanded && (
-              <button
-                onClick={() => setMobileSidebarOpen(false)}
-                className="lg:hidden p-1.5 rounded-lg text-zinc-400 hover:bg-white/[0.08]"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="space-y-1">
-            {sidebarNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setMobileSidebarOpen(false);
-                  }}
-                  title={!isExpanded ? item.label : undefined}
-                  className={`w-full flex items-center rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer group ${
-                    isActive
-                      ? 'bg-[#C59E5F]/15 text-[#E5C38D] border border-[#C59E5F]/30 font-semibold shadow-xs'
-                      : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white border border-transparent'
-                  } ${isExpanded ? 'px-3 py-2 justify-start' : 'px-0 py-2.5 justify-center'}`}
-                >
-                  <div className="flex items-center justify-center shrink-0 w-6 h-6">
-                    <Icon
-                      className={`w-4 h-4 transition-colors ${
-                        isActive ? 'text-[#E5C38D]' : 'text-zinc-500 group-hover:text-zinc-200'
-                      }`}
-                    />
-                  </div>
-
-                  <div className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center justify-between whitespace-nowrap ${
-                    isExpanded ? 'max-w-[180px] opacity-100 ml-3 flex-1' : 'max-w-0 opacity-0 ml-0 pointer-events-none'
-                  }`}>
-                    <span className="truncate">{item.label}</span>
-                    {item.badge && (
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#C59E5F]/20 text-[#E5C38D] border border-[#C59E5F]/30 font-mono ml-2 shrink-0">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </nav>
+          )}
         </div>
 
-        {/* Sidebar Footer: Current Plan + User Profile */}
-        <div className="space-y-3 pt-3 border-t border-white/[0.08]">
+        {/* Navigation Links - Scrollable middle container so all 14 items can be scrolled through without clipping */}
+        <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-1 py-1 pr-0.5 scrollbar-thin">
+          {sidebarNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setMobileSidebarOpen(false);
+                }}
+                title={!isExpanded ? item.label : undefined}
+                className={`w-full flex items-center rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer group ${
+                  isActive
+                    ? 'bg-[#C59E5F]/15 text-[#E5C38D] border border-[#C59E5F]/30 font-semibold shadow-xs'
+                    : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white border border-transparent'
+                } ${isExpanded ? 'px-3 py-2 justify-start' : 'px-0 py-2.5 justify-center'}`}
+              >
+                <div className="flex items-center justify-center shrink-0 w-6 h-6">
+                  <Icon
+                    className={`w-4 h-4 transition-colors ${
+                      isActive ? 'text-[#E5C38D]' : 'text-zinc-500 group-hover:text-zinc-200'
+                    }`}
+                  />
+                </div>
+
+                <div className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center justify-between whitespace-nowrap ${
+                  isExpanded ? 'max-w-[180px] opacity-100 ml-3 flex-1' : 'max-w-0 opacity-0 ml-0 pointer-events-none'
+                }`}>
+                  <span className="truncate">{item.label}</span>
+                  {item.badge && (
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#C59E5F]/20 text-[#E5C38D] border border-[#C59E5F]/30 font-mono ml-2 shrink-0">
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Sidebar Footer: Current Plan + User Profile (Pinned at bottom) */}
+        <div className="shrink-0 space-y-3 pt-3 border-t border-white/[0.08]">
           {/* Current Plan Box */}
           <div className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             isExpanded ? 'max-h-56 opacity-100 mb-2' : 'max-h-0 opacity-0 pointer-events-none mb-0'
@@ -382,7 +384,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       {/* ============================================================ */}
       {/* MAIN CONTENT AREA                                            */}
       {/* ============================================================ */}
-      <main className="flex-1 flex flex-col min-w-0 pb-16 lg:pl-[72px]">
+      <main className="flex-1 h-screen overflow-y-auto overflow-x-hidden flex flex-col min-w-0 pb-16 lg:pl-[72px]">
         
         {/* Top Header Bar */}
         <header className="sticky top-0 z-30 bg-[#07090C]/90 backdrop-blur-md border-b border-white/[0.08] px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
@@ -605,7 +607,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
             }
           >
-            {activeTab === 'playground' ? (
+            {activeTab === 'apikeys' ? (
+              <ApiKeysView />
+            ) : activeTab === 'playground' ? (
               <PlaygroundView />
             ) : activeTab === 'alerts' ? (
               <AlertsView />
