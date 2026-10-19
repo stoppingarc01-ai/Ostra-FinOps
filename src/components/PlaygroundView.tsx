@@ -16,6 +16,7 @@ import {
   ChevronUp,
   Square
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import { CATALOG_MODELS, ProviderLogo, type ModelIntegration } from './IntegrationsView';
 
 interface PlaygroundTelemetry {
@@ -37,6 +38,8 @@ interface PlaygroundViewProps {
 export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   initialModelId
 }) => {
+  const { user } = useAuth();
+
   // Find initial model or default to Nemotron Ultra
   const defaultModel = CATALOG_MODELS.find(
     (m) =>
@@ -216,6 +219,21 @@ export async function reserveBudgetSlot(orgId: string, estimatedUsd: number): Pr
         (estimatedInputTokens / 1_000_000) * inputPer1M +
         (generatedTokens / 1_000_000) * outputPer1M;
 
+      const newLog = {
+        id: traceId,
+        request_id: traceId,
+        created_at: new Date().toISOString(),
+        routed_model: selectedModel.modelId,
+        requested_model: selectedModel.modelId,
+        provider: selectedModel.provider,
+        cost_usd: calculatedCost,
+        input_tokens: estimatedInputTokens,
+        output_tokens: generatedTokens,
+        latency_ms: finalLatency,
+        status_code: 200,
+        cache_hit: false,
+      };
+
       setTelemetry({
         status: 200,
         ttftMs: finalTtft,
@@ -227,6 +245,15 @@ export async function reserveBudgetSlot(orgId: string, estimatedUsd: number): Pr
         provider: selectedModel.provider,
         modelId: selectedModel.modelId
       });
+
+      // Real-time broadcast to Overview and sync with local storage
+      try {
+        const storageKey = `ostraops_recent_logs_${user?.id || 'guest'}`;
+        const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const updated = [newLog, ...(Array.isArray(existing) ? existing.slice(0, 99) : [])];
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      } catch {}
+      window.dispatchEvent(new CustomEvent('ostraops:new_log', { detail: newLog }));
     } catch {
       setOutputText('Request aborted or connection interrupted.');
     } finally {

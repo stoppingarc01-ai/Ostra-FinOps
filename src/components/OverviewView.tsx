@@ -4,20 +4,21 @@ import {
   Check, 
   AlertTriangle, 
   CheckCircle2, 
-  X,
-  Sparkles,
-  ArrowRight,
-  Shield,
-  Zap,
-  Activity,
-  Radio,
-  Clock,
-  Flame,
-  Layers
+  X, 
+  Sparkles, 
+  ArrowRight, 
+  Shield, 
+  Zap, 
+  Activity, 
+  Radio, 
+  Clock, 
+  Flame, 
+  Layers,
+  Send
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPlanEntitlements } from '../lib/entitlements';
-import { fetchGatewayLogs, isSupabaseAvailable } from '../lib/supabase';
+import { fetchGatewayLogs, isSupabaseAvailable, supabase } from '../lib/supabase';
 import { fetchUserAlerts } from '../lib/alertsService';
 import type { GatewayLog, SystemAlert } from '../types/database';
 
@@ -44,6 +45,338 @@ interface TelemetryPoint {
   cacheHitRate: number;
 }
 
+interface DualLinePoint {
+  month: string;
+  actual: number;
+  baseline: number;
+  isForecast?: boolean;
+  dateStr: string;
+  tooltipVal: string;
+}
+
+interface DualLineForecastCardProps {
+  id: string;
+  options: string[];
+  selectedOption: string;
+  onSelectOption: (opt: string) => void;
+  bigValue: string;
+  trendPct: string;
+  points: DualLinePoint[];
+  curveColor?: string;
+  baselineColor?: string;
+}
+
+/**
+ * DualLineForecastCard:
+ * Matches the requested screenshot aesthetic:
+ * - Top-left dropdown + top-right 6-dot menu icon
+ * - Bottom-left big KPI value with green trend pill (↗ 2.5%)
+ * - Bottom-right dual-line SVG curve (solid actual + dashed baseline + diagonal hatched Nov/Dec forecast zone + floating dark pill tooltip)
+ */
+const DualLineForecastCard: React.FC<DualLineForecastCardProps> = ({
+  id,
+  options,
+  selectedOption,
+  onSelectOption,
+  bigValue,
+  trendPct,
+  points,
+  curveColor = '#E5C38D',
+  baselineColor = 'rgba(255, 255, 255, 0.28)',
+}) => {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+
+  // SVG Geometry
+  const width = 760;
+  const height = 170;
+  const padLeft = 20;
+  const padRight = 24;
+  const padTop = 22;
+  const padBottom = 28;
+  const plotW = width - padLeft - padRight;
+  const plotH = height - padTop - padBottom;
+
+  const allValues = points.flatMap((p) => [p.actual, p.baseline]);
+  const maxVal = Math.max(...allValues, 1);
+  const minVal = Math.min(...allValues, 0);
+  const range = maxVal - minVal || 1;
+
+  const coords = points.map((p, i) => {
+    const x = padLeft + (i / Math.max(1, points.length - 1)) * plotW;
+    const actualRatio = Math.min(1, Math.max(0, (p.actual - minVal) / range));
+    const baselineRatio = Math.min(1, Math.max(0, (p.baseline - minVal) / range));
+    const yActual = padTop + (1 - actualRatio) * plotH;
+    const yBaseline = padTop + (1 - baselineRatio) * plotH;
+    return { x, yActual, yBaseline, p, i };
+  });
+
+  const actualHistoricCoords = coords.slice(0, 10);
+  const actualForecastCoords = coords.slice(9);
+
+  const getCubicPath = (pts: { x: number; y: number }[]) => {
+    if (pts.length === 0) return '';
+    let d = `M ${pts[0].x} ${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const c = pts[i];
+      const n = pts[i + 1];
+      const cpx = (c.x + n.x) / 2;
+      d += ` C ${cpx} ${c.y}, ${cpx} ${n.y}, ${n.x} ${n.y}`;
+    }
+    return d;
+  };
+
+  const actualHistoricPath = getCubicPath(actualHistoricCoords.map((c) => ({ x: c.x, y: c.yActual })));
+  const actualForecastPath = getCubicPath(actualForecastCoords.map((c) => ({ x: c.x, y: c.yActual })));
+  const baselinePath = getCubicPath(coords.map((c) => ({ x: c.x, y: c.yBaseline })));
+
+  // Forecast demarcator: starts between Oct (index 9) and Nov (index 10)
+  const xForecast = padLeft + (9.5 / 11) * plotW;
+  const forecastWidth = (width - padRight) - xForecast;
+
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!svgRef.current || coords.length === 0) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const svgX = (mouseX / rect.width) * width;
+
+    let closest = 0;
+    let minDiff = Infinity;
+    coords.forEach((c, i) => {
+      const diff = Math.abs(c.x - svgX);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = i;
+      }
+    });
+    setHoveredIdx(closest);
+  };
+
+  const activeCoord = hoveredIdx !== null ? coords[hoveredIdx] : null;
+
+  return (
+    <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xl relative overflow-hidden transition-all hover:border-[#C59E5F]/30 group">
+      {/* Top Bar: Dropdown on Left, 6-dot menu on Right */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="relative">
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer"
+          >
+            <span>{selectedOption}</span>
+            <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+          </button>
+          {dropdownOpen && (
+            <div className="absolute top-full left-0 mt-1 z-30 w-48 rounded-xl bg-[#07090C] border border-white/10 shadow-2xl py-1 animate-in fade-in zoom-in-95">
+              {options.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => {
+                    onSelectOption(opt);
+                    setDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-1.5 text-xs text-zinc-300 hover:text-white hover:bg-white/[0.06] flex items-center justify-between cursor-pointer"
+                >
+                  <span>{opt}</span>
+                  {selectedOption === opt && <Check className="w-3 h-3 text-[#C59E5F]" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 6-dot Grip Menu Icon */}
+        <div className="text-zinc-600 hover:text-zinc-400 cursor-grab p-1" title="Drag to reorder card">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+            <circle cx="4" cy="3" r="1.2" />
+            <circle cx="10" cy="3" r="1.2" />
+            <circle cx="4" cy="7" r="1.2" />
+            <circle cx="10" cy="7" r="1.2" />
+            <circle cx="4" cy="11" r="1.2" />
+            <circle cx="10" cy="11" r="1.2" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Grid: Left KPI + Right Dual-Line Graph */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+        {/* Left Column: Big KPI + Green Trend Pill */}
+        <div className="lg:col-span-3 pb-2 sm:pb-5">
+          <div className="flex items-baseline gap-2.5 flex-wrap">
+            <span className="text-2xl sm:text-[32px] font-extrabold text-white tracking-tight font-sans">
+              {bigValue}
+            </span>
+            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              <span className="text-[11px]">↗</span>
+              <span>{trendPct}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Right Column: Dual-Line Forecast Graph */}
+        <div className="lg:col-span-9 relative select-none">
+          {/* Floating Tooltip */}
+          {activeCoord && (
+            <div
+              className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full transition-all duration-75"
+              style={{
+                left: `${(activeCoord.x / width) * 100}%`,
+                top: `${(activeCoord.yActual / height) * 100}%`,
+              }}
+            >
+              <div className="bg-[#07090C]/95 backdrop-blur-md border border-white/20 rounded-xl px-3 py-1.5 shadow-2xl text-center -mt-2.5 animate-in fade-in zoom-in-95">
+                <div className="text-xs font-bold text-white font-mono leading-tight">
+                  {activeCoord.p.tooltipVal}
+                </div>
+                <div className="text-[10px] text-zinc-400 font-mono mt-0.5 leading-tight">
+                  {activeCoord.p.dateStr}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SVG Canvas */}
+          <svg
+            ref={svgRef}
+            viewBox={`0 0 ${width} ${height}`}
+            className="w-full h-36 sm:h-44 overflow-visible cursor-crosshair"
+            preserveAspectRatio="none"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => setHoveredIdx(null)}
+          >
+            <defs>
+              <pattern
+                id={`hatch-${id}`}
+                width="8"
+                height="8"
+                patternTransform="rotate(45 0 0)"
+                patternUnits="userSpaceOnUse"
+              >
+                <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(255,255,255,0.08)" strokeWidth="1.2" />
+              </pattern>
+            </defs>
+
+            {/* Horizontal Grid Lines */}
+            {[0.25, 0.5, 0.75].map((ratio, idx) => {
+              const y = padTop + ratio * plotH;
+              return (
+                <line
+                  key={idx}
+                  x1={padLeft}
+                  y1={y}
+                  x2={width - padRight}
+                  y2={y}
+                  stroke="rgba(255,255,255,0.05)"
+                  strokeDasharray="3 3"
+                />
+              );
+            })}
+
+            {/* Hatched Forecast Zone for Nov & Dec */}
+            <rect
+              x={xForecast}
+              y={padTop}
+              width={forecastWidth}
+              height={plotH}
+              fill={`url(#hatch-${id})`}
+              rx="2"
+            />
+            <line
+              x1={xForecast}
+              y1={padTop}
+              x2={xForecast}
+              y2={padTop + plotH}
+              stroke="rgba(255,255,255,0.18)"
+              strokeDasharray="3 3"
+            />
+            <line
+              x1={width - padRight}
+              y1={padTop}
+              x2={width - padRight}
+              y2={padTop + plotH}
+              stroke="rgba(255,255,255,0.18)"
+              strokeDasharray="3 3"
+            />
+
+            {/* Dashed Baseline Line */}
+            <path
+              d={baselinePath}
+              fill="none"
+              stroke={baselineColor}
+              strokeWidth="1.8"
+              strokeDasharray="4 4"
+              strokeLinecap="round"
+            />
+
+            {/* Solid Historic Curve Line (Jan to Oct) */}
+            <path
+              d={actualHistoricPath}
+              fill="none"
+              stroke={curveColor}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {/* Solid Forecast Curve Line (Oct to Dec) */}
+            <path
+              d={actualForecastPath}
+              fill="none"
+              stroke={curveColor}
+              strokeWidth="1.8"
+              strokeOpacity="0.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {/* Interactive Crosshair Dot */}
+            {activeCoord && (
+              <g>
+                <line
+                  x1={activeCoord.x}
+                  y1={activeCoord.yActual}
+                  x2={activeCoord.x}
+                  y2={padTop + plotH}
+                  stroke={curveColor}
+                  strokeWidth="1.2"
+                  strokeDasharray="3 3"
+                />
+                <circle
+                  cx={activeCoord.x}
+                  cy={activeCoord.yActual}
+                  r={4.5}
+                  fill={curveColor}
+                  stroke="#07090C"
+                  strokeWidth="2"
+                />
+              </g>
+            )}
+
+            {/* X-axis Month Labels */}
+            {coords.map((c, i) => {
+              const isHovered = hoveredIdx === i;
+              return (
+                <text
+                  key={i}
+                  x={c.x}
+                  y={height - 6}
+                  textAnchor="middle"
+                  className={`text-[10px] font-mono transition-colors ${
+                    isHovered ? 'fill-white font-bold' : 'fill-zinc-500'
+                  }`}
+                >
+                  {c.p.month}
+                </text>
+              );
+            })}
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const OverviewView: React.FC<OverviewViewProps> = ({
   onNavigateToUsage,
   onNavigateToModels,
@@ -60,8 +393,24 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   const [metricMode, setMetricMode] = useState<'monthly' | 'live'>('monthly');
   const [chartMetric, setChartMetric] = useState<ChartMetric>('spend');
   const [chartTimeframe, setChartTimeframe] = useState<ChartTimeframe>('7d');
+  const [showDeepEngine, setShowDeepEngine] = useState(false);
 
-  // Hover and interaction states for the Crazy Chart
+  // Dual Line Graph Dropdown States
+  const [spendOption, setSpendOption] = useState('Spend Velocity');
+  const [requestOption, setRequestOption] = useState('All Invocations');
+
+  // Real-time Traffic Simulation Toggle
+  const [autoSimulate, setAutoSimulate] = useState(false);
+  const [isSendingProbe, setIsSendingProbe] = useState(false);
+
+  // Live Telemetry Data from Backend
+  const [liveLogs, setLiveLogs] = useState<GatewayLog[]>([]);
+  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string>('Just now');
+  const [, setClockTick] = useState(0);
+
+  // Hover and interaction states for Deep Stream Graph
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [hoverCoords, setHoverCoords] = useState<{ x: number; y: number } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -69,12 +418,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   // Selected Alert for modal
   const [selectedAlert, setSelectedAlert] = useState<string | null>(null);
 
-  // Live Telemetry Data from Backend
-  const [liveLogs, setLiveLogs] = useState<GatewayLog[]>([]);
-  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
-  const [isLiveConnected, setIsLiveConnected] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<string>('Just now');
+  // 1-second interval to update relative timestamps live
+  useEffect(() => {
+    const timer = setInterval(() => setClockTick((t) => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
+  // Real-time Telemetry Data Fetcher & Event Bus Listener
   useEffect(() => {
     let isMounted = true;
     const userId = user?.id || 'guest';
@@ -110,7 +460,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         try {
           const remoteLogs = await fetchGatewayLogs(100, orgId);
           if (remoteLogs && remoteLogs.length > 0) {
-            const existingIds = new Set(combinedLogs.map(l => l.request_id || l.id));
+            const existingIds = new Set(combinedLogs.map((l) => l.request_id || l.id));
             for (const item of remoteLogs) {
               if (!existingIds.has(item.request_id || item.id)) {
                 combinedLogs.push(item);
@@ -121,14 +471,25 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       }
 
       if (isMounted) {
-        setLiveLogs(combinedLogs);
-        if (combinedLogs.length > 0) {
-          setIsLiveConnected(true);
-        }
+        setLiveLogs((prev) => {
+          // Merge preserving ordering with newest on top
+          const idSet = new Set<string>();
+          const result: GatewayLog[] = [];
+          for (const item of [...combinedLogs, ...prev]) {
+            const key = item.request_id || item.id || Math.random().toString();
+            if (!idSet.has(key)) {
+              idSet.add(key);
+              result.push(item);
+            }
+          }
+          return result.slice(0, 200);
+        });
+
+        setIsLiveConnected(true);
         setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       }
 
-      // 4. Load Real User Alerts
+      // 3. Load Real User Alerts
       if (user?.uid) {
         try {
           const userAlerts = await fetchUserAlerts(user.uid);
@@ -138,13 +499,134 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     };
 
     loadRealData();
-    const interval = setInterval(loadRealData, 4000);
+    // Fast 1500ms interval for ultra-responsive real-time updates
+    const pollInterval = setInterval(loadRealData, 1500);
+
+    // Instant zero-delay custom event listener
+    const onNewLog = (e: Event) => {
+      const detail = (e as CustomEvent<GatewayLog>).detail;
+      if (detail && isMounted) {
+        setLiveLogs((prev) => {
+          if (prev.some((l) => (l.id || l.request_id) === (detail.id || detail.request_id))) return prev;
+          return [detail, ...prev.slice(0, 199)];
+        });
+        setIsLiveConnected(true);
+        setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      }
+    };
+    window.addEventListener('ostraops:new_log', onNewLog);
+
+    // Cross-tab storage synchronization
+    const onStorage = (e: StorageEvent) => {
+      if (e.key && e.key.startsWith('ostraops_recent_logs')) {
+        try {
+          const parsed = JSON.parse(e.newValue || '[]');
+          if (Array.isArray(parsed) && parsed.length > 0 && isMounted) {
+            setLiveLogs((prev) => {
+              const map = new Map<string, GatewayLog>();
+              [...parsed, ...prev].forEach((l) => {
+                const id = l.id || l.request_id || Math.random().toString();
+                if (!map.has(id)) map.set(id, l);
+              });
+              return Array.from(map.values()).slice(0, 200);
+            });
+            setIsLiveConnected(true);
+            setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+          }
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', onStorage);
+
+    // Supabase Realtime Channel
+    let supabaseChannel: any = null;
+    if (isSupabaseAvailable()) {
+      try {
+        supabaseChannel = supabase
+          .channel('realtime_overview_logs')
+          .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'gateway_logs' },
+            (payload) => {
+              const newLog = payload.new as GatewayLog;
+              if (newLog && isMounted) {
+                setLiveLogs((prev) => {
+                  if (prev.some((l) => (l.id || l.request_id) === (newLog.id || newLog.request_id))) return prev;
+                  return [newLog, ...prev.slice(0, 199)];
+                });
+                setIsLiveConnected(true);
+                setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+              }
+            }
+          )
+          .subscribe();
+      } catch {}
+    }
 
     return () => {
       isMounted = false;
-      clearInterval(interval);
+      clearInterval(pollInterval);
+      window.removeEventListener('ostraops:new_log', onNewLog);
+      window.removeEventListener('storage', onStorage);
+      if (supabaseChannel) {
+        supabase.removeChannel(supabaseChannel);
+      }
     };
   }, [user?.uid, user?.id, organization?.id]);
+
+  // Real-time Traffic Simulator Probe
+  const handleSendLiveProbe = async () => {
+    setIsSendingProbe(true);
+    const sampleEngines = [
+      { id: 'openai/gpt-4o', provider: 'OpenAI', inTok: 840, outTok: 290, cost: 0.0033 },
+      { id: 'anthropic/claude-3-7-sonnet', provider: 'Anthropic', inTok: 1250, outTok: 480, cost: 0.0082 },
+      { id: 'deepseek/deepseek-r1', provider: 'Fireworks', inTok: 2400, outTok: 710, cost: 0.0022 },
+      { id: 'google/gemini-2.5-flash', provider: 'Google', inTok: 620, outTok: 180, cost: 0.00045 },
+      { id: 'meta-llama/llama-3.3-70b', provider: 'Groq', inTok: 980, outTok: 340, cost: 0.00068 },
+    ];
+    const eng = sampleEngines[Math.floor(Math.random() * sampleEngines.length)];
+    const traceId = 'ost_live_' + Math.random().toString(36).slice(2, 9);
+    const simulatedLog: GatewayLog = {
+      id: traceId,
+      request_id: traceId,
+      organization_id: organization?.id || 'default_org',
+      project_id: 'default_proj',
+      environment_id: 'development',
+      virtual_key_id: 'vk_playground',
+      created_at: new Date().toISOString(),
+      completed_at: new Date().toISOString(),
+      routed_model: eng.id,
+      requested_model: eng.id,
+      provider: eng.provider,
+      cost_usd: eng.cost,
+      input_tokens: eng.inTok,
+      output_tokens: eng.outTok,
+      latency_ms: Math.floor(Math.random() * 80) + 110,
+      status_code: 200,
+      fallback_used: false,
+      fallback_from_model: null,
+      error_type: null,
+      error_code: null,
+    };
+
+    try {
+      const storageKey = `ostraops_recent_logs_${user?.id || 'guest'}`;
+      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      localStorage.setItem(storageKey, JSON.stringify([simulatedLog, ...existing.slice(0, 99)]));
+    } catch {}
+
+    window.dispatchEvent(new CustomEvent('ostraops:new_log', { detail: simulatedLog }));
+    setTimeout(() => setIsSendingProbe(false), 300);
+  };
+
+  // Auto Simulation Interval
+  useEffect(() => {
+    if (!autoSimulate) return;
+    const interval = setInterval(() => {
+      handleSendLiveProbe();
+    }, 3800);
+    return () => clearInterval(interval);
+  }, [autoSimulate]);
 
   // Compute live spend / tokens / requests strictly from real logs
   const totalSpend = useMemo(() => liveLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0), [liveLogs]);
@@ -166,17 +648,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   const modelEntries = useMemo(() => Object.entries(modelsMap).sort((a, b) => b[1].spend - a[1].spend), [modelsMap]);
   const uniqueModelsCount = modelEntries.length;
 
-  // -------------------------------------------------------------
-  // 4 Top Metric Cards (Matches Image 2 exactly)
-  // -------------------------------------------------------------
   const isMonthly = metricMode === 'monthly';
 
-  // Card 1: Total Spend (This Month)
+  // 4 Top Metric Display Calculations
   const displaySpend = isMonthly 
     ? (4328.64 + totalSpend).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : totalSpend.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  // Card 2: Tokens Used
   const displayTokens = isMonthly
     ? (totalTokens > 0 ? `${(312.6 + totalTokens / 1_000_000).toFixed(1)}M` : '312.6M')
     : totalTokens >= 1_000_000 
@@ -185,7 +663,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       ? `${(totalTokens / 1000).toFixed(1)}K` 
       : `${totalTokens.toLocaleString()}`;
 
-  // Card 3: Models Using
   const displayModelsCount = isMonthly
     ? `${Math.max(12, uniqueModelsCount)} Active`
     : `${uniqueModelsCount > 0 ? uniqueModelsCount : 1} Active`;
@@ -194,20 +671,64 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     ? modelEntries.map(e => e[0].replace('gpt-', 'GPT-').replace('claude-', 'Clau-').replace('gemini-', 'Gem-')).slice(0, 2).join(', ')
     : 'GPT-4o, Clau...';
 
-  // Card 4: Total Requests
   const displayRequests = isMonthly
     ? (89732 + totalRequests).toLocaleString()
     : totalRequests.toLocaleString();
 
   // -------------------------------------------------------------
-  // Crazy High-Resolution Chart Points Generator (Backend Connected)
+  // DUAL-LINE FORECAST GRAPHS (Matches Image Exactly)
   // -------------------------------------------------------------
+  // Card 1: Spend Velocity Points (12 Months Jan..Dec)
+  const spendVelocityPoints = useMemo<DualLinePoint[]>(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const baseActuals = [14200, 15800, 15400, 17900, 18600, 21800, 23400, 26700, 28100, 30203.04 + totalSpend, 32100, 34800];
+    const baseBaselines = [12100, 13400, 13900, 15300, 16200, 18100, 19800, 21900, 23200, 24500, 26100, 27600];
+
+    return months.map((m, i) => {
+      const isFc = i >= 10;
+      const actualVal = baseActuals[i];
+      const baselineVal = baseBaselines[i];
+      const tooltipVal = i === 7 ? '$66.24' : `$${actualVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const dateStr = i === 7 ? 'Aug 12, 2026' : `${m} 15, 2026`;
+      return {
+        month: m,
+        actual: actualVal,
+        baseline: baselineVal,
+        isForecast: isFc,
+        dateStr,
+        tooltipVal,
+      };
+    });
+  }, [totalSpend]);
+
+  // Card 2: Request Volume Points (12 Months Jan..Dec)
+  const requestVolumePoints = useMemo<DualLinePoint[]>(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const baseActuals = [41200, 47300, 46100, 52900, 56800, 64900, 69800, 77400, 82900, 89732 + totalRequests, 94100, 99400];
+    const baseBaselines = [35100, 40200, 39400, 45100, 48900, 55200, 59800, 65900, 70200, 74900, 79200, 83800];
+
+    return months.map((m, i) => {
+      const isFc = i >= 10;
+      const actualVal = baseActuals[i];
+      const baselineVal = baseBaselines[i];
+      const tooltipVal = i === 7 ? '2,840 reqs' : `${Math.round(actualVal).toLocaleString()} reqs`;
+      const dateStr = i === 7 ? 'Aug 12, 2026' : `${m} 15, 2026`;
+      return {
+        month: m,
+        actual: actualVal,
+        baseline: baselineVal,
+        isForecast: isFc,
+        dateStr,
+        tooltipVal,
+      };
+    });
+  }, [totalRequests]);
+
+  // Deep High-Resolution Telemetry Points (Crazy Graph)
   const chartPoints: TelemetryPoint[] = useMemo(() => {
-    // Generate dates according to chartTimeframe
     const count = chartTimeframe === '24h' ? 12 : chartTimeframe === '30d' ? 15 : chartTimeframe === 'all' ? 20 : 7;
     const points: TelemetryPoint[] = [];
 
-    // Base mock curves reflecting realistic growth trajectory matching $4,328/mo
     const baseSpends = [480, 560, 520, 680, 710, 840, 938, 1020, 1140, 1260, 1310, 1420, 1580, 1640, 1720, 1850, 1940, 2010, 2150, 2240];
     const baseTokens = [34.2, 38.6, 36.1, 46.8, 49.3, 58.1, 64.2, 70.5, 78.4, 86.2, 90.1, 98.4, 108.2, 112.5, 118.4, 126.8, 133.2, 138.1, 147.5, 154.2];
     const baseReqs = [9800, 11200, 10400, 13600, 14200, 16800, 18600, 20400, 22800, 25100, 26200, 28600, 31400, 32700, 34500, 37000, 38800, 40200, 43100, 45000];
@@ -228,7 +749,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const fullDate = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
-      // Find any real logs that match this date
       const matchingLogs = liveLogs.filter(l => (l.created_at || iso).startsWith(dateKey));
       const realDaySpend = matchingLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0);
       const realDayTokens = matchingLogs.reduce((acc, l) => acc + (l.input_tokens || 0) + (l.output_tokens || 0), 0);
@@ -256,7 +776,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     return points;
   }, [chartTimeframe, liveLogs, isMonthly]);
 
-  // Extract current value selector for the active metric
   const getMetricValue = (p: TelemetryPoint): number => {
     switch (chartMetric) {
       case 'spend': return p.spend;
@@ -275,7 +794,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     }
   };
 
-  // SVG Geometry Calculation
   const { pathD, areaD, svgPoints, maxYVal, minYVal } = useMemo(() => {
     const width = 1000;
     const height = 280;
@@ -297,7 +815,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       return { x, y, pt, i };
     });
 
-    // Cubic Bezier curve path
     let dStr = '';
     if (coords.length > 0) {
       dStr = `M ${coords[0].x} ${coords[0].y}`;
@@ -331,7 +848,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     const mouseX = e.clientX - rect.left;
     const svgX = (mouseX / rect.width) * 1000;
 
-    // Find closest point by x coordinate
     let closestIndex = 0;
     let minDiff = Infinity;
     svgPoints.forEach((pt, i) => {
@@ -346,9 +862,17 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     setHoverCoords({ x: svgPoints[closestIndex].x, y: svgPoints[closestIndex].y });
   };
 
-  const handleMouseLeave = () => {
-    setHoveredIndex(null);
-    setHoverCoords(null);
+  const formatRelativeTime = (dateStr: string): string => {
+    try {
+      const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+      if (diff < 3) return 'Just now';
+      if (diff < 60) return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return `${Math.floor(diff / 86400)}d ago`;
+    } catch {
+      return 'Recently';
+    }
   };
 
   const timeOptions = ['Today', 'Yesterday', 'Last 7 days', 'Last 30 days', 'All time'];
@@ -397,17 +921,20 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       </div>
 
       {/* ============================================================ */}
-      {/* 2. HEADER: TITLE + TELEMETRY CONTROLS                        */}
+      {/* 2. HEADER: TITLE + REAL-TIME CONTROLS                        */}
       {/* ============================================================ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5 mb-1">
+          <div className="flex items-center gap-2.5 mb-1 flex-wrap">
             <span className="px-2 py-0.5 rounded-md bg-[#C59E5F]/15 text-[#E5C38D] text-[10px] font-bold font-mono tracking-wider uppercase border border-[#C59E5F]/30">
               Gateway Telemetry Hub
             </span>
             <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-mono font-semibold">
-              <span className={`w-1.5 h-1.5 rounded-full ${isLiveConnected ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_#34D399]' : 'bg-emerald-500'}`} />
-              <span>{isLiveConnected ? 'Backend Connected' : 'Telemetry Ready'} • Synced {lastSyncTime}</span>
+              <span className="relative flex h-2 w-2">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isLiveConnected ? 'bg-emerald-400' : 'bg-amber-400'} opacity-75`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${isLiveConnected ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+              </span>
+              <span>{isLiveConnected ? 'Real-Time Stream Active' : 'Connecting to Stream...'} • Synced {lastSyncTime}</span>
             </div>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
@@ -415,8 +942,38 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </h1>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
-          {/* Mode Switcher: 30D Aggregated vs Live Session Stream */}
+        {/* Real-time controls & Timeframe */}
+        <div className="flex items-center gap-2.5 self-start lg:self-auto flex-wrap">
+          {/* Live Request Probe Button */}
+          <button
+            onClick={handleSendLiveProbe}
+            disabled={isSendingProbe}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer border ${
+              isSendingProbe 
+                ? 'bg-[#C59E5F] text-black border-[#C59E5F]' 
+                : 'bg-white/[0.04] hover:bg-white/[0.08] text-[#E5C38D] border-white/10 hover:border-[#C59E5F]/40'
+            }`}
+            title="Fire a live simulated LLM execution to test real-time graphs and live table updates"
+          >
+            <Send className={`w-3.5 h-3.5 ${isSendingProbe ? 'animate-bounce' : ''}`} />
+            <span>{isSendingProbe ? 'Streaming...' : 'Send Live Probe'}</span>
+          </button>
+
+          {/* Auto-Stream Toggle */}
+          <button
+            onClick={() => setAutoSimulate((v) => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer border ${
+              autoSimulate
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-[0_0_12px_rgba(52,211,153,0.2)]'
+                : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 border-white/10'
+            }`}
+            title="Toggle continuous real-time synthetic traffic stream"
+          >
+            <span className={`w-2 h-2 rounded-full ${autoSimulate ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
+            <span>Auto Stream: {autoSimulate ? 'ON' : 'OFF'}</span>
+          </button>
+
+          {/* Mode Switcher */}
           <div className="flex items-center bg-[#07090C] border border-white/[0.08] p-1 rounded-xl text-xs font-mono">
             <button
               onClick={() => setMetricMode('monthly')}
@@ -426,7 +983,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              30D Run-Rate
+              Run-Rate
             </button>
             <button
               onClick={() => setMetricMode('live')}
@@ -437,7 +994,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               }`}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${metricMode === 'live' ? 'bg-black' : 'bg-emerald-400'} animate-pulse`} />
-              <span>Live Session ({liveLogs.length})</span>
+              <span>Live ({liveLogs.length})</span>
             </button>
           </div>
 
@@ -478,7 +1035,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       </div>
 
       {/* ============================================================ */}
-      {/* 3. ROW: 4 METRIC CARDS (Pixel-Perfect Match to Image 2)      */}
+      {/* 3. ROW: 4 METRIC CARDS                                       */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
@@ -487,29 +1044,25 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           onClick={onNavigateToUsage}
           className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/40 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
         >
-          {/* Top Row: Title + Badge */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-400">Total Spend (This Month)</span>
-            <div className="w-6 h-6 rounded-md bg-[#161B22] border border-white/10 flex items-center justify-center text-xs font-mono text-zinc-300 font-bold shadow-2xs">
-              $
+            <span className="text-xs font-medium text-zinc-400">Total Spend</span>
+            <div className="px-2 py-0.5 rounded-md bg-[#161B22] border border-white/10 text-[10px] font-mono text-zinc-300 font-bold tracking-wider shadow-2xs">
+              USD
             </div>
           </div>
 
-          {/* Big Value */}
           <div className="my-1.5">
             <span className="text-2xl sm:text-[30px] font-extrabold text-white tracking-tight font-sans">
               ${displaySpend}
             </span>
           </div>
 
-          {/* Bottom Row: Trend + Sparkline */}
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center gap-1 text-emerald-400 font-mono text-xs font-semibold">
               <span className="text-sm">↗</span>
-              <span>22.4% vs last month</span>
+              <span>2.5% vs baseline</span>
             </div>
             
-            {/* Smooth Rising Curve Sparkline (Gold) */}
             <svg viewBox="0 0 76 24" className="w-20 h-6 overflow-visible shrink-0">
               <path
                 d="M 2 20 C 24 20, 36 17, 48 11 C 58 6, 66 5, 74 2"
@@ -527,7 +1080,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           onClick={onNavigateToUsage}
           className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/40 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
         >
-          {/* Top Row: Title + Badge */}
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-zinc-400">Tokens Used</span>
             <div className="px-2 py-0.5 rounded-md bg-[#161B22] border border-white/10 text-[10px] font-mono text-zinc-300 font-bold tracking-wider shadow-2xs">
@@ -535,21 +1087,18 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </div>
           </div>
 
-          {/* Big Value */}
           <div className="my-1.5">
             <span className="text-2xl sm:text-[30px] font-extrabold text-white tracking-tight font-sans">
               {displayTokens}
             </span>
           </div>
 
-          {/* Bottom Row: Trend + Equalizer Volume Bars */}
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center gap-1 text-[#E5C38D] font-mono text-xs font-semibold">
               <span className="text-sm">↗</span>
               <span>12.2% vs last month</span>
             </div>
             
-            {/* Equalizer volume bars matching Image 2 */}
             <div className="flex items-end gap-1 h-5 shrink-0 pr-1">
               {[22, 34, 28, 48, 62, 52, 76, 88, 100].map((h, idx) => (
                 <span
@@ -570,7 +1119,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           onClick={onNavigateToModels}
           className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/40 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
         >
-          {/* Top Row: Title + Badge */}
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-zinc-400">Models Using</span>
             <div className="px-2 py-0.5 rounded-md bg-[#161B22] border border-white/10 text-[10px] font-mono text-zinc-300 font-bold tracking-wider shadow-2xs">
@@ -578,20 +1126,17 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </div>
           </div>
 
-          {/* Big Value */}
           <div className="my-1.5">
             <span className="text-2xl sm:text-[30px] font-extrabold text-white tracking-tight font-sans">
               {displayModelsCount}
             </span>
           </div>
 
-          {/* Bottom Row: Model subtitle + Rising Sparkline */}
           <div className="mt-2 flex items-center justify-between">
             <span className="text-zinc-500 font-mono text-xs truncate max-w-[130px]" title={topModelsLabel}>
               {topModelsLabel}
             </span>
             
-            {/* Smooth Rising Curve Sparkline (Gold) */}
             <svg viewBox="0 0 76 24" className="w-20 h-6 overflow-visible shrink-0">
               <path
                 d="M 2 22 C 26 22, 40 20, 52 14 C 62 9, 68 5, 74 3"
@@ -609,7 +1154,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           onClick={onNavigateToUsage}
           className="p-5 rounded-2xl bg-[#0B0E14] border border-white/[0.08] hover:border-[#C59E5F]/40 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
         >
-          {/* Top Row: Title + Badge */}
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-zinc-400">Total Requests</span>
             <div className="px-2 py-0.5 rounded-md bg-[#161B22] border border-white/10 text-[10px] font-mono text-zinc-300 font-bold tracking-wider shadow-2xs">
@@ -617,21 +1161,18 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </div>
           </div>
 
-          {/* Big Value */}
           <div className="my-1.5">
             <span className="text-2xl sm:text-[30px] font-extrabold text-white tracking-tight font-sans">
               {displayRequests}
             </span>
           </div>
 
-          {/* Bottom Row: Trend + Sine-Wave Sparkline */}
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center gap-1 text-[#E5C38D] font-mono text-xs font-semibold">
               <span className="text-sm">↗</span>
-              <span>24.1% vs last month</span>
+              <span>2.4% vs baseline</span>
             </div>
             
-            {/* Smooth Sinusoidal Curve Sparkline (Gold) */}
             <svg viewBox="0 0 76 24" className="w-20 h-6 overflow-visible shrink-0">
               <path
                 d="M 2 18 C 16 18, 26 6, 38 6 C 50 6, 58 18, 74 8"
@@ -647,325 +1188,319 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       </div>
 
       {/* ============================================================ */}
-      {/* 4. HERO SECTION: "WO LINE WAALA GRAPH" (CRAZY LOOKING)        */}
+      {/* 4. HERO SECTION: TWO DUAL-LINE FORECAST GRAPHS               */}
+      {/*    (Exact style of user reference image, Luxury Theme)       */}
       {/* ============================================================ */}
-      <div className="rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-2xl p-6 sm:p-7 relative overflow-hidden space-y-6">
-        
-        {/* Ambient Top Glow Mesh */}
-        <div 
-          className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[250px] pointer-events-none rounded-full blur-[100px] opacity-25"
-          style={{ background: 'radial-gradient(circle, #C59E5F 0%, transparent 70%)' }}
+      <div className="space-y-4">
+        {/* Graph 1: Spend Velocity */}
+        <DualLineForecastCard
+          id="spend-velocity"
+          options={['Spend Velocity', 'Net revenue', 'Projected Velocity', 'Hourly Spend']}
+          selectedOption={spendOption}
+          onSelectOption={setSpendOption}
+          bigValue={`$${(30203.04 + totalSpend).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          trendPct="2.5%"
+          points={spendVelocityPoints}
+          curveColor="#E5C38D"
+          baselineColor="rgba(255, 255, 255, 0.28)"
         />
 
-        {/* Top Control Bar of Hero Graph */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-mono uppercase font-bold text-[#C59E5F] tracking-widest flex items-center gap-1.5">
-                <Radio className="w-3 h-3 text-[#C59E5F] animate-pulse" />
-                <span>TELEMETRY STREAM ENGINE v2.4</span>
-              </span>
-              <span className="text-zinc-600">•</span>
-              <span className="text-[11px] font-mono text-zinc-400">
-                Live Multi-Provider Routing Velocity
-              </span>
-            </div>
-            <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
-              <span>Spend &amp; Traffic Velocity Stream</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-[#C59E5F]/15 text-[#E5C38D] font-mono font-bold border border-[#C59E5F]/30">
-                {formatMetricDisplay(getMetricValue(activePoint))}
-              </span>
-            </h2>
-          </div>
-
-          {/* Metric Selector Tabs & Timeframe */}
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Metric Tabs */}
-            <div className="flex items-center bg-[#07090C] border border-white/[0.08] p-1 rounded-xl text-xs font-mono">
-              <button
-                onClick={() => setChartMetric('spend')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-bold ${
-                  chartMetric === 'spend'
-                    ? 'bg-[#C59E5F] text-black shadow-xs'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                Spend ($)
-              </button>
-              <button
-                onClick={() => setChartMetric('tokens')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-bold ${
-                  chartMetric === 'tokens'
-                    ? 'bg-[#C59E5F] text-black shadow-xs'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                Tokens
-              </button>
-              <button
-                onClick={() => setChartMetric('requests')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-bold ${
-                  chartMetric === 'requests'
-                    ? 'bg-[#C59E5F] text-black shadow-xs'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                Requests (RPM)
-              </button>
-              <button
-                onClick={() => setChartMetric('latency')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-bold ${
-                  chartMetric === 'latency'
-                    ? 'bg-[#C59E5F] text-black shadow-xs'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                Latency (ms)
-              </button>
-            </div>
-
-            {/* Timeframe Tabs */}
-            <div className="flex items-center bg-[#07090C] border border-white/[0.08] p-1 rounded-xl text-xs font-mono">
-              {(['24h', '7d', '30d', 'all'] as ChartTimeframe[]).map((tf) => (
-                <button
-                  key={tf}
-                  onClick={() => setChartTimeframe(tf)}
-                  className={`px-2.5 py-1.5 rounded-lg uppercase transition-all cursor-pointer font-bold ${
-                    chartTimeframe === tf
-                      ? 'bg-white/[0.12] text-white border border-white/20'
-                      : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
-                >
-                  {tf}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Crazy Interactive SVG Line Chart */}
-        <div className="relative w-full select-none pt-2">
-          
-          {/* Active Hover Floating Tooltip */}
-          {hoveredIndex !== null && hoverCoords && (
-            <div
-              className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full transition-all duration-75"
-              style={{
-                left: `${(hoverCoords.x / 1000) * 100}%`,
-                top: `${(hoverCoords.y / 280) * 100}%`,
-              }}
-            >
-              <div className="bg-[#0B0E14]/95 backdrop-blur-xl border border-[#C59E5F]/50 rounded-2xl p-3 shadow-2xl text-xs font-mono w-56 space-y-1.5 -mt-3 animate-in fade-in zoom-in-95">
-                <div className="flex items-center justify-between border-b border-white/[0.08] pb-1.5">
-                  <span className="text-[11px] font-bold text-zinc-300">{chartPoints[hoveredIndex].fullDate}</span>
-                  <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                    HTTP 200
-                  </span>
-                </div>
-                
-                <div className="flex items-baseline justify-between pt-0.5">
-                  <span className="text-zinc-400 text-[11px] font-medium capitalize">{chartMetric}:</span>
-                  <span className="text-base font-extrabold text-[#E5C38D]">
-                    {formatMetricDisplay(getMetricValue(chartPoints[hoveredIndex]))}
-                  </span>
-                </div>
-
-                <div className="text-[10px] text-zinc-400 space-y-0.5 pt-1 border-t border-white/[0.06]">
-                  <div className="flex justify-between">
-                    <span>Requests:</span>
-                    <span className="text-white font-bold">{chartPoints[hoveredIndex].requests.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tokens:</span>
-                    <span className="text-white font-bold">{chartPoints[hoveredIndex].tokens.toFixed(1)}M</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Latency:</span>
-                    <span className="text-white font-bold">{chartPoints[hoveredIndex].latency}ms</span>
-                  </div>
-                  <div className="flex justify-between text-emerald-400">
-                    <span>Edge Cache:</span>
-                    <span className="font-bold">{chartPoints[hoveredIndex].cacheHitRate}% hit</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* SVG Canvas */}
-          <div className="relative w-full overflow-hidden">
-            <svg
-              ref={svgRef}
-              viewBox="0 0 1000 280"
-              className="w-full h-64 sm:h-72 overflow-visible cursor-crosshair"
-              preserveAspectRatio="none"
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeave}
-            >
-              <defs>
-                {/* Crazy Multi-Stop Golden Glow Area Fill */}
-                <linearGradient id="crazyGlowFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#C59E5F" stopOpacity="0.45" />
-                  <stop offset="35%" stopColor="#C59E5F" stopOpacity="0.18" />
-                  <stop offset="75%" stopColor="#C59E5F" stopOpacity="0.04" />
-                  <stop offset="100%" stopColor="#C59E5F" stopOpacity="0" />
-                </linearGradient>
-
-                {/* Laser Glow Filter */}
-                <filter id="neonLaserGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="5" floodColor="#C59E5F" floodOpacity="0.6" />
-                  <feDropShadow dx="0" dy="4" stdDeviation="12" floodColor="#E5C38D" floodOpacity="0.3" />
-                </filter>
-              </defs>
-
-              {/* Horizontal Dashed Benchmark Grid Lines */}
-              {[0.2, 0.45, 0.7, 0.95].map((ratio, idx) => {
-                const y = 30 + ratio * 210;
-                const benchmarkVal = maxYVal - ratio * (maxYVal - minYVal);
-                return (
-                  <g key={idx}>
-                    <line
-                      x1={40}
-                      y1={y}
-                      x2={960}
-                      y2={y}
-                      stroke="rgba(255,255,255,0.06)"
-                      strokeDasharray="4 4"
-                    />
-                    <text
-                      x={970}
-                      y={y + 3}
-                      textAnchor="start"
-                      className="text-[10px] font-mono fill-zinc-600 font-medium"
-                    >
-                      {formatMetricDisplay(benchmarkVal).replace('Tokens', '').replace('Reqs', '').replace('Latency', '')}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {/* Gradient Area Under Curve */}
-              <path d={areaD} fill="url(#crazyGlowFill)" />
-
-              {/* Laser Underlayer (Glow) */}
-              <path
-                d={pathD}
-                fill="none"
-                stroke="#C59E5F"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                filter="url(#neonLaserGlow)"
-              />
-
-              {/* Crisp Foreground Curve Line */}
-              <path
-                d={pathD}
-                fill="none"
-                stroke="#FFF2D1"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-
-              {/* Interactive Vertical Laser Crosshair */}
-              {hoverCoords && (
-                <g>
-                  <line
-                    x1={hoverCoords.x}
-                    y1={30}
-                    x2={hoverCoords.x}
-                    y2={240}
-                    stroke="#E5C38D"
-                    strokeWidth="1.5"
-                    strokeDasharray="3 3"
-                    className="animate-pulse"
-                  />
-                  {/* Glowing intersection node */}
-                  <circle
-                    cx={hoverCoords.x}
-                    cy={hoverCoords.y}
-                    r={9}
-                    className="fill-[#E5C38D]/25 animate-ping"
-                  />
-                  <circle
-                    cx={hoverCoords.x}
-                    cy={hoverCoords.y}
-                    r={6}
-                    className="fill-[#E5C38D] stroke-[#0B0E14] stroke-[3px]"
-                  />
-                </g>
-              )}
-
-              {/* Data Node Points (Rendered along the curve) */}
-              {svgPoints.map((pt, i) => {
-                const isHovered = hoveredIndex === i;
-                return (
-                  <g key={i}>
-                    <circle
-                      cx={pt.x}
-                      cy={pt.y}
-                      r={isHovered ? 6 : 3.5}
-                      className={`transition-all duration-200 ${
-                        isHovered 
-                          ? 'fill-white stroke-[#0B0E14] stroke-2 shadow-lg' 
-                          : 'fill-[#E5C38D] stroke-[#0B0E14] stroke-2 opacity-80 hover:opacity-100'
-                      }`}
-                    />
-                    {/* X-axis date labels */}
-                    <text
-                      x={pt.x}
-                      y={262}
-                      textAnchor="middle"
-                      className={`text-[10px] font-mono transition-colors ${
-                        isHovered ? 'fill-[#E5C38D] font-bold' : 'fill-zinc-500'
-                      }`}
-                    >
-                      {pt.pt.label}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-
-          {/* Bottom Telemetry Intelligence Strip (Inside Hero Card) */}
-          <div className="pt-4 border-t border-white/[0.08] grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
-              <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
-                <Flame className="w-3 h-3 text-[#C59E5F]" />
-                <span>Peak Hourly Velocity</span>
-              </div>
-              <div className="text-sm font-bold text-white font-mono">$184.20 / hr</div>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
-              <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
-                <Zap className="w-3 h-3 text-emerald-400" />
-                <span>Cache Efficiency</span>
-              </div>
-              <div className="text-sm font-bold text-emerald-400 font-mono">94.6% Hit Rate</div>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
-              <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
-                <Clock className="w-3 h-3 text-[#E5C38D]" />
-                <span>P99 Edge Latency</span>
-              </div>
-              <div className="text-sm font-bold text-white font-mono">138ms Avg</div>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
-              <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
-                <Layers className="w-3 h-3 text-[#C59E5F]" />
-                <span>Failover Routes</span>
-              </div>
-              <div className="text-sm font-bold text-white font-mono">3 Providers Hot</div>
-            </div>
-          </div>
-        </div>
-
+        {/* Graph 2: Request Volume (All Invocations) */}
+        <DualLineForecastCard
+          id="request-volume"
+          options={['All Invocations', 'All revenue', 'Request Volume', 'RPM Velocity']}
+          selectedOption={requestOption}
+          onSelectOption={setRequestOption}
+          bigValue={`${(89732 + totalRequests).toLocaleString()}`}
+          trendPct="2.4%"
+          points={requestVolumePoints}
+          curveColor="#FFFFFF"
+          baselineColor="rgba(255, 255, 255, 0.28)"
+        />
       </div>
+
+      {/* Toggle to inspect Deep Telemetry Stream Engine */}
+      <div className="flex items-center justify-between pt-1">
+        <button
+          onClick={() => setShowDeepEngine(!showDeepEngine)}
+          className="text-xs font-mono text-zinc-400 hover:text-[#E5C38D] transition-colors flex items-center gap-1.5 cursor-pointer"
+        >
+          <Activity className="w-3.5 h-3.5 text-[#C59E5F]" />
+          <span>{showDeepEngine ? 'Hide Deep Telemetry Stream Engine' : 'Show Deep Telemetry Stream Engine (Multi-Metric Analyzer) →'}</span>
+        </button>
+      </div>
+
+      {/* ============================================================ */}
+      {/* OPTIONAL DEEP TELEMETRY STREAM ENGINE (EXPANDABLE)           */}
+      {/* ============================================================ */}
+      {showDeepEngine && (
+        <div className="rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-2xl p-6 sm:p-7 relative overflow-hidden space-y-6 animate-in fade-in">
+          
+          <div 
+            className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[250px] pointer-events-none rounded-full blur-[100px] opacity-25"
+            style={{ background: 'radial-gradient(circle, #C59E5F 0%, transparent 70%)' }}
+          />
+
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-mono uppercase font-bold text-[#C59E5F] tracking-widest flex items-center gap-1.5">
+                  <Radio className="w-3 h-3 text-[#C59E5F] animate-pulse" />
+                  <span>TELEMETRY STREAM ENGINE v2.4</span>
+                </span>
+                <span className="text-zinc-600">•</span>
+                <span className="text-[11px] font-mono text-zinc-400">
+                  Live Multi-Provider Routing Velocity
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                <span>Spend &amp; Traffic Velocity Stream</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[#C59E5F]/15 text-[#E5C38D] font-mono font-bold border border-[#C59E5F]/30">
+                  {formatMetricDisplay(getMetricValue(activePoint))}
+                </span>
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center bg-[#07090C] border border-white/[0.08] p-1 rounded-xl text-xs font-mono">
+                {(['spend', 'tokens', 'requests', 'latency'] as ChartMetric[]).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setChartMetric(m)}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-bold capitalize ${
+                      chartMetric === m
+                        ? 'bg-[#C59E5F] text-black shadow-xs'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center bg-[#07090C] border border-white/[0.08] p-1 rounded-xl text-xs font-mono">
+                {(['24h', '7d', '30d', 'all'] as ChartTimeframe[]).map((tf) => (
+                  <button
+                    key={tf}
+                    onClick={() => setChartTimeframe(tf)}
+                    className={`px-2.5 py-1.5 rounded-lg uppercase transition-all cursor-pointer font-bold ${
+                      chartTimeframe === tf
+                        ? 'bg-white/[0.12] text-white border border-white/20'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    {tf}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative w-full select-none pt-2">
+            {hoveredIndex !== null && hoverCoords && (
+              <div
+                className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full transition-all duration-75"
+                style={{
+                  left: `${(hoverCoords.x / 1000) * 100}%`,
+                  top: `${(hoverCoords.y / 280) * 100}%`,
+                }}
+              >
+                <div className="bg-[#0B0E14]/95 backdrop-blur-xl border border-[#C59E5F]/50 rounded-2xl p-3 shadow-2xl text-xs font-mono w-56 space-y-1.5 -mt-3 animate-in fade-in zoom-in-95">
+                  <div className="flex items-center justify-between border-b border-white/[0.08] pb-1.5">
+                    <span className="text-[11px] font-bold text-zinc-300">{chartPoints[hoveredIndex].fullDate}</span>
+                    <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      HTTP 200
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-baseline justify-between pt-0.5">
+                    <span className="text-zinc-400 text-[11px] font-medium capitalize">{chartMetric}:</span>
+                    <span className="text-base font-extrabold text-[#E5C38D]">
+                      {formatMetricDisplay(getMetricValue(chartPoints[hoveredIndex]))}
+                    </span>
+                  </div>
+
+                  <div className="text-[10px] text-zinc-400 space-y-0.5 pt-1 border-t border-white/[0.06]">
+                    <div className="flex justify-between">
+                      <span>Requests:</span>
+                      <span className="text-white font-bold">{chartPoints[hoveredIndex].requests.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tokens:</span>
+                      <span className="text-white font-bold">{chartPoints[hoveredIndex].tokens.toFixed(1)}M</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Latency:</span>
+                      <span className="text-white font-bold">{chartPoints[hoveredIndex].latency}ms</span>
+                    </div>
+                    <div className="flex justify-between text-emerald-400">
+                      <span>Edge Cache:</span>
+                      <span className="font-bold">{chartPoints[hoveredIndex].cacheHitRate}% hit</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="relative w-full overflow-hidden">
+              <svg
+                ref={svgRef}
+                viewBox="0 0 1000 280"
+                className="w-full h-64 sm:h-72 overflow-visible cursor-crosshair"
+                preserveAspectRatio="none"
+                onMouseMove={handleMouseMove}
+                onMouseLeave={() => {
+                  setHoveredIndex(null);
+                  setHoverCoords(null);
+                }}
+              >
+                <defs>
+                  <linearGradient id="crazyGlowFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#C59E5F" stopOpacity="0.45" />
+                    <stop offset="35%" stopColor="#C59E5F" stopOpacity="0.18" />
+                    <stop offset="75%" stopColor="#C59E5F" stopOpacity="0.04" />
+                    <stop offset="100%" stopColor="#C59E5F" stopOpacity="0" />
+                  </linearGradient>
+
+                  <filter id="neonLaserGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="5" floodColor="#C59E5F" floodOpacity="0.6" />
+                    <feDropShadow dx="0" dy="4" stdDeviation="12" floodColor="#E5C38D" floodOpacity="0.3" />
+                  </filter>
+                </defs>
+
+                {[0.2, 0.45, 0.7, 0.95].map((ratio, idx) => {
+                  const y = 30 + ratio * 210;
+                  const benchmarkVal = maxYVal - ratio * (maxYVal - minYVal);
+                  return (
+                    <g key={idx}>
+                      <line
+                        x1={40}
+                        y1={y}
+                        x2={960}
+                        y2={y}
+                        stroke="rgba(255,255,255,0.06)"
+                        strokeDasharray="4 4"
+                      />
+                      <text
+                        x={970}
+                        y={y + 3}
+                        textAnchor="start"
+                        className="text-[10px] font-mono fill-zinc-600 font-medium"
+                      >
+                        {formatMetricDisplay(benchmarkVal).replace('Tokens', '').replace('Reqs', '').replace('Latency', '')}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                <path d={areaD} fill="url(#crazyGlowFill)" />
+
+                <path
+                  d={pathD}
+                  fill="none"
+                  stroke="#C59E5F"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  filter="url(#neonLaserGlow)"
+                />
+
+                <path
+                  d={pathD}
+                  fill="none"
+                  stroke="#FFF2D1"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+                {hoverCoords && (
+                  <g>
+                    <line
+                      x1={hoverCoords.x}
+                      y1={30}
+                      x2={hoverCoords.x}
+                      y2={240}
+                      stroke="#E5C38D"
+                      strokeWidth="1.5"
+                      strokeDasharray="3 3"
+                    />
+                    <circle
+                      cx={hoverCoords.x}
+                      cy={hoverCoords.y}
+                      r={6}
+                      className="fill-[#E5C38D] stroke-[#0B0E14] stroke-[3px]"
+                    />
+                  </g>
+                )}
+
+                {svgPoints.map((pt, i) => {
+                  const isHovered = hoveredIndex === i;
+                  return (
+                    <g key={i}>
+                      <circle
+                        cx={pt.x}
+                        cy={pt.y}
+                        r={isHovered ? 6 : 3.5}
+                        className={`transition-all duration-200 ${
+                          isHovered 
+                            ? 'fill-white stroke-[#0B0E14] stroke-2 shadow-lg' 
+                            : 'fill-[#E5C38D] stroke-[#0B0E14] stroke-2 opacity-80'
+                        }`}
+                      />
+                      <text
+                        x={pt.x}
+                        y={262}
+                        textAnchor="middle"
+                        className={`text-[10px] font-mono transition-colors ${
+                          isHovered ? 'fill-[#E5C38D] font-bold' : 'fill-zinc-500'
+                        }`}
+                      >
+                        {pt.pt.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+
+            <div className="pt-4 border-t border-white/[0.08] grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
+                <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
+                  <Flame className="w-3 h-3 text-[#C59E5F]" />
+                  <span>Peak Hourly Velocity</span>
+                </div>
+                <div className="text-sm font-bold text-white font-mono">$184.20 / hr</div>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
+                <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
+                  <Zap className="w-3 h-3 text-emerald-400" />
+                  <span>Cache Efficiency</span>
+                </div>
+                <div className="text-sm font-bold text-emerald-400 font-mono">94.6% Hit Rate</div>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
+                <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
+                  <Clock className="w-3 h-3 text-[#E5C38D]" />
+                  <span>P99 Edge Latency</span>
+                </div>
+                <div className="text-sm font-bold text-white font-mono">138ms Avg</div>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-[#07090C] border border-white/[0.06] space-y-1">
+                <div className="text-[10px] font-mono uppercase text-zinc-400 flex items-center gap-1.5">
+                  <Layers className="w-3 h-3 text-[#C59E5F]" />
+                  <span>Failover Routes</span>
+                </div>
+                <div className="text-sm font-bold text-white font-mono">3 Providers Hot</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
 
       {/* ============================================================ */}
       {/* 5. ROW 3: MODELS BY COST SHARE & ACTIVE ALERTS               */}
@@ -1133,18 +1668,18 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       )}
 
       {/* ============================================================ */}
-      {/* 6. ROW 4: RECENT REAL GATEWAY INVOCATIONS & ACTIONS          */}
+      {/* 6. ROW 4: RECENT REAL GATEWAY INVOCATIONS (LIVE STREAM)      */}
       {/* ============================================================ */}
       <div className="p-6 rounded-3xl bg-[#0B0E14] border border-white/[0.08] shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono uppercase font-bold text-[#C59E5F] tracking-wider">
-                Live Gateway Activity
+                Live Gateway Stream
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>{liveLogs.length} Actions Tracked</span>
+                <span>{liveLogs.length} Events Logged (0ms Live Sync)</span>
               </span>
             </div>
             <h3 className="text-base font-bold text-white tracking-tight mt-0.5">
@@ -1167,7 +1702,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <div className="py-8 text-center text-xs text-zinc-500 flex flex-col items-center">
             <Activity className="w-8 h-8 text-zinc-600 mb-2" />
             <span className="text-zinc-300 font-medium">No API invocations recorded yet.</span>
-            <span className="text-zinc-500 mt-0.5">Run a prompt from the Test Playground or Terminal to stream live telemetry here.</span>
+            <span className="text-zinc-500 mt-0.5">
+              Click &quot;Send Live Probe&quot; above or run a prompt in Test Playground to stream live telemetry here.
+            </span>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -1179,18 +1716,24 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                   <th className="pb-3 font-semibold">Tokens (In / Out)</th>
                   <th className="pb-3 font-semibold">Latency</th>
                   <th className="pb-3 font-semibold">Calculated Cost</th>
-                  <th className="pb-3 font-semibold text-right">Timestamp</th>
+                  <th className="pb-3 font-semibold text-right">Time</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
-                {liveLogs.slice(0, 10).map((log) => {
+                {liveLogs.slice(0, 10).map((log, idx) => {
                   const totalTok = (log.input_tokens || 0) + (log.output_tokens || 0);
                   const isOk = (log.status_code || 200) < 400;
+                  const isNewest = idx === 0;
                   return (
-                    <tr key={log.id || log.request_id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr 
+                      key={log.id || log.request_id || idx} 
+                      className={`hover:bg-white/[0.02] transition-colors ${
+                        isNewest ? 'bg-[#C59E5F]/[0.03]' : ''
+                      }`}
+                    >
                       <td className="py-3">
                         <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-[#C59E5F]" />
+                          <span className={`w-2 h-2 rounded-full ${isNewest ? 'bg-emerald-400 animate-ping' : 'bg-[#C59E5F]'}`} />
                           <div>
                             <span className="font-bold text-white block">{log.routed_model || log.requested_model}</span>
                             <span className="text-[10px] text-zinc-500">{log.provider || 'Gateway Proxy'}</span>
@@ -1205,9 +1748,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                         </span>
                       </td>
                       <td className="py-3 text-zinc-300">
-                        <span className="font-semibold text-white">{totalTok}</span>
+                        <span className="font-semibold text-white">{totalTok.toLocaleString()}</span>
                         <span className="text-[10px] text-zinc-500 block">
-                          {log.input_tokens || 0} in • {log.output_tokens || 0} out
+                          {(log.input_tokens || 0).toLocaleString()} in • {(log.output_tokens || 0).toLocaleString()} out
                         </span>
                       </td>
                       <td className="py-3 text-zinc-300 font-semibold">
@@ -1216,8 +1759,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                       <td className="py-3 text-[#E5C38D] font-bold">
                         ${(log.cost_usd || 0.00001).toFixed(6)}
                       </td>
-                      <td className="py-3 text-right text-zinc-500 text-[11px]">
-                        {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      <td className="py-3 text-right">
+                        <span className="text-zinc-300 font-semibold block">
+                          {formatRelativeTime(log.created_at)}
+                        </span>
+                        <span className="text-zinc-600 text-[10px]">
+                          {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </span>
                       </td>
                     </tr>
                   );
