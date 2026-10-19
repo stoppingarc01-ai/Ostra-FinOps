@@ -20,8 +20,7 @@ import {
   Loader2,
   ShieldCheck,
   Copy,
-  Plus,
-  Bell
+  Plus
 } from 'lucide-react';
 import { SecurityConsoleView } from './SecurityConsoleView';
 import { PreferencesView } from './PreferencesView';
@@ -29,7 +28,6 @@ import { BillingView } from './BillingView';
 import { useAuth } from '../contexts/AuthContext';
 import { auth, db } from '../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from 'firebase/auth';
 import { subscribeToUserProjects } from '../lib/projectsService';
 
 interface SettingsViewProps {
@@ -150,24 +148,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
     ];
   });
 
-  // Real connected OAuth & Integrations state
-  const isGoogleConnected = useMemo(() => {
-    return auth.currentUser?.providerData.some(p => p.providerId === 'google.com') || false;
-  }, [user]);
 
-  const isGithubConnected = useMemo(() => {
-    return auth.currentUser?.providerData.some(p => p.providerId === 'github.com') || false;
-  }, [user]);
-
-  const [slackWebhook, setSlackWebhook] = useState<string>(() => {
-    try {
-      return localStorage.getItem(`ostraops_slack_webhook_${user?.id || 'guest'}`) || '';
-    } catch {
-      return '';
-    }
-  });
-  const [slackModalOpen, setSlackModalOpen] = useState(false);
-  const [slackWebhookInput, setSlackWebhookInput] = useState('');
 
   // Real Activity Log State
   interface ActivityLogItem {
@@ -290,42 +271,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
     showToast('Session terminated.');
   };
 
-  const handleConnectGoogle = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      recordActivity('Linked Google Workspace account', 'user');
-      showToast('Google account linked successfully.');
-    } catch (err: any) {
-      showToast(`Google link: ${err.message}`);
-    }
-  };
-
-  const handleConnectGithub = async () => {
-    try {
-      const provider = new GithubAuthProvider();
-      await signInWithPopup(auth, provider);
-      recordActivity('Linked GitHub OAuth account', 'user');
-      showToast('GitHub account linked successfully.');
-    } catch (err: any) {
-      showToast(`GitHub link: ${err.message}`);
-    }
-  };
-
-  const handleSaveSlackWebhook = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!slackWebhookInput.trim().startsWith('https://hooks.slack.com/')) {
-      showToast('Please enter a valid Slack Incoming Webhook URL');
-      return;
-    }
-    setSlackWebhook(slackWebhookInput.trim());
-    try {
-      localStorage.setItem(`ostraops_slack_webhook_${user?.id || 'guest'}`, slackWebhookInput.trim());
-    } catch {}
-    recordActivity('Configured Slack notification webhook', 'sparkles');
-    setSlackModalOpen(false);
-    showToast('Slack webhook connected and verified.');
-  };
 
   // Form States: Profile Information — initialized from auth profile
   const [fullName, setFullName] = useState('');
@@ -952,133 +897,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
                 </div>
               </div>
 
-              {/* Card 2: Connected Accounts (Real-Time OAuth Providers) */}
-              <div className="rounded-2xl bg-[#0B0E14] border border-white/[0.08] p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-base font-bold text-white font-sans">
-                      Connected Accounts
-                    </h3>
-                    <p className="text-xs text-zinc-400">
-                      Manage third-party SSO accounts and OAuth integrations linked to your profile.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
-                  {/* Google */}
-                  <div className="p-3.5 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-[#0B0E14] border border-white/[0.08] flex items-center justify-center text-xs font-bold font-mono text-white">
-                        G
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-white block leading-tight">Google Workspace</span>
-                        <span className="text-[10px] text-zinc-400 font-mono">
-                          {isGoogleConnected ? (user?.email || emailAddress) : 'Single Sign-On SSO'}
-                        </span>
-                      </div>
-                    </div>
-                    {isGoogleConnected ? (
-                      <span className="text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border border-emerald-500/20">
-                        Connected
-                      </span>
-                    ) : (
-                      <button
-                        onClick={handleConnectGoogle}
-                        className="text-xs font-bold text-[#C59E5F] hover:text-white font-mono cursor-pointer px-2 py-0.5 rounded-md hover:bg-white/[0.06] transition-colors"
-                      >
-                        Connect
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Slack */}
-                  <div className="p-3.5 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-[#0B0E14] border border-white/[0.08] flex items-center justify-center text-xs font-bold font-mono text-[#E01E5A]">
-                        #
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-white block leading-tight">Slack Alerts</span>
-                        <span className="text-[10px] text-zinc-400 font-mono">
-                          {slackWebhook ? 'Webhook Active' : 'Spend & Budget Webhook'}
-                        </span>
-                      </div>
-                    </div>
-                    {slackWebhook ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border border-emerald-500/20">
-                          Connected
-                        </span>
-                        <button
-                          onClick={() => {
-                            setSlackWebhook('');
-                            try { localStorage.removeItem(`ostraops_slack_webhook_${user?.id || 'guest'}`); } catch {}
-                            showToast('Slack webhook disconnected');
-                          }}
-                          className="text-[10px] text-rose-400 hover:text-rose-300 font-mono cursor-pointer"
-                        >
-                          Disconnect
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setSlackModalOpen(true)}
-                        className="text-xs font-bold text-[#C59E5F] hover:text-white font-mono cursor-pointer px-2 py-0.5 rounded-md hover:bg-white/[0.06] transition-colors"
-                      >
-                        Configure
-                      </button>
-                    )}
-                  </div>
-
-                  {/* GitHub */}
-                  <div className="p-3.5 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-[#0B0E14] border border-white/[0.08] flex items-center justify-center text-xs font-bold font-mono text-white">
-                        GH
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-white block leading-tight">GitHub OAuth</span>
-                        <span className="text-[10px] text-zinc-400 font-mono">
-                          {isGithubConnected ? (user?.displayName || (emailAddress || '').split('@')[0]) : 'CI/CD & Repo Action Tracing'}
-                        </span>
-                      </div>
-                    </div>
-                    {isGithubConnected ? (
-                      <span className="text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border border-emerald-500/20">
-                        Connected
-                      </span>
-                    ) : (
-                      <button
-                        onClick={handleConnectGithub}
-                        className="text-xs font-bold text-[#C59E5F] hover:text-white font-mono cursor-pointer px-2 py-0.5 rounded-md hover:bg-white/[0.06] transition-colors"
-                      >
-                        Connect
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Microsoft */}
-                  <div className="p-3.5 rounded-xl bg-[#07090C] border border-white/[0.08] flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-[#0B0E14] border border-white/[0.08] flex items-center justify-center text-xs font-bold font-mono text-[#00A4EF]">
-                        MS
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-white block leading-tight">Microsoft Entra</span>
-                        <span className="text-[10px] text-zinc-400 font-mono">Enterprise Tenant SSO</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => showToast('Microsoft Entra ID integration enabled for Enterprise tier')}
-                      className="text-xs font-bold text-zinc-400 hover:text-white font-mono cursor-pointer px-2 py-0.5 rounded-md hover:bg-white/[0.06] transition-colors"
-                    >
-                      Connect
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
@@ -1621,67 +1439,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onNavigateHome }) =>
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* MODAL: CONNECT SLACK WEBHOOK                                  */}
-      {/* ============================================================ */}
-      {slackModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-[#0B0E14] border border-white/[0.08] w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-150 font-sans">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30">
-                <Bell className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white">
-                  Connect Slack Channel
-                </h3>
-                <p className="text-xs text-zinc-400">
-                  Receive instant budget alert pings and anomaly notifications in Slack.
-                </p>
-              </div>
-            </div>
 
-            <form onSubmit={handleSaveSlackWebhook} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-zinc-300 font-mono uppercase">
-                  Slack Incoming Webhook URL
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={slackWebhookInput}
-                  onChange={(e) => setSlackWebhookInput(e.target.value)}
-                  placeholder="https://hooks.slack.com/services/T00/B00/XXXXX"
-                  className="w-full px-3.5 py-2.5 text-xs font-mono bg-[#07090C] border border-white/[0.08] rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:border-purple-500 transition-colors"
-                />
-              </div>
-
-              <div className="p-3 rounded-xl bg-[#07090C] border border-white/[0.08] text-[11px] text-zinc-400 font-mono leading-relaxed">
-                Create an Incoming Webhook in your Slack Workspace App configuration and paste the webhook URL here.
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSlackModalOpen(false);
-                    setSlackWebhookInput('');
-                  }}
-                  className="px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-white/[0.04] transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
-                >
-                  <span>Save Webhook</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ============================================================ */}
       {/* CONFIRMATION MODAL: DELETE ACCOUNT                           */}
